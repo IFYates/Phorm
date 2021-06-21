@@ -33,7 +33,7 @@ namespace IFY.Phorm.Connectivity
         public void Close() => _db.Close();
 
 #pragma warning disable CS8603 // Possible null reference return.
-        public IAsyncDbCommand CreateCommand() => _db.CreateCommand().Shim<IAsyncDbCommand>();
+        public IAsyncDbCommand CreateCommand() => (_db.CreateCommand() as System.Data.Common.DbCommand)?.Shim<IAsyncDbCommand>();
 #pragma warning restore CS8603 // Possible null reference return.
         IDbCommand IDbConnection.CreateCommand() => _db.CreateCommand();
 

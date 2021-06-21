@@ -6,6 +6,12 @@ namespace IFY.Phorm
     public class PhormContractAttribute : Attribute
     {
         /// <summary>
+        /// The type of database object the contract targets.
+        /// Note that only <see cref="DbObjectType.StoredProcedure"/> supports receiving data.
+        /// </summary>
+        public DbObjectType Target { get; set; } = DbObjectType.StoredProcedure;
+
+        /// <summary>
         /// The contract name to use, if not the same as the decorated class / interface.
         /// </summary>
         public string? Name { get; init; }

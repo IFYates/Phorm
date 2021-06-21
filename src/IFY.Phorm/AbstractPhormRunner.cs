@@ -53,7 +53,12 @@ namespace IFY.Phorm
                 {
                     value = obj != null && prop.CanRead ? prop.GetValue(obj) : null;
                 }
-
+                
+                if (prop.GetCustomAttribute<IgnoreDataMemberAttribute>() != null)
+                {
+                    continue;
+                }
+                
                 // Wrap as ContractMember, if not already
                 if (value is not ContractMember mem)
                 {
@@ -74,8 +79,8 @@ namespace IFY.Phorm
                         mem = ContractMember.Out<object>(prop.Name, prop);
                     }
                 }
-                members.Add(mem);
 
+                members.Add(mem);
                 mem.ResolveAttributes(obj);
 
                 // Check for DataMemberAttribute
@@ -264,6 +269,8 @@ namespace IFY.Phorm
 
         #endregion Execution
 
+        #region Connection
+
         protected abstract string? GetConnectionName();
 
         protected virtual IAsyncDbCommand CreateCommand(IPhormDbConnection connection, string schema, string actionName)
@@ -273,6 +280,8 @@ namespace IFY.Phorm
             cmd.CommandText = $"[{schema}].[{actionName}]";
             return cmd;
         }
+
+        #endregion Connection
 
         #region All
 

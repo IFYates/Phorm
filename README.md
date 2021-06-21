@@ -2,7 +2,7 @@
 Pho/rm - The **P**rocedure-**h**eavy **o**bject-**r**elational **m**apping framework
 
 ## Goals
-- An O/RM framework utilising stored procedures as the sole database interaction
+- An O/RM framework utilising stored procedures as the primary database interaction
 - Solving a specific style of data access - not a one-size-fits-all solution
 
 ## Driving principals
@@ -27,6 +27,7 @@ With this approach, the data management team can provide access contracts to mee
 - DTO field transformation via extensions (JSON, enum, encryption included by default)
 - DTO read/write to implicitly named sprocs
 - Test helper for checking anonymous objects
+- Read from table/view, but not write to
 
 ## Antithesis
 Pho/rm requires significant code to wire the data layer to the business logic; this is intentional to the design and will not be resolved by this project.
