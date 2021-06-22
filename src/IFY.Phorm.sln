@@ -5,14 +5,14 @@ VisualStudioVersion = 16.0.31205.134
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IFY.Phorm", "IFY.Phorm\IFY.Phorm.csproj", "{3D21066F-63A2-4B25-AEE7-79983A991A31}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IFY.Phorm.Tests", "IFY.Phorm.Tests\IFY.Phorm.Tests.csproj", "{369429CA-8C0C-41C2-BBBC-6A417D6CF2AC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IFY.Phorm.Tests", "IFY.Phorm.Tests\IFY.Phorm.Tests.csproj", "{369429CA-8C0C-41C2-BBBC-6A417D6CF2AC}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{6741609E-F2E3-4756-AAD6-39B7F4F85BB7}"
 	ProjectSection(SolutionItems) = preProject
 		..\README.md = ..\README.md
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IFY.Phorm.SqlClient", "IFY.Phorm.SqlClient\IFY.Phorm.SqlClient.csproj", "{15329C60-F0B4-444B-AFD1-6A0FFA310797}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IFY.Phorm.SqlClient", "IFY.Phorm.SqlClient\IFY.Phorm.SqlClient.csproj", "{15329C60-F0B4-444B-AFD1-6A0FFA310797}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
