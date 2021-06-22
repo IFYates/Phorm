@@ -105,7 +105,21 @@ namespace IFY.Phorm.Tests
             var obj = new { BattleId = 1, ReturnValue = ContractMember.RetVal() };
             var x = phorm.All<DTO, ITest2>(obj);
             Assert.AreEqual(1, obj.ReturnValue.Value);
-            Assert.AreEqual(0, x.Length);
+            Assert.AreEqual(4, x.Length);
+        }
+        
+        [PhormContract(Target = DbObjectType.Table)]
+        public interface IBattle
+        {
+        }
+
+        [TestMethod]
+        public void All_from_view()
+        {
+            var phorm = getPhormRunner();
+
+            var x = phorm.All<DTO, IBattle>();
+            Assert.AreEqual(4, x.Length);
         }
     }
 }

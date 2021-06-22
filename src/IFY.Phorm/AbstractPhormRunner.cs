@@ -53,12 +53,12 @@ namespace IFY.Phorm
                 {
                     value = obj != null && prop.CanRead ? prop.GetValue(obj) : null;
                 }
-                
+
                 if (prop.GetCustomAttribute<IgnoreDataMemberAttribute>() != null)
                 {
                     continue;
                 }
-                
+
                 // Wrap as ContractMember, if not already
                 if (value is not ContractMember mem)
                 {
@@ -137,43 +137,45 @@ namespace IFY.Phorm
             return returnValue;
         }
 
-        private static (string? schema, string actionName) getContractAttribute(Type type)
+        private static (string? schema, string objectName, DbObjectType objectType) getContractAttribute(Type type)
         {
             var pcAttr = type.GetCustomAttribute<PhormContractAttribute>(false);
             if (pcAttr?.Name != null)
             {
-                return (pcAttr.Namespace, pcAttr.Name ?? string.Empty);
+                return (pcAttr.Namespace, pcAttr.Name, pcAttr.Target);
             }
 
+            var schemaName = pcAttr?.Namespace;
             var contractName = type.Name;
+            var objectType = pcAttr?.Target ?? DbObjectType.StoredProcedure;
+
             if (type.IsInterface && contractName.Length > 0 && contractName[0] == 'I')
             {
                 contractName = contractName[1..];
             }
-            var schemaName = pcAttr?.Namespace;
 
             if (pcAttr == null)
             {
                 var dcAttr = type.GetCustomAttribute<DataContractAttribute>(false);
                 if (dcAttr != null)
                 {
-                    contractName = dcAttr.Name ?? contractName;
                     schemaName = dcAttr.Namespace;
+                    contractName = dcAttr.Name ?? contractName;
                 }
             }
 
-            return (schemaName, contractName);
+            return (schemaName, contractName, objectType);
         }
 
         #endregion Contract parsing
 
         #region Execution
 
-        private IAsyncDbCommand startCommand(string? schema, string actionName, ContractMember[] members)
+        private IAsyncDbCommand startCommand(string? schema, string objectName, ContractMember[] members, DbObjectType objectType)
         {
             var conn = _connectionProvider.GetConnection(GetConnectionName());
             schema = schema?.Length > 0 ? schema : conn.DefaultSchema;
-            var cmd = CreateCommand(conn, schema, actionName);
+            var cmd = CreateCommand(conn, schema, objectName, objectType);
 
             // Convert to database parameters
             foreach (var mem in members)
@@ -273,11 +275,19 @@ namespace IFY.Phorm
 
         protected abstract string? GetConnectionName();
 
-        protected virtual IAsyncDbCommand CreateCommand(IPhormDbConnection connection, string schema, string actionName)
+        protected virtual IAsyncDbCommand CreateCommand(IPhormDbConnection connection, string schema, string objectName, DbObjectType objectType)
         {
             var cmd = connection.CreateCommand();
+
+            if (objectType == DbObjectType.Table || objectType == DbObjectType.View)
+            {
+                cmd.CommandType = CommandType.Text;
+                cmd.CommandText = $"SELECT * FROM [{schema}].[{objectName}]";
+                return cmd;
+            }
+
             cmd.CommandType = CommandType.StoredProcedure;
-            cmd.CommandText = $"[{schema}].[{actionName}]";
+            cmd.CommandText = $"[{schema}].[{objectName}]";
             return cmd;
         }
 
@@ -285,19 +295,19 @@ namespace IFY.Phorm
 
         #region All
 
-        public TResultContract[] All<TResultContract>(string actionName, object? args = null)
+        public TResultContract[] All<TResultContract>(string objectName, object? args = null)
             where TResultContract : new()
-            => AllAsync<TResultContract>(actionName, args).GetAwaiter().GetResult();
+            => AllAsync<TResultContract>(objectName, args).GetAwaiter().GetResult();
 
         public TResultContract[] All<TResultContract, TActionContract>(object? args = null)
             where TResultContract : new()
             => AllAsync<TResultContract, TActionContract>(args).GetAwaiter().GetResult();
 
-        public async Task<TResultContract[]> AllAsync<TResultContract>(string actionName, object? args = null, CancellationToken? cancellationToken = null)
+        public async Task<TResultContract[]> AllAsync<TResultContract>(string objectName, object? args = null, CancellationToken? cancellationToken = null)
             where TResultContract : new()
         {
             var pars = getMembersFromContract(args);
-            using var cmd = startCommand(null, actionName, pars);
+            using var cmd = startCommand(null, objectName, pars, DbObjectType.StoredProcedure);
             var results = await readAll<TResultContract>(cmd, cancellationToken);
             parseCommandResult(cmd, args, pars);
             return results;
@@ -306,9 +316,9 @@ namespace IFY.Phorm
         public async Task<TResultContract[]> AllAsync<TResultContract, TActionContract>(object? args = null, CancellationToken? cancellationToken = null)
             where TResultContract : new()
         {
-            var (schema, actionName) = getContractAttribute(typeof(TActionContract));
+            var (schema, objectName, objectType) = getContractAttribute(typeof(TActionContract));
             var pars = getMembersFromContract(args, typeof(TActionContract));
-            using var cmd = startCommand(schema, actionName, pars);
+            using var cmd = startCommand(schema, objectName, pars, objectType);
             var results = await readAll<TResultContract>(cmd, cancellationToken);
             parseCommandResult(cmd, args, pars);
             return results;
@@ -318,8 +328,8 @@ namespace IFY.Phorm
 
         #region Call
 
-        public int Call(string actionName, object? args = null)
-            => CallAsync(actionName, args).GetAwaiter().GetResult();
+        public int Call(string objectName, object? args = null)
+            => CallAsync(objectName, args).GetAwaiter().GetResult();
 
         public int Call<TActionContract>(object? args = null)
             => CallAsync<TActionContract>(args).GetAwaiter().GetResult();
@@ -327,19 +337,19 @@ namespace IFY.Phorm
         public int Call<TActionContract>(TActionContract? contract)
             => CallAsync(contract).GetAwaiter().GetResult();
 
-        public async Task<int> CallAsync(string actionName, object? args = null, CancellationToken? cancellationToken = null)
+        public async Task<int> CallAsync(string objectName, object? args = null, CancellationToken? cancellationToken = null)
         {
             var pars = getMembersFromContract(args);
-            using var cmd = startCommand(null, actionName ?? string.Empty, pars);
+            using var cmd = startCommand(null, objectName ?? string.Empty, pars, DbObjectType.StoredProcedure);
             await doExec(cmd, cancellationToken);
             return parseCommandResult(cmd, args, pars);
         }
 
         public async Task<int> CallAsync<TActionContract>(object? args = null, CancellationToken? cancellationToken = null)
         {
-            var (schema, actionName) = getContractAttribute(typeof(TActionContract));
+            var (schema, objectName, objectType) = getContractAttribute(typeof(TActionContract));
             var pars = getMembersFromContract(args, typeof(TActionContract));
-            using var cmd = startCommand(schema, actionName, pars);
+            using var cmd = startCommand(schema, objectName, pars, objectType);
             await doExec(cmd, cancellationToken);
             return parseCommandResult(cmd, args, pars);
         }
@@ -351,18 +361,18 @@ namespace IFY.Phorm
 
         #region Single
 
-        public TResultContract? Single<TResultContract>(string actionName, object? args = null)
+        public TResultContract? Single<TResultContract>(string objectName, object? args = null)
             where TResultContract : new()
-            => SingleAsync<TResultContract>(actionName, args).GetAwaiter().GetResult();
+            => SingleAsync<TResultContract>(objectName, args).GetAwaiter().GetResult();
 
         public TResultContract? Single<TResultContract, TActionContract>(object? args = null)
             where TResultContract : new()
             => SingleAsync<TResultContract, TActionContract>(args).GetAwaiter().GetResult();
 
-        public async Task<TResultContract?> SingleAsync<TResultContract>(string actionName, object? args = null, CancellationToken? cancellationToken = null) where TResultContract : new()
+        public async Task<TResultContract?> SingleAsync<TResultContract>(string objectName, object? args = null, CancellationToken? cancellationToken = null) where TResultContract : new()
         {
             var pars = getMembersFromContract(args);
-            using var cmd = startCommand(null, actionName, pars);
+            using var cmd = startCommand(null, objectName, pars, DbObjectType.StoredProcedure);
             var result = await readSingle<TResultContract>(cmd, cancellationToken);
             parseCommandResult(cmd, args, pars);
             return result;
@@ -370,9 +380,9 @@ namespace IFY.Phorm
 
         public async Task<TResultContract?> SingleAsync<TResultContract, TActionContract>(object? args = null, CancellationToken? cancellationToken = null) where TResultContract : new()
         {
-            var (schema, actionName) = getContractAttribute(typeof(TActionContract));
+            var (schema, objectName, objectType) = getContractAttribute(typeof(TActionContract));
             var pars = getMembersFromContract(args, typeof(TActionContract));
-            using var cmd = startCommand(schema, actionName, pars);
+            using var cmd = startCommand(schema, objectName, pars, objectType);
             var result = await readSingle<TResultContract>(cmd, cancellationToken);
             parseCommandResult(cmd, args, pars);
             return result;

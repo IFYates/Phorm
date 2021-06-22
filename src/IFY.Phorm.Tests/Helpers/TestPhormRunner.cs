@@ -29,12 +29,10 @@ namespace IFY.Phorm.Tests
             throw new NotSupportedException();
         }
 
-        protected override IAsyncDbCommand CreateCommand(IPhormDbConnection connection, string schema, string actionName)
+        protected override IAsyncDbCommand CreateCommand(IPhormDbConnection connection, string schema, string objectName, DbObjectType objectType)
         {
-            var cmd = connection.CreateCommand();
+            var cmd = base.CreateCommand(connection, schema, objectName, objectType);
             Commands.Add(cmd);
-            cmd.CommandType = CommandType.StoredProcedure;
-            cmd.CommandText = $"[{schema}].[{actionName}]";
             return cmd;
         }
 

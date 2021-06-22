@@ -7,11 +7,11 @@ namespace IFY.Phorm
     {
         #region Call
 
-        int Call(string actionName, object? args = null);
+        int Call(string objectName, object? args = null);
         int Call<TActionContract>(object? args = null);
         int Call<TActionContract>(TActionContract? contract); // Same as "object? args = null", but allows better Intellisense
         
-        Task<int> CallAsync(string actionName, object? args = null, CancellationToken? cancellationToken = null);
+        Task<int> CallAsync(string objectName, object? args = null, CancellationToken? cancellationToken = null);
         Task<int> CallAsync<TActionContract>(object? args = null, CancellationToken? cancellationToken = null);
         Task<int> CallAsync<TActionContract>(TActionContract? contract, CancellationToken? cancellationToken = null); // Same as "object? args = null", but allows better Intellisense
 
@@ -19,12 +19,12 @@ namespace IFY.Phorm
         
         #region Single
         
-        TResultContract? Single<TResultContract>(string actionName, object? args = null)
+        TResultContract? Single<TResultContract>(string objectName, object? args = null)
             where TResultContract : new();
         TResultContract? Single<TResultContract, TActionContract>(object? args = null)
             where TResultContract : new();
 
-        Task<TResultContract?> SingleAsync<TResultContract>(string actionName, object? args = null, CancellationToken? cancellationToken = null)
+        Task<TResultContract?> SingleAsync<TResultContract>(string objectName, object? args = null, CancellationToken? cancellationToken = null)
             where TResultContract : new();
         Task<TResultContract?> SingleAsync<TResultContract, TActionContract>(object? args = null, CancellationToken? cancellationToken = null)
             where TResultContract : new();
@@ -33,12 +33,12 @@ namespace IFY.Phorm
 
         #region All
         
-        TResultContract[] All<TResultContract>(string actionName, object? args = null)
+        TResultContract[] All<TResultContract>(string objectName, object? args = null)
             where TResultContract : new();
         TResultContract[] All<TResultContract, TActionContract>(object? args = null)
             where TResultContract : new();
 
-        Task<TResultContract[]> AllAsync<TResultContract>(string actionName, object? args = null, CancellationToken? cancellationToken = null)
+        Task<TResultContract[]> AllAsync<TResultContract>(string objectName, object? args = null, CancellationToken? cancellationToken = null)
             where TResultContract : new();
         Task<TResultContract[]> AllAsync<TResultContract, TActionContract>(object? args = null, CancellationToken? cancellationToken = null)
             where TResultContract : new();

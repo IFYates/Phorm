@@ -7,6 +7,7 @@ namespace IFY.Phorm.SqlClient
     {
         private readonly string? _connectionName;
 
+        public string ViewPrefix { get; init; } = "vw_";
         public string ProcedurePrefix { get; init; } = "usp_";
 
         public SqlPhormRunner(IPhormDbConnectionProvider connectionProvider, string? connectionName)
@@ -17,12 +18,21 @@ namespace IFY.Phorm.SqlClient
 
         protected override string? GetConnectionName() => _connectionName;
 
-        protected override IAsyncDbCommand CreateCommand(IPhormDbConnection connection, string schema, string actionName)
+        protected override IAsyncDbCommand CreateCommand(IPhormDbConnection connection, string schema, string objectName, DbObjectType objectType)
         {
-            // Support temp sprocs
-            actionName = actionName.Length > 0 && actionName[0] == '#' ? actionName : ProcedurePrefix + actionName;
+            // Complete object name
+            switch (objectType)
+            {
+                case DbObjectType.StoredProcedure:
+                    // Support temp sprocs
+                    objectName = objectName.Length > 0 && objectName[0] == '#' ? objectName : ProcedurePrefix + objectName;
+                    break;
+                case DbObjectType.View:
+                    objectName = ViewPrefix + objectName;
+                    break;
+            }
 
-            return base.CreateCommand(connection, schema, actionName);
+            return base.CreateCommand(connection, schema, objectName, objectType);
         }
 
         #region Transactions
