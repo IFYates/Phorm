@@ -6,6 +6,7 @@ using System.Data;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -176,6 +177,22 @@ namespace IFY.Phorm
             var conn = _connectionProvider.GetConnection(GetConnectionName());
             schema = schema?.Length > 0 ? schema : conn.DefaultSchema;
             var cmd = CreateCommand(conn, schema, objectName, objectType);
+
+            // Build WHERE clause from members
+            if (objectType == DbObjectType.Table || objectType == DbObjectType.View)
+            {
+                var sb = new StringBuilder();
+                foreach (var mem in members.Where(m => m.Direction == ParameterDirection.Input || m.Direction == ParameterDirection.InputOutput))
+                {
+                    // TODO: Ignore members without value
+                    if (sb.Length > 0)
+                    {
+                        sb.Append(" AND ");
+                    }
+                    sb.AppendFormat("[{0}] = @{0}", mem.Name);
+                }
+                cmd.CommandText += " WHERE " + sb.ToString();
+            }
 
             // Convert to database parameters
             foreach (var mem in members)

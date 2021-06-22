@@ -1,16 +1,41 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
-    <Nullable>enable</Nullable>
-  </PropertyGroup>
+    <PropertyGroup>
+        <TargetFramework>net5.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 
-  <ItemGroup>
-    <PackageReference Include="System.Data.SqlClient" Version="4.8.2" />
-  </ItemGroup>
+        <Authors>IFYates</Authors>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <Version>0.1.2-beta</Version>
+        <AssemblyVersion>0.1.2</AssemblyVersion>
+        <FileVersion>0.1.2</FileVersion>
+        <PackageProjectUrl>https://github.com/IFYates/Phorm</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/IFYates/Phorm</RepositoryUrl>
+        <RepositoryType>GitHub</RepositoryType>
+        <PackageReleaseNotes>[POC]</PackageReleaseNotes>
+        <Copyright>(c) IFYates</Copyright>
+        <Description>SqlClient implementation of the Procedure-heavy object-relational mapping framework.</Description>
 
-  <ItemGroup>
-    <ProjectReference Include="..\IFY.Phorm\IFY.Phorm.csproj" />
-  </ItemGroup>
+        <TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);CopyProjectReferencesToPackage</TargetsForTfmSpecificBuildOutput>
+    </PropertyGroup>
+
+    <Target DependsOnTargets="ResolveReferences" Name="CopyProjectReferencesToPackage">
+        <ItemGroup>
+            <BuildOutputInPackage Include="@(ReferenceCopyLocalPaths->WithMetadataValue('ReferenceSourceTarget', 'ProjectReference'))"/>
+        </ItemGroup>
+    </Target>
+
+    <ItemGroup>
+        <PackageReference Include="System.Data.SqlClient" Version="4.8.2" />
+        <PackageReference Include="Shimterface.Standard" Version="1.6.4" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\IFY.Phorm\IFY.Phorm.csproj">
+            <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
+            <IncludeAssets>{ProjectName}.dll</IncludeAssets>
+        </ProjectReference>
+    </ItemGroup>
 
 </Project>

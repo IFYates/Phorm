@@ -5,6 +5,7 @@ using IFY.Phorm.SqlClient;
 using IFY.Phorm.Transformation;
 using System;
 using System.Runtime.Serialization;
+using System.Linq;
 
 namespace IFY.Phorm.Tests
 {
@@ -108,9 +109,10 @@ namespace IFY.Phorm.Tests
             Assert.AreEqual(4, x.Length);
         }
         
-        [PhormContract(Target = DbObjectType.Table)]
-        public interface IBattle
+        [PhormContract(Name = "Battle", Target = DbObjectType.View)]
+        public interface IBattleView
         {
+            long? Id { get; }
         }
 
         [TestMethod]
@@ -118,8 +120,23 @@ namespace IFY.Phorm.Tests
         {
             var phorm = getPhormRunner();
 
-            var x = phorm.All<DTO, IBattle>();
-            Assert.AreEqual(4, x.Length);
+            var x = phorm.All<DTO, IBattleView>(new { Id = 1 });
+            Assert.AreEqual(1, x.Single().Id);
+        }
+
+        [PhormContract(Name = "Battle", Target = DbObjectType.Table)]
+        public interface IBattleTable
+        {
+            long? Id { get; }
+        }
+
+        [TestMethod]
+        public void All_from_table()
+        {
+            var phorm = getPhormRunner();
+
+            var x = phorm.All<DTO, IBattleTable>(new { Id = 1 });
+            Assert.AreEqual(1, x.Single().Id);
         }
     }
 }
