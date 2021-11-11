@@ -53,7 +53,7 @@ namespace IFY.Phorm.Tests
             }
             return new TestDbCommand();
         }
-        IDbCommand IDbConnection.CreateCommand() => CreateCommand();
+        IDbCommand IDbConnection.CreateCommand() => (IDbCommand)CreateCommand();
 
         public virtual void Dispose()
         {

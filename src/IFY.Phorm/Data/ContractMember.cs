@@ -96,7 +96,7 @@ namespace IFY.Phorm.Data
             Attributes.ToList().ForEach(a => a.SetContext(context));
         }
 
-        public IDataParameter ToDataParameter(IDbCommand cmd)
+        public IDataParameter ToDataParameter(IAsyncDbCommand cmd)
         {
             var param = cmd.CreateParameter();
             param.ParameterName = "@" + Name;
