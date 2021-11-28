@@ -1,5 +1,7 @@
 ﻿using IFY.Phorm.Connectivity;
+using System;
 using System.Data;
+using System.Linq;
 
 namespace IFY.Phorm.SqlClient
 {
@@ -9,6 +11,7 @@ namespace IFY.Phorm.SqlClient
 
         public string ViewPrefix { get; init; } = "vw_";
         public string ProcedurePrefix { get; init; } = "usp_";
+        public string TablePrefix { get; init; } = "usp_";
 
         public SqlPhormRunner(IPhormDbConnectionProvider connectionProvider, string? connectionName)
             : base(connectionProvider)
@@ -21,16 +24,13 @@ namespace IFY.Phorm.SqlClient
         protected override IAsyncDbCommand CreateCommand(IPhormDbConnection connection, string schema, string objectName, DbObjectType objectType)
         {
             // Complete object name
-            switch (objectType)
+            objectName = objectType switch
             {
-                case DbObjectType.StoredProcedure:
-                    // Support temp sprocs
-                    objectName = objectName.Length > 0 && objectName[0] == '#' ? objectName : ProcedurePrefix + objectName;
-                    break;
-                case DbObjectType.View:
-                    objectName = ViewPrefix + objectName;
-                    break;
-            }
+                DbObjectType.StoredProcedure => objectName.FirstOrDefault() == '#' ? objectName : ProcedurePrefix + objectName, // Support temp sprocs
+                DbObjectType.View => ViewPrefix + objectName,
+                DbObjectType.Table => TablePrefix + objectName,
+                _ => throw new NotSupportedException($"Unsupported object type: {objectType}")
+            };
 
             return base.CreateCommand(connection, schema, objectName, objectType);
         }
