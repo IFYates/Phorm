@@ -82,7 +82,7 @@ namespace IFY.Phorm
                 }
 
                 members.Add(mem);
-                mem.ResolveAttributes(obj);
+                mem.ResolveAttributes(obj, out _);
 
                 // Check for DataMemberAttribute
                 var dmAttr = mem.Attributes.OfType<DataMemberAttribute>().SingleOrDefault();
@@ -265,14 +265,24 @@ namespace IFY.Phorm
         {
             var entity = new TResult();
 
+            // Resolve member values
+            var secureMembers = new Dictionary<ContractMember, int>();
             for (var i = 0; i < rdr.FieldCount; ++i)
             {
-                var col = rdr.GetName(i).ToLower();
-                if (members.TryGetValue(col, out var mem))
+                var fieldName = rdr.GetName(i).ToLower();
+                if (members.TryGetValue(fieldName, out var memb))
                 {
-                    mem.ResolveAttributes(entity);
-                    mem.FromDatasource(rdr.GetValue(i));
-                    mem.SourceProperty?.SetValue(entity, mem.Value);
+                    memb.ResolveAttributes(entity, out var isSecure);
+                    if (isSecure)
+                    {
+                        // Defer secure members until after non-secure, to allow for authenticator properties
+                        secureMembers[memb] = i;
+                    }
+                    else
+                    {
+                        memb.FromDatasource(rdr.GetValue(i));
+                        memb.SourceProperty?.SetValue(entity, memb.Value);
+                    }
                 }
                 else
                 {
@@ -280,7 +290,14 @@ namespace IFY.Phorm
                 }
             }
 
-            // TODO: Must apply non secure columns first
+            // Apply secure values
+            foreach (var kvp in secureMembers)
+            {
+                var memb = kvp.Key;
+                memb.FromDatasource(rdr.GetValue(kvp.Value));
+                memb.SourceProperty?.SetValue(entity, memb.Value);
+            }
+
             // TODO: Warnings for missing expected columns
 
             return entity;
