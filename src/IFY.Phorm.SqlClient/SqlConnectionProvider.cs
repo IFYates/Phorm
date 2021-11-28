@@ -1,7 +1,5 @@
 ﻿using IFY.Phorm.Connectivity;
-using Shimterface;
 using System;
-using System.Data;
 using System.Data.SqlClient;
 
 namespace IFY.Phorm.SqlClient

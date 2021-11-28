@@ -78,6 +78,10 @@ namespace IFY.Phorm.Data
         {
             return new ContractMember<T>(name, value, ParameterDirection.InputOutput, sourceProperty);
         }
+        public static ContractMember<T> Out<T>()
+        {
+            return new ContractMember<T>(string.Empty, default, ParameterDirection.Output);
+        }
         public static ContractMember<T> Out<T>(string name, PropertyInfo? sourceProperty = null)
         {
             return new ContractMember<T>(name, default, ParameterDirection.Output, sourceProperty);
@@ -184,6 +188,10 @@ namespace IFY.Phorm.Data
 
         public void FromDatasource(object? val)
         {
+            if (val == DBNull.Value)
+            {
+                val = null;
+            }
             if (Attributes.Length > 0)
             {
                 // AbstractSecureValue
@@ -229,11 +237,18 @@ namespace IFY.Phorm.Data
         internal ContractMember(string name, T? value, ParameterDirection dir, PropertyInfo? sourceProperty)
             : base(name, value, dir, sourceProperty)
         {
+            if (ValueType == typeof(object))
+            {
+                ValueType = typeof(T);
+            }
         }
 
         public override void SetValue(object? value)
         {
-            value = Convert.ChangeType(value, typeof(T));
+            if (typeof(T) != typeof(object))
+            {
+                value = Convert.ChangeType(value, typeof(T));
+            }
             if (base.Value != value)
             {
                 base.Value = value;

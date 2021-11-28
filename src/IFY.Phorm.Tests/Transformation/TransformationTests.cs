@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Text;
+using IFY.Phorm.Data;
 
 namespace IFY.Phorm.Tests.Encryption
 {
@@ -21,7 +22,7 @@ namespace IFY.Phorm.Tests.Encryption
         }
 
         [PhormContract]
-        interface IWithTransformation
+        interface IWithTransformation : IPhormContract
         {
             [TransformToSource]
             string? Value { get; }
@@ -76,7 +77,7 @@ namespace IFY.Phorm.Tests.Encryption
             runner.TestConnectionProvider?.TestConnection?.CommandQueue.Enqueue(cmd);
 
             // Act
-            var res = runner.Single<DataObject>("Get");
+            var res = runner.One<DataObject>("Get");
 
             // Assert
             Assert.IsNotNull(res);

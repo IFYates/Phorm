@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using IFY.Phorm.Data;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace IFY.Phorm
@@ -8,42 +9,50 @@ namespace IFY.Phorm
         #region Call
 
         int Call(string objectName, object? args = null);
-        int Call<TActionContract>(object? args = null);
-        int Call<TActionContract>(TActionContract? contract); // Same as "object? args = null", but allows better Intellisense
-        
+        int Call<TActionContract>(object? args = null)
+            where TActionContract : IPhormContract;
+        int Call<TActionContract>(TActionContract? contract) // Same as "object? args = null", but allows better Intellisense
+            where TActionContract : IPhormContract;
+
         Task<int> CallAsync(string objectName, object? args = null, CancellationToken? cancellationToken = null);
-        Task<int> CallAsync<TActionContract>(object? args = null, CancellationToken? cancellationToken = null);
-        Task<int> CallAsync<TActionContract>(TActionContract? contract, CancellationToken? cancellationToken = null); // Same as "object? args = null", but allows better Intellisense
+        Task<int> CallAsync<TActionContract>(object? args = null, CancellationToken? cancellationToken = null)
+            where TActionContract : IPhormContract;
+        Task<int> CallAsync<TActionContract>(TActionContract? contract, CancellationToken? cancellationToken = null) // Same as "object? args = null", but allows better Intellisense
+            where TActionContract : IPhormContract;
 
         #endregion Call
-        
-        #region Single
-        
-        TResultContract? Single<TResultContract>(string objectName, object? args = null)
-            where TResultContract : new();
-        TResultContract? Single<TResultContract, TActionContract>(object? args = null)
-            where TResultContract : new();
 
-        Task<TResultContract?> SingleAsync<TResultContract>(string objectName, object? args = null, CancellationToken? cancellationToken = null)
-            where TResultContract : new();
-        Task<TResultContract?> SingleAsync<TResultContract, TActionContract>(object? args = null, CancellationToken? cancellationToken = null)
-            where TResultContract : new();
+        #region One
 
-        #endregion Single
+        TResultContract? One<TResultContract>(string objectName, object? args = null, DbObjectType objectType = DbObjectType.StoredProcedure)
+            where TResultContract : new();
+        TResultContract? One<TResultContract, TActionContract>(object? args = null)
+            where TResultContract : new()
+            where TActionContract : IPhormContract;
 
-        #region All
-        
-        TResultContract[] All<TResultContract>(string objectName, object? args = null)
+        Task<TResultContract?> OneAsync<TResultContract>(string objectName, object? args = null, DbObjectType objectType = DbObjectType.StoredProcedure, CancellationToken? cancellationToken = null)
             where TResultContract : new();
-        TResultContract[] All<TResultContract, TActionContract>(object? args = null)
-            where TResultContract : new();
+        Task<TResultContract?> OneAsync<TResultContract, TActionContract>(object? args = null, CancellationToken? cancellationToken = null)
+            where TResultContract : new()
+            where TActionContract : IPhormContract;
 
-        Task<TResultContract[]> AllAsync<TResultContract>(string objectName, object? args = null, CancellationToken? cancellationToken = null)
-            where TResultContract : new();
-        Task<TResultContract[]> AllAsync<TResultContract, TActionContract>(object? args = null, CancellationToken? cancellationToken = null)
-            where TResultContract : new();
+        #endregion One
 
-        #endregion All
+        #region Many
+
+        TResultContract[] Many<TResultContract>(string objectName, object? args = null, DbObjectType objectType = DbObjectType.StoredProcedure)
+            where TResultContract : new();
+        TResultContract[] Many<TResultContract, TActionContract>(object? args = null)
+            where TResultContract : new()
+            where TActionContract : IPhormContract;
+
+        Task<TResultContract[]> ManyAsync<TResultContract>(string objectName, object? args = null, DbObjectType objectType = DbObjectType.StoredProcedure, CancellationToken? cancellationToken = null)
+            where TResultContract : new();
+        Task<TResultContract[]> ManyAsync<TResultContract, TActionContract>(object? args = null, CancellationToken? cancellationToken = null)
+            where TResultContract : new()
+            where TActionContract : IPhormContract;
+
+        #endregion Many
 
         #region Transactions
 

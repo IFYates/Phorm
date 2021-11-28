@@ -51,12 +51,12 @@ var factory = di.Resolve<IPhormConnectionFactory>();
 IPhormConnection conn = factory.GetDefaultConnection();
 
 // Data connection used to fetch an entity via a named sproc in different ways
-RecordDTO data = conn.Get<RecordDTO>("Record_GetById", new { Id = id }); // Fully ad hoc
-RecordDTO data = conn.Get<RecordDTO, IRecord_GetById>(new { Id = id }); // Anon parameters
+RecordDTO data = conn.One<RecordDTO>("Record_GetById", new { Id = id }); // Fully ad hoc
+RecordDTO data = conn.One<RecordDTO, IRecord_GetById>(new { Id = id }); // Anon parameters
 
 IRecord_GetById q = new RecordDTO { Id = id }; // Or any IRecord_GetById implementation
-RecordDTO data = conn.Get<RecordDTO>("Record_GetById", q); // Ad hoc procedure
-RecordDTO data = conn.Get<RecordDTO, IRecord_GetById>(q); // Query instance
+RecordDTO data = conn.One<RecordDTO>("Record_GetById", q); // Ad hoc procedure
+RecordDTO data = conn.One<RecordDTO, IRecord_GetById>(q); // Query instance
 
 // Update the entity in different ways
 var lastModifiedProperty = new DbField<DateTime>();
@@ -66,7 +66,7 @@ int result = conn.Call("Record_UpdateName", data); // Ad hoc procedure
 int result = conn.Call<IRecord_UpdateName>(data); // Entity instance
 ```
 
-Each of the `Get` requests will execute something like `usp_Record_GetById @Id = {id}`.
+Each of the `One` requests will execute something like `usp_Record_GetById @Id = {id}`.
 
 Each of the `Call` requests execute sometiong like `usp_Record_UpdateName @Id = {id}, @Name = {name}` and will update the `LastModified` property (`lastModifiedProperty` or `data.LastModified`).
 

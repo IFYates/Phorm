@@ -11,7 +11,7 @@ namespace IFY.Phorm.SqlClient
 
         public string ViewPrefix { get; init; } = "vw_";
         public string ProcedurePrefix { get; init; } = "usp_";
-        public string TablePrefix { get; init; } = "usp_";
+        public string TablePrefix { get; init; } = "";
 
         public SqlPhormRunner(IPhormDbConnectionProvider connectionProvider, string? connectionName)
             : base(connectionProvider)

@@ -11,9 +11,9 @@ namespace System.Data
     {
         string CommandText { get; set; }
         CommandType CommandType { get; set; }
-        IDataParameterCollection Parameters { get; }
+        public IDataParameterCollection Parameters { get; }
 
-        IDbDataParameter CreateParameter();
+        public IDbDataParameter CreateParameter();
         Task<DbDataReader> ExecuteReaderAsync(CancellationToken cancellationToken);
     }
 }

@@ -1,10 +1,13 @@
 ﻿using Shimterface;
 using System.Data;
+using System.Data.Common;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace IFY.Phorm.Connectivity
 {
     /// <summary>
-    /// Wraps <see cref="DbConnection"/> with additional Pho/rm values.
+    /// Wraps <see cref="IDbConnection"/> with additional Pho/rm values.
     /// </summary>
     public sealed class PhormDbConnection : IPhormDbConnection
     {
@@ -30,15 +33,39 @@ namespace IFY.Phorm.Connectivity
 
         public void ChangeDatabase(string databaseName) => _db.ChangeDatabase(databaseName);
 
+        public void Open() => _db.Open();
         public void Close() => _db.Close();
 
+        // TEMP
+        internal class DbCommandShim : IAsyncDbCommand
+        {
+            private readonly DbCommand _cmd;
+
+            public DbCommandShim(DbCommand cmd)
+            {
+                _cmd = cmd;
+            }
+
+            public string CommandText { get => _cmd.CommandText; set => _cmd.CommandText = value; }
+            public CommandType CommandType { get => _cmd.CommandType; set => _cmd.CommandType = value; }
+
+            public IDataParameterCollection Parameters => _cmd.Parameters;
+
+            public IDbDataParameter CreateParameter() => _cmd.CreateParameter();
+
+            public void Dispose()
+            {
+                _cmd.Dispose();
+            }
+
+            public Task<DbDataReader> ExecuteReaderAsync(CancellationToken cancellationToken) => _cmd.ExecuteReaderAsync(cancellationToken);
+        }
+
 #pragma warning disable CS8603 // Possible null reference return.
-        public IAsyncDbCommand CreateCommand() => (_db.CreateCommand() as System.Data.Common.DbCommand)?.Shim<IAsyncDbCommand>();
+        public IAsyncDbCommand CreateCommand() => new DbCommandShim(_db.CreateCommand() as DbCommand);//?.Shim<IAsyncDbCommand>();
 #pragma warning restore CS8603 // Possible null reference return.
         IDbCommand IDbConnection.CreateCommand() => _db.CreateCommand();
 
         public void Dispose() => _db.Dispose();
-
-        public void Open() => _db.Open();
     }
 }

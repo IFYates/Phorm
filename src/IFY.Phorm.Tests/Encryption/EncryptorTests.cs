@@ -6,6 +6,7 @@ using System;
 using System.Data;
 using System.Linq;
 using System.Text;
+using IFY.Phorm.Data;
 
 namespace IFY.Phorm.Tests.Encryption
 {
@@ -20,14 +21,14 @@ namespace IFY.Phorm.Tests.Encryption
         }
 
         [PhormContract]
-        interface ISaveDataObject
+        interface ISaveDataObject : IPhormContract
         {
             [SecureValue("Test")]
             string? Value { get; }
         }
 
         [PhormContract]
-        interface ISaveDataObjectWithAuthenticator
+        interface ISaveDataObjectWithAuthenticator : IPhormContract
         {
             string? Authenticator { get; }
             [SecureValue("Test", nameof(Authenticator))]
@@ -35,7 +36,7 @@ namespace IFY.Phorm.Tests.Encryption
         }
 
         [PhormContract]
-        interface ISaveDataObjectWithTransformation
+        interface ISaveDataObjectWithTransformation : IPhormContract
         {
             [ReverseString]
             [SecureValue("Test")]
