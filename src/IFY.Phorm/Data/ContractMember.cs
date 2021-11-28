@@ -87,13 +87,14 @@ namespace IFY.Phorm.Data
             return new ContractMember<int>("return", 0, ParameterDirection.ReturnValue);
         }
 
-        public void ResolveAttributes(object? context)
+        public void ResolveAttributes(object? context, out bool isSecure)
         {
             if (SourceProperty != null && Attributes.Length == 0)
             {
                 Attributes = SourceProperty.GetCustomAttributes().OfType<IContractMemberAttribute>().ToArray();
             }
             Attributes.ToList().ForEach(a => a.SetContext(context));
+            isSecure = Attributes.OfType<AbstractSecureValueAttribute>().Any();
         }
 
         public IDataParameter ToDataParameter(IAsyncDbCommand cmd)
@@ -101,19 +102,19 @@ namespace IFY.Phorm.Data
             var param = cmd.CreateParameter();
             param.ParameterName = "@" + Name;
             param.Direction = Direction;
-            if (Direction == ParameterDirection.Output || Direction == ParameterDirection.InputOutput)
+            if (Direction is ParameterDirection.Output or ParameterDirection.InputOutput)
             {
                 param.Size = Size > 0 ? Size : 256;
             }
 
             // Transformation
-            var val = Value;
             var transfAttr = Attributes.OfType<AbstractTransphormAttribute>().SingleOrDefault();
+            var val = Value;
             if (transfAttr != null)
             {
                 val = transfAttr.ToDatasource(val);
             }
-            else if (val != null)
+            if (val != null)
             {
                 if (val.GetType().IsEnum)
                 {
@@ -136,24 +137,19 @@ namespace IFY.Phorm.Data
 
             // Apply value
             param.Value = val ?? DBNull.Value; // Must send non-null
-            var valType = param.Value.GetType();
             if (val == null)
             {
                 // NOTE: Ignoring for Output as breaks fixed-char args - do not know full impact
-                if (valType == typeof(string) && Direction != ParameterDirection.Output)
+                if (ValueType == typeof(string) && Direction != ParameterDirection.Output)
                 {
                     // Fixes execution issue
                     param.Size = Size > 0 ? Size : 256;
                 }
             }
 
-            if (valType == typeof(Guid) || valType == typeof(Guid?))
+            if (param.Value is Guid)
             {
                 param.DbType = DbType.Guid;
-            }
-            if (valType == typeof(byte[]))
-            {
-                param.DbType = DbType.Binary;
             }
 
             if (Attributes.Length > 0)
@@ -173,13 +169,13 @@ namespace IFY.Phorm.Data
                 var secvalAttr = Attributes.OfType<AbstractSecureValueAttribute>().SingleOrDefault();
                 if (secvalAttr != null)
                 {
-                    param.DbType = DbType.Binary;
                     param.Value = secvalAttr.Encrypt(param.Value);
                 }
             }
 
             if (param.Value is byte[] bin)
             {
+                param.DbType = DbType.Binary;
                 param.Size = bin.Length;
             }
 
