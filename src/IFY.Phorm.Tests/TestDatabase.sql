@@ -19,6 +19,12 @@ AS
 	RETURN 1
 GO
 
+CREATE OR ALTER PROC [dbo].[usp_GetAll]
+AS
+	SELECT * FROM [dbo].[DataTable]
+	RETURN 1
+GO
+
 CREATE OR ALTER PROC [dbo].[usp_Upsert]
 	@Id BIGINT = NULL OUTPUT,
 	@Int INT = NULL,

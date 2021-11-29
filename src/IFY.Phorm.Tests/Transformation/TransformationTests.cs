@@ -49,7 +49,7 @@ namespace IFY.Phorm.Tests.Encryption
             var args = new { Value = "value" };
 
             // Act
-            var res = runner.Call<IWithTransformation>(args);
+            var res = runner.From<IWithTransformation>().Call(args);
 
             // Assert
             Assert.AreEqual(1, res);
@@ -77,7 +77,7 @@ namespace IFY.Phorm.Tests.Encryption
             runner.TestConnectionProvider?.TestConnection?.CommandQueue.Enqueue(cmd);
 
             // Act
-            var res = runner.One<DataObject>("Get");
+            var res = runner.From("Get").One<DataObject>();
 
             // Assert
             Assert.IsNotNull(res);

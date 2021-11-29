@@ -1,11 +1,11 @@
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using IFY.Phorm.Data;
 using IFY.Phorm.Encryption;
 using IFY.Phorm.SqlClient;
 using IFY.Phorm.Transformation;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
-using System.Runtime.Serialization;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Text;
 
 namespace IFY.Phorm.Tests
@@ -15,9 +15,16 @@ namespace IFY.Phorm.Tests
     {
         [PhormContract(Name = "DataTable")]
         public record DataItem(long Id, int? Int, string? Text, byte[]? Data, DateTime? DateTime)
-            : IUpsert
+            : IUpsert, IUpsertOnlyIntWithId, IUpsertWithId
         {
             public DataItem() : this(default, default, default, default, default)
+            { }
+        }
+
+        [PhormContract(Name = "DataTable")]
+        public record DataItemWithoutText(long Id, int? Int, [property: IgnoreDataMember] string? Text, byte[]? Data, DateTime? DateTime)
+        {
+            public DataItemWithoutText() : this(default, default, default, default, default)
             { }
         }
 
@@ -48,6 +55,28 @@ namespace IFY.Phorm.Tests
             string? Text { get; }
             byte[]? Data { get; }
             DateTime? DateTime { get; }
+        }
+        [PhormContract(Name = "Upsert")]
+        public interface IUpsertWithId : IUpsert
+        {
+            long Id { init; }
+        }
+
+        [PhormContract]
+        public interface IGetAll : IPhormContract
+        {
+            long Id { get; }
+            int? Int { get; }
+            string? Text { get; }
+            byte[]? Data { get; }
+            DateTime? DateTime { get; }
+        }
+
+        [PhormContract(Name = "Upsert")]
+        public interface IUpsertOnlyIntWithId : IPhormContract
+        {
+            long Id { init; }
+            int? Int { get; }
         }
 
         [PhormContract]
@@ -83,7 +112,7 @@ namespace IFY.Phorm.Tests
 
             var phorm = new SqlPhormRunner(connProc, "*");
 
-            phorm.Call("ClearTable");
+            phorm.From("ClearTable").Call();
 
             return phorm;
         }
@@ -96,6 +125,20 @@ namespace IFY.Phorm.Tests
                 return new NullEncryptor();
             }
         }
+
+        [PhormContract(Name = "Data", Target = DbObjectType.View)]
+        public interface IDataView : IPhormContract
+        {
+            long? Id { get; }
+        }
+
+        [PhormContract(Target = DbObjectType.Table)]
+        public interface IDataTable : IPhormContract
+        {
+            long? Id { get; }
+        }
+
+        #region Call
 
         [TestMethod]
         public void Call__By_anon_Insert_various_types()
@@ -110,7 +153,7 @@ namespace IFY.Phorm.Tests
 
             // Act
             var res = phorm.Call("Upsert", new { Int = randNum, Text = randStr, Data = randData, DateTime = randDT });
-            var obj = phorm.One<DataItem>("DataTable", objectType: DbObjectType.Table);
+            var obj = phorm.From("DataTable", objectType: DbObjectType.Table).One<DataItem>();
 
             // Assert
             Assert.AreEqual(1, res);
@@ -132,8 +175,8 @@ namespace IFY.Phorm.Tests
             var randDT = DateTime.UtcNow;
 
             // Act
-            var res = phorm.Call<IUpsert>(new { Int = randNum, Text = randStr, Data = randData, DateTime = randDT });
-            var obj = phorm.One<DataItem>("DataTable", objectType: DbObjectType.Table);
+            var res = phorm.From<IUpsert>().Call(new { Int = randNum, Text = randStr, Data = randData, DateTime = randDT });
+            var obj = phorm.From("DataTable", objectType: DbObjectType.Table).One<DataItem>();
 
             // Assert
             Assert.AreEqual(1, res);
@@ -154,11 +197,11 @@ namespace IFY.Phorm.Tests
                 Guid.NewGuid().ToString(),
                 Encoding.UTF8.GetBytes(Guid.NewGuid().ToString()),
                 DateTime.UtcNow
-                );
+            );
 
             // Act
             var res = phorm.Call<IUpsert>(arg);
-            var obj = phorm.One<DataItem>("DataTable", objectType: DbObjectType.Table);
+            var obj = phorm.From("DataTable", objectType: DbObjectType.Table).One<DataItem>();
 
             // Assert
             Assert.AreEqual(1, res);
@@ -169,7 +212,7 @@ namespace IFY.Phorm.Tests
         }
 
         [TestMethod]
-        public void Call__Get_output()
+        public void Call__Get_by_anon_output()
         {
             // Arrange
             var phorm = getPhormRunner();
@@ -180,12 +223,29 @@ namespace IFY.Phorm.Tests
             };
 
             // Act
-            var res = phorm.Call("Upsert", arg);
-            var obj = phorm.One<DataItem>("DataTable", objectType: DbObjectType.Table);
+            var res = phorm.From("Upsert").Call(arg);
+            var obj = phorm.From("DataTable", objectType: DbObjectType.Table).One<DataItem>();
 
             // Assert
             Assert.AreEqual(1, res);
             Assert.AreEqual(obj.Id, arg.Id.Value);
+        }
+
+        [TestMethod]
+        public void Call__Get_by_contract_output()
+        {
+            // Arrange
+            var phorm = getPhormRunner();
+
+            var arg = new DataItem();
+
+            // Act
+            var res = phorm.From<IUpsertOnlyIntWithId>().Call(arg);
+            var obj = phorm.From("DataTable", objectType: DbObjectType.Table).One<DataItem>();
+
+            // Assert
+            Assert.AreEqual(1, res);
+            Assert.AreEqual(obj.Id, arg.Id);
         }
 
         [TestMethod]
@@ -199,59 +259,109 @@ namespace IFY.Phorm.Tests
             {
                 SecureData = "data"
             };
-            var x = phorm.Call<ITest>(obj);
+            var x = phorm.From<ITest>().Call(obj);
             Assert.AreEqual(1, x);
             Assert.IsNotNull(obj.SecureData);
 
             var obj2 = new { Id = 20, Res = ContractMember.Out<string>("Res") };
-            var y = phorm.CallAsync<ITest>(obj2);
+            var y = phorm.From<ITest>().CallAsync(obj2);
             Assert.AreEqual(1, y.Result);
             Assert.IsNotNull(obj2.Res.Value);
         }
 
+        #endregion Call
+
+        #region Many
+
         [TestMethod]
-        public void All()
+        public void Many__Can_access_returnvalue_of_sproc()
         {
             var phorm = getPhormRunner();
 
-            var obj = new { Id = 1, ReturnValue = ContractMember.RetVal() };
-            var x = phorm.Many<DTO, ITest2>(obj);
+            phorm.Call("Upsert");
+            phorm.Call("Upsert");
+            phorm.Call("Upsert");
+            phorm.Call("Upsert");
+
+            var obj = new { ReturnValue = ContractMember.RetVal() };
+            var x = phorm.From<IGetAll>().Many<DataItem>(obj);
+
             Assert.AreEqual(1, obj.ReturnValue.Value);
             Assert.AreEqual(4, x.Length);
         }
 
-        [PhormContract(Name = "Data", Target = DbObjectType.View)]
-        public interface IDataView : IPhormContract
+        [TestMethod]
+        public void Many__Filtered_from_view()
         {
-            long? Id { get; }
-        }
+            // Arrange
+            var phorm = getPhormRunner();
 
-        [PhormContract(Target = DbObjectType.Table)]
-        public interface IDataTable : IPhormContract
-        {
-            long? Id { get; }
+            var obj1 = new DataItem();
+            var res1 = phorm.Call<IUpsertWithId>(obj1);
+
+            var obj2 = new DataItem();
+            var res2 = phorm.Call<IUpsertWithId>(obj2);
+
+            // Act
+            var res3 = phorm.From<IDataView>().Many<DataItem>(new { obj2.Id });
+
+            // Assert
+            Assert.AreEqual(1, res1);
+            Assert.AreEqual(1, res2);
+            Assert.AreNotEqual(obj1.Id, obj2.Id);
+            Assert.AreEqual(obj2.Id, res3.Single().Id);
         }
 
         [TestMethod]
-        public void All_from_view()
+        public void Many__Filtered_by_view()
         {
+            // Arrange
             var phorm = getPhormRunner();
 
-            phorm.Call("Upsert");
+            phorm.Call("Upsert", new { Int = 0, IsInView = false });
+            phorm.Call("Upsert", new { Int = 0, IsInView = false });
+            phorm.Call("Upsert", new { Int = 1, IsInView = true });
+            phorm.Call("Upsert", new { Int = 1, IsInView = true });
+            phorm.Call("Upsert", new { Int = 1, IsInView = true });
 
-            var x = phorm.Many<DataItem, IDataView>(new { Id = 1 });
-            Assert.AreEqual(1, x.Single().Id);
+            // Act
+            var res = phorm.From<IDataView>().Many<DataItem>();
+
+            // Assert
+            Assert.AreEqual(3, res.Length);
+            Assert.IsTrue(res.All(e => e.Int == 1));
         }
 
         [TestMethod]
-        public void All_from_table()
+        public void Many__Filtered_from_table()
         {
             var phorm = getPhormRunner();
-            
-            phorm.Call("Upsert");
 
-            var x = phorm.Many<DataItem, IDataTable>(new { Id = 1 });
+            var res = phorm.Call("Upsert");
+
+            var x = phorm.From<IDataView>().Many<DataItem>(new { Id = 1 });
+
+            Assert.AreEqual(1, res);
             Assert.AreEqual(1, x.Single().Id);
         }
+
+        #endregion Many
+
+        #region One
+
+        [TestMethod]
+        public void One__Can_ignore_property()
+        {
+            var phorm = getPhormRunner();
+
+            var res = phorm.Call("Upsert");
+
+            var obj = phorm.From<IDataView>().One<DataItemWithoutText>(new { Id = 1 });
+
+            Assert.AreEqual(1, res);
+            Assert.IsNull(obj.Text);
+        }
+
+        #endregion One
     }
 }

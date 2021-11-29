@@ -5,6 +5,8 @@ using System.Linq;
 
 namespace IFY.Phorm.SqlClient
 {
+    // TODO: handle errors and log messages
+
     public class SqlPhormRunner : AbstractPhormRunner
     {
         private readonly string? _connectionName;

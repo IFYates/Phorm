@@ -182,6 +182,10 @@ namespace IFY.Phorm.Data
                 param.DbType = DbType.Binary;
                 param.Size = bin.Length;
             }
+            else if (ValueType == typeof(byte[]))
+            {
+                param.DbType = DbType.Binary;
+            }
 
             return param;
         }
@@ -245,9 +249,16 @@ namespace IFY.Phorm.Data
 
         public override void SetValue(object? value)
         {
-            if (typeof(T) != typeof(object))
+            if (value != null)
             {
-                value = Convert.ChangeType(value, typeof(T));
+                var targetType = typeof(T) != typeof(object) ? typeof(T)
+                    : ValueType != typeof(object) ? ValueType
+                    : null;
+                if (targetType != null)
+                {
+                    targetType = Nullable.GetUnderlyingType(targetType) ?? targetType;
+                    value = Convert.ChangeType(value, targetType);
+                }
             }
             if (base.Value != value)
             {
