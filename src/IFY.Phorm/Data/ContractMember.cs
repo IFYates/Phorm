@@ -15,7 +15,7 @@ namespace IFY.Phorm.Data
     /// Supports in (to database) and out (from database) as well as the special-case return-value
     /// TODO: Column cover
     /// </summary>
-    public class ContractMember
+    public abstract class ContractMember
     {
         /// <summary>
         /// Name as given in stored procedure
@@ -25,7 +25,7 @@ namespace IFY.Phorm.Data
         /// Size of data to/from database
         /// 0 is unspecified / unlimited
         /// </summary>
-        public int Size { get; set; }
+        public int Size { get; } // TODO: not yet set
         /// <summary>
         /// Value being passed to or returned from stored procedure
         /// </summary>
@@ -37,16 +37,16 @@ namespace IFY.Phorm.Data
         /// <summary>
         /// Allowed direction of value from POV of sproc
         /// </summary>
-        public ParameterDirection Direction { get; private set; }
+        public ParameterDirection Direction { get; }
         /// <summary>
         /// Property of underlying DTO/Contract used to map types
         /// </summary>
-        public PropertyInfo? SourceProperty { get; private set; }
+        public PropertyInfo? SourceProperty { get; }
         /// <summary>
         /// The true type of the value, even if null
         /// Can be different to property value
         /// </summary>
-        public Type ValueType { get; set; }
+        public Type ValueType { get; init; }
         /// <summary>
         /// Relevant attributes for this contract member.
         /// </summary>
@@ -57,14 +57,6 @@ namespace IFY.Phorm.Data
             Name = name ?? string.Empty;
             SourceProperty = sourceProperty;
             ValueType = sourceProperty?.PropertyType ?? typeof(object);
-            SetValue(value);
-            Direction = dir;
-            HasChanged = false;
-        }
-        protected ContractMember(string? name, object? value, ParameterDirection dir, Type valueType)
-        {
-            Name = name ?? string.Empty;
-            ValueType = valueType;
             SetValue(value);
             Direction = dir;
             HasChanged = false;
@@ -123,19 +115,32 @@ namespace IFY.Phorm.Data
                 if (val.GetType().IsEnum)
                 {
                     val = (int)val;
+                    param.DbType = DbType.Int32;
                 }
                 else if (val is DateTime dt)
                 {
                     param.DbType = DbType.DateTime2;
                     // DateTime must be shifted in to SQL date range
-                    if (dt < SqlDateTime.MinValue.Value)
+                    if (dt <= SqlDateTime.MinValue.Value)
                     {
                         val = SqlDateTime.MinValue.Value;
                     }
-                    else if (dt > SqlDateTime.MaxValue.Value)
+                    else if (dt >= SqlDateTime.MaxValue.Value)
                     {
                         val = SqlDateTime.MaxValue.Value;
                     }
+                }
+            }
+
+            // TODO: Is this needed as also in PhormContractRunner?
+            // Check for DataMemberAttribute
+            var dmAttr = SourceProperty?.GetCustomAttribute<DataMemberAttribute>();
+            if (dmAttr != null)
+            {
+                // Primitives are never "missing", so only check null
+                if (dmAttr.IsRequired && val == null)
+                {
+                    throw new ArgumentNullException(Name, $"Parameter {Name} for contract {SourceProperty?.ReflectedType?.FullName} is required but was null");
                 }
             }
 
@@ -158,17 +163,6 @@ namespace IFY.Phorm.Data
 
             if (Attributes.Length > 0)
             {
-                // Check for DataMemberAttribute
-                var dmAttr = Attributes.OfType<DataMemberAttribute>().SingleOrDefault();
-                if (dmAttr != null)
-                {
-                    // Primitives are never "missing", so only check null
-                    if (dmAttr.IsRequired && param.Value == null)
-                    {
-                        throw new ArgumentNullException(Name, $"Parameter {Name} for contract {SourceProperty?.ReflectedType?.FullName} is required but was null");
-                    }
-                }
-
                 // AbstractSecureValue
                 var secvalAttr = Attributes.OfType<AbstractSecureValueAttribute>().SingleOrDefault();
                 if (secvalAttr != null)
@@ -216,18 +210,7 @@ namespace IFY.Phorm.Data
             SetValue(val);
         }
 
-        public virtual void SetValue(object? value)
-        {
-            if (SourceProperty != null)
-            {
-                value = Convert.ChangeType(value, SourceProperty.PropertyType);
-            }
-            if (Value != value)
-            {
-                Value = value;
-                HasChanged = true;
-            }
-        }
+        public abstract void SetValue(object? value);
     }
 
     public class ContractMember<T> : ContractMember
@@ -235,8 +218,9 @@ namespace IFY.Phorm.Data
         public new T? Value => (T?)base.Value;
 
         internal ContractMember(string name, T? value, ParameterDirection dir)
-            : base(name, value, dir, typeof(T))
+            : base(name, value, dir, null)
         {
+            ValueType = typeof(T);
         }
         internal ContractMember(string name, T? value, ParameterDirection dir, PropertyInfo? sourceProperty)
             : base(name, value, dir, sourceProperty)
@@ -254,7 +238,7 @@ namespace IFY.Phorm.Data
                 var targetType = typeof(T) != typeof(object) ? typeof(T)
                     : ValueType != typeof(object) ? ValueType
                     : null;
-                if (targetType != null)
+                if (targetType != null && !targetType.IsInstanceOfType(value))
                 {
                     targetType = Nullable.GetUnderlyingType(targetType) ?? targetType;
                     value = Convert.ChangeType(value, targetType);

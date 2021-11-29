@@ -1,5 +1,7 @@
 ﻿using IFY.Phorm.Encryption;
 
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("IFY.Phorm.Tests")]
+
 namespace IFY.Phorm
 {
     public static class GlobalSettings

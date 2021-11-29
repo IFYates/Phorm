@@ -272,7 +272,7 @@ namespace IFY.Phorm
                 memb.ResolveAttributes(obj, out _);
 
                 // Check for DataMemberAttribute
-                var dmAttr = memb.Attributes.OfType<DataMemberAttribute>().SingleOrDefault();
+                var dmAttr = prop?.GetCustomAttribute<DataMemberAttribute>();
                 if (dmAttr != null)
                 {
                     memb.Name = dmAttr.Name ?? memb.Name;
@@ -318,9 +318,11 @@ namespace IFY.Phorm
                 }
                 else if (param.Direction == ParameterDirection.ReturnValue)
                 {
-                    var memb = members.SingleOrDefault(a => a.Direction == ParameterDirection.ReturnValue);
-                    memb?.SetValue((int?)param.Value ?? 0);
-                    returnValue = (int?)memb?.Value ?? 0;
+                    if (members.TrySingle(a => a.Direction == ParameterDirection.ReturnValue, out var memb))
+                    {
+                        memb.SetValue((int?)param.Value ?? 0);
+                        returnValue = (int?)memb.Value ?? 0;
+                    }
                 }
             }
             return returnValue;

@@ -8,7 +8,7 @@ using System.Text;
 
 namespace IFY.Phorm.Tests
 {
-    [TestClass]
+    [TestClass, Ignore]
     public class SqlIntegrationTests
     {
         [PhormContract(Name = "DataTable")]
