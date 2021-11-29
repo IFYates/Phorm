@@ -1,7 +1,5 @@
 using IFY.Phorm.Data;
-using IFY.Phorm.Encryption;
 using IFY.Phorm.SqlClient;
-using IFY.Phorm.Transformation;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Linq;
@@ -28,26 +26,6 @@ namespace IFY.Phorm.Tests
             { }
         }
 
-        [DataContract]
-        public record DTO(long Id, ETest Enum, DateTime? Timestamp) : IDataContract, ITest
-        {
-            [DataMember(Name = "Data"), SecureValue("Test", nameof(Id))] public string SecureData { get; set; }
-            public string? Text { get; set; }
-
-            public DTO()
-                : this(0, ETest.Value1, null)
-            {
-            }
-        }
-
-        public enum ETest
-        {
-            Value1 = 1,
-            [EnumMember(Value = "Value2")]
-            ValueX,
-            Value3
-        }
-
         [PhormContract]
         public interface IUpsert : IPhormContract
         {
@@ -65,11 +43,11 @@ namespace IFY.Phorm.Tests
         [PhormContract]
         public interface IGetAll : IPhormContract
         {
-            long Id { get; }
-            int? Int { get; }
-            string? Text { get; }
-            byte[]? Data { get; }
-            DateTime? DateTime { get; }
+            //long Id { get; }
+            //int? Int { get; }
+            //string? Text { get; }
+            //byte[]? Data { get; }
+            //DateTime? DateTime { get; }
         }
 
         [PhormContract(Name = "Upsert")]
@@ -77,33 +55,6 @@ namespace IFY.Phorm.Tests
         {
             long Id { init; }
             int? Int { get; }
-        }
-
-        [PhormContract]
-        public interface ITest : IPhormContract
-        {
-            long Id { get; }
-            [EnumValue(SendAsString = true)]
-            ETest Enum { get; }
-            string Text { set; }
-            //[SecureValue("Test", nameof(Id))] string SecureData { get; }
-        }
-
-        [PhormContract]
-        public interface ITest2 : IPhormContract
-        {
-            long Id { get; }
-        }
-
-        [PhormContract]
-        public interface IDataContract : IPhormContract
-        {
-            long Id { get; }
-
-            [DataMember(Name = "Data"), SecureValue("Test", nameof(Id))] string SecureData { get; }
-
-            [CalculatedValue] // e.g., SecureDataHash
-            public string Text() { return SecureData; }
         }
 
         private static IPhormRunner getPhormRunner()
@@ -117,23 +68,8 @@ namespace IFY.Phorm.Tests
             return phorm;
         }
 
-
-        class TestEncryptionProvider : IEncryptionProvider
-        {
-            public IEncryptor GetInstance(string dataClassification)
-            {
-                return new NullEncryptor();
-            }
-        }
-
         [PhormContract(Name = "Data", Target = DbObjectType.View)]
         public interface IDataView : IPhormContract
-        {
-            long? Id { get; }
-        }
-
-        [PhormContract(Target = DbObjectType.Table)]
-        public interface IDataTable : IPhormContract
         {
             long? Id { get; }
         }
@@ -246,27 +182,6 @@ namespace IFY.Phorm.Tests
             // Assert
             Assert.AreEqual(1, res);
             Assert.AreEqual(obj.Id, arg.Id);
-        }
-
-        [TestMethod]
-        public void Callx()
-        {
-            var phorm = getPhormRunner();
-
-            GlobalSettings.EncryptionProvider = new TestEncryptionProvider();
-
-            var obj = new DTO(20, ETest.ValueX, null)
-            {
-                SecureData = "data"
-            };
-            var x = phorm.From<ITest>().Call(obj);
-            Assert.AreEqual(1, x);
-            Assert.IsNotNull(obj.SecureData);
-
-            var obj2 = new { Id = 20, Res = ContractMember.Out<string>("Res") };
-            var y = phorm.From<ITest>().CallAsync(obj2);
-            Assert.AreEqual(1, y.Result);
-            Assert.IsNotNull(obj2.Res.Value);
         }
 
         #endregion Call

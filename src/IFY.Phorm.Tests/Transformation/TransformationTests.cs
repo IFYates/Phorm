@@ -1,13 +1,10 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Moq;
-using IFY.Phorm.Encryption;
+﻿using IFY.Phorm.Data;
 using IFY.Phorm.Transformation;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using System.Text;
-using IFY.Phorm.Data;
 
 namespace IFY.Phorm.Tests.Encryption
 {
@@ -49,7 +46,7 @@ namespace IFY.Phorm.Tests.Encryption
             var args = new { Value = "value" };
 
             // Act
-            var res = runner.From<IWithTransformation>().Call(args);
+            var res = runner.Call<IWithTransformation>(args);
 
             // Assert
             Assert.AreEqual(1, res);

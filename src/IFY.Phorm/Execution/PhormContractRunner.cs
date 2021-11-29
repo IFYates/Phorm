@@ -73,7 +73,8 @@ namespace IFY.Phorm
             if (_objectType is DbObjectType.Table or DbObjectType.View)
             {
                 var sb = new StringBuilder();
-                foreach (var memb in members.Where(m => m.Direction is ParameterDirection.Input or ParameterDirection.InputOutput))
+                foreach (var memb in members.Where(m => m.Direction is ParameterDirection.Input or ParameterDirection.InputOutput)
+                    .Where(m => m.Value != null && m.Value != DBNull.Value))
                 {
                     // TODO: Ignore members without value
                     if (sb.Length > 0)
@@ -204,8 +205,12 @@ namespace IFY.Phorm
         /// <summary>
         /// Convert properties of any object to <see cref="ContractMember"/>s.
         /// </summary>
-        private static ContractMember[] getMembersFromContract(object? obj, Type? contractType = null)
+        private static ContractMember[] getMembersFromContract(object? obj, Type? contractType)
         {
+            if (contractType == typeof(IPhormContract))
+            {
+                contractType = null;
+            }
             if (obj == null && contractType == null)
             {
                 return addReturnValue(obj, new()).ToArray();
@@ -327,7 +332,7 @@ namespace IFY.Phorm
             => CallAsync(args).GetAwaiter().GetResult();
         public async Task<int> CallAsync(object? args = null, CancellationToken? cancellationToken = null)
         {
-            var pars = getMembersFromContract(args);
+            var pars = getMembersFromContract(args, typeof(TActionContract));
             using var cmd = startCommand(pars);
             await doExec(cmd, cancellationToken);
             return parseCommandResult(cmd, args, pars);
@@ -349,7 +354,7 @@ namespace IFY.Phorm
         public async Task<TResult[]> ManyAsync<TResult>(object? args = null, CancellationToken? cancellationToken = null)
             where TResult : new()
         {
-            var pars = getMembersFromContract(args);
+            var pars = getMembersFromContract(args, typeof(TActionContract));
             using var cmd = startCommand(pars);
             var result = await readAll<TResult>(cmd, cancellationToken);
             parseCommandResult(cmd, args, pars);
@@ -374,7 +379,7 @@ namespace IFY.Phorm
         public async Task<TResult?> OneAsync<TResult>(object? args = null, CancellationToken? cancellationToken = null)
             where TResult : new()
         {
-            var pars = getMembersFromContract(args);
+            var pars = getMembersFromContract(args, typeof(TActionContract));
             using var cmd = startCommand(pars);
             var result = await readSingle<TResult>(cmd, cancellationToken);
             parseCommandResult(cmd, args, pars);
