@@ -63,7 +63,7 @@ namespace IFY.Phorm.Tests
 
             var phorm = new SqlPhormRunner(connProc, "*");
 
-            phorm.From("ClearTable").Call();
+            phorm.Call("ClearTable");
 
             return phorm;
         }
@@ -111,7 +111,7 @@ namespace IFY.Phorm.Tests
             var randDT = DateTime.UtcNow;
 
             // Act
-            var res = phorm.From<IUpsert>().Call(new { Int = randNum, Text = randStr, Data = randData, DateTime = randDT });
+            var res = phorm.Call<IUpsert>(new { Int = randNum, Text = randStr, Data = randData, DateTime = randDT });
             var obj = phorm.From("DataTable", objectType: DbObjectType.Table).One<DataItem>();
 
             // Assert
@@ -159,7 +159,7 @@ namespace IFY.Phorm.Tests
             };
 
             // Act
-            var res = phorm.From("Upsert").Call(arg);
+            var res = phorm.Call("Upsert", arg);
             var obj = phorm.From("DataTable", objectType: DbObjectType.Table).One<DataItem>();
 
             // Assert
@@ -176,7 +176,7 @@ namespace IFY.Phorm.Tests
             var arg = new DataItem();
 
             // Act
-            var res = phorm.From<IUpsertOnlyIntWithId>().Call(arg);
+            var res = phorm.Call<IUpsertOnlyIntWithId>(arg);
             var obj = phorm.From("DataTable", objectType: DbObjectType.Table).One<DataItem>();
 
             // Assert

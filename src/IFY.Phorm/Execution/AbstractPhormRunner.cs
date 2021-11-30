@@ -65,7 +65,8 @@ namespace IFY.Phorm
             => CallAsync(objectName, args).GetAwaiter().GetResult();
         public Task<int> CallAsync(string objectName, object? args = null, CancellationToken? cancellationToken = null)
         {
-            return From(objectName).CallAsync(args, cancellationToken);
+            var runner = new PhormContractRunner<IPhormContract>(this, objectName, DbObjectType.StoredProcedure);
+            return runner.CallAsync(args, cancellationToken);
         }
 
         public int Call<TActionContract>(object? args = null)
@@ -74,7 +75,8 @@ namespace IFY.Phorm
         public Task<int> CallAsync<TActionContract>(object? args = null, CancellationToken? cancellationToken = null)
             where TActionContract : IPhormContract
         {
-            return From<TActionContract>().CallAsync(args, cancellationToken);
+            var runner = new PhormContractRunner<TActionContract>(this, null, DbObjectType.StoredProcedure);
+            return runner.CallAsync(args, cancellationToken);
         }
 
         public int Call<TActionContract>(TActionContract contract)
@@ -83,7 +85,8 @@ namespace IFY.Phorm
         public Task<int> CallAsync<TActionContract>(TActionContract contract, CancellationToken? cancellationToken = null)
             where TActionContract : IPhormContract
         {
-            return From<TActionContract>().CallAsync(contract, cancellationToken);
+            var runner = new PhormContractRunner<TActionContract>(this, null, DbObjectType.StoredProcedure);
+            return runner.CallAsync(contract, cancellationToken);
         }
 
         #endregion Call
