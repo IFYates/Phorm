@@ -352,7 +352,7 @@ namespace IFY.Phorm.Data.Tests
         }
 
         [TestMethod]
-        public void ToDataParameter__Can_require_parameter_is_not_null()
+        public void ToDataParameter__Required_parameter_null__Exception()
         {
             // Arrange
             getDbMocks(out var cmdMock, out var dbpMock);
@@ -371,6 +371,46 @@ namespace IFY.Phorm.Data.Tests
             // Assert
             cmdMock.Verify();
             dbpMock.Verify();
+        }
+
+        [TestMethod]
+        public void ToDataParameter__Required_parameter_not_null__OK()
+        {
+            // Arrange
+            getDbMocks(out var cmdMock, out var dbpMock);
+
+            var prop = GetType().GetProperty(nameof(RequiredProperty)) ?? throw new Exception();
+
+            var memb = ContractMember.In<string?>(prop.Name, "value", prop);
+            memb.ResolveAttributes(null, out _);
+
+            // Act
+            var res = memb.ToDataParameter(cmdMock.Object);
+
+            // Assert
+            cmdMock.Verify();
+            dbpMock.Verify();
+            Assert.AreEqual("value", res.Value);
+        }
+
+        [TestMethod]
+        public void ToDataParameter__Required_parameter_default__OK()
+        {
+            // Arrange
+            getDbMocks(out var cmdMock, out var dbpMock);
+
+            var prop = GetType().GetProperty(nameof(RequiredProperty)) ?? throw new Exception();
+
+            var memb = ContractMember.In(prop.Name, 0, prop);
+            memb.ResolveAttributes(null, out _);
+
+            // Act
+            var res = memb.ToDataParameter(cmdMock.Object);
+
+            // Assert
+            cmdMock.Verify();
+            dbpMock.Verify();
+            Assert.AreEqual(0, res.Value);
         }
 
         [TestMethod]

@@ -8,6 +8,8 @@ namespace IFY.Phorm.Transformation
     /// </summary>
     public class JsonValueAttribute : AbstractTransphormAttribute
     {
+        // TODO: expose important JSON serializer settings
+
         public override object? FromDatasource(Type type, object? data)
         {
             return data != null ? JsonSerializer.Deserialize((string)data, type) : null;

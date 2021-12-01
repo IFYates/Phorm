@@ -13,21 +13,18 @@ namespace IFY.Phorm.Tests.Encryption
     [TestClass]
     public class EncryptorTests
     {
-        [PhormContract]
         class DataObject
         {
             public string? Authenticator { get; set; }
             public string? Value { get; set; }
         }
 
-        [PhormContract]
         interface ISaveDataObject : IPhormContract
         {
             [SecureValue("Test")]
             string? Value { get; }
         }
 
-        [PhormContract]
         interface ISaveDataObjectWithAuthenticator : IPhormContract
         {
             string? Authenticator { get; }
@@ -35,7 +32,6 @@ namespace IFY.Phorm.Tests.Encryption
             string? Value { get; }
         }
 
-        [PhormContract]
         interface ISaveDataObjectWithTransformation : IPhormContract
         {
             [ReverseString]

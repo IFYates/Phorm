@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Linq;
+using System.Reflection;
+using System.Runtime.Serialization;
 
 namespace IFY.Phorm.Transformation
 {
@@ -19,8 +22,7 @@ namespace IFY.Phorm.Transformation
         public override object? FromDatasource(Type type, object? data)
         {
             var enumType = Nullable.GetUnderlyingType(type) ?? type;
-            var str = data?.ToString();
-            if (str == null)
+            if (data == null)
             {
                 if (enumType != type)
                 {
@@ -29,15 +31,22 @@ namespace IFY.Phorm.Transformation
                 throw new ArgumentNullException(nameof(data), $"Contract property for enum {type.FullName} does not support null.");
             }
 
-            if (data?.GetType() == enumType)
+            if (data.GetType() == enumType)
             {
                 return data;
             }
 
-            // Supports name or integer already
-            // TODO: EnumMember value
-            // TODO: Bad numeric values? e.g., <min, >max
-            return Enum.Parse(enumType, str, true); // Will fail on bad value
+            // Favour numeric
+            var str = $"{data}";
+            if (data is int)
+            {
+                return Enum.Parse(enumType, str); // Will not fail on bad value (TODO: option to check)
+            }
+
+            // Supports name by EnumMember first
+            var memberMatch = enumType.GetMembers()
+                .FirstOrDefault(m => m.GetCustomAttribute<EnumMemberAttribute>()?.Value?.Equals(str, StringComparison.OrdinalIgnoreCase) == true);
+            return Enum.Parse(enumType, memberMatch?.Name ?? str, true); // Will fail on bad value
         }
 
         public override object? ToDatasource(object? data)
@@ -47,14 +56,20 @@ namespace IFY.Phorm.Transformation
                 return null;
             }
 
-            var enumType = Nullable.GetUnderlyingType(data.GetType()) ?? data.GetType();
+            var enumType = data.GetType();
             if (!enumType.IsEnum)
             {
-                throw new InvalidCastException($"Property is marked with '{nameof(EnumValueAttribute)}', but contained value of type {enumType.GetType().FullName}.");
+                throw new InvalidCastException($"Property is marked with '{nameof(EnumValueAttribute)}', but contained value of type {enumType.FullName}.");
             }
 
-            // TODO: EnumMember value
-            return SendAsString ? data.ToString() : (int)data;
+            if (!SendAsString)
+            {
+                return (int)data;
+            }
+
+            var enumValue = enumType.GetMember($"{data}").First();
+            var memberAttr = enumValue.GetCustomAttribute<EnumMemberAttribute>();
+            return memberAttr?.Value ?? enumValue.Name;
         }
     }
 }

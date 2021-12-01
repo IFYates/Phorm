@@ -25,16 +25,16 @@ namespace IFY.Phorm
 
             var contractType = typeof(TActionContract);
             var contractName = contractType.Name;
-            if (contractType.IsInterface && contractName[0] == 'I')
-            {
-                contractName = contractName[1..];
-            }
             if (contractType == typeof(IPhormContract))
             {
                 _objectName = objectName ?? throw new ArgumentNullException(nameof(objectName));
             }
             else
             {
+                if (contractType.IsInterface && contractName[0] == 'I')
+                {
+                    contractName = contractName[1..];
+                }
                 objectName = null;
                 _objectName = contractName;
             }

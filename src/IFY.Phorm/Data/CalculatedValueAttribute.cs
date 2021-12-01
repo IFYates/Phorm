@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace IFY.Phorm.Data
 {
@@ -8,6 +9,7 @@ namespace IFY.Phorm.Data
     /// Note: Transformations are not supported on calculated values.
     /// </summary>
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
+    [ExcludeFromCodeCoverage(Justification = "No logic")]
     public class CalculatedValueAttribute : Attribute, IContractMemberAttribute
     {
         public void SetContext(object? context) { }

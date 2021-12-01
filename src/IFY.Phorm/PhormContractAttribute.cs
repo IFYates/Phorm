@@ -9,7 +9,7 @@ namespace IFY.Phorm
         /// The type of database object the contract targets.
         /// Note that only <see cref="DbObjectType.StoredProcedure"/> supports receiving data via Call.
         /// </summary>
-        public DbObjectType Target { get; set; } = DbObjectType.StoredProcedure;
+        public DbObjectType Target { get; set; } = DbObjectType.Default;
 
         /// <summary>
         /// The contract name to use, if not the same as the decorated class / interface.

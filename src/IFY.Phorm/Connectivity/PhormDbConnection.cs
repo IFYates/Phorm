@@ -1,6 +1,7 @@
 ﻿using Shimterface;
 using System.Data;
 using System.Data.Common;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -37,6 +38,7 @@ namespace IFY.Phorm.Connectivity
         public void Close() => _db.Close();
 
         // TEMP
+        [ExcludeFromCodeCoverage]
         internal class DbCommandShim : IAsyncDbCommand
         {
             private readonly DbCommand _cmd;

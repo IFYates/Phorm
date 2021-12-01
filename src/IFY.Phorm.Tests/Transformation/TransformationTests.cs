@@ -11,14 +11,12 @@ namespace IFY.Phorm.Tests.Encryption
     [TestClass]
     public class TransformationTests
     {
-        [PhormContract]
         class DataObject
         {
             [TransformFromSource]
             public string? Value { get; set; }
         }
 
-        [PhormContract]
         interface IWithTransformation : IPhormContract
         {
             [TransformToSource]
