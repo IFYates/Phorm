@@ -38,7 +38,6 @@ namespace IFY.Phorm.Connectivity
         public void Close() => _db.Close();
 
         // TEMP
-        [ExcludeFromCodeCoverage]
         internal class DbCommandShim : IAsyncDbCommand
         {
             private readonly DbCommand _cmd;

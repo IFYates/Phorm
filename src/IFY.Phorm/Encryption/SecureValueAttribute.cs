@@ -28,6 +28,7 @@ namespace IFY.Phorm.Encryption
             _authenticatorPropertyName = authenticatorPropertyName;
         }
 
+        // TODO: more generic helper
         private static byte[] getBytes(object value)
         {
             if (value is decimal dec)
