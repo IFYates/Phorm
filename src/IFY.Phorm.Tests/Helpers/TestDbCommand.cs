@@ -10,20 +10,25 @@ namespace IFY.Phorm.Tests
     /// <summary>
     /// Mockable test object with useful default implementation.
     /// </summary>
-    public partial class TestDbCommand : IAsyncDbCommand
+    public partial class TestDbCommand : DbCommand, IAsyncDbCommand, IDbCommand
     {
         public int ReturnValue { get; set; } = 1;
         public DbDataReader Reader { get; set; }
 
-        public virtual string CommandText { get; set; } = string.Empty;
-        public virtual int CommandTimeout { get; set; }
-        public virtual CommandType CommandType { get; set; }
+        public override string CommandText { get; set; } = string.Empty;
+        public override int CommandTimeout { get; set; }
+        public override CommandType CommandType { get; set; }
         public virtual IDbConnection? Connection { get; set; }
 
         public virtual IDataParameterCollection Parameters { get; } = new TestParameterCollection();
 
         public virtual IDbTransaction? Transaction { get; set; }
-        public virtual UpdateRowSource UpdatedRowSource { get; set; }
+        public override UpdateRowSource UpdatedRowSource { get; set; }
+
+        protected override DbConnection? DbConnection { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        protected override DbParameterCollection DbParameterCollection => throw new NotImplementedException();
+        protected override DbTransaction? DbTransaction { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public override bool DesignTimeVisible { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
         public TestDbCommand()
         {
@@ -34,7 +39,7 @@ namespace IFY.Phorm.Tests
             Reader = reader;
         }
 
-        public virtual void Cancel()
+        public override void Cancel()
         {
         }
 
@@ -43,11 +48,12 @@ namespace IFY.Phorm.Tests
             return new TestDbParameter();
         }
 
-        public virtual void Dispose()
+        public new virtual void Dispose()
         {
+            base.Dispose();
         }
 
-        public virtual int ExecuteNonQuery()
+        public override int ExecuteNonQuery()
         {
             throw new NotImplementedException();
         }
@@ -74,13 +80,23 @@ namespace IFY.Phorm.Tests
             return Task.FromResult(Reader);
         }
 
-        public virtual object? ExecuteScalar()
+        public override object? ExecuteScalar()
         {
             throw new NotImplementedException();
         }
 
-        public virtual void Prepare()
+        public override void Prepare()
         {
+        }
+
+        protected override DbParameter CreateDbParameter()
+        {
+            throw new NotImplementedException();
+        }
+
+        protected override DbDataReader ExecuteDbDataReader(CommandBehavior behavior)
+        {
+            throw new NotImplementedException();
         }
     }
 }

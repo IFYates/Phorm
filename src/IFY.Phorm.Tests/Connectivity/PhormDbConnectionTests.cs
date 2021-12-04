@@ -1,4 +1,5 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using IFY.Phorm.Tests;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using System;
 using System.Data;
@@ -99,7 +100,7 @@ namespace IFY.Phorm.Connectivity.Tests
         {
             // Assert
             var cmdText = Guid.NewGuid().ToString();
-            var cmdMock = new Mock<DbCommand>(MockBehavior.Strict);
+            var cmdMock = new Mock<TestDbCommand>(MockBehavior.Strict);
             cmdMock.SetupGet(m => m.CommandText).Returns(cmdText);
 
             var dbMock = new Mock<IDbConnection>(MockBehavior.Strict);

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Reflection;
-using System.Text;
 
 namespace IFY.Phorm.Encryption
 {
@@ -15,6 +14,7 @@ namespace IFY.Phorm.Encryption
         private object? _context;
 
         private static object? _lastInstance = null;
+        private static string? _lastProperty = null;
         private static byte[] _lastValue = Array.Empty<byte>();
 
         /// <summary>
@@ -28,51 +28,25 @@ namespace IFY.Phorm.Encryption
             _authenticatorPropertyName = authenticatorPropertyName;
         }
 
-        // TODO: more generic helper
-        private static byte[] getBytes(object value)
-        {
-            if (value is decimal dec)
-            {
-                var ints = Decimal.GetBits(dec);
-                var bytes = new byte[16];
-                Array.Copy(BitConverter.GetBytes(ints[0]), 0, bytes, 0, 4);
-                Array.Copy(BitConverter.GetBytes(ints[1]), 0, bytes, 4, 4);
-                Array.Copy(BitConverter.GetBytes(ints[2]), 0, bytes, 8, 4);
-                Array.Copy(BitConverter.GetBytes(ints[3]), 0, bytes, 12, 4);
-                return bytes;
-            }
-
-            return value switch
-            {
-                byte[] val => val,
-                byte val => BitConverter.GetBytes(val),
-                char val => BitConverter.GetBytes(val),
-                double val => BitConverter.GetBytes(val),
-                float val => BitConverter.GetBytes(val),
-                Guid val => val.ToByteArray(),
-                int val => BitConverter.GetBytes(val),
-                long val => BitConverter.GetBytes(val),
-                short val => BitConverter.GetBytes(val),
-                string val => Encoding.UTF8.GetBytes(val),
-                _ => throw new InvalidCastException(),
-            };
-        }
-
         private static byte[] resolveAuthenticator(object? context, string? propertyName)
         {
-            if (context != null && _lastInstance != context && propertyName != null)
+            if (context == null || propertyName == null)
             {
+                return Array.Empty<byte>();
+            }
+            if (_lastInstance != context || _lastProperty != propertyName)
+            {
+                // Find property
                 var authenticatorProperty = context.GetType().GetProperty(propertyName, BindingFlags.Public | BindingFlags.Instance)
                     ?? throw new InvalidOperationException($"Specified authenticator '{propertyName}' is not a public property on type {context.GetType().FullName}");
+
+                // Remember this state
                 _lastInstance = context;
-                _lastValue = Array.Empty<byte>();
+                _lastProperty = propertyName;
 
                 // Get value as byte[]
                 var value = authenticatorProperty.GetValue(context);
-                if (value != null)
-                {
-                    _lastValue = getBytes(value);
-                }
+                _lastValue = value.GetBytes();
             }
             return _lastValue;
         }
@@ -82,7 +56,7 @@ namespace IFY.Phorm.Encryption
             if (value == null)
             {
                 return Array.Empty<byte>();
-            } 
+            }
 
             if (GlobalSettings.EncryptionProvider == null)
             {
@@ -105,7 +79,7 @@ namespace IFY.Phorm.Encryption
             {
                 return Array.Empty<byte>();
             }
-            var bytes = getBytes(value);
+            var bytes = value.GetBytes();
 
             if (GlobalSettings.EncryptionProvider == null)
             {
@@ -126,6 +100,7 @@ namespace IFY.Phorm.Encryption
         public override void SetContext(object? context)
         {
             _context = context;
+            // TODO: clear _last* fields here, if doesn't break caching
         }
     }
 }
