@@ -107,6 +107,28 @@ namespace IFY.Phorm
                 throw new InvalidOperationException("Non-result request returned a result.");
             }
         }
+        private static async Task<TResult[]> readAll<TResult>(IAsyncDbCommand cmd, CancellationToken? cancellationToken)
+            where TResult : new()
+        {
+            var results = new List<TResult>();
+            var resultMembers = getMembersFromContract(null, typeof(TResult))
+                .ToDictionary(m => m.Name.ToLower());
+
+            // Parse first resultset
+            using var rdr = await cmd.ExecuteReaderAsync(cancellationToken ?? CancellationToken.None);
+            while (rdr.Read())
+            {
+                var res = getEntity<TResult>(rdr, resultMembers);
+                results.Add(res);
+            }
+
+            if (await rdr.NextResultAsync())
+            {
+                // TODO: handle child resultset
+            }
+
+            return results.ToArray();
+        }
         private static async Task<TResult?> readSingle<TResult>(IAsyncDbCommand cmd, CancellationToken? cancellationToken)
             where TResult : new()
         {
@@ -131,28 +153,6 @@ namespace IFY.Phorm
                 throw new InvalidOperationException("Expected a single-record result, but more than one found.");
             }
             return default;
-        }
-        private static async Task<TResult[]> readAll<TResult>(IAsyncDbCommand cmd, CancellationToken? cancellationToken)
-            where TResult : new()
-        {
-            var results = new List<TResult>();
-            var resultMembers = getMembersFromContract(null, typeof(TResult))
-                .ToDictionary(m => m.Name.ToLower());
-
-            // Parse first resultset
-            using var rdr = await cmd.ExecuteReaderAsync(cancellationToken ?? CancellationToken.None);
-            while (rdr.Read())
-            {
-                var res = getEntity<TResult>(rdr, resultMembers);
-                results.Add(res);
-            }
-
-            if (await rdr.NextResultAsync())
-            {
-                // TODO: handle child resultset
-            }
-
-            return results.ToArray();
         }
 
         private static TResult getEntity<TResult>(IDataReader rdr, Dictionary<string, ContractMember> members)
@@ -205,22 +205,20 @@ namespace IFY.Phorm
         /// <summary>
         /// Convert properties of any object to <see cref="ContractMember"/>s.
         /// </summary>
-        private static ContractMember[] getMembersFromContract(object? obj, Type? contractType)
+        private static ContractMember[] getMembersFromContract(object? obj, Type contractType)
         {
-            if (contractType == typeof(IPhormContract))
+            var hasContract = contractType != typeof(IPhormContract);
+            if (!hasContract)
             {
-                contractType = null;
-            }
-            if (obj == null && contractType == null)
-            {
-                return addReturnValue(obj, new()).ToArray();
+                if (obj == null)
+                {
+                    return addReturnValue(obj, new()).ToArray();
+                }
+                contractType = obj.GetType();
             }
 
             var objType = obj?.GetType();
-            var hasContract = contractType != null;
-            var isContract = contractType != null && (obj == null || contractType.IsAssignableFrom(objType));
-            contractType ??= objType ?? throw new NullReferenceException();
-
+            var isContract = hasContract && (obj == null || contractType.IsAssignableFrom(objType));
             var props = contractType.GetProperties(BindingFlags.Instance | BindingFlags.Public);
             var members = new List<ContractMember>(props.Length);
             foreach (var prop in props)

@@ -33,6 +33,7 @@ namespace IFY.Phorm
             if (objectType is DbObjectType.Table or DbObjectType.View)
             {
                 cmd.CommandType = CommandType.Text;
+                // TODO: Could replace '*' with desired column names, validated by cached SchemaOnly call
                 cmd.CommandText = $"SELECT * FROM [{schema}].[{objectName}]";
                 return cmd;
             }

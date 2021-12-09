@@ -54,5 +54,15 @@ namespace IFY.Phorm.Tests
             // Assert
             Assert.AreNotEqual(0, res.Length);
         }
+
+        [TestMethod]
+        public void GetBytes__Unsupported_type__Exception()
+        {
+            // Act
+            Assert.ThrowsException<InvalidCastException>(() =>
+            {
+                _ = new ExtensionsTests().GetBytes();
+            });
+        }
     }
 }

@@ -18,11 +18,11 @@ namespace IFY.Phorm.Tests
         public override string CommandText { get; set; } = string.Empty;
         public override int CommandTimeout { get; set; }
         public override CommandType CommandType { get; set; }
-        public virtual IDbConnection? Connection { get; set; }
+        public new virtual IDbConnection? Connection { get; set; }
 
-        public virtual IDataParameterCollection Parameters { get; } = new TestParameterCollection();
+        public new virtual IDataParameterCollection Parameters { get; } = new TestParameterCollection();
 
-        public virtual IDbTransaction? Transaction { get; set; }
+        public new virtual IDbTransaction? Transaction { get; set; }
         public override UpdateRowSource UpdatedRowSource { get; set; }
 
         protected override DbConnection? DbConnection { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
@@ -51,6 +51,14 @@ namespace IFY.Phorm.Tests
         public new virtual void Dispose()
         {
             base.Dispose();
+        }
+        public override ValueTask DisposeAsync()
+        {
+            return base.DisposeAsync();
+        }
+        protected override void Dispose(bool disposing)
+        {
+            base.Dispose(disposing);
         }
 
         public override int ExecuteNonQuery()

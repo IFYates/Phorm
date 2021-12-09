@@ -100,12 +100,14 @@ namespace IFY.Phorm.Connectivity.Tests
         {
             // Assert
             var cmdText = Guid.NewGuid().ToString();
-            var cmdMock = new Mock<TestDbCommand>(MockBehavior.Strict);
-            cmdMock.SetupGet(m => m.CommandText).Returns(cmdText);
+            var cmd = new TestDbCommand
+            {
+                CommandText = cmdText
+            };
 
             var dbMock = new Mock<IDbConnection>(MockBehavior.Strict);
             dbMock.Setup(m => m.CreateCommand())
-                .Returns(cmdMock.Object).Verifiable();
+                .Returns(cmd).Verifiable();
 
             var db = new PhormDbConnection("", dbMock.Object);
 
