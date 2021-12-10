@@ -15,6 +15,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<ProjectReference Include="..\IFY.Phorm.SqlClient\IFY.Phorm.SqlClient.csproj" />
 		<ProjectReference Include="..\IFY.Phorm\IFY.Phorm.csproj" />
 	</ItemGroup>
 

@@ -1,6 +1,7 @@
 ﻿using IFY.Phorm.Encryption;
 
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo("IFY.Phorm.Tests")]
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("IFY.Phorm.SqlClient.Tests")]
 
 namespace IFY.Phorm
 {

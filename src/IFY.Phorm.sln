@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.31205.134
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31919.166
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IFY.Phorm", "IFY.Phorm\IFY.Phorm.csproj", "{3D21066F-63A2-4B25-AEE7-79983A991A31}"
 EndProject
@@ -13,6 +13,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IFY.Phorm.SqlClient", "IFY.Phorm.SqlClient\IFY.Phorm.SqlClient.csproj", "{15329C60-F0B4-444B-AFD1-6A0FFA310797}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IFY.Phorm.SqlClient.Tests", "IFY.Phorm.SqlClient.Tests\IFY.Phorm.SqlClient.Tests.csproj", "{EEBA764B-76E1-4220-B0B4-5DCA27D0CDB6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -32,6 +34,10 @@ Global
 		{15329C60-F0B4-444B-AFD1-6A0FFA310797}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{15329C60-F0B4-444B-AFD1-6A0FFA310797}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{15329C60-F0B4-444B-AFD1-6A0FFA310797}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EEBA764B-76E1-4220-B0B4-5DCA27D0CDB6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EEBA764B-76E1-4220-B0B4-5DCA27D0CDB6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EEBA764B-76E1-4220-B0B4-5DCA27D0CDB6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EEBA764B-76E1-4220-B0B4-5DCA27D0CDB6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
