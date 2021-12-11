@@ -48,6 +48,49 @@ namespace IFY.Phorm
             };
         }
 
+        public static T? FromBytes<T>(this byte[]? bytes)
+            => (T?)FromBytes(bytes, typeof(T));
+        public static object? FromBytes(this byte[]? bytes, Type resultType)
+        {
+            if (bytes == null)
+            {
+                return default;
+            }
+
+            if (resultType == typeof(decimal))
+            {
+                var bits = new int[4];
+                var arr = new byte[4];
+                Array.Copy(bytes, 0, arr, 0, 4);
+                bits[0] = BitConverter.ToInt32(arr);
+                Array.Copy(bytes, 4, arr, 0, 4);
+                bits[1] = BitConverter.ToInt32(arr);
+                Array.Copy(bytes, 8, arr, 0, 4);
+                bits[2] = BitConverter.ToInt32(arr);
+                Array.Copy(bytes, 12, arr, 0, 4);
+                bits[3] = BitConverter.ToInt32(arr);
+                return new decimal(bits);
+            }
+            if (resultType == typeof(string))
+            {
+                return Encoding.UTF8.GetString(bytes);
+            }
+
+            var def = Activator.CreateInstance(resultType);
+            return def switch
+            {
+                byte => bytes.Single(),
+                char => BitConverter.ToChar(bytes),
+                double => BitConverter.ToDouble(bytes),
+                float => BitConverter.ToSingle(bytes),
+                Guid => new Guid(bytes),
+                int => BitConverter.ToInt32(bytes),
+                long => BitConverter.ToInt64(bytes),
+                short => BitConverter.ToInt16(bytes),
+                _ => throw new InvalidCastException(),
+            };
+        }
+
         public static bool TrySingle<T>(this IEnumerable<T> coll, Func<T, bool> predicate, [MaybeNullWhen(false)] out T result)
         {
             result = coll.SingleOrDefault(predicate);

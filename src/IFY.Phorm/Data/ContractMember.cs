@@ -238,10 +238,17 @@ namespace IFY.Phorm.Data
                 var targetType = typeof(T) != typeof(object) ? typeof(T)
                     : ValueType != typeof(object) ? ValueType
                     : null;
+                targetType = Nullable.GetUnderlyingType(targetType) ?? targetType;
                 if (targetType != null && !targetType.IsInstanceOfType(value))
                 {
-                    targetType = Nullable.GetUnderlyingType(targetType) ?? targetType;
-                    value = Convert.ChangeType(value, targetType);
+                    if (value is byte[] bytes)
+                    {
+                        value = bytes.FromBytes(targetType);
+                    }
+                    else
+                    {
+                        value = Convert.ChangeType(value, targetType);
+                    }
                 }
             }
             if (base.Value != value)
