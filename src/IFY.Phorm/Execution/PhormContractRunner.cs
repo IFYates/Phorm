@@ -308,11 +308,16 @@ namespace IFY.Phorm
             var returnValue = 0;
             foreach (IDataParameter param in cmd.Parameters)
             {
-                if (param.Direction is ParameterDirection.Output or ParameterDirection.InputOutput)
+                if (contract != null && param.Direction is ParameterDirection.Output or ParameterDirection.InputOutput)
                 {
-                    var memb = members.SingleOrDefault(a => a.Name == param.ParameterName[1..]);
-                    memb?.FromDatasource(param.Value); // NOTE: Always given as VARCHAR
-                    memb?.SourceProperty?.SetValue(contract, memb.Value);
+                    var memb = members.Single(a => a.Name == param.ParameterName[1..]);
+                    memb.FromDatasource(param.Value); // NOTE: Always given as VARCHAR
+                    var prop = memb.SourceProperty;
+                    if (prop != null && prop.ReflectedType?.IsAssignableFrom(contract.GetType()) == false)
+                    {
+                        prop = contract.GetType().GetProperty(prop.Name);
+                    }
+                    prop?.SetValue(contract, memb.Value);
                 }
                 else if (param.Direction == ParameterDirection.ReturnValue)
                 {

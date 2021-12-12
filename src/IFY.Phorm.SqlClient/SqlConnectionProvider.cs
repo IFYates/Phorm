@@ -15,12 +15,12 @@ namespace IFY.Phorm.SqlClient
             DatabaseConnectionString = databaseConnectionString;
         }
 
-        protected virtual SqlConnectionStringBuilder GetConnectionString(string? contextUser)
+        protected virtual SqlConnectionStringBuilder GetConnectionString(string? connectionName)
         {
-            // The connection will identify as the context user
+            // The connection will identify as the given name
             return new SqlConnectionStringBuilder(DatabaseConnectionString)
             {
-                ApplicationName = contextUser ?? string.Empty
+                ApplicationName = connectionName ?? string.Empty
             };
         }
 

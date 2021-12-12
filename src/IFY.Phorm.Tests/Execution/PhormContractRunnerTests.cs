@@ -1,6 +1,7 @@
 ﻿using IFY.Phorm.Data;
 using IFY.Phorm.Encryption;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Moq;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -396,13 +397,31 @@ namespace IFY.Phorm.Tests
 
             var phorm = new TestPhormRunner(new TestPhormConnectionProvider((s) => conn));
 
+            var data = "secure_value".GetBytes();
+            var encdata = Guid.NewGuid().ToString().GetBytes();
+            var encrMock = new Mock<IEncryptor>(MockBehavior.Strict);
+            encrMock.SetupProperty(m => m.Authenticator);
+            encrMock.Setup(m => m.Encrypt(data))
+                .Returns(encdata);
+            encrMock.Setup(m => m.Decrypt(encdata))
+                .Returns(data);
+
+            var provMock = new Mock<IEncryptionProvider>(MockBehavior.Strict);
+            provMock.Setup(m => m.GetInstance("class"))
+                .Returns(() => encrMock.Object);
+            GlobalSettings.EncryptionProvider = provMock.Object;
+
             var runner = new PhormContractRunner<ISecureTestContract>(phorm, null, DbObjectType.Default);
 
+            var dto = new TestContract { Arg = 100, Arg3 = "secure_value" };
+
             // Act
-            var res = runner.Call(new TestContract { Arg = 100, Arg3 = "secure_value" });
+            var res = runner.Call(dto);
 
             // Assert
-            Assert.Inconclusive();
+            Assert.AreEqual(1, res);
+            Assert.AreEqual("secure_value", dto.Arg3);
+            CollectionAssert.AreEqual(100.GetBytes(), encrMock.Object.Authenticator);
         }
 
         [TestMethod]
@@ -859,8 +878,15 @@ namespace IFY.Phorm.Tests
             Assert.AreEqual(1, pars[1].Value);
         }
 
+        public class TestSecureDto
+        {
+            public int Arg { get; set; }
+            [SecureValue("class", nameof(Arg))]
+            public string Arg3 { get; set; }
+        }
+
         [TestMethod]
-        public void Manu__SecureValue_sent_encrypted_received_decrypted_by_authenticator()
+        public void Many__SecureValue_sent_encrypted_received_decrypted_by_authenticator()
         {
             // Arrange
             var conn = new TestPhormConnection("")
@@ -868,18 +894,44 @@ namespace IFY.Phorm.Tests
                 DefaultSchema = "schema"
             };
 
-            var cmd = new TestDbCommand();
+            var data = "secure_value".GetBytes();
+            var encdata = Guid.NewGuid().ToString().GetBytes();
+            var encrMock = new Mock<IEncryptor>(MockBehavior.Strict);
+            encrMock.SetupProperty(m => m.Authenticator);
+            encrMock.Setup(m => m.Encrypt(data))
+                .Returns(encdata);
+            encrMock.Setup(m => m.Decrypt(encdata))
+                .Returns(data);
+
+            var provMock = new Mock<IEncryptionProvider>(MockBehavior.Strict);
+            provMock.Setup(m => m.GetInstance("class"))
+                .Returns(() => encrMock.Object);
+            GlobalSettings.EncryptionProvider = provMock.Object;
+
+            var rdr = new TestDbReader();
+            rdr.Data.Add(new Dictionary<string, object>()
+            {
+                ["Arg3"] = encdata
+            });
+            var cmd = new TestDbCommand
+            {
+                Reader = rdr
+            };
             conn.CommandQueue.Enqueue(cmd);
 
             var phorm = new TestPhormRunner(new TestPhormConnectionProvider((s) => conn));
 
             var runner = new PhormContractRunner<ISecureTestContract>(phorm, null, DbObjectType.Default);
 
+            var dto = new TestContract { Arg = 100, Arg3 = "secure_value" };
+
             // Act
-            var res = runner.Many<object>(new TestContract { Arg = 100, Arg3 = "secure_value" });
+            var res = runner.Many<TestSecureDto>(dto);
 
             // Assert
-            Assert.Inconclusive();
+            Assert.AreEqual(1, res.Length);
+            Assert.AreEqual("secure_value", res[0].Arg3);
+            CollectionAssert.AreEqual(100.GetBytes(), encrMock.Object.Authenticator);
         }
 
         #endregion Many

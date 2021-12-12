@@ -238,9 +238,9 @@ namespace IFY.Phorm.Data
                 var targetType = typeof(T) != typeof(object) ? typeof(T)
                     : ValueType != typeof(object) ? ValueType
                     : null;
-                targetType = Nullable.GetUnderlyingType(targetType) ?? targetType;
                 if (targetType != null && !targetType.IsInstanceOfType(value))
                 {
+                    targetType = Nullable.GetUnderlyingType(targetType) ?? targetType;
                     if (value is byte[] bytes)
                     {
                         value = bytes.FromBytes(targetType);
