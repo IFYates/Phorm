@@ -1,6 +1,7 @@
 ﻿using IFY.Phorm.Encryption;
 using IFY.Phorm.Transformation;
 using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlTypes;
 using System.Linq;
@@ -81,6 +82,106 @@ namespace IFY.Phorm.Data
         public static ContractMember<int> RetVal()
         {
             return new ContractMember<int>("return", 0, ParameterDirection.ReturnValue);
+        }
+
+        /// <summary>
+        /// Convert properties of any object to <see cref="ContractMember"/>s.
+        /// </summary>
+        public static ContractMember[] GetMembersFromContract(object? obj, Type contractType)
+        {
+            var hasContract = contractType != typeof(IPhormContract);
+            if (!hasContract)
+            {
+                if (obj == null)
+                {
+                    return addReturnValue(obj, new()).ToArray();
+                }
+                contractType = obj.GetType();
+            }
+
+            var objType = obj?.GetType();
+            var isContract = hasContract && (obj == null || contractType.IsAssignableFrom(objType));
+            var props = contractType.GetProperties(BindingFlags.Instance | BindingFlags.Public);
+            var members = new List<ContractMember>(props.Length);
+            foreach (var prop in props)
+            {
+                PropertyInfo? objProp = null;
+                object? value;
+                if (!isContract)
+                {
+                    // Allow use of non-contract
+                    objProp = objType?.GetProperty(prop.Name, BindingFlags.Instance | BindingFlags.Public);
+                    value = obj != null && objProp?.CanRead == true ? objProp.GetValue(obj) : null;
+                }
+                else
+                {
+                    value = obj != null && prop.CanRead ? prop.GetValue(obj) : null;
+                }
+
+                if (prop.GetCustomAttribute<IgnoreDataMemberAttribute>() != null)
+                {
+                    continue;
+                }
+
+                // Wrap as ContractMember, if not already
+                if (value is not ContractMember memb)
+                {
+                    if (!hasContract)
+                    {
+                        memb = In(prop.Name, value);
+                    }
+                    else if (!prop.CanWrite)
+                    {
+                        memb = In(prop.Name, value, prop);
+                    }
+                    else if (prop.CanRead)
+                    {
+                        memb = InOut(prop.Name, value, prop);
+                    }
+                    else
+                    {
+                        memb = Out<object>(prop.Name, prop);
+                    }
+                }
+                else
+                {
+                    memb.Name = prop.Name;
+                }
+
+                members.Add(memb);
+                memb.ResolveAttributes(obj, out _);
+
+                // Check for DataMemberAttribute
+                var dmAttr = prop?.GetCustomAttribute<DataMemberAttribute>();
+                if (dmAttr != null)
+                {
+                    memb.Name = dmAttr.Name ?? memb.Name;
+
+                    // Primitives are never "missing", so only check null
+                    if (dmAttr.IsRequired && memb.Value == null)
+                    {
+                        throw new ArgumentNullException(memb.Name, $"Parameter {memb.Name} for contract {contractType.FullName} is required but was null");
+                    }
+                }
+            }
+
+            return addReturnValue(obj, members).ToArray();
+
+            static IList<ContractMember> addReturnValue(object? obj, List<ContractMember> members)
+            {
+                // Always want the return value on action contracts
+                var retPar = (ContractMember<int>?)members.FirstOrDefault(p => p.Direction == ParameterDirection.ReturnValue);
+                if (retPar == null)
+                {
+                    // Allow for a return value on the object
+                    retPar = obj?.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public)
+                        .Where(p => p.PropertyType == typeof(ContractMember<int>))
+                        .Select(p => p.GetValue(obj) as ContractMember<int>)
+                        .FirstOrDefault(v => v?.Direction == ParameterDirection.ReturnValue);
+                    members.Add(retPar ?? RetVal());
+                }
+                return members;
+            }
         }
 
         public void ResolveAttributes(object? context, out bool isSecure)

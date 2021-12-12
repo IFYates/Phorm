@@ -111,7 +111,7 @@ namespace IFY.Phorm
             where TResult : new()
         {
             var results = new List<TResult>();
-            var resultMembers = getMembersFromContract(null, typeof(TResult))
+            var resultMembers = ContractMember.GetMembersFromContract(null, typeof(TResult))
                 .ToDictionary(m => m.Name.ToLower());
 
             // Parse first resultset
@@ -133,7 +133,7 @@ namespace IFY.Phorm
             where TResult : new()
         {
             var results = new List<TResult>();
-            var resultMembers = getMembersFromContract(null, typeof(TResult))
+            var resultMembers = ContractMember.GetMembersFromContract(null, typeof(TResult))
                 .ToDictionary(m => m.Name.ToLower());
 
             // Parse first record of result
@@ -198,110 +198,6 @@ namespace IFY.Phorm
             return entity;
         }
 
-        #endregion Execution
-
-        #region Contract parsing
-
-        /// <summary>
-        /// Convert properties of any object to <see cref="ContractMember"/>s.
-        /// </summary>
-        private static ContractMember[] getMembersFromContract(object? obj, Type contractType)
-        {
-            var hasContract = contractType != typeof(IPhormContract);
-            if (!hasContract)
-            {
-                if (obj == null)
-                {
-                    return addReturnValue(obj, new()).ToArray();
-                }
-                contractType = obj.GetType();
-            }
-
-            var objType = obj?.GetType();
-            var isContract = hasContract && (obj == null || contractType.IsAssignableFrom(objType));
-            var props = contractType.GetProperties(BindingFlags.Instance | BindingFlags.Public);
-            var members = new List<ContractMember>(props.Length);
-            foreach (var prop in props)
-            {
-                PropertyInfo? objProp = null;
-                object? value;
-                if (!isContract)
-                {
-                    // Allow use of non-contract
-                    objProp = objType?.GetProperty(prop.Name, BindingFlags.Instance | BindingFlags.Public);
-                    value = obj != null && objProp?.CanRead == true ? objProp.GetValue(obj) : null;
-                }
-                else
-                {
-                    value = obj != null && prop.CanRead ? prop.GetValue(obj) : null;
-                }
-
-                if (prop.GetCustomAttribute<IgnoreDataMemberAttribute>() != null)
-                {
-                    continue;
-                }
-
-                // Wrap as ContractMember, if not already
-                if (value is not ContractMember memb)
-                {
-                    if (!hasContract)
-                    {
-                        memb = ContractMember.In(prop.Name, value);
-                    }
-                    else if (!prop.CanWrite)
-                    {
-                        memb = ContractMember.In(prop.Name, value, prop);
-                    }
-                    else if (prop.CanRead)
-                    {
-                        memb = ContractMember.InOut(prop.Name, value, prop);
-                    }
-                    else
-                    {
-                        memb = ContractMember.Out<object>(prop.Name, prop);
-                    }
-                }
-                else
-                {
-                    memb.Name = prop.Name;
-                }
-
-                members.Add(memb);
-                memb.ResolveAttributes(obj, out _);
-
-                // Check for DataMemberAttribute
-                var dmAttr = prop?.GetCustomAttribute<DataMemberAttribute>();
-                if (dmAttr != null)
-                {
-                    memb.Name = dmAttr.Name ?? memb.Name;
-
-                    // Primitives are never "missing", so only check null
-                    if (dmAttr.IsRequired && memb.Value == null)
-                    {
-                        throw new ArgumentNullException(memb.Name, $"Parameter {memb.Name} for contract {contractType.FullName} is required but was null");
-                    }
-                }
-            }
-
-            return addReturnValue(obj, members).ToArray();
-
-            static IList<ContractMember> addReturnValue(object? obj, List<ContractMember> members)
-            {
-                // Always want the return value on action contracts
-                var retPar = (ContractMember<int>?)members.FirstOrDefault(p => p.Direction == ParameterDirection.ReturnValue);
-                if (retPar == null)
-                {
-                    // Allow for a return value on the object
-                    retPar = obj?.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public)
-                        .Where(p => p.PropertyType == typeof(ContractMember<int>))
-                        .Select(p => p.GetValue(obj) as ContractMember<int>)
-                        .FirstOrDefault(v => v?.Direction == ParameterDirection.ReturnValue);
-                    members.Add(retPar ?? ContractMember.RetVal());
-                }
-                return members;
-            }
-        }
-
         private static int parseCommandResult(IAsyncDbCommand cmd, object? contract, ContractMember[] members)
         {
             // Update parameters for output values
@@ -331,13 +227,13 @@ namespace IFY.Phorm
             return returnValue;
         }
 
-        #endregion Contract parsing
+        #endregion Execution
 
         public int Call(object? args = null)
             => CallAsync(args).GetAwaiter().GetResult();
         public async Task<int> CallAsync(object? args = null, CancellationToken? cancellationToken = null)
         {
-            var pars = getMembersFromContract(args, typeof(TActionContract));
+            var pars = ContractMember.GetMembersFromContract(args, typeof(TActionContract));
             using var cmd = startCommand(pars);
             await doExec(cmd, cancellationToken);
             return parseCommandResult(cmd, args, pars);
@@ -347,7 +243,7 @@ namespace IFY.Phorm
             => CallAsync(args, null).GetAwaiter().GetResult();
         public async Task<int> CallAsync(TActionContract args, CancellationToken? cancellationToken = null)
         {
-            var pars = getMembersFromContract(args, typeof(TActionContract));
+            var pars = ContractMember.GetMembersFromContract(args, typeof(TActionContract));
             using var cmd = startCommand(pars);
             await doExec(cmd, cancellationToken);
             return parseCommandResult(cmd, args, pars);
@@ -359,7 +255,7 @@ namespace IFY.Phorm
         public async Task<TResult[]> ManyAsync<TResult>(object? args = null, CancellationToken? cancellationToken = null)
             where TResult : new()
         {
-            var pars = getMembersFromContract(args, typeof(TActionContract));
+            var pars = ContractMember.GetMembersFromContract(args, typeof(TActionContract));
             using var cmd = startCommand(pars);
             var result = await readAll<TResult>(cmd, cancellationToken);
             parseCommandResult(cmd, args, pars);
@@ -371,7 +267,7 @@ namespace IFY.Phorm
             => ManyAsync<TResult>(args, null).GetAwaiter().GetResult();
         public async Task<TResult[]> ManyAsync<TResult>(TActionContract args, CancellationToken? cancellationToken = null) where TResult : new()
         {
-            var pars = getMembersFromContract(args, typeof(TActionContract));
+            var pars = ContractMember.GetMembersFromContract(args, typeof(TActionContract));
             using var cmd = startCommand(pars);
             var result = await readAll<TResult>(cmd, cancellationToken);
             parseCommandResult(cmd, args, pars);
@@ -384,7 +280,7 @@ namespace IFY.Phorm
         public async Task<TResult?> OneAsync<TResult>(object? args = null, CancellationToken? cancellationToken = null)
             where TResult : new()
         {
-            var pars = getMembersFromContract(args, typeof(TActionContract));
+            var pars = ContractMember.GetMembersFromContract(args, typeof(TActionContract));
             using var cmd = startCommand(pars);
             var result = await readSingle<TResult>(cmd, cancellationToken);
             parseCommandResult(cmd, args, pars);
@@ -397,7 +293,7 @@ namespace IFY.Phorm
         public async Task<TResult?> OneAsync<TResult>(TActionContract args, CancellationToken? cancellationToken = null)
             where TResult : new()
         {
-            var pars = getMembersFromContract(args, typeof(TActionContract));
+            var pars = ContractMember.GetMembersFromContract(args, typeof(TActionContract));
             using var cmd = startCommand(pars);
             var result = await readSingle<TResult>(cmd, cancellationToken);
             parseCommandResult(cmd, args, pars);
