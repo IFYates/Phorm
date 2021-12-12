@@ -39,7 +39,7 @@ namespace IFY.Phorm.Tests.Encryption
         public void Can_transform_value_to_datasource()
         {
             // Arrange
-            var runner = new TestPhormRunner();
+            var runner = new TestPhormSession();
 
             var args = new { Value = "value" };
 
@@ -68,7 +68,7 @@ namespace IFY.Phorm.Tests.Encryption
                 }
             });
 
-            var runner = new TestPhormRunner();
+            var runner = new TestPhormSession();
             runner.TestConnectionProvider?.TestConnection?.CommandQueue.Enqueue(cmd);
 
             // Act

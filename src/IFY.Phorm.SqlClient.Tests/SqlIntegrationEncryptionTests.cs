@@ -37,11 +37,11 @@ namespace IFY.Phorm.Tests
             }
         }
 
-        private static IPhormRunner getPhormRunner()
+        private static IPhormSession getPhormSession()
         {
             var connProc = new SqlConnectionProvider(@"Server=(localdb)\ProjectModels;Database=PhormTests;");
 
-            var phorm = new SqlPhormRunner(connProc, "*");
+            var phorm = new SqlPhormSession(connProc, "*");
 
             phorm.Call("ClearTable");
 
@@ -52,7 +52,7 @@ namespace IFY.Phorm.Tests
         public void String_encryption_full()
         {
             // Arrange
-            var phorm = getPhormRunner();
+            var phorm = getPhormSession();
 
             var randInt = DateTime.UtcNow.Millisecond;
             var randStr = Guid.NewGuid().ToString();

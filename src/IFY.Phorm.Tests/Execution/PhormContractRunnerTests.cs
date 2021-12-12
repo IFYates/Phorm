@@ -207,7 +207,7 @@ namespace IFY.Phorm.Tests
             });
             conn.CommandQueue.Enqueue(cmd);
 
-            var phorm = new TestPhormRunner(new TestPhormConnectionProvider((s) => conn));
+            var phorm = new TestPhormSession(new TestPhormConnectionProvider((s) => conn));
 
             var runner = new PhormContractRunner<IPhormContract>(phorm, "CallTest", DbObjectType.StoredProcedure);
 
@@ -258,7 +258,7 @@ namespace IFY.Phorm.Tests
             });
             conn.CommandQueue.Enqueue(cmd);
 
-            var phorm = new TestPhormRunner(new TestPhormConnectionProvider((s) => conn));
+            var phorm = new TestPhormSession(new TestPhormConnectionProvider((s) => conn));
 
             var runner = new PhormContractRunner<IPhormContract>(phorm, "CallTest", DbObjectType.StoredProcedure);
 
@@ -311,7 +311,7 @@ namespace IFY.Phorm.Tests
             });
             conn.CommandQueue.Enqueue(cmd);
 
-            var phorm = new TestPhormRunner(new TestPhormConnectionProvider((s) => conn));
+            var phorm = new TestPhormSession(new TestPhormConnectionProvider((s) => conn));
 
             var runner = new PhormContractRunner<IPhormContract>(phorm, "CallTest", objType);
 
@@ -365,7 +365,7 @@ namespace IFY.Phorm.Tests
             });
             conn.CommandQueue.Enqueue(cmd);
 
-            var phorm = new TestPhormRunner(new TestPhormConnectionProvider((s) => conn));
+            var phorm = new TestPhormSession(new TestPhormConnectionProvider((s) => conn));
 
             var runner = new PhormContractRunner<IPhormContract>(phorm, "CallTest", objType);
 
@@ -417,7 +417,7 @@ namespace IFY.Phorm.Tests
             });
             conn.CommandQueue.Enqueue(cmd);
 
-            var phorm = new TestPhormRunner(new TestPhormConnectionProvider((s) => conn));
+            var phorm = new TestPhormSession(new TestPhormConnectionProvider((s) => conn));
 
             var runner = new PhormContractRunner<TestContract>(phorm, "CallTest", DbObjectType.StoredProcedure);
 
@@ -468,7 +468,7 @@ namespace IFY.Phorm.Tests
             });
             conn.CommandQueue.Enqueue(cmd);
 
-            var phorm = new TestPhormRunner(new TestPhormConnectionProvider((s) => conn));
+            var phorm = new TestPhormSession(new TestPhormConnectionProvider((s) => conn));
 
             var runner = new PhormContractRunner<TestContract>(phorm, "CallTest", DbObjectType.StoredProcedure);
 
@@ -521,7 +521,7 @@ namespace IFY.Phorm.Tests
             });
             conn.CommandQueue.Enqueue(cmd);
 
-            var phorm = new TestPhormRunner(new TestPhormConnectionProvider((s) => conn));
+            var phorm = new TestPhormSession(new TestPhormConnectionProvider((s) => conn));
 
             var runner = new PhormContractRunner<TestContract>(phorm, "CallTest", objType);
 
@@ -574,7 +574,7 @@ namespace IFY.Phorm.Tests
             });
             conn.CommandQueue.Enqueue(cmd);
 
-            var phorm = new TestPhormRunner(new TestPhormConnectionProvider((s) => conn));
+            var phorm = new TestPhormSession(new TestPhormConnectionProvider((s) => conn));
 
             var runner = new PhormContractRunner<TestContract>(phorm, "CallTest", objType);
 
@@ -637,7 +637,7 @@ namespace IFY.Phorm.Tests
             };
             conn.CommandQueue.Enqueue(cmd);
 
-            var phorm = new TestPhormRunner(new TestPhormConnectionProvider((s) => conn));
+            var phorm = new TestPhormSession(new TestPhormConnectionProvider((s) => conn));
 
             var runner = new PhormContractRunner<ISecureTestContract>(phorm, null, DbObjectType.Default);
 

@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace IFY.Phorm
 {
-    public interface IPhormRunner
+    public interface IPhormSession
     {
         #region Call
 
@@ -43,7 +43,7 @@ namespace IFY.Phorm
         /// Begin a new transaction, with associated runner.
         /// </summary>
         /// <returns>The runner of the transaction.</returns>
-        ITransactedPhormRunner BeginTransaction();
+        ITransactedPhormSession BeginTransaction();
 
         #endregion Transactions
     }

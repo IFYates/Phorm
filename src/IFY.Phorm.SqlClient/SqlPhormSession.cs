@@ -7,7 +7,7 @@ namespace IFY.Phorm.SqlClient
 {
     // TODO: handle errors and log messages
 
-    public class SqlPhormRunner : AbstractPhormRunner
+    public class SqlPhormSession : AbstractPhormSession
     {
         private readonly string? _connectionName;
 
@@ -15,7 +15,7 @@ namespace IFY.Phorm.SqlClient
         public string ProcedurePrefix { get; init; } = "usp_";
         public string TablePrefix { get; init; } = "";
 
-        public SqlPhormRunner(IPhormDbConnectionProvider connectionProvider, string? connectionName)
+        public SqlPhormSession(IPhormDbConnectionProvider connectionProvider, string? connectionName)
             : base(connectionProvider)
         {
             _connectionName = connectionName;
@@ -42,12 +42,12 @@ namespace IFY.Phorm.SqlClient
         public override bool SupportsTransactions => true;
         public override bool IsInTransaction => false;
 
-        public override ITransactedPhormRunner BeginTransaction()
+        public override ITransactedPhormSession BeginTransaction()
         {
             var conn = _connectionProvider.GetConnection(_connectionName);
             conn.Open();
             var transaction = conn.BeginTransaction();
-            return new TransactedSqlPhormRunner(_connectionProvider, _connectionName, transaction);
+            return new TransactedSqlPhormSession(_connectionProvider, _connectionName, transaction);
         }
 
         #endregion Transactions

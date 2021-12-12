@@ -14,12 +14,12 @@ namespace IFY.Phorm
     public class PhormContractRunner<TActionContract> : IPhormContractRunner<TActionContract>
         where TActionContract : IPhormContract
     {
-        private readonly AbstractPhormRunner _runner;
+        private readonly AbstractPhormSession _runner;
         private readonly string? _schema;
         private readonly string _objectName;
         private readonly DbObjectType _objectType;
 
-        public PhormContractRunner(AbstractPhormRunner runner, string? objectName, DbObjectType objectType)
+        public PhormContractRunner(AbstractPhormSession runner, string? objectName, DbObjectType objectType)
         {
             _runner = runner;
 

@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace IFY.Phorm.SqlClient.Tests
 {
     [TestClass, Ignore]
-    public class SqlPhormRunnerTests
+    public class SqlPhormSessionTests
     {
         [TestMethod]
         public void BeginTransactionTest()

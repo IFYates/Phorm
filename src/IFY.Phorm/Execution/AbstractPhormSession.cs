@@ -6,11 +6,11 @@ using System.Threading.Tasks;
 
 namespace IFY.Phorm
 {
-    public abstract partial class AbstractPhormRunner : IPhormRunner
+    public abstract partial class AbstractPhormSession : IPhormSession
     {
         protected readonly IPhormDbConnectionProvider _connectionProvider;
 
-        public AbstractPhormRunner(IPhormDbConnectionProvider connectionProvider)
+        public AbstractPhormSession(IPhormDbConnectionProvider connectionProvider)
         {
             _connectionProvider = connectionProvider;
         }
@@ -98,7 +98,7 @@ namespace IFY.Phorm
 
         public abstract bool IsInTransaction { get; }
 
-        public abstract ITransactedPhormRunner BeginTransaction();
+        public abstract ITransactedPhormSession BeginTransaction();
 
         #endregion Transactions
     }

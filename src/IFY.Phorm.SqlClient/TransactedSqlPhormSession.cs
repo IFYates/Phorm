@@ -3,12 +3,12 @@ using System.Data;
 
 namespace IFY.Phorm.SqlClient
 {
-    public class TransactedSqlPhormRunner : SqlPhormRunner, ITransactedPhormRunner
+    public class TransactedSqlPhormSession : SqlPhormSession, ITransactedPhormSession
     {
         private bool _isDisposed = false;
         private readonly IDbTransaction _transaction;
 
-        public TransactedSqlPhormRunner(IPhormDbConnectionProvider dbProvider, string? contextUser, IDbTransaction transaction)
+        public TransactedSqlPhormSession(IPhormDbConnectionProvider dbProvider, string? contextUser, IDbTransaction transaction)
             : base(dbProvider, contextUser)
         {
             _transaction = transaction;

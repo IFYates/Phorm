@@ -5,7 +5,7 @@ using System.Data;
 namespace IFY.Phorm.SqlClient.Tests
 {
     [TestClass]
-    public class TransactedSqlPhormRunnerTests
+    public class TransactedSqlPhormSessionTests
     {
         [TestMethod]
         public void Commit()
@@ -14,7 +14,7 @@ namespace IFY.Phorm.SqlClient.Tests
             var transMock = new Mock<IDbTransaction>(MockBehavior.Strict);
             transMock.Setup(m => m.Commit()).Verifiable();
 
-            var runner = new TransactedSqlPhormRunner(null, null, transMock.Object);
+            var runner = new TransactedSqlPhormSession(null, null, transMock.Object);
 
             // Act
             runner.Commit();
@@ -30,7 +30,7 @@ namespace IFY.Phorm.SqlClient.Tests
             var transMock = new Mock<IDbTransaction>(MockBehavior.Strict);
             transMock.Setup(m => m.Rollback()).Verifiable();
 
-            var runner = new TransactedSqlPhormRunner(null, null, transMock.Object);
+            var runner = new TransactedSqlPhormSession(null, null, transMock.Object);
 
             // Act
             runner.Rollback();
@@ -51,7 +51,7 @@ namespace IFY.Phorm.SqlClient.Tests
                 .Returns(connMock.Object);
             transMock.Setup(m => m.Dispose()).Verifiable();
 
-            var runner = new TransactedSqlPhormRunner(null, null, transMock.Object);
+            var runner = new TransactedSqlPhormSession(null, null, transMock.Object);
 
             // Act
             runner.Dispose();

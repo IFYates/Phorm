@@ -55,7 +55,7 @@ namespace IFY.Phorm.Tests.Encryption
         public void Can_encrypt_string_value_out_to_database()
         {
             // Arrange
-            var runner = new TestPhormRunner();
+            var runner = new TestPhormSession();
 
             var args = new { Value = "value" };
             var objectData = Encoding.UTF8.GetBytes(args.Value);
@@ -87,7 +87,7 @@ namespace IFY.Phorm.Tests.Encryption
         public void Can_encrypt_with_authenticator()
         {
             // Arrange
-            var runner = new TestPhormRunner();
+            var runner = new TestPhormSession();
 
             var args = new { Authenticator = "auth", Value = "value" };
             var authBytes = Encoding.UTF8.GetBytes(args.Authenticator);
@@ -116,7 +116,7 @@ namespace IFY.Phorm.Tests.Encryption
         public void Can_encrypt_transformed_value()
         {
             // Arrange
-            var runner = new TestPhormRunner();
+            var runner = new TestPhormSession();
 
             var args = new { Value = "value" };
             var objectData = Encoding.UTF8.GetBytes("eulav"); // Transformed

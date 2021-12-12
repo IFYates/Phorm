@@ -5,7 +5,7 @@ using System.Data;
 
 namespace IFY.Phorm.Tests
 {
-    internal class TestPhormRunner : AbstractPhormRunner
+    internal class TestPhormSession : AbstractPhormSession
     {
         public TestPhormConnectionProvider? TestConnectionProvider => _connectionProvider as TestPhormConnectionProvider;
 
@@ -15,16 +15,16 @@ namespace IFY.Phorm.Tests
 
         public override bool IsInTransaction => false;
 
-        public TestPhormRunner()
+        public TestPhormSession()
             : this(new TestPhormConnectionProvider())
         {
         }
-        public TestPhormRunner(IPhormDbConnectionProvider connectionProvider)
+        public TestPhormSession(IPhormDbConnectionProvider connectionProvider)
             : base(connectionProvider)
         {
         }
 
-        public override ITransactedPhormRunner BeginTransaction()
+        public override ITransactedPhormSession BeginTransaction()
         {
             throw new NotSupportedException();
         }

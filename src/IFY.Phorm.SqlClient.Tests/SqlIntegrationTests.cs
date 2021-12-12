@@ -57,11 +57,11 @@ namespace IFY.Phorm.Tests
             int? Int { get; }
         }
 
-        private static IPhormRunner getPhormRunner()
+        private static IPhormSession getPhormSession()
         {
             var connProc = new SqlConnectionProvider(@"Server=(localdb)\ProjectModels;Database=PhormTests;");
 
-            var phorm = new SqlPhormRunner(connProc, "*");
+            var phorm = new SqlPhormSession(connProc, "*");
 
             phorm.Call("ClearTable");
 
@@ -80,7 +80,7 @@ namespace IFY.Phorm.Tests
         public void Call__By_anon_Insert_various_types()
         {
             // Arrange
-            var phorm = getPhormRunner();
+            var phorm = getPhormSession();
 
             var randNum = DateTime.UtcNow.Millisecond;
             var randStr = Guid.NewGuid().ToString();
@@ -103,7 +103,7 @@ namespace IFY.Phorm.Tests
         public void Call__By_contract_and_anon_arg_Insert_various_types()
         {
             // Arrange
-            var phorm = getPhormRunner();
+            var phorm = getPhormSession();
 
             var randNum = DateTime.UtcNow.Millisecond;
             var randStr = Guid.NewGuid().ToString();
@@ -126,7 +126,7 @@ namespace IFY.Phorm.Tests
         public void Call__By_contract_arg_Insert_various_types()
         {
             // Arrange
-            var phorm = getPhormRunner();
+            var phorm = getPhormSession();
 
             var arg = new DataItem(0,
                 DateTime.UtcNow.Millisecond,
@@ -151,7 +151,7 @@ namespace IFY.Phorm.Tests
         public void Call__Get_by_anon_output()
         {
             // Arrange
-            var phorm = getPhormRunner();
+            var phorm = getPhormSession();
 
             var arg = new
             {
@@ -171,7 +171,7 @@ namespace IFY.Phorm.Tests
         public void Call__Get_by_contract_output()
         {
             // Arrange
-            var phorm = getPhormRunner();
+            var phorm = getPhormSession();
 
             var arg = new DataItem();
 
@@ -191,7 +191,7 @@ namespace IFY.Phorm.Tests
         [TestMethod]
         public void Many__Can_access_returnvalue_of_sproc()
         {
-            var phorm = getPhormRunner();
+            var phorm = getPhormSession();
 
             phorm.Call("Upsert");
             phorm.Call("Upsert");
@@ -209,7 +209,7 @@ namespace IFY.Phorm.Tests
         public void Many__Filtered_from_view()
         {
             // Arrange
-            var phorm = getPhormRunner();
+            var phorm = getPhormSession();
 
             var obj1 = new DataItem();
             var res1 = phorm.Call<IUpsertWithId>(obj1);
@@ -231,7 +231,7 @@ namespace IFY.Phorm.Tests
         public void Many__Filtered_by_view()
         {
             // Arrange
-            var phorm = getPhormRunner();
+            var phorm = getPhormSession();
 
             phorm.Call("Upsert", new { Int = 0, IsInView = false });
             phorm.Call("Upsert", new { Int = 0, IsInView = false });
@@ -250,7 +250,7 @@ namespace IFY.Phorm.Tests
         [TestMethod]
         public void Many__Filtered_from_table()
         {
-            var phorm = getPhormRunner();
+            var phorm = getPhormSession();
 
             var res = phorm.Call("Upsert");
 
@@ -267,7 +267,7 @@ namespace IFY.Phorm.Tests
         [TestMethod]
         public void One__Can_ignore_property()
         {
-            var phorm = getPhormRunner();
+            var phorm = getPhormSession();
 
             var res = phorm.Call("Upsert");
 

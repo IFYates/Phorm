@@ -3,10 +3,10 @@
 namespace IFY.Phorm
 {
     /// <summary>
-    /// A <see cref="IPhormRunner"/> that is in a transaction.
+    /// A <see cref="IPhormSession"/> that is in a transaction.
     /// Disposing this runner before invoking <see cref="Commit"/> is the same as calling <see cref="Rollback"/>.
     /// </summary>
-    public interface ITransactedPhormRunner : IPhormRunner, IDisposable
+    public interface ITransactedPhormSession : IPhormSession, IDisposable
     {
         /// <summary>
         /// Commit the transaction, making this runner unusable for further calls.
