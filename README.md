@@ -47,19 +47,19 @@ A simple Pho/rm use would have the structure:
 [PhormContract] public interface IRecord_UpdateName { long Id { get; }, string Name { get; }, DateTime LastModified { set; } }
 
 // Configured factory instance creates a data connection
-var factory = di.Resolve<IPhormConnectionFactory>();
-IPhormConnection conn = factory.GetDefaultConnection();
+var factory = di.Resolve<IPhormDbConnectionProvider>();
+IPhormDbConnection conn = factory.GetConnection();
 
 // Data connection used to fetch an entity via a named sproc in different ways
-RecordDTO data = conn.One<RecordDTO>("Record_GetById", new { Id = id }); // Fully ad hoc
-RecordDTO data = conn.One<RecordDTO, IRecord_GetById>(new { Id = id }); // Anon parameters
+RecordDTO data = conn.From("Record_GetById").One<RecordDTO>(new { Id = id }); // Fully ad hoc
+RecordDTO data = conn.From<IRecord_GetById>().One<RecordDTO>(new { Id = id }); // Anon parameters
 
 IRecord_GetById q = new RecordDTO { Id = id }; // Or any IRecord_GetById implementation
-RecordDTO data = conn.One<RecordDTO>("Record_GetById", q); // Ad hoc procedure
-RecordDTO data = conn.One<RecordDTO, IRecord_GetById>(q); // Query instance
+RecordDTO data = conn.From("Record_GetById").One<RecordDTO>(q); // Ad hoc procedure
+RecordDTO data = conn.From<IRecord_GetById>().One<RecordDTO>(q); // Query instance
 
 // Update the entity in different ways
-var lastModifiedProperty = new DbField<DateTime>();
+var lastModifiedProperty = ContractMember.Out<DateTime>();
 int result = conn.Call("Record_UpdateName", new { Id = id, Name = name, LastModified = lastModifiedProperty }); // Fully ad hoc
 int result = conn.Call<IRecord_UpdateName>(new { Id = id, Name = name, LastModified = lastModifiedProperty }); // Anon parameters
 int result = conn.Call("Record_UpdateName", data); // Ad hoc procedure
@@ -83,6 +83,8 @@ Each of the `Call` requests execute sometiong like `usp_Record_UpdateName @Id = 
 
 ## Configuration
 - Stored procedure prefix (default "usp_")
+- View name prefix (default "vw_")
+- Table name prefix (no default)
 
 ## Extensions
 - OnConnected action against connection
@@ -94,13 +96,12 @@ DataContract // This class/struct/record is a contract, where all public propert
     Namespace = "" // The schema name to use, if not the current database user
 
 PhormContract // Same as DataContract, but also for action contracts (interfaces)
+    DbObjectType Target // For choosing between procedure, table, view
 
 DataMember // This property is included in the contract, with possible customisation
     EmitDefaultValue = false // Whether to always send the default value
     IsRequired = false // Whether to fail if this property is not set on fetch
     Name = "" // Override the property name matched in the datasource
-
-// Need: To/From Json, To/From Encryption, To/From enum type (int/string)
 
 IgnoreDataMember // Do not include this property in the contract
 ```
