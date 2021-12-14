@@ -17,6 +17,6 @@ namespace IFY.Phorm.Connectivity
         /// </summary>
         /// <param name="connectionName">The name of the connection to scope this connection for.</param>
         /// <returns>A datasource connection for the given context.</returns>
-        IPhormDbConnection GetConnection(string? connectionName);
+        IPhormDbConnection GetConnection(string? connectionName = null);
     }
 }

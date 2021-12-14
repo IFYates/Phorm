@@ -18,10 +18,9 @@ namespace IFY.Phorm.SqlClient
         protected virtual SqlConnectionStringBuilder GetConnectionString(string? connectionName)
         {
             // The connection will identify as the given name
-            return new SqlConnectionStringBuilder(DatabaseConnectionString)
-            {
-                ApplicationName = connectionName ?? string.Empty
-            };
+            var connStr = new SqlConnectionStringBuilder(DatabaseConnectionString);
+            connStr.ApplicationName = connectionName ?? connStr.ApplicationName;
+            return connStr;
         }
 
         public IPhormDbConnection GetConnection(string? connectionName)
