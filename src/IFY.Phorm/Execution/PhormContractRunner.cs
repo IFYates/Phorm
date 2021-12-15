@@ -137,22 +137,22 @@ namespace IFY.Phorm
                 .ToDictionary(m => m.Name.ToLower());
 
             // Parse first record of result
+            TResult? res = default;
             using var rdr = await cmd.ExecuteReaderAsync(cancellationToken ?? CancellationToken.None);
             if (rdr.Read())
             {
-                var res = getEntity<TResult>(rdr, resultMembers);
+                res = getEntity<TResult>(rdr, resultMembers);
                 if (rdr.Read())
                 {
                     throw new InvalidOperationException("Expected a single-record result, but more than one found.");
                 }
-                return res;
             }
 
             if (await rdr.NextResultAsync())
             {
                 throw new InvalidOperationException("Expected a single-record result, but more than one found.");
             }
-            return default;
+            return res;
         }
 
         private static TResult getEntity<TResult>(IDataReader rdr, Dictionary<string, ContractMember> members)

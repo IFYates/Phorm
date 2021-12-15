@@ -35,7 +35,7 @@ namespace IFY.Phorm
             return value switch
             {
                 byte[] val => val,
-                byte val => BitConverter.GetBytes(val),
+                byte val => new[] { val },
                 char val => BitConverter.GetBytes(val),
                 double val => BitConverter.GetBytes(val),
                 float val => BitConverter.GetBytes(val),
@@ -57,6 +57,10 @@ namespace IFY.Phorm
                 return default;
             }
 
+            if (resultType == typeof(byte[]))
+            {
+                return bytes;
+            }
             if (resultType == typeof(decimal))
             {
                 var bits = new int[4];

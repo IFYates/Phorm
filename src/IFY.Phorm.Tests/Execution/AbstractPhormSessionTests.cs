@@ -31,6 +31,7 @@ namespace IFY.Phorm.Tests
             // Arrange
             var phorm = new TestPhormSession();
 
+
             // Act
             var runner = phorm.From<ITestContract>();
 

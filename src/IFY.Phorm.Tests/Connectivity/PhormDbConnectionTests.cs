@@ -11,10 +11,37 @@ namespace IFY.Phorm.Connectivity.Tests
     public class PhormDbConnectionTests
     {
         [TestMethod]
+        public void Properties()
+        {
+            // Arrange
+            var dbMock = new Mock<IDbConnection>(MockBehavior.Strict);
+            dbMock.SetupProperty(m => m.ConnectionString);
+            dbMock.SetupGet(m => m.ConnectionTimeout).Returns(1234);
+            dbMock.SetupGet(m => m.Database).Returns("databaseName");
+            dbMock.SetupGet(m => m.State).Returns(ConnectionState.Connecting);
+
+            var db = new PhormDbConnection("contextName", dbMock.Object)
+            {
+                DefaultSchema = "schema",
+                ConnectionString = "connString"
+            };
+
+            // Assert
+            Assert.AreSame(dbMock.Object, db.DbConnection);
+            Assert.AreEqual("contextName", db.ConnectionName);
+            Assert.AreEqual("schema", db.DefaultSchema);
+            Assert.AreEqual("connString", db.ConnectionString);
+            Assert.AreEqual("connString", dbMock.Object.ConnectionString);
+            Assert.AreEqual(1234, db.ConnectionTimeout);
+            Assert.AreEqual("databaseName", db.Database);
+            Assert.AreEqual(ConnectionState.Connecting, db.State);
+        }
+
+        [TestMethod]
         public void BeginTransaction()
         {
-            // Assert
-            var dbMock = new Mock<IPhormDbConnection>(MockBehavior.Strict);
+            // Arrange
+            var dbMock = new Mock<IDbConnection>(MockBehavior.Strict);
             dbMock.Setup(m => m.BeginTransaction())
                 .Returns(() => null).Verifiable();
 
@@ -30,8 +57,8 @@ namespace IFY.Phorm.Connectivity.Tests
         [TestMethod]
         public void BeginTransaction__With_IsolationLevel()
         {
-            // Assert
-            var dbMock = new Mock<IPhormDbConnection>(MockBehavior.Strict);
+            // Arrange
+            var dbMock = new Mock<IDbConnection>(MockBehavior.Strict);
             dbMock.Setup(m => m.BeginTransaction(It.IsAny<IsolationLevel>()))
                 .Returns(() => null).Verifiable();
 
@@ -47,8 +74,8 @@ namespace IFY.Phorm.Connectivity.Tests
         [TestMethod]
         public void ChangeDatabase()
         {
-            // Assert
-            var dbMock = new Mock<IPhormDbConnection>(MockBehavior.Strict);
+            // Arrange
+            var dbMock = new Mock<IDbConnection>(MockBehavior.Strict);
             dbMock.Setup(m => m.ChangeDatabase(It.IsAny<string>()))
                 .Verifiable();
 
@@ -64,8 +91,8 @@ namespace IFY.Phorm.Connectivity.Tests
         [TestMethod]
         public void Open()
         {
-            // Assert
-            var dbMock = new Mock<IPhormDbConnection>(MockBehavior.Strict);
+            // Arrange
+            var dbMock = new Mock<IDbConnection>(MockBehavior.Strict);
             dbMock.Setup(m => m.Open())
                 .Verifiable();
 
@@ -81,8 +108,8 @@ namespace IFY.Phorm.Connectivity.Tests
         [TestMethod]
         public void Close()
         {
-            // Assert
-            var dbMock = new Mock<IPhormDbConnection>(MockBehavior.Strict);
+            // Arrange
+            var dbMock = new Mock<IDbConnection>(MockBehavior.Strict);
             dbMock.Setup(m => m.Close())
                 .Verifiable();
 
@@ -98,7 +125,7 @@ namespace IFY.Phorm.Connectivity.Tests
         [TestMethod]
         public void CreateCommand__Wraps_command_as_IAsyncDbCommand()
         {
-            // Assert
+            // Arrange
             var cmdText = Guid.NewGuid().ToString();
             var cmd = new TestDbCommand
             {
@@ -120,10 +147,29 @@ namespace IFY.Phorm.Connectivity.Tests
         }
 
         [TestMethod]
+        public void CreateCommand__IDbConnection()
+        {
+            // Arrange
+            var cmdMock = new Mock<IDbCommand>(MockBehavior.Strict);
+
+            var dbMock = new Mock<IDbConnection>(MockBehavior.Strict);
+            dbMock.Setup(m => m.CreateCommand())
+                .Returns(cmdMock.Object).Verifiable();
+
+            var db = new PhormDbConnection("", dbMock.Object);
+
+            // Act
+            var res = ((IDbConnection)db).CreateCommand();
+
+            // Assert
+            Assert.AreSame(cmdMock.Object, res);
+        }
+
+        [TestMethod]
         public void Dispose()
         {
-            // Assert
-            var dbMock = new Mock<IPhormDbConnection>(MockBehavior.Strict);
+            // Arrange
+            var dbMock = new Mock<IDbConnection>(MockBehavior.Strict);
             dbMock.Setup(m => m.Dispose())
                 .Verifiable();
 

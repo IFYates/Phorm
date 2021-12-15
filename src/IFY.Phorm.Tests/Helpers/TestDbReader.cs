@@ -10,6 +10,7 @@ namespace IFY.Phorm.Tests
     {
         public Dictionary<string, object>? Tuple { get; private set; } = null;
         public List<Dictionary<string, object>> Data { get; init; } = new();
+        public List<Dictionary<string, object>[]> Results { get; init; } = new();
 
         public override object this[int ordinal] => throw new NotImplementedException();
 
@@ -137,6 +138,13 @@ namespace IFY.Phorm.Tests
 
         public override bool NextResult()
         {
+            if (Results.Count > 0)
+            {
+                Data.Clear();
+                Data.AddRange(Results[0]);
+                Results.RemoveAt(0);
+                return true;
+            }
             return false;
         }
 
