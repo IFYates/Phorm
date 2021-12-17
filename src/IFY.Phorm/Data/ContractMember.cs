@@ -169,16 +169,9 @@ namespace IFY.Phorm.Data
 
             static IList<ContractMember> addReturnValue(object? obj, List<ContractMember> members)
             {
-                // Always want the return value on action contracts
-                var retPar = (ContractMember<int>?)members.FirstOrDefault(p => p.Direction == ParameterDirection.ReturnValue);
-                if (retPar == null)
+                if (!members.Any(p => p.Direction == ParameterDirection.ReturnValue))
                 {
-                    // Allow for a return value on the object
-                    retPar = obj?.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public)
-                        .Where(p => p.PropertyType == typeof(ContractMember<int>))
-                        .Select(p => p.GetValue(obj) as ContractMember<int>)
-                        .FirstOrDefault(v => v?.Direction == ParameterDirection.ReturnValue);
-                    members.Add(retPar ?? RetVal());
+                    members.Add(RetVal());
                 }
                 return members;
             }

@@ -124,6 +124,30 @@ namespace IFY.Phorm.Data.Tests
             Assert.AreSame(typeof(TestSecureAttribute), memb.Attributes.Single().GetType());
         }
 
+        #region GetMembersFromContract
+
+        class ObjectWithReturnValueProperty
+        {
+            public ContractMember ReturnValue { get; } = ContractMember.RetVal();
+        }
+
+        [TestMethod]
+        public void GetMembersFromContract__ReturnValue_property_on_object()
+        {
+            // Arrange
+            var obj = new ObjectWithReturnValueProperty();
+
+            // Act
+            var res = ContractMember.GetMembersFromContract(obj, typeof(IPhormContract));
+
+            // Assert
+            Assert.AreEqual(1, res.Length);
+            Assert.AreEqual(ParameterDirection.ReturnValue, ((ContractMember<int>)res[0]).Direction);
+            Assert.AreSame(obj.ReturnValue, (ContractMember<int>)res[0]);
+        }
+
+        #endregion GetMembersFromContract
+
         #region ToDataParameter
 
         public enum TestEnum

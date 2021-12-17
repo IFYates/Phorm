@@ -94,11 +94,5 @@ namespace IFY.Phorm
                 _ => throw new InvalidCastException(),
             };
         }
-
-        public static bool TrySingle<T>(this IEnumerable<T> coll, Func<T, bool> predicate, [MaybeNullWhen(false)] out T result)
-        {
-            result = coll.SingleOrDefault(predicate);
-            return result != null;
-        }
     }
 }

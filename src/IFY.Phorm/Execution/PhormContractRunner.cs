@@ -217,10 +217,10 @@ namespace IFY.Phorm
                 }
                 else if (param.Direction == ParameterDirection.ReturnValue)
                 {
-                    if (members.TrySingle(a => a.Direction == ParameterDirection.ReturnValue, out var memb))
+                    returnValue = (int?)param.Value ?? 0;
+                    foreach (var memb in members.Where(a => a.Direction == ParameterDirection.ReturnValue))
                     {
-                        memb.SetValue((int?)param.Value ?? 0);
-                        returnValue = (int?)memb.Value ?? 0;
+                        memb.SetValue(returnValue);
                     }
                 }
             }
