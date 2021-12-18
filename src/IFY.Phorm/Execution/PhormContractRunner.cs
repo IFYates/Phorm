@@ -122,9 +122,11 @@ namespace IFY.Phorm
                 results.Add(res);
             }
 
-            if (await rdr.NextResultAsync())
+            // Process sub results
+            int rsOrder = 0;
+            while (await rdr.NextResultAsync())
             {
-                // TODO: handle child resultset
+                matchResultset(rsOrder++, rdr, results);
             }
 
             return results.ToArray();
@@ -132,7 +134,6 @@ namespace IFY.Phorm
         private static async Task<TResult?> readSingle<TResult>(IAsyncDbCommand cmd, CancellationToken? cancellationToken)
             where TResult : new()
         {
-            var results = new List<TResult>();
             var resultMembers = ContractMember.GetMembersFromContract(null, typeof(TResult))
                 .ToDictionary(m => m.Name.ToLower());
 
@@ -148,17 +149,68 @@ namespace IFY.Phorm
                 }
             }
 
-            if (await rdr.NextResultAsync())
+            // Process sub results
+            int rsOrder = 0;
+            while (await rdr.NextResultAsync())
             {
-                throw new InvalidOperationException("Expected a single-record result, but more than one found.");
+                matchResultset(rsOrder++, rdr, new[] { res });
             }
+
             return res;
+        }
+
+        private static void matchResultset<TResult>(int order, IDataReader rdr, IEnumerable<TResult> parents)
+        {
+            // Find resultset target
+            var rsProp = typeof(TResult).GetProperties()
+                .SingleOrDefault(p => p.GetCustomAttribute<ResultsetAttribute>()?.Order == order);
+            if (rsProp?.CanWrite != true)
+            {
+                // TODO: log resultset ignored
+                return;
+            }
+
+            // Get data
+            var recordType = rsProp.PropertyType.IsArray ? rsProp.PropertyType.GetElementType() : rsProp.PropertyType;
+            var records = new List<object>();
+            var recordMembers = ContractMember.GetMembersFromContract(null, recordType)
+                .ToDictionary(m => m.Name.ToLower());
+            while (rdr.Read())
+            {
+                var res = getEntity(recordType, rdr, recordMembers);
+                records.Add(res);
+            }
+
+            // Use selector
+            var attr = rsProp.GetCustomAttribute<ResultsetAttribute>() ?? new ResultsetAttribute(0, string.Empty);
+            foreach (var parent in parents)
+            {
+                var matches = attr.FilterMatched(parent, records);
+                if (rsProp.PropertyType.IsArray)
+                {
+                    var arr = (Array?)Activator.CreateInstance(rsProp.PropertyType, new object[] { matches.Length }) ?? Array.Empty<object>();
+                    Array.Copy(matches, arr, matches.Length);
+                    rsProp.SetValue(parent, arr);
+                }
+                else if (matches.Length > 1)
+                {
+                    throw new InvalidCastException($"Resultset property {rsProp.Name} is not an array but matched {matches.Length} records");
+                }
+                else
+                {
+                    rsProp.SetValue(parent, matches.FirstOrDefault());
+                }
+            }
         }
 
         private static TResult getEntity<TResult>(IDataReader rdr, Dictionary<string, ContractMember> members)
             where TResult : new()
         {
-            var entity = new TResult();
+            return (TResult)getEntity(typeof(TResult), rdr, members);
+        }
+        private static object getEntity(Type entityType, IDataReader rdr, Dictionary<string, ContractMember> members)
+        {
+            var entity = Activator.CreateInstance(entityType) ?? new object();
 
             // Resolve member values
             var secureMembers = new Dictionary<ContractMember, int>();

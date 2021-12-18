@@ -70,6 +70,26 @@ Each of the `One` requests will execute something like `usp_Record_GetById @Id =
 
 Each of the `Call` requests execute sometiong like `usp_Record_UpdateName @Id = {id}, @Name = {name}` and will update the `LastModified` property (`lastModifiedProperty` or `data.LastModified`).
 
+## Secondary resultsets
+Pho/rm supports additional resultsets in procedure responses in order to provide parent-child data in a single request.  
+This is achieved by defining a selector for the relationship.
+
+Note that any child value returned that is not matched by a selector is discarded.
+
+```CSharp
+public record ChildContract(long ParentId);
+public record ParentContract(long Id)
+{
+    [Recordset(order: 0, selectorProperty: nameof(ChildrenSelector))]
+    public ChildContract[] Children { get; set; }
+    public static RecordMatcher<ParentContract, ChildContract> ChildrenSelector => new((parent, child) => child.ParentId == parent.Id);
+}
+
+ParentContract[] result = phorm.From("ParentsWithChildren").Many<ParentContract>();
+```
+
+This example will result in each parent entity instance containing a list of all child entities matching on the id.
+
 ## Best practices
 * A contract per operation (avoid the ad hoc solution for complete code)
 * Wrap related operations in a "gateway", to reduce exposure of the `IPhormConnection` instance.
@@ -152,7 +172,7 @@ public class MyEncryptionProvider : IEncryptionProvider
 }
 // Registered at startup: phormSettings.EncryptionProvider = new MyEncryptionProvider();
 
-public MyEncryptor : IEncryptor
+public class MyEncryptor : IEncryptor
 {
         public string DataClassification { get; init; }
         public byte[] Authenticator { get; set; }
