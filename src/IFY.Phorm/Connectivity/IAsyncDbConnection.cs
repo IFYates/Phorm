@@ -1,4 +1,5 @@
-﻿using System.Data.Common;
+﻿using Shimterface;
+using System.Data.Common;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -11,9 +12,10 @@ namespace System.Data
     {
         string CommandText { get; set; }
         CommandType CommandType { get; set; }
-        public IDataParameterCollection Parameters { get; }
+        [Shim(typeof(IDbCommand))] IDataParameterCollection Parameters { get; }
 
-        public IDbDataParameter CreateParameter();
+        [Shim(typeof(IDbCommand))]
+        IDbDataParameter CreateParameter();
         Task<DbDataReader> ExecuteReaderAsync(CancellationToken cancellationToken);
     }
 }
