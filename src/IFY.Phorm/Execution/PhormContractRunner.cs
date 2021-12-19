@@ -166,8 +166,7 @@ namespace IFY.Phorm
                 .SingleOrDefault(p => p.GetCustomAttribute<ResultsetAttribute>()?.Order == order);
             if (rsProp?.CanWrite != true)
             {
-                // TODO: log resultset ignored
-                return;
+                throw new InvalidDataContractException($"Resultset property '{rsProp.Name}' is not writable.");
             }
 
             // Get data
@@ -194,7 +193,7 @@ namespace IFY.Phorm
                 }
                 else if (matches.Length > 1)
                 {
-                    throw new InvalidCastException($"Resultset property {rsProp.Name} is not an array but matched {matches.Length} records");
+                    throw new InvalidCastException($"Resultset property {rsProp.Name} is not an array but matched {matches.Length} records.");
                 }
                 else
                 {

@@ -1,4 +1,5 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
 using System.Linq;
 
 namespace IFY.Phorm.Data.Tests
@@ -11,7 +12,7 @@ namespace IFY.Phorm.Data.Tests
             public long Id { get; set; }
 
             public static object InvalidSelectProperty => new RecordMatcher<ParentObject, ChildObject>((p, c) => true);
-            public static IRecordMatcher TypeMismatchSelector => new RecordMatcher<ParentObject, ParentObject>((p, c) => true);
+            public static IRecordMatcher WrongParentType => new RecordMatcher<ChildObject, ChildObject>((p, c) => true);
             public static IRecordMatcher MatchByParentId => new RecordMatcher<ParentObject, ChildObject>((p, c) => c.ParentId == p.Id);
         }
         public class ChildObject
@@ -20,7 +21,7 @@ namespace IFY.Phorm.Data.Tests
         }
 
         [TestMethod]
-        public void FilterMatched__Bad_selector_name__Empty()
+        public void FilterMatched__Bad_selector_name__Fail()
         {
             // Arrange
             var parent = new ParentObject { Id = 1234 };
@@ -29,14 +30,15 @@ namespace IFY.Phorm.Data.Tests
             var attr = new ResultsetAttribute(0, "BadSelectorProperty");
 
             // Act
-            var result = attr.FilterMatched(parent, new[] { child });
+            var ex = Assert.ThrowsException<InvalidCastException>(() =>
+                attr.FilterMatched(parent, new[] { child }));
 
             // Assert
-            Assert.AreEqual(0, result.Length);
+            Assert.AreEqual("Selector property 'BadSelectorProperty' does not return IRecordMatcher.", ex.Message);
         }
 
         [TestMethod]
-        public void FilterMatched__Bad_selector_type__Empty()
+        public void FilterMatched__Bad_selector_type__Fail()
         {
             // Arrange
             var parent = new ParentObject { Id = 1234 };
@@ -45,46 +47,32 @@ namespace IFY.Phorm.Data.Tests
             var attr = new ResultsetAttribute(0, nameof(ParentObject.InvalidSelectProperty));
 
             // Act
-            var result = attr.FilterMatched(parent, new[] { child });
+            var ex = Assert.ThrowsException<InvalidCastException>(() =>
+                attr.FilterMatched(parent, new[] { child }));
 
             // Assert
-            Assert.AreEqual(0, result.Length);
+            Assert.AreEqual("Selector property 'InvalidSelectProperty' does not return IRecordMatcher.", ex.Message);
         }
 
         [TestMethod]
-        public void FilterMatched__Bad_selector_typedef__Empty()
+        public void FilterMatched__Wrong_parent_type__Fail()
         {
             // Arrange
             var parent = new ParentObject { Id = 1234 };
             var child = new ChildObject { ParentId = 1234 };
 
-            var attr = new ResultsetAttribute(0, nameof(ParentObject.TypeMismatchSelector));
+            var attr = new ResultsetAttribute(0, nameof(ParentObject.WrongParentType));
 
             // Act
-            var result = attr.FilterMatched(parent, new[] { child });
+            var ex = Assert.ThrowsException<InvalidCastException>(() =>
+                attr.FilterMatched(parent, new[] { child }));
 
             // Assert
-            Assert.AreEqual(0, result.Length);
+            Assert.AreEqual("Parent entity type 'IFY.Phorm.Data.Tests.ResultsetAttributeTests+ParentObject' could not be used for matcher expecting type 'IFY.Phorm.Data.Tests.ResultsetAttributeTests+ChildObject'.", ex.Message);
         }
 
         [TestMethod]
-        public void FilterMatched__Wrong_parent_type__Empty()
-        {
-            // Arrange
-            var parent = new ChildObject();
-            var child = new ChildObject { ParentId = 1234 };
-
-            var attr = new ResultsetAttribute(0, nameof(ParentObject.MatchByParentId));
-
-            // Act
-            var result = attr.FilterMatched(parent, new[] { child });
-
-            // Assert
-            Assert.AreEqual(0, result.Length);
-        }
-
-        [TestMethod]
-        public void FilterMatched__Wrong_entity_type__Empty()
+        public void FilterMatched__Wrong_entity_type__Fail()
         {
             // Arrange
             var parent = new ParentObject { Id = 1234 };
@@ -93,10 +81,11 @@ namespace IFY.Phorm.Data.Tests
             var attr = new ResultsetAttribute(0, nameof(ParentObject.MatchByParentId));
 
             // Act
-            var result = attr.FilterMatched(parent, new[] { child });
+            var ex = Assert.ThrowsException<InvalidCastException>(() =>
+                attr.FilterMatched(parent, new[] { child }));
 
             // Assert
-            Assert.AreEqual(0, result.Length);
+            Assert.AreEqual("Child entity type 'IFY.Phorm.Data.Tests.ResultsetAttributeTests+ParentObject' could not be used for matcher expecting type 'IFY.Phorm.Data.Tests.ResultsetAttributeTests+ChildObject'.", ex.Message);
         }
 
         [TestMethod]

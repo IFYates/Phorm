@@ -2,6 +2,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
+using System.Runtime.Serialization;
 
 namespace IFY.Phorm.Tests
 {
@@ -76,10 +77,9 @@ namespace IFY.Phorm.Tests
             var runner = new PhormContractRunner<ITestContract>(phorm, "ContractName", DbObjectType.StoredProcedure);
 
             // Act
-            var res = runner.ManyAsync<TestParentBadProperty>().Result;
-
-            // Assert
-            Assert.AreEqual(0, res[0].Children.Length);
+            var ex = Assert.ThrowsException<AggregateException>(() =>
+                runner.ManyAsync<TestParentBadProperty>().Result);
+            Assert.AreEqual("Resultset property 'Children' is not writable.", ((InvalidDataContractException?)ex.InnerException)?.Message);
         }
 
         [TestMethod]

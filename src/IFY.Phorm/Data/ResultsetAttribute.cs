@@ -10,6 +10,9 @@ namespace IFY.Phorm.Data
         public int Order { get; }
         public string SelectorPropertyName { get; }
 
+        private Type? _lastSelectorType = null;
+        private IRecordMatcher? _lastMatcher = null;
+
         public ResultsetAttribute(int order, string selectorPropertyName)
         {
             Order = order;
@@ -18,16 +21,20 @@ namespace IFY.Phorm.Data
 
         public object[] FilterMatched(object parent, IEnumerable<object> children)
         {
-            var selectorProp = parent.GetType().GetProperty(SelectorPropertyName);
-            if (selectorProp?.PropertyType.IsAssignableTo(typeof(IRecordMatcher)) != true)
+            if (_lastSelectorType != parent.GetType())
             {
-                return Array.Empty<object>();
-            }
+                var selectorProp = parent.GetType().GetProperty(SelectorPropertyName);
+                if (selectorProp?.PropertyType.IsAssignableTo(typeof(IRecordMatcher)) != true)
+                {
+                    throw new InvalidCastException($"Selector property '{SelectorPropertyName}' does not return IRecordMatcher.");
+                }
 
-            var selector = selectorProp.GetAccessors()[0].IsStatic
-                ? (IRecordMatcher?)selectorProp.GetValue(null)
-                : (IRecordMatcher?)selectorProp.GetValue(parent);
-            return children.Where(c => selector?.IsMatch(parent, c) == true).ToArray();
+                _lastSelectorType = parent.GetType();
+                _lastMatcher = selectorProp.GetAccessors()[0].IsStatic
+                    ? (IRecordMatcher?)selectorProp.GetValue(null)
+                    : (IRecordMatcher?)selectorProp.GetValue(parent);
+            }
+            return children.Where(c => _lastMatcher!.IsMatch(parent, c) == true).ToArray();
         }
     }
 }
