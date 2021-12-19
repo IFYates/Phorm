@@ -7,13 +7,11 @@
 
         <Authors>IFYates</Authors>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
-        <Version>0.1.2-beta</Version>
-        <AssemblyVersion>0.1.2</AssemblyVersion>
-        <FileVersion>0.1.2</FileVersion>
+        <Version>1.0.0</Version>
         <PackageProjectUrl>https://github.com/IFYates/Phorm</PackageProjectUrl>
         <RepositoryUrl>https://github.com/IFYates/Phorm</RepositoryUrl>
         <RepositoryType>GitHub</RepositoryType>
-        <PackageReleaseNotes>[POC]</PackageReleaseNotes>
+		<PackageReleaseNotes>v1.0.0 - First fully-functional release</PackageReleaseNotes>
         <Copyright>(c) IFYates</Copyright>
         <Description>SqlClient implementation of the Procedure-heavy object-relational mapping framework.</Description>
 
