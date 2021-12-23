@@ -94,7 +94,7 @@ namespace IFY.Phorm.Data
             {
                 if (obj == null)
                 {
-                    return addReturnValue(obj, new()).ToArray();
+                    return addReturnValue(new()).ToArray();
                 }
                 contractType = obj.GetType();
             }
@@ -165,13 +165,19 @@ namespace IFY.Phorm.Data
                 }
             }
 
-            return addReturnValue(obj, members).ToArray();
+            return addReturnValue(members).ToArray();
 
-            static IList<ContractMember> addReturnValue(object? obj, List<ContractMember> members)
+            IList<ContractMember> addReturnValue(List<ContractMember> members)
             {
                 if (!members.Any(p => p.Direction == ParameterDirection.ReturnValue))
-                {
-                    members.Add(RetVal());
+                {                    
+                    // Allow for a return value on the object
+                    var retPar = obj?.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public)
+                        .Where(p => p.PropertyType == typeof(ContractMember<int>))
+                        .Select(p => p.GetValue(obj) as ContractMember<int>)
+                        .FirstOrDefault(v => v?.Direction == ParameterDirection.ReturnValue);
+
+                    members.Add(retPar ?? RetVal());
                 }
                 return members;
             }
