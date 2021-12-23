@@ -81,8 +81,8 @@ public record ChildContract(long ParentId);
 public record ParentContract(long Id)
 {
     [Recordset(order: 0, selectorProperty: nameof(ChildrenSelector))]
-    public ChildContract[] Children { get; set; }
-    public static RecordMatcher<ParentContract, ChildContract> ChildrenSelector => new((parent, child) => child.ParentId == parent.Id);
+    public ChildContract[] Children { get; set; } // The property to fill with selected child entities
+    public static RecordMatcher<ParentContract, ChildContract> ChildrenSelector => new((parent, child) => child.ParentId == parent.Id); // The logic for selecting child entities
 }
 
 ParentContract[] result = phorm.From("ParentsWithChildren").Many<ParentContract>();

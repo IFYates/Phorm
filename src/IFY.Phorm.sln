@@ -16,6 +16,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IFY.Phorm.SqlClient", "IFY.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IFY.Phorm.SqlClient.Tests", "IFY.Phorm.SqlClient.Tests\IFY.Phorm.SqlClient.Tests.csproj", "{EEBA764B-76E1-4220-B0B4-5DCA27D0CDB6}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IFY.Phorm.SqlClient.IntegrationTests", "IFY.Phorm.SqlClient.IntegrationTests\IFY.Phorm.SqlClient.IntegrationTests.csproj", "{8108F071-7D34-4713-84E4-041426A1CCDA}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{FD1F6039-0890-4FE1-96E6-DCF37933295C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -38,9 +42,18 @@ Global
 		{EEBA764B-76E1-4220-B0B4-5DCA27D0CDB6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EEBA764B-76E1-4220-B0B4-5DCA27D0CDB6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EEBA764B-76E1-4220-B0B4-5DCA27D0CDB6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8108F071-7D34-4713-84E4-041426A1CCDA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8108F071-7D34-4713-84E4-041426A1CCDA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8108F071-7D34-4713-84E4-041426A1CCDA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8108F071-7D34-4713-84E4-041426A1CCDA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{369429CA-8C0C-41C2-BBBC-6A417D6CF2AC} = {FD1F6039-0890-4FE1-96E6-DCF37933295C}
+		{EEBA764B-76E1-4220-B0B4-5DCA27D0CDB6} = {FD1F6039-0890-4FE1-96E6-DCF37933295C}
+		{8108F071-7D34-4713-84E4-041426A1CCDA} = {FD1F6039-0890-4FE1-96E6-DCF37933295C}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {2CC49BBB-6C96-42C0-A938-D8EAE844BB0D}

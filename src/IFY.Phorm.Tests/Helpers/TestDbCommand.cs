@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data;
 using System.Data.Common;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -10,17 +11,19 @@ namespace IFY.Phorm.Tests
     /// <summary>
     /// Mockable test object with useful default implementation.
     /// </summary>
+    [SuppressMessage("Design", "CA1061:Do not hide base class methods")]
     public partial class TestDbCommand : DbCommand, IAsyncDbCommand, IDbCommand
     {
         public int ReturnValue { get; set; } = 1;
         public DbDataReader Reader { get; set; }
 
-        public override string CommandText { get; set; } = string.Empty;
+        public override string CommandText { get; [param: AllowNull] set; } = string.Empty;
         public override int CommandTimeout { get; set; }
         public override CommandType CommandType { get; set; }
         public new virtual IDbConnection? Connection { get; set; }
 
         public new virtual IDataParameterCollection Parameters { get; } = new TestParameterCollection();
+
 
         public new virtual IDbTransaction? Transaction { get; set; }
         public override UpdateRowSource UpdatedRowSource { get; set; }
@@ -43,7 +46,7 @@ namespace IFY.Phorm.Tests
         {
         }
 
-        public virtual IDbDataParameter CreateParameter()
+        public new virtual IDbDataParameter CreateParameter()
         {
             return new TestDbParameter();
         }
@@ -66,17 +69,17 @@ namespace IFY.Phorm.Tests
             throw new NotImplementedException();
         }
 
-        public virtual IDataReader ExecuteReader()
+        public new virtual IDataReader ExecuteReader()
         {
             throw new NotImplementedException();
         }
 
-        public virtual IDataReader ExecuteReader(CommandBehavior behavior)
+        public new virtual IDataReader ExecuteReader(CommandBehavior behavior)
         {
             throw new NotImplementedException();
         }
 
-        public virtual Task<DbDataReader> ExecuteReaderAsync(CancellationToken cancellationToken)
+        public new virtual Task<DbDataReader> ExecuteReaderAsync(CancellationToken cancellationToken)
         {
             var retvalParam = Parameters.AsParameters()
                 .FirstOrDefault(p => p.Direction == ParameterDirection.ReturnValue);

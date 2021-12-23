@@ -43,7 +43,7 @@ namespace IFY.Phorm.Connectivity.Tests
             // Arrange
             var dbMock = new Mock<IDbConnection>(MockBehavior.Strict);
             dbMock.Setup(m => m.BeginTransaction())
-                .Returns(() => null).Verifiable();
+                .Returns(() => null!).Verifiable();
 
             var db = new PhormDbConnection("", dbMock.Object);
 
@@ -60,7 +60,7 @@ namespace IFY.Phorm.Connectivity.Tests
             // Arrange
             var dbMock = new Mock<IDbConnection>(MockBehavior.Strict);
             dbMock.Setup(m => m.BeginTransaction(It.IsAny<IsolationLevel>()))
-                .Returns(() => null).Verifiable();
+                .Returns(() => null!).Verifiable();
 
             var db = new PhormDbConnection("", dbMock.Object);
 

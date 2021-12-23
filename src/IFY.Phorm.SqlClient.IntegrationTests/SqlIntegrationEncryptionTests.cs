@@ -1,10 +1,9 @@
 ﻿using IFY.Phorm.Data;
 using IFY.Phorm.Encryption;
-using IFY.Phorm.SqlClient;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 
-namespace IFY.Phorm.Tests
+namespace IFY.Phorm.SqlClient.IntegrationTests
 {
     [TestClass]
     public class SqlIntegrationEncryptionTests
@@ -12,7 +11,7 @@ namespace IFY.Phorm.Tests
         [PhormContract(Name = "DataTable")]
         public record DataItem(long Id, int Int, [property: SecureValue("class", nameof(DataItem.Int))] string Data)
         {
-            public DataItem() : this(default, default, default)
+            public DataItem() : this(default, default, default!)
             { }
         }
         [PhormContract]
@@ -62,7 +61,8 @@ namespace IFY.Phorm.Tests
 
             // Act
             var res = phorm.CallAsync<IUpsert>(new { Int = randInt, Data = randStr }).Result;
-            var obj = phorm.From("DataTable", objectType: DbObjectType.Table).OneAsync<DataItem>().Result;
+            var obj = phorm.From("DataTable", objectType: DbObjectType.Table)
+                .OneAsync<DataItem>().Result!;
 
             // Assert
             Assert.AreEqual(1, res);

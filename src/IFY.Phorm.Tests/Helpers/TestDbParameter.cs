@@ -1,4 +1,5 @@
 ﻿using System.Data;
+using System.Diagnostics.CodeAnalysis;
 
 namespace IFY.Phorm.Tests
 {
@@ -15,8 +16,8 @@ namespace IFY.Phorm.Tests
 
         public virtual bool IsNullable { get; } = true;
 
-        public virtual string ParameterName { get; set; } = string.Empty;
-        public virtual string SourceColumn { get; set; } = string.Empty;
+        public virtual string ParameterName { get; [param: AllowNull] set; } = string.Empty;
+        public virtual string SourceColumn { get; [param: AllowNull] set; } = string.Empty;
         public virtual DataRowVersion SourceVersion { get; set; }
         public virtual object? Value { get; set; }
     }

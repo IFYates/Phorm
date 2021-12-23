@@ -48,7 +48,7 @@ namespace IFY.Phorm.Encryption.Tests
 
             var provMock = new Mock<IEncryptionProvider>(MockBehavior.Strict);
             provMock.Setup(m => m.GetInstance("class"))
-                .Returns(() => null);
+                .Returns(() => null!);
             GlobalSettings.EncryptionProvider = provMock.Object;
 
             var data = new byte[] { 1, 2, 3, 4 };
@@ -152,7 +152,7 @@ namespace IFY.Phorm.Encryption.Tests
 
             var provMock = new Mock<IEncryptionProvider>(MockBehavior.Strict);
             provMock.Setup(m => m.GetInstance("class"))
-                .Returns(() => null);
+                .Returns(() => null!);
             GlobalSettings.EncryptionProvider = provMock.Object;
 
             var data = new byte[] { 1, 2, 3, 4 };

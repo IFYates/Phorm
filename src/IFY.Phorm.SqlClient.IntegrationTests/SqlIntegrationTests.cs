@@ -1,14 +1,13 @@
 using IFY.Phorm.Data;
-using IFY.Phorm.SqlClient;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
 
-namespace IFY.Phorm.Tests
+namespace IFY.Phorm.SqlClient.IntegrationTests
 {
-    [TestClass, Ignore]
+    [TestClass]
     public class SqlIntegrationTests
     {
         [PhormContract(Name = "DataTable")]
@@ -89,7 +88,7 @@ namespace IFY.Phorm.Tests
 
             // Act
             var res = phorm.Call("Upsert", new { Int = randNum, Text = randStr, Data = randData, DateTime = randDT });
-            var obj = phorm.From("DataTable", objectType: DbObjectType.Table).One<DataItem>();
+            var obj = phorm.From("DataTable", objectType: DbObjectType.Table).One<DataItem>()!;
 
             // Assert
             Assert.AreEqual(1, res);
@@ -112,7 +111,7 @@ namespace IFY.Phorm.Tests
 
             // Act
             var res = phorm.Call<IUpsert>(new { Int = randNum, Text = randStr, Data = randData, DateTime = randDT });
-            var obj = phorm.From("DataTable", objectType: DbObjectType.Table).One<DataItem>();
+            var obj = phorm.From("DataTable", objectType: DbObjectType.Table).One<DataItem>()!;
 
             // Assert
             Assert.AreEqual(1, res);
@@ -137,7 +136,7 @@ namespace IFY.Phorm.Tests
 
             // Act
             var res = phorm.Call<IUpsert>(arg);
-            var obj = phorm.From("DataTable", objectType: DbObjectType.Table).One<DataItem>();
+            var obj = phorm.From("DataTable", objectType: DbObjectType.Table).One<DataItem>()!;
 
             // Assert
             Assert.AreEqual(1, res);
@@ -160,7 +159,7 @@ namespace IFY.Phorm.Tests
 
             // Act
             var res = phorm.Call("Upsert", arg);
-            var obj = phorm.From("DataTable", objectType: DbObjectType.Table).One<DataItem>();
+            var obj = phorm.From("DataTable", objectType: DbObjectType.Table).One<DataItem>()!;
 
             // Assert
             Assert.AreEqual(1, res);
@@ -177,7 +176,7 @@ namespace IFY.Phorm.Tests
 
             // Act
             var res = phorm.Call<IUpsertOnlyIntWithId>(arg);
-            var obj = phorm.From("DataTable", objectType: DbObjectType.Table).One<DataItem>();
+            var obj = phorm.From("DataTable", objectType: DbObjectType.Table).One<DataItem>()!;
 
             // Assert
             Assert.AreEqual(1, res);
@@ -271,7 +270,7 @@ namespace IFY.Phorm.Tests
 
             var res = phorm.Call("Upsert");
 
-            var obj = phorm.From<IDataView>().One<DataItemWithoutText>(new { Id = 1 });
+            var obj = phorm.From<IDataView>().One<DataItemWithoutText>(new { Id = 1 })!;
 
             Assert.AreEqual(1, res);
             Assert.IsNull(obj.Text);

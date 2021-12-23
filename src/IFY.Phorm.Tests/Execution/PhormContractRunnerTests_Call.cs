@@ -19,7 +19,7 @@ namespace IFY.Phorm.Tests
             [IgnoreDataMember]
             public int Arg2 { get; set; }
             [IgnoreDataMember]
-            public string? Arg3 { get; set; } = string.Empty;
+            public string Arg3 { get; set; } = string.Empty;
             [IgnoreDataMember]
             public ContractMember Arg4 { get; set; } = ContractMember.Out<string>("InvalidRename");
         }
@@ -199,11 +199,11 @@ namespace IFY.Phorm.Tests
             // Act
             if (byAsync)
             {
-                Assert.ThrowsException<AggregateException>(() => runner.CallAsync(new TestContract { Arg3 = null }).Result);
+                Assert.ThrowsException<AggregateException>(() => runner.CallAsync(new TestContract { Arg3 = null! }).Result);
             }
             else
             {
-                Assert.ThrowsException<ArgumentNullException>(() => runner.Call(new TestContract { Arg3 = null }));
+                Assert.ThrowsException<ArgumentNullException>(() => runner.Call(new TestContract { Arg3 = null! }));
             }
         }
 

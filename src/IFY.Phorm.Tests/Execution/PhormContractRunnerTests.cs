@@ -41,7 +41,7 @@ namespace IFY.Phorm.Tests
             [IgnoreDataMember]
             public int Arg2 { get; set; }
             [IgnoreDataMember]
-            public string? Arg3 { get; set; } = string.Empty;
+            public string Arg3 { get; set; } = string.Empty;
             [IgnoreDataMember]
             public ContractMember Arg4 { get; set; } = ContractMember.Out<string>("InvalidRename");
         }
@@ -72,7 +72,7 @@ namespace IFY.Phorm.Tests
         public void PhormContractRunner__Anonymous_Gets_contract_info()
         {
             // Act
-            var runner = new PhormContractRunner<IPhormContract>(null, "objectName", DbObjectType.Table);
+            var runner = new PhormContractRunner<IPhormContract>(null!, "objectName", DbObjectType.Table);
 
             // Assert
             Assert.IsNull(getFieldValue<string>(runner, "_schema"));
@@ -86,7 +86,7 @@ namespace IFY.Phorm.Tests
             // Act
             Assert.ThrowsException<ArgumentNullException>(() =>
             {
-                _ = new PhormContractRunner<IPhormContract>(null, null, DbObjectType.StoredProcedure);
+                _ = new PhormContractRunner<IPhormContract>(null!, null, DbObjectType.StoredProcedure);
             });
         }
 
@@ -94,7 +94,7 @@ namespace IFY.Phorm.Tests
         public void PhormContractRunner__Anonymous_Default_objectType_is_StoredProcedure()
         {
             // Act
-            var runner = new PhormContractRunner<IPhormContract>(null, "objectName", DbObjectType.Default);
+            var runner = new PhormContractRunner<IPhormContract>(null!, "objectName", DbObjectType.Default);
 
             // Assert
             Assert.IsNull(getFieldValue<string>(runner, "_schema"));
@@ -106,7 +106,7 @@ namespace IFY.Phorm.Tests
         public void PhormContractRunner__Contract__Takes_value()
         {
             // Act
-            var runner = new PhormContractRunner<IContractDTO>(null, null, DbObjectType.Default);
+            var runner = new PhormContractRunner<IContractDTO>(null!, null, DbObjectType.Default);
 
             // Assert
             Assert.IsNull(getFieldValue<string>(runner, "_schema"));
@@ -118,7 +118,7 @@ namespace IFY.Phorm.Tests
         public void PhormContractRunner__Contract__Ignores_name_override()
         {
             // Act
-            var runner = new PhormContractRunner<IContractDTO>(null, "objectName", DbObjectType.Table);
+            var runner = new PhormContractRunner<IContractDTO>(null!, "objectName", DbObjectType.Table);
 
             // Assert
             Assert.IsNull(getFieldValue<string>(runner, "_schema"));
@@ -130,7 +130,7 @@ namespace IFY.Phorm.Tests
         public void PhormContractRunner__Contract_with_attribute__Takes_values()
         {
             // Act
-            var runner = new PhormContractRunner<IContractWithAttributeDTO>(null, null, DbObjectType.Default);
+            var runner = new PhormContractRunner<IContractWithAttributeDTO>(null!, null, DbObjectType.Default);
 
             // Assert
             Assert.AreEqual("schema", getFieldValue<string>(runner, "_schema"));
@@ -142,7 +142,7 @@ namespace IFY.Phorm.Tests
         public void PhormContractRunner__Contract_with_attribute__Ignores_overrides()
         {
             // Act
-            var runner = new PhormContractRunner<IContractWithAttributeDTO>(null, "objectName", DbObjectType.View);
+            var runner = new PhormContractRunner<IContractWithAttributeDTO>(null!, "objectName", DbObjectType.View);
 
             // Assert
             Assert.AreEqual("schema", getFieldValue<string>(runner, "_schema"));
@@ -154,7 +154,7 @@ namespace IFY.Phorm.Tests
         public void PhormContractRunner__DataContract__Takes_values()
         {
             // Act
-            var runner = new PhormContractRunner<DataContractDTO>(null, null, DbObjectType.Default);
+            var runner = new PhormContractRunner<DataContractDTO>(null!, null, DbObjectType.Default);
 
             // Assert
             Assert.AreEqual("schema", getFieldValue<string>(runner, "_schema"));
@@ -166,7 +166,7 @@ namespace IFY.Phorm.Tests
         public void PhormContractRunner__DataContract__Ignores_name_override()
         {
             // Act
-            var runner = new PhormContractRunner<DataContractDTO>(null, "objectName", DbObjectType.View);
+            var runner = new PhormContractRunner<DataContractDTO>(null!, "objectName", DbObjectType.View);
 
             // Assert
             Assert.AreEqual("schema", getFieldValue<string>(runner, "_schema"));
@@ -600,7 +600,7 @@ namespace IFY.Phorm.Tests
         {
             public int Arg { get; set; }
             [SecureValue("class", nameof(Arg))]
-            public string Arg3 { get; set; }
+            public string Arg3 { get; set; } = string.Empty;
         }
 
         [TestMethod]
@@ -1060,7 +1060,7 @@ namespace IFY.Phorm.Tests
             var dto = new TestContract { Arg = 100, Arg3 = "secure_value" };
 
             // Act
-            var res = runner.One<TestSecureDto>(dto);
+            var res = runner.One<TestSecureDto>(dto)!;
 
             // Assert
             Assert.AreEqual("secure_value", res.Arg3);

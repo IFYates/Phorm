@@ -40,6 +40,55 @@ namespace IFY.Phorm.Tests
         }
 
         [TestMethod]
+        public void ManyAsync__Resolves_secondary_resultset()
+        {
+            // Arrange
+            var conn = new TestPhormConnection("")
+            {
+                DefaultSchema = "schema"
+            };
+
+            var cmd = new TestDbCommand(new TestDbReader
+            {
+                Data = new List<Dictionary<string, object>>
+                {
+                    new Dictionary<string, object>
+                    {
+                        ["Id"] = 1,
+                        ["Key"] = "key1"
+                    }
+                },
+                Results = new List<Dictionary<string, object>[]>(new[]
+                {
+                    new[]
+                    {
+                        new Dictionary<string, object>
+                        {
+                            ["ParentId"] = 1,
+                            ["Value"] = "value1"
+                        },
+                        new Dictionary<string, object>
+                        {
+                            ["Value"] = "value2"
+                        }
+                    }
+                })
+            });
+            conn.CommandQueue.Enqueue(cmd);
+
+            var phorm = new TestPhormSession(new TestPhormConnectionProvider((s) => conn));
+
+            var runner = new PhormContractRunner<ITestContract>(phorm, "ContractName", DbObjectType.StoredProcedure);
+
+            // Act
+            var res = runner.ManyAsync<TestParent>().Result;
+
+            // Assert
+            Assert.AreEqual(1, res[0].Children.Length);
+            Assert.AreEqual("value1", res[0].Children[0].Value);
+        }
+
+        [TestMethod]
         public void ManyAsync__Resultset_property_not_writable__Fail()
         {
             // Arrange

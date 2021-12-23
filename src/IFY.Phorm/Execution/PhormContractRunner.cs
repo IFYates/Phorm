@@ -166,11 +166,11 @@ namespace IFY.Phorm
                 .SingleOrDefault(p => p.GetCustomAttribute<ResultsetAttribute>()?.Order == order);
             if (rsProp?.CanWrite != true)
             {
-                throw new InvalidDataContractException($"Resultset property '{rsProp.Name}' is not writable.");
+                throw new InvalidDataContractException($"Resultset property '{rsProp?.Name}' is not writable.");
             }
 
             // Get data
-            var recordType = rsProp.PropertyType.IsArray ? rsProp.PropertyType.GetElementType() : rsProp.PropertyType;
+            var recordType = rsProp.PropertyType.IsArray ? rsProp.PropertyType.GetElementType()! : rsProp.PropertyType;
             var records = new List<object>();
             var recordMembers = ContractMember.GetMembersFromContract(null, recordType)
                 .ToDictionary(m => m.Name.ToLower());
@@ -184,7 +184,7 @@ namespace IFY.Phorm
             var attr = rsProp.GetCustomAttribute<ResultsetAttribute>() ?? new ResultsetAttribute(0, string.Empty);
             foreach (var parent in parents)
             {
-                var matches = attr.FilterMatched(parent, records);
+                var matches = attr.FilterMatched(parent!, records);
                 if (rsProp.PropertyType.IsArray)
                 {
                     var arr = (Array?)Activator.CreateInstance(rsProp.PropertyType, new object[] { matches.Length }) ?? Array.Empty<object>();
