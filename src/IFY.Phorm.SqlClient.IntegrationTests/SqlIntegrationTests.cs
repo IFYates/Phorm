@@ -4,6 +4,7 @@ using System;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace IFY.Phorm.SqlClient.IntegrationTests
 {
@@ -56,7 +57,7 @@ namespace IFY.Phorm.SqlClient.IntegrationTests
             int? Int { get; }
         }
 
-        private static IPhormSession getPhormSession()
+        private static SqlPhormSession getPhormSession()
         {
             var connProc = new SqlConnectionProvider(@"Server=(localdb)\ProjectModels;Database=PhormTests;");
 
@@ -277,5 +278,43 @@ namespace IFY.Phorm.SqlClient.IntegrationTests
         }
 
         #endregion One
+
+        [TestMethod]
+        public void Can_get_print_messages_by_anon()
+        {
+            var phorm = getPhormSession();
+
+            var randStr = DateTime.Now.ToString("o");
+
+            var arg = new
+            {
+                Text = randStr,
+                Print = ContractMember.Console()
+            };
+
+            var res = phorm.Call("PrintTest", arg);
+
+            Assert.AreEqual(1, res);
+            Assert.AreEqual(randStr, arg.Print.Value?.Trim());
+        }
+
+        [TestMethod]
+        public async Task Can_get_error_message_by_anon()
+        {
+            var phorm = getPhormSession();
+
+            var randStr = DateTime.Now.ToString("o");
+
+            var arg = new
+            {
+                Text = randStr,
+                Print = ContractMember.Console()
+            };
+
+            var res = await phorm.CallAsync("ErrorTest", arg);
+
+            Assert.AreEqual(1, res);
+            Assert.AreEqual(randStr, arg.Print.Value?.Trim());
+        }
     }
 }

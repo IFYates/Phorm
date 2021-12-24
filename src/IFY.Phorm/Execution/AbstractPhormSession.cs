@@ -1,6 +1,8 @@
 ﻿using IFY.Phorm.Connectivity;
 using IFY.Phorm.Data;
+using IFY.Phorm.Execution;
 using System.Data;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -42,6 +44,14 @@ namespace IFY.Phorm
             cmd.CommandText = $"[{schema}].[{objectName}]";
             return cmd;
         }
+
+        /// <summary>
+        /// If the connection implementation supports capture of console output (print statements),
+        /// this method returns a new <see cref="IConsoleCapture"/> that will receive the output.
+        /// </summary>
+        /// <param name="cmd">The command to capture console output for.</param>
+        /// <returns>The object that will be provide the final console output.</returns>
+        protected internal virtual IConsoleCapture StartConsoleCapture(IAsyncDbCommand cmd) => NullConsoleCapture.Instance;
 
         #endregion Connection
 

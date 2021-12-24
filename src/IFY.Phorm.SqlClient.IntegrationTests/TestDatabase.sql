@@ -15,12 +15,14 @@ GO
 
 CREATE OR ALTER PROC [dbo].[usp_ClearTable]
 AS
+	SET NOCOUNT ON
 	TRUNCATE TABLE [dbo].[DataTable]
 	RETURN 1
 GO
 
 CREATE OR ALTER PROC [dbo].[usp_GetAll]
 AS
+	SET NOCOUNT ON
 	SELECT * FROM [dbo].[DataTable]
 	RETURN 1
 GO
@@ -34,6 +36,7 @@ CREATE OR ALTER PROC [dbo].[usp_Upsert]
 	@IsInView BIT = NULL
 AS
 BEGIN
+	SET NOCOUNT ON
 	IF (@Id IS NULL) BEGIN
 		INSERT [dbo].[DataTable] ([Int], [Text], [Data], [DateTime], [IsInView])
 			SELECT @Int, @Text, @Data, @DateTime, ISNULL(@IsInView, 1)
@@ -50,4 +53,20 @@ BEGIN
 		WHERE [Id] = @Id
 	RETURN @@ROWCOUNT
 END
+GO
+
+CREATE OR ALTER PROC [dbo].[usp_PrintTest]
+	@Text VARCHAR(256) = NULL
+AS
+	SET NOCOUNT ON
+	RAISERROR (@Text, 0, 1) WITH NOWAIT;
+	RETURN 1
+GO
+
+CREATE OR ALTER PROC [dbo].[usp_ErrorTest]
+	@Text VARCHAR(256) = NULL
+AS
+	SET NOCOUNT ON
+	RAISERROR (@Text, 18, 1) WITH NOWAIT;
+	RETURN 1
 GO

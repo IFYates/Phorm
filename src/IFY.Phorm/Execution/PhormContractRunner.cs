@@ -14,14 +14,14 @@ namespace IFY.Phorm
     public class PhormContractRunner<TActionContract> : IPhormContractRunner<TActionContract>
         where TActionContract : IPhormContract
     {
-        private readonly AbstractPhormSession _runner;
+        private readonly AbstractPhormSession _session;
         private readonly string? _schema;
         private readonly string _objectName;
         private readonly DbObjectType _objectType;
 
-        public PhormContractRunner(AbstractPhormSession runner, string? objectName, DbObjectType objectType)
+        public PhormContractRunner(AbstractPhormSession session, string? objectName, DbObjectType objectType)
         {
-            _runner = runner;
+            _session = session;
 
             var contractType = typeof(TActionContract);
             var contractName = contractType.Name;
@@ -67,13 +67,13 @@ namespace IFY.Phorm
 
         private IAsyncDbCommand startCommand(ContractMember[] members)
         {
-            var cmd = _runner.CreateCommand(_schema, _objectName, _objectType);
+            var cmd = _session.CreateCommand(_schema, _objectName, _objectType);
 
             // Build WHERE clause from members
             if (_objectType is DbObjectType.Table or DbObjectType.View)
             {
                 var sb = new StringBuilder();
-                foreach (var memb in members.Where(m => m.Direction is ParameterDirection.Input or ParameterDirection.InputOutput)
+                foreach (var memb in members.Where(m => m.Direction is ParameterType.Input or ParameterType.InputOutput)
                     .Where(m => m.Value != null && m.Value != DBNull.Value))
                 {
                     // TODO: Ignore members without value
@@ -249,7 +249,7 @@ namespace IFY.Phorm
             return entity;
         }
 
-        private static int parseCommandResult(IAsyncDbCommand cmd, object? contract, ContractMember[] members)
+        private static int parseCommandResult(IAsyncDbCommand cmd, object? contract, ContractMember[] members, string consoleOutput)
         {
             // Update parameters for output values
             var returnValue = 0;
@@ -269,12 +269,21 @@ namespace IFY.Phorm
                 else if (param.Direction == ParameterDirection.ReturnValue)
                 {
                     returnValue = (int?)param.Value ?? 0;
-                    foreach (var memb in members.Where(a => a.Direction == ParameterDirection.ReturnValue))
+                    foreach (var memb in members.Where(a => a.Direction == ParameterType.ReturnValue))
                     {
                         memb.SetValue(returnValue);
                     }
                 }
             }
+
+            // TODO: only if needed
+            // Support console capture
+            var consoleProp = contract?.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public)
+                .Where(p => p.PropertyType == typeof(ContractMember<string>))
+                .Select(p => p.GetValue(contract) as ContractMember<string>)
+                .FirstOrDefault(v => v?.Direction == ParameterType.Console);
+            consoleProp?.SetValue(consoleOutput);
+
             return returnValue;
         }
 
@@ -286,8 +295,9 @@ namespace IFY.Phorm
         {
             var pars = ContractMember.GetMembersFromContract(args, typeof(TActionContract));
             using var cmd = startCommand(pars);
+            var console = _session.StartConsoleCapture(cmd);
             await doExec(cmd, cancellationToken);
-            return parseCommandResult(cmd, args, pars);
+            return parseCommandResult(cmd, args, pars, console.Complete());
         }
 
         public int Call(TActionContract args)
@@ -296,8 +306,9 @@ namespace IFY.Phorm
         {
             var pars = ContractMember.GetMembersFromContract(args, typeof(TActionContract));
             using var cmd = startCommand(pars);
+            var console = _session.StartConsoleCapture(cmd);
             await doExec(cmd, cancellationToken);
-            return parseCommandResult(cmd, args, pars);
+            return parseCommandResult(cmd, args, pars, console.Complete());
         }
 
         public TResult[] Many<TResult>(object? args = null)
@@ -308,8 +319,9 @@ namespace IFY.Phorm
         {
             var pars = ContractMember.GetMembersFromContract(args, typeof(TActionContract));
             using var cmd = startCommand(pars);
+            var console = _session.StartConsoleCapture(cmd);
             var result = await readAll<TResult>(cmd, cancellationToken);
-            parseCommandResult(cmd, args, pars);
+            parseCommandResult(cmd, args, pars, console.Complete());
             return result;
         }
 
@@ -320,8 +332,9 @@ namespace IFY.Phorm
         {
             var pars = ContractMember.GetMembersFromContract(args, typeof(TActionContract));
             using var cmd = startCommand(pars);
+            var console = _session.StartConsoleCapture(cmd);
             var result = await readAll<TResult>(cmd, cancellationToken);
-            parseCommandResult(cmd, args, pars);
+            parseCommandResult(cmd, args, pars, console.Complete());
             return result;
         }
 
@@ -333,8 +346,9 @@ namespace IFY.Phorm
         {
             var pars = ContractMember.GetMembersFromContract(args, typeof(TActionContract));
             using var cmd = startCommand(pars);
+            var console = _session.StartConsoleCapture(cmd);
             var result = await readSingle<TResult>(cmd, cancellationToken);
-            parseCommandResult(cmd, args, pars);
+            parseCommandResult(cmd, args, pars, console.Complete());
             return result;
         }
 
@@ -346,8 +360,9 @@ namespace IFY.Phorm
         {
             var pars = ContractMember.GetMembersFromContract(args, typeof(TActionContract));
             using var cmd = startCommand(pars);
+            var console = _session.StartConsoleCapture(cmd);
             var result = await readSingle<TResult>(cmd, cancellationToken);
-            parseCommandResult(cmd, args, pars);
+            parseCommandResult(cmd, args, pars, console.Complete());
             return result;
         }
     }
