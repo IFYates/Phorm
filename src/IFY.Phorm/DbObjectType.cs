@@ -4,7 +4,6 @@
     {
         Default,
         StoredProcedure,
-        Table,
-        View,
+        View, // Including Table as a read-only concept
     }
 }

@@ -14,14 +14,15 @@ namespace IFY.Phorm
     public class PhormContractRunner<TActionContract> : IPhormContractRunner<TActionContract>
         where TActionContract : IPhormContract
     {
-        private readonly AbstractPhormSession _runner;
+        private readonly AbstractPhormSession _session;
         private readonly string? _schema;
         private readonly string _objectName;
         private readonly DbObjectType _objectType;
+        private readonly object? _runArgs;
 
-        public PhormContractRunner(AbstractPhormSession runner, string? objectName, DbObjectType objectType)
+        public PhormContractRunner(AbstractPhormSession runner, string? objectName, DbObjectType objectType, object? args)
         {
-            _runner = runner;
+            _session = runner;
 
             var contractType = typeof(TActionContract);
             var contractName = contractType.Name;
@@ -61,16 +62,18 @@ namespace IFY.Phorm
             {
                 _objectType = objectType == DbObjectType.Default ? DbObjectType.StoredProcedure : objectType;
             }
+
+            _runArgs = args;
         }
 
         #region Execution
 
         private IAsyncDbCommand startCommand(ContractMember[] members)
         {
-            var cmd = _runner.CreateCommand(_schema, _objectName, _objectType);
+            var cmd = _session.CreateCommand(_schema, _objectName, _objectType);
 
             // Build WHERE clause from members
-            if (_objectType is DbObjectType.Table or DbObjectType.View)
+            if (_objectType == DbObjectType.View)
             {
                 var sb = new StringBuilder();
                 foreach (var memb in members.Where(m => m.Direction is ParameterDirection.Input or ParameterDirection.InputOutput)
@@ -97,66 +100,6 @@ namespace IFY.Phorm
             }
 
             return cmd;
-        }
-
-        private static async Task doExec(IAsyncDbCommand cmd, CancellationToken? cancellationToken)
-        {
-            using var rdr = await cmd.ExecuteReaderAsync(cancellationToken ?? CancellationToken.None);
-            if (rdr.Read())
-            {
-                throw new InvalidOperationException("Non-result request returned a result.");
-            }
-        }
-        private static async Task<TResult[]> readAll<TResult>(IAsyncDbCommand cmd, CancellationToken? cancellationToken)
-            where TResult : new()
-        {
-            var results = new List<TResult>();
-            var resultMembers = ContractMember.GetMembersFromContract(null, typeof(TResult))
-                .ToDictionary(m => m.Name.ToLower());
-
-            // Parse first resultset
-            using var rdr = await cmd.ExecuteReaderAsync(cancellationToken ?? CancellationToken.None);
-            while (rdr.Read())
-            {
-                var res = getEntity<TResult>(rdr, resultMembers);
-                results.Add(res);
-            }
-
-            // Process sub results
-            int rsOrder = 0;
-            while (await rdr.NextResultAsync())
-            {
-                matchResultset(rsOrder++, rdr, results);
-            }
-
-            return results.ToArray();
-        }
-        private static async Task<TResult?> readSingle<TResult>(IAsyncDbCommand cmd, CancellationToken? cancellationToken)
-            where TResult : new()
-        {
-            var resultMembers = ContractMember.GetMembersFromContract(null, typeof(TResult))
-                .ToDictionary(m => m.Name.ToLower());
-
-            // Parse first record of result
-            TResult? res = default;
-            using var rdr = await cmd.ExecuteReaderAsync(cancellationToken ?? CancellationToken.None);
-            if (rdr.Read())
-            {
-                res = getEntity<TResult>(rdr, resultMembers);
-                if (rdr.Read())
-                {
-                    throw new InvalidOperationException("Expected a single-record result, but more than one found.");
-                }
-            }
-
-            // Process sub results
-            int rsOrder = 0;
-            while (await rdr.NextResultAsync())
-            {
-                matchResultset(rsOrder++, rdr, new[] { res });
-            }
-
-            return res;
         }
 
         private static void matchResultset<TResult>(int order, IDataReader rdr, IEnumerable<TResult> parents)
@@ -202,11 +145,6 @@ namespace IFY.Phorm
             }
         }
 
-        private static TResult getEntity<TResult>(IDataReader rdr, Dictionary<string, ContractMember> members)
-            where TResult : new()
-        {
-            return (TResult)getEntity(typeof(TResult), rdr, members);
-        }
         private static object getEntity(Type entityType, IDataReader rdr, Dictionary<string, ContractMember> members)
         {
             var entity = Activator.CreateInstance(entityType) ?? new object();
@@ -280,75 +218,82 @@ namespace IFY.Phorm
 
         #endregion Execution
 
-        public int Call(object? args = null)
-            => CallAsync(args).GetAwaiter().GetResult();
-        public async Task<int> CallAsync(object? args = null, CancellationToken? cancellationToken = null)
+        public async Task<int> CallAsync(CancellationToken? cancellationToken = null)
         {
-            var pars = ContractMember.GetMembersFromContract(args, typeof(TActionContract));
+            // Prepare execution
+            var pars = ContractMember.GetMembersFromContract(_runArgs, typeof(TActionContract));
             using var cmd = startCommand(pars);
-            await doExec(cmd, cancellationToken);
-            return parseCommandResult(cmd, args, pars);
+
+            // Execution
+            using var rdr = await cmd.ExecuteReaderAsync(cancellationToken ?? CancellationToken.None);
+            if (_session.StrictResultSize && rdr.Read())
+            {
+                throw new InvalidOperationException("Non-result request returned a result.");
+            }
+
+            return parseCommandResult(cmd, _runArgs, pars);
         }
 
-        public int Call(TActionContract args)
-            => CallAsync(args, null).GetAwaiter().GetResult();
-        public async Task<int> CallAsync(TActionContract args, CancellationToken? cancellationToken = null)
+        public TResult? Get<TResult>()
+            where TResult : class
+            => GetAsync<TResult>(null).GetAwaiter().GetResult();
+        public async Task<TResult?> GetAsync<TResult>(CancellationToken? cancellationToken = null)
+            where TResult : class
         {
-            var pars = ContractMember.GetMembersFromContract(args, typeof(TActionContract));
-            using var cmd = startCommand(pars);
-            await doExec(cmd, cancellationToken);
-            return parseCommandResult(cmd, args, pars);
-        }
+            // Check whether this is One or Many
+            var entityType = typeof(TResult);
+            var isArray = entityType.IsArray;
+            if (isArray)
+            {
+                entityType = entityType.GetElementType()!;
+            }
+            if (entityType.GetConstructor(Array.Empty<Type>()) == null)
+            {
+                throw new MissingMethodException($"Attempt to get type {entityType.FullName} without empty constructor.");
+            }
 
-        public TResult[] Many<TResult>(object? args = null)
-            where TResult : new()
-            => ManyAsync<TResult>(args, null).GetAwaiter().GetResult();
-        public async Task<TResult[]> ManyAsync<TResult>(object? args = null, CancellationToken? cancellationToken = null)
-            where TResult : new()
-        {
-            var pars = ContractMember.GetMembersFromContract(args, typeof(TActionContract));
+            // Prepare execution
+            var pars = ContractMember.GetMembersFromContract(_runArgs, typeof(TActionContract));
             using var cmd = startCommand(pars);
-            var result = await readAll<TResult>(cmd, cancellationToken);
-            parseCommandResult(cmd, args, pars);
-            return result;
-        }
 
-        public TResult[] Many<TResult>(TActionContract args)
-            where TResult : new()
-            => ManyAsync<TResult>(args, null).GetAwaiter().GetResult();
-        public async Task<TResult[]> ManyAsync<TResult>(TActionContract args, CancellationToken? cancellationToken = null) where TResult : new()
-        {
-            var pars = ContractMember.GetMembersFromContract(args, typeof(TActionContract));
-            using var cmd = startCommand(pars);
-            var result = await readAll<TResult>(cmd, cancellationToken);
-            parseCommandResult(cmd, args, pars);
-            return result;
-        }
+            var resultMembers = ContractMember.GetMembersFromContract(null, entityType)
+                .ToDictionary(m => m.Name.ToLower());
 
-        public TResult? One<TResult>(object? args = null)
-            where TResult : new()
-            => OneAsync<TResult>(args, null).GetAwaiter().GetResult();
-        public async Task<TResult?> OneAsync<TResult>(object? args = null, CancellationToken? cancellationToken = null)
-            where TResult : new()
-        {
-            var pars = ContractMember.GetMembersFromContract(args, typeof(TActionContract));
-            using var cmd = startCommand(pars);
-            var result = await readSingle<TResult>(cmd, cancellationToken);
-            parseCommandResult(cmd, args, pars);
-            return result;
-        }
+            // Parse resultset
+            var results = new List<object>();
+            using var rdr = await cmd.ExecuteReaderAsync(cancellationToken ?? CancellationToken.None);
+            if (!isArray && rdr.Read())
+            {
+                var result = getEntity(entityType, rdr, resultMembers);
+                results.Add(result);
 
-        public TResult? One<TResult>(TActionContract args)
-            where TResult : new()
-            => OneAsync<TResult>(args, null).GetAwaiter().GetResult();
-        public async Task<TResult?> OneAsync<TResult>(TActionContract args, CancellationToken? cancellationToken = null)
-            where TResult : new()
-        {
-            var pars = ContractMember.GetMembersFromContract(args, typeof(TActionContract));
-            using var cmd = startCommand(pars);
-            var result = await readSingle<TResult>(cmd, cancellationToken);
-            parseCommandResult(cmd, args, pars);
-            return result;
+                if (_session.StrictResultSize && rdr.Read())
+                {
+                    throw new InvalidOperationException("Expected a single-record result, but more than one found.");
+                }
+            }
+            else
+            {
+                while (rdr.Read())
+                {
+                    var result = getEntity(entityType, rdr, resultMembers);
+                    results.Add(result);
+                }
+            }
+
+            // Process sub results
+            var rsOrder = 0;
+            while (await rdr.NextResultAsync())
+            {
+                matchResultset(rsOrder++, rdr, results);
+            }
+
+            parseCommandResult(cmd, _runArgs, pars);
+
+            // Return expected type
+            return !isArray
+                ? (TResult?)results.SingleOrDefault()
+                : (TResult)(object)results.ToArray();
         }
     }
 }

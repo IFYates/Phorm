@@ -64,6 +64,8 @@ namespace IFY.Phorm.SqlClient.IntegrationTests
             var obj = phorm.From("DataTable", objectType: DbObjectType.Table)
                 .OneAsync<DataItem>().Result!;
 
+            phorm.Get<DataItem[]>();
+
             // Assert
             Assert.AreEqual(1, res);
             Assert.AreEqual(randStr, obj.Data);
