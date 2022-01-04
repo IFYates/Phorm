@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace IFY.Phorm
 {
-    public class PhormContractRunner<TActionContract> : IPhormContractRunner<TActionContract>
+    internal class PhormContractRunner<TActionContract> : IPhormContractRunner<TActionContract>
         where TActionContract : IPhormContract
     {
         private readonly AbstractPhormSession _session;
@@ -21,10 +21,14 @@ namespace IFY.Phorm
         private readonly object? _runArgs;
 
         public PhormContractRunner(AbstractPhormSession runner, string? objectName, DbObjectType objectType, object? args)
+            : this(runner, typeof(TActionContract), objectName, objectType, args)
+        {
+        }
+        public PhormContractRunner(AbstractPhormSession runner, Type contractType, string? objectName, DbObjectType objectType, object? args)
         {
             _session = runner;
 
-            var contractType = typeof(TActionContract);
+            contractType = contractType.IsArray ? contractType.GetElementType()! : contractType;
             var contractName = contractType.Name;
             if (contractType == typeof(IPhormContract))
             {
@@ -73,7 +77,7 @@ namespace IFY.Phorm
             var cmd = _session.CreateCommand(_schema, _objectName, _objectType);
 
             // Build WHERE clause from members
-            if (_objectType == DbObjectType.View)
+            if (_objectType is DbObjectType.Table or DbObjectType.View)
             {
                 var sb = new StringBuilder();
                 foreach (var memb in members.Where(m => m.Direction is ParameterDirection.Input or ParameterDirection.InputOutput)
@@ -291,9 +295,14 @@ namespace IFY.Phorm
             parseCommandResult(cmd, _runArgs, pars);
 
             // Return expected type
-            return !isArray
-                ? (TResult?)results.SingleOrDefault()
-                : (TResult)(object)results.ToArray();
+            if (!isArray)
+            {
+                return (TResult?)results.SingleOrDefault();
+            }
+
+            var resultArr = (Array)Activator.CreateInstance(typeof(TResult), new object[] { results.Count })!;
+            Array.Copy(results.ToArray(), resultArr, results.Count);
+            return (TResult)(object)resultArr;
         }
     }
 }

@@ -32,7 +32,7 @@ namespace IFY.Phorm
         {
             var cmd = connection.CreateCommand();
 
-            if (objectType == DbObjectType.View)
+            if (objectType is DbObjectType.Table or DbObjectType.View)
             {
                 cmd.CommandType = CommandType.Text;
                 // TODO: Could replace '*' with desired column names, validated by cached SchemaOnly call
@@ -109,7 +109,7 @@ namespace IFY.Phorm
         public TResult? Get<TResult>(object? args = null)
             where TResult : class
         {
-            IPhormContractRunner<IPhormContract> runner = new PhormContractRunner<IPhormContract>(this, null, DbObjectType.View, args);
+            var runner = new PhormContractRunner<IPhormContract>(this, typeof(TResult), null, DbObjectType.Table, args);
             return runner.Get<TResult>();
         }
 
@@ -119,7 +119,7 @@ namespace IFY.Phorm
         public Task<TResult?> GetAsync<TResult>(object? args = null, CancellationToken? cancellationToken = null)
             where TResult : class
         {
-            IPhormContractRunner<IPhormContract> runner = new PhormContractRunner<IPhormContract>(this, null, DbObjectType.View, args);
+            var runner = new PhormContractRunner<IPhormContract>(this, typeof(TResult), null, DbObjectType.Table, args);
             return runner.GetAsync<TResult>(cancellationToken);
         }
 
