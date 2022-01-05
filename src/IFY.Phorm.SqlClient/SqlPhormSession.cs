@@ -15,7 +15,10 @@ namespace IFY.Phorm.SqlClient
         public string ProcedurePrefix { get; init; } = "usp_";
         public string TablePrefix { get; init; } = "";
 
-        public SqlPhormSession(IPhormDbConnectionProvider connectionProvider, string? connectionName)
+        public SqlPhormSession(string databaseConnectionString, string? connectionName = null)
+            : this(new SqlConnectionProvider(databaseConnectionString), connectionName)
+        { }
+        public SqlPhormSession(IPhormDbConnectionProvider connectionProvider, string? connectionName = null)
             : base(connectionProvider)
         {
             _connectionName = connectionName;

@@ -78,10 +78,10 @@ namespace IFY.Phorm.Tests
 
             var phorm = new TestPhormSession(new TestPhormConnectionProvider((s) => conn));
 
-            var runner = new PhormContractRunner<ITestContract>(phorm, "ContractName", DbObjectType.StoredProcedure);
+            var runner = new PhormContractRunner<ITestContract>(phorm, "ContractName", DbObjectType.StoredProcedure, null);
 
             // Act
-            var res = runner.ManyAsync<TestParent>().Result;
+            var res = runner.GetAsync<TestParent[]>().Result!;
 
             // Assert
             Assert.AreEqual(1, res[0].Children.Length);
@@ -123,11 +123,11 @@ namespace IFY.Phorm.Tests
 
             var phorm = new TestPhormSession(new TestPhormConnectionProvider((s) => conn));
 
-            var runner = new PhormContractRunner<ITestContract>(phorm, "ContractName", DbObjectType.StoredProcedure);
+            var runner = new PhormContractRunner<ITestContract>(phorm, "ContractName", DbObjectType.StoredProcedure, null);
 
             // Act
             var ex = Assert.ThrowsException<AggregateException>(() =>
-                runner.ManyAsync<TestParentBadProperty>().Result);
+                runner.GetAsync<TestParentBadProperty[]>().Result);
             Assert.AreEqual("Resultset property 'Children' is not writable.", ((InvalidDataContractException?)ex.InnerException)?.Message);
         }
 
@@ -170,10 +170,10 @@ namespace IFY.Phorm.Tests
 
             var phorm = new TestPhormSession(new TestPhormConnectionProvider((s) => conn));
 
-            var runner = new PhormContractRunner<ITestContract>(phorm, "ContractName", DbObjectType.StoredProcedure);
+            var runner = new PhormContractRunner<ITestContract>(phorm, "ContractName", DbObjectType.StoredProcedure, null);
 
             // Act
-            var res = runner.OneAsync<TestParent>().Result;
+            var res = runner.GetAsync<TestParent>().Result;
 
             // Assert
             Assert.AreEqual(1, res?.Children.Length);
@@ -221,11 +221,11 @@ namespace IFY.Phorm.Tests
 
             var phorm = new TestPhormSession(new TestPhormConnectionProvider((s) => conn));
 
-            var runner = new PhormContractRunner<ITestContract>(phorm, "ContractName", DbObjectType.StoredProcedure);
+            var runner = new PhormContractRunner<ITestContract>(phorm, "ContractName", DbObjectType.StoredProcedure, null);
 
             // Act
             var ex = Assert.ThrowsException<AggregateException>(() =>
-               runner.OneAsync<TestParent>().Result);
+               runner.GetAsync<TestParent>().Result);
             Assert.IsTrue(((InvalidCastException?)ex.InnerException)?.Message.Contains("not an array") == true);
         }
 
@@ -265,10 +265,10 @@ namespace IFY.Phorm.Tests
 
             var phorm = new TestPhormSession(new TestPhormConnectionProvider((s) => conn));
 
-            var runner = new PhormContractRunner<ITestContract>(phorm, "ContractName", DbObjectType.StoredProcedure);
+            var runner = new PhormContractRunner<ITestContract>(phorm, "ContractName", DbObjectType.StoredProcedure, null);
 
             // Act
-            var res = runner.OneAsync<TestParent>().Result;
+            var res = runner.GetAsync<TestParent>().Result;
 
             // Assert
             Assert.AreEqual("value1", res?.Child?.Value);

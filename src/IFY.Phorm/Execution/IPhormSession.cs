@@ -6,26 +6,48 @@ namespace IFY.Phorm
 {
     public interface IPhormSession
     {
-        #region Call
+        /// <summary>
+        /// Whether to throw an exception if an invocation result includes more records than expected.
+        /// Defaults to true.
+        /// </summary>
+        /// <exception cref="System.InvalidOperationException"></exception>
+        bool StrictResultSize { get; set; }
 
-        int Call(string objectName, object? args = null);
+        #region Call/get from action contract
+
+        int Call(string contractName, object? args = null);
         int Call<TActionContract>(object? args = null)
             where TActionContract : IPhormContract;
         int Call<TActionContract>(TActionContract contract) // Same as "object? args = null", but allows better Intellisense
             where TActionContract : IPhormContract;
 
-        Task<int> CallAsync(string objectName, object? args = null, CancellationToken? cancellationToken = null);
+        Task<int> CallAsync(string contractName, object? args = null, CancellationToken? cancellationToken = null);
         Task<int> CallAsync<TActionContract>(object? args = null, CancellationToken? cancellationToken = null)
             where TActionContract : IPhormContract;
         Task<int> CallAsync<TActionContract>(TActionContract contract, CancellationToken? cancellationToken = null) // Same as "object? args = null", but allows better Intellisense
             where TActionContract : IPhormContract;
 
-        #endregion Call
+        IPhormContractRunner From(string contractName, object? args = null);
+        IPhormContractRunner<TActionContract> From<TActionContract>(object? args = null)
+            where TActionContract : IPhormContract;
+        IPhormContractRunner<TActionContract> From<TActionContract>(TActionContract contract) // Same as "object? args = null", but allows better Intellisense
+            where TActionContract : IPhormContract;
 
-        IPhormContractRunner From(string objectName, DbObjectType objectType = DbObjectType.StoredProcedure);
+        #endregion Call/get from action contract
 
-        IPhormContractRunner<T> From<T>(DbObjectType objectType = DbObjectType.StoredProcedure)
-            where T : IPhormContract;
+        #region Get from Table/View
+
+        TResult? Get<TResult>(object? args = null)
+            where TResult : class;
+        TResult? Get<TResult>(TResult args) // Same as "object? args = null", but allows better Intellisense
+            where TResult : class;
+
+        Task<TResult?> GetAsync<TResult>(object? args = null, CancellationToken? cancellationToken = null)
+            where TResult : class;
+        Task<TResult?> GetAsync<TResult>(TResult args, CancellationToken? cancellationToken = null) // Same as "object? args = null", but allows better Intellisense
+            where TResult : class;
+
+        #endregion Get from Table/View
 
         #region Transactions
 

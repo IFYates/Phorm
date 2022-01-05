@@ -61,8 +61,9 @@ namespace IFY.Phorm.SqlClient.IntegrationTests
 
             // Act
             var res = phorm.CallAsync<IUpsert>(new { Int = randInt, Data = randStr }).Result;
-            var obj = phorm.From("DataTable", objectType: DbObjectType.Table)
-                .OneAsync<DataItem>().Result!;
+            var obj = phorm.GetAsync<DataItem>().Result!;
+
+            phorm.Get<DataItem[]>();
 
             // Assert
             Assert.AreEqual(1, res);

@@ -10,6 +10,8 @@ namespace IFY.Phorm
     {
         protected readonly IPhormDbConnectionProvider _connectionProvider;
 
+        public bool StrictResultSize { get; set; } = true;
+
         public AbstractPhormSession(IPhormDbConnectionProvider connectionProvider)
         {
             _connectionProvider = connectionProvider;
@@ -34,6 +36,7 @@ namespace IFY.Phorm
             {
                 cmd.CommandType = CommandType.Text;
                 // TODO: Could replace '*' with desired column names, validated by cached SchemaOnly call
+                // TODO: Can do TOP 2 if want to check for first item
                 cmd.CommandText = $"SELECT * FROM [{schema}].[{objectName}]";
                 return cmd;
             }
@@ -45,29 +48,14 @@ namespace IFY.Phorm
 
         #endregion Connection
 
-        #region From
-
-        public IPhormContractRunner From(string objectName, DbObjectType objectType = DbObjectType.StoredProcedure)
-        {
-            return new PhormContractRunner<IPhormContract>(this, objectName, objectType);
-        }
-
-        public IPhormContractRunner<T> From<T>(DbObjectType objectType = DbObjectType.StoredProcedure)
-            where T : IPhormContract
-        {
-            return new PhormContractRunner<T>(this, null, objectType);
-        }
-
-        #endregion From
-
         #region Call
 
-        public int Call(string objectName, object? args = null)
-            => CallAsync(objectName, args).GetAwaiter().GetResult();
-        public Task<int> CallAsync(string objectName, object? args = null, CancellationToken? cancellationToken = null)
+        public int Call(string contractName, object? args = null)
+            => CallAsync(contractName, args).GetAwaiter().GetResult();
+        public Task<int> CallAsync(string contractName, object? args = null, CancellationToken? cancellationToken = null)
         {
-            var runner = new PhormContractRunner<IPhormContract>(this, objectName, DbObjectType.StoredProcedure);
-            return runner.CallAsync(args, cancellationToken);
+            var runner = new PhormContractRunner<IPhormContract>(this, contractName, DbObjectType.StoredProcedure, args);
+            return runner.CallAsync(cancellationToken);
         }
 
         public int Call<TActionContract>(object? args = null)
@@ -76,8 +64,8 @@ namespace IFY.Phorm
         public Task<int> CallAsync<TActionContract>(object? args = null, CancellationToken? cancellationToken = null)
             where TActionContract : IPhormContract
         {
-            var runner = new PhormContractRunner<TActionContract>(this, null, DbObjectType.StoredProcedure);
-            return runner.CallAsync(args, cancellationToken);
+            var runner = new PhormContractRunner<TActionContract>(this, null, DbObjectType.StoredProcedure, args);
+            return runner.CallAsync(cancellationToken);
         }
 
         public int Call<TActionContract>(TActionContract contract)
@@ -86,11 +74,56 @@ namespace IFY.Phorm
         public Task<int> CallAsync<TActionContract>(TActionContract contract, CancellationToken? cancellationToken = null)
             where TActionContract : IPhormContract
         {
-            var runner = new PhormContractRunner<TActionContract>(this, null, DbObjectType.StoredProcedure);
-            return runner.CallAsync(contract, cancellationToken);
+            var runner = new PhormContractRunner<TActionContract>(this, null, DbObjectType.StoredProcedure, contract);
+            return runner.CallAsync(cancellationToken);
         }
 
         #endregion Call
+
+        #region From
+
+        public IPhormContractRunner From(string contractName, object? args = null)
+        {
+            return new PhormContractRunner<IPhormContract>(this, contractName, DbObjectType.StoredProcedure, args);
+        }
+
+        public IPhormContractRunner<TActionContract> From<TActionContract>(object? args = null)
+            where TActionContract : IPhormContract
+        {
+            return new PhormContractRunner<TActionContract>(this, null, DbObjectType.StoredProcedure, args);
+        }
+
+        public IPhormContractRunner<TActionContract> From<TActionContract>(TActionContract contract)
+            where TActionContract : IPhormContract
+        {
+            return new PhormContractRunner<TActionContract>(this, null, DbObjectType.StoredProcedure, contract);
+        }
+
+        #endregion From
+
+        #region Get
+
+        public TResult? Get<TResult>(TResult args)
+            where TResult : class
+            => Get<TResult>((object?)args);
+        public TResult? Get<TResult>(object? args = null)
+            where TResult : class
+        {
+            var runner = new PhormContractRunner<IPhormContract>(this, typeof(TResult), null, DbObjectType.Table, args);
+            return runner.Get<TResult>();
+        }
+
+        public Task<TResult?> GetAsync<TResult>(TResult args, CancellationToken? cancellationToken = null)
+            where TResult : class
+            => GetAsync<TResult>((object?)args, cancellationToken);
+        public Task<TResult?> GetAsync<TResult>(object? args = null, CancellationToken? cancellationToken = null)
+            where TResult : class
+        {
+            var runner = new PhormContractRunner<IPhormContract>(this, typeof(TResult), null, DbObjectType.Table, args);
+            return runner.GetAsync<TResult>(cancellationToken);
+        }
+
+        #endregion Get
 
         #region Transactions
 

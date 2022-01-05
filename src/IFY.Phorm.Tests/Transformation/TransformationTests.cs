@@ -72,7 +72,7 @@ namespace IFY.Phorm.Tests.Encryption
             runner.TestConnectionProvider?.TestConnection?.CommandQueue.Enqueue(cmd);
 
             // Act
-            var res = runner.From("Get").One<DataObject>();
+            var res = runner.From("Get").Get<DataObject>();
 
             // Assert
             Assert.IsNotNull(res);

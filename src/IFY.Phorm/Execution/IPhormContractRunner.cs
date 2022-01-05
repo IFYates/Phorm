@@ -6,28 +6,25 @@ namespace IFY.Phorm
 {
     public interface IPhormContractRunner
     {
-        TResult[] Many<TResult>(object? args = null)
-            where TResult : new();
-        Task<TResult[]> ManyAsync<TResult>(object? args = null, CancellationToken? cancellationToken = null)
-            where TResult : new();
-
-        TResult? One<TResult>(object? args = null)
-            where TResult : new();
-        Task<TResult?> OneAsync<TResult>(object? args = null, CancellationToken? cancellationToken = null) // Same as "object? args = null", but allows better Intellisense
-            where TResult : new();
+        /// <summary>
+        /// Get one or more entity instances.
+        /// </summary>
+        /// <typeparam name="TResult">The type of entity to map result data to.</typeparam>
+        /// <returns>When <typeparamref name="TResult"/> is the entity type, will return the single result instance or null. When <typeparamref name="TResult"/> is an array of the entity type, will return an array of all types from the result (never null).</returns>
+        TResult? Get<TResult>()
+            where TResult : class;
+        /// <summary>
+        /// Get one or more entity instances.
+        /// </summary>
+        /// <typeparam name="TResult">The type of entity to map result data to.</typeparam>
+        /// <param name="cancellationToken">A token to cancel the asynchronous operation.</param>
+        /// <returns>When <typeparamref name="TResult"/> is the entity type, will return the single result instance or null. When <typeparamref name="TResult"/> is an array of the entity type, will return an array of all types from the result (never null).</returns>
+        Task<TResult?> GetAsync<TResult>(CancellationToken? cancellationToken = null)
+            where TResult : class;
     }
 
     public interface IPhormContractRunner<T> : IPhormContractRunner
         where T : IPhormContract
     {
-        TResult[] Many<TResult>(T args) // Same as "object? args = null", but allows better Intellisense
-            where TResult : new();
-        Task<TResult[]> ManyAsync<TResult>(T args, CancellationToken? cancellationToken = null) // Same as "object? args = null", but allows better Intellisense
-            where TResult : new();
-
-        TResult? One<TResult>(T args) // Same as "object? args = null", but allows better Intellisense
-            where TResult : new();
-        Task<TResult?> OneAsync<TResult>(T args, CancellationToken? cancellationToken = null)
-            where TResult : new();
     }
 }

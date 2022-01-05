@@ -84,6 +84,7 @@ namespace IFY.Phorm.Data
             return new ContractMember<int>("return", 0, ParameterDirection.ReturnValue);
         }
 
+        // TODO: Cache members by type?
         /// <summary>
         /// Convert properties of any object to <see cref="ContractMember"/>s.
         /// </summary>
@@ -163,6 +164,8 @@ namespace IFY.Phorm.Data
                         throw new ArgumentNullException(memb.Name, $"Parameter {memb.Name} for contract {contractType.FullName} is required but was null");
                     }
                 }
+
+                // TODO: omit unused?
             }
 
             return addReturnValue(members).ToArray();
