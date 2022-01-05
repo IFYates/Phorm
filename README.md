@@ -51,12 +51,12 @@ var factory = di.Resolve<IPhormDbConnectionProvider>();
 IPhormDbConnection conn = factory.GetConnection();
 
 // Data connection used to fetch an entity via a named sproc in different ways
-RecordDTO data = conn.From("Record_GetById").One<RecordDTO>(new { Id = id }); // Fully ad hoc
-RecordDTO data = conn.From<IRecord_GetById>().One<RecordDTO>(new { Id = id }); // Anon parameters
+RecordDTO? data = conn.From("Record_GetById", new { Id = id }).Get<RecordDTO>(); // Fully ad hoc
+RecordDTO? data = conn.From<IRecord_GetById>(new { Id = id }).Get<RecordDTO>(); // Anon parameters
 
 IRecord_GetById q = new RecordDTO { Id = id }; // Or any IRecord_GetById implementation
-RecordDTO data = conn.From("Record_GetById").One<RecordDTO>(q); // Ad hoc procedure
-RecordDTO data = conn.From<IRecord_GetById>().One<RecordDTO>(q); // Query instance
+RecordDTO? data = conn.From("Record_GetById", q).Get<RecordDTO>(); // Ad hoc procedure
+RecordDTO? data = conn.From<IRecord_GetById>(q).Get<RecordDTO>(); // Query instance
 
 // Update the entity in different ways
 var lastModifiedProperty = ContractMember.Out<DateTime>();
@@ -66,7 +66,7 @@ int result = conn.Call("Record_UpdateName", data); // Ad hoc procedure
 int result = conn.Call<IRecord_UpdateName>(data); // Entity instance
 ```
 
-Each of the `One` requests will execute something like `usp_Record_GetById @Id = {id}`.
+Each of the `Get` requests will execute something like `usp_Record_GetById @Id = {id}`.
 
 Each of the `Call` requests execute sometiong like `usp_Record_UpdateName @Id = {id}, @Name = {name}` and will update the `LastModified` property (`lastModifiedProperty` or `data.LastModified`).
 
@@ -78,6 +78,7 @@ Note that any child value returned that is not matched by a selector is discarde
 
 ```CSharp
 public record ChildContract(long ParentId);
+[PhormContract(Name = "ParentsWithChildren")]
 public record ParentContract(long Id)
 {
     [Recordset(order: 0, selectorProperty: nameof(ChildrenSelector))]
@@ -85,7 +86,7 @@ public record ParentContract(long Id)
     public static RecordMatcher<ParentContract, ChildContract> ChildrenSelector => new((parent, child) => child.ParentId == parent.Id); // The logic for selecting child entities
 }
 
-ParentContract[] result = phorm.From("ParentsWithChildren").Many<ParentContract>();
+ParentContract[] result = phorm.Get<ParentContract[]>()!; // Get many from table ParentsWithChildren
 ```
 
 This example will result in each parent entity instance containing a list of all child entities matching on the id.
@@ -204,4 +205,11 @@ public interface IRecord_Update
 
 This will call the action contract with an additional `@NewParameter = 'NewValue'`.
 
+## Console/Error messages
+TODO
+
 ## Connection context
+TODO
+
+## GenSpec support
+TODO
