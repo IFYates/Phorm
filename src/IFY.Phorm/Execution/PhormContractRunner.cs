@@ -106,10 +106,10 @@ namespace IFY.Phorm
             return cmd;
         }
 
-        private static void matchResultset<TResult>(int order, IDataReader rdr, IEnumerable<TResult> parents)
+        private static void matchResultset(Type entityType, int order, IDataReader rdr, IEnumerable<object> parents)
         {
             // Find resultset target
-            var rsProp = typeof(TResult).GetProperties()
+            var rsProp = entityType.GetProperties()
                 .SingleOrDefault(p => p.GetCustomAttribute<ResultsetAttribute>()?.Order == order);
             if (rsProp?.CanWrite != true)
             {
@@ -289,7 +289,7 @@ namespace IFY.Phorm
             var rsOrder = 0;
             while (await rdr.NextResultAsync())
             {
-                matchResultset(rsOrder++, rdr, results);
+                matchResultset(entityType, rsOrder++, rdr, results);
             }
 
             parseCommandResult(cmd, _runArgs, pars);
