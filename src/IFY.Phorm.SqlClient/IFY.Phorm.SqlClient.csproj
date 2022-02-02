@@ -1,39 +1,47 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-    <PropertyGroup>
-        <TargetFramework>net5.0</TargetFramework>
-        <Nullable>enable</Nullable>
-        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+	<PropertyGroup>
+		<TargetFramework>net5.0</TargetFramework>
+		<Nullable>enable</Nullable>
 
-        <Authors>IFYates</Authors>
-        <PackageLicenseExpression>MIT</PackageLicenseExpression>
-        <Version>1.0.0</Version>
-        <PackageProjectUrl>https://github.com/IFYates/Phorm</PackageProjectUrl>
-        <RepositoryUrl>https://github.com/IFYates/Phorm</RepositoryUrl>
-        <RepositoryType>GitHub</RepositoryType>
-		<PackageReleaseNotes>v1.0.0 - First fully-functional release</PackageReleaseNotes>
-        <Copyright>(c) IFYates</Copyright>
-        <Description>SqlClient implementation of the Procedure-heavy object-relational mapping framework.</Description>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<PublishRepositoryUrl>true</PublishRepositoryUrl>
+		<IncludeSymbols>true</IncludeSymbols>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
 
-        <TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);CopyProjectReferencesToPackage</TargetsForTfmSpecificBuildOutput>
-    </PropertyGroup>
+		<Authors>IFYates</Authors>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<Version>1.1.0-beta3</Version>
+		<PackageProjectUrl>https://github.com/IFYates/Phorm</PackageProjectUrl>
+		<RepositoryUrl>https://github.com/IFYates/Phorm</RepositoryUrl>
+		<RepositoryType>GitHub</RepositoryType>
+		<PackageReleaseNotes>
+			v1.1.0-beta - New syntax
+			v1.0.0-beta - First fully-functional release
+		</PackageReleaseNotes>
+		<Copyright>(c) IFYates</Copyright>
+		<Description>SqlClient implementation of the Procedure-heavy object-relational mapping framework.</Description>
 
-    <Target DependsOnTargets="ResolveReferences" Name="CopyProjectReferencesToPackage">
-        <ItemGroup>
-            <BuildOutputInPackage Include="@(ReferenceCopyLocalPaths->WithMetadataValue('ReferenceSourceTarget', 'ProjectReference'))"/>
-        </ItemGroup>
-    </Target>
+		<TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);CopyProjectReferencesToPackage</TargetsForTfmSpecificBuildOutput>
+	</PropertyGroup>
 
-    <ItemGroup>
-        <PackageReference Include="System.Data.SqlClient" Version="4.8.2" />
-        <PackageReference Include="Shimterface.Standard" Version="1.6.7" />
-    </ItemGroup>
+	<Target DependsOnTargets="ResolveReferences" Name="CopyProjectReferencesToPackage">
+		<ItemGroup>
+			<BuildOutputInPackage Include="@(ReferenceCopyLocalPaths-&gt;WithMetadataValue('ReferenceSourceTarget', 'ProjectReference'))" />
+		</ItemGroup>
+	</Target>
 
-    <ItemGroup>
-        <ProjectReference Include="..\IFY.Phorm\IFY.Phorm.csproj">
-            <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
-            <IncludeAssets>{ProjectName}.dll</IncludeAssets>
-        </ProjectReference>
-    </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="System.Data.SqlClient" Version="4.8.3" />
+		<PackageReference Include="Shimterface.Standard" Version="1.6.7" />
+		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\IFY.Phorm\IFY.Phorm.csproj">
+			<ReferenceOutputAssembly>true</ReferenceOutputAssembly>
+			<IncludeAssets>{ProjectName}.dll;{ProjectName}.pdb</IncludeAssets>
+		</ProjectReference>
+	</ItemGroup>
 
 </Project>

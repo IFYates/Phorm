@@ -3,21 +3,27 @@
     <PropertyGroup>
         <TargetFramework>net5.0</TargetFramework>
         <Nullable>enable</Nullable>
+		
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<PublishRepositoryUrl>true</PublishRepositoryUrl>
+		<IncludeSymbols>true</IncludeSymbols>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
 
 		<Authors>IFYates</Authors>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
-		<Version>1.0.0</Version>
+		<Version>1.1.0-beta</Version>
 		<PackageProjectUrl>https://github.com/IFYates/Phorm</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/IFYates/Phorm</RepositoryUrl>
 		<RepositoryType>GitHub</RepositoryType>
-		<PackageReleaseNotes>v1.0.0 - First fully-functional release</PackageReleaseNotes>
+		<PackageReleaseNotes>v1.1.0-beta - New syntax
+v1.0.0-beta - First fully-functional release</PackageReleaseNotes>
 		<Copyright>(c) IFYates</Copyright>
 		<Description>The Procedure-heavy object-relational mapping framework.</Description>
 	</PropertyGroup>
 
     <ItemGroup>
         <PackageReference Include="Shimterface.Standard" Version="1.6.7" />
-    </ItemGroup>
+		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
+	</ItemGroup>
 
 </Project>
