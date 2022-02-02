@@ -100,7 +100,10 @@ namespace IFY.Phorm
             foreach (var memb in members)
             {
                 var param = memb.ToDataParameter(cmd);
-                cmd.Parameters.Add(param);
+                if (param.Value != null && param.Value != DBNull.Value)
+                {
+                    cmd.Parameters.Add(param);
+                }
             }
 
             return cmd;
@@ -168,8 +171,7 @@ namespace IFY.Phorm
                     }
                     else
                     {
-                        memb.FromDatasource(rdr.GetValue(i));
-                        memb.SourceProperty?.SetValue(entity, memb.Value);
+                        setEntityValue(entity, memb, rdr, i);
                     }
                 }
                 else
@@ -181,14 +183,25 @@ namespace IFY.Phorm
             // Apply secure values
             foreach (var kvp in secureMembers)
             {
-                var memb = kvp.Key;
-                memb.FromDatasource(rdr.GetValue(kvp.Value));
-                memb.SourceProperty?.SetValue(entity, memb.Value);
+                setEntityValue(entity, kvp.Key, rdr, kvp.Value);
             }
 
             // TODO: Warnings for missing expected columns
 
             return entity;
+
+            static void setEntityValue(object entity, ContractMember memb, IDataReader rdr, int idx)
+            {
+                memb.FromDatasource(rdr.GetValue(idx));
+                try
+                {
+                    memb.SourceProperty?.SetValue(entity, memb.Value);
+                }
+                catch (Exception ex)
+                {
+                    throw new InvalidOperationException($"Failed set to property {memb.SourceProperty?.Name ?? memb.Name}", ex);
+                }
+            }
         }
 
         private static int parseCommandResult(IAsyncDbCommand cmd, object? contract, ContractMember[] members)
