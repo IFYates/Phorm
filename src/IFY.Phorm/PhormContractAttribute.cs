@@ -14,11 +14,11 @@ namespace IFY.Phorm
         /// <summary>
         /// The contract name to use, if not the same as the decorated class / interface.
         /// </summary>
-        public string? Name { get; init; }
+        public string? Name { get; set; }
         
         /// <summary>
         /// The database schema to use for this contract, if not the default schema of the connection.
         /// </summary>
-        public string? Namespace { get; init; }
+        public string? Namespace { get; set; }
     }
 }

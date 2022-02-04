@@ -8,7 +8,7 @@ namespace IFY.Phorm.Tests
 {
     public class TestPhormConnection : IPhormDbConnection
     {
-        public Queue<TestDbCommand> CommandQueue { get; } = new();
+        public Queue<TestDbCommand> CommandQueue { get; } = new Queue<TestDbCommand>();
 
         public virtual string? ConnectionName { get; }
 

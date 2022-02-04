@@ -9,8 +9,19 @@ namespace IFY.Phorm.SqlClient.IntegrationTests
     public class SqlIntegrationEncryptionTests
     {
         [PhormContract(Name = "DataTable")]
-        public record DataItem(long Id, int Int, [property: SecureValue("class", nameof(DataItem.Int))] string Data)
+        public class DataItem
         {
+            public long Id { get; }
+            public int Num { get; }
+            [SecureValue("class", nameof(Num))] public string Data { get; }
+
+            public DataItem(long id, int num, string data)
+            {
+                Id = id;
+                Num = num;
+                Data = data;
+            }
+
             public DataItem() : this(default, default, default!)
             { }
         }
@@ -18,7 +29,7 @@ namespace IFY.Phorm.SqlClient.IntegrationTests
         public interface IUpsert : IPhormContract
         {
             int Int { get; }
-            [SecureValue("class", nameof(DataItem.Int))]
+            [SecureValue("class", nameof(DataItem.Num))]
             string Data { get; }
         }
 

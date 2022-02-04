@@ -16,7 +16,7 @@ namespace IFY.Phorm.Tests
 
             [Resultset(0, nameof(ChildrenSelector))]
             public TestChild[] Children { get; set; } = Array.Empty<TestChild>();
-            public static RecordMatcher<TestParent, TestChild> ChildrenSelector { get; } = new((p, c) => c.ParentId == p.Id);
+            public static RecordMatcher<TestParent, TestChild> ChildrenSelector { get; } = new RecordMatcher<TestParent, TestChild>((p, c) => c.ParentId == p.Id);
 
             [Resultset(1, nameof(ChildrenSelector))]
             public TestChild? Child { get; set; }
@@ -32,7 +32,7 @@ namespace IFY.Phorm.Tests
         {
             [Resultset(0, nameof(TrueSelector))]
             public TestChild[] Children { get; } = Array.Empty<TestChild>();
-            public static RecordMatcher<TestParentBadProperty, TestChild> TrueSelector { get; } = new((p, c) => true);
+            public static RecordMatcher<TestParentBadProperty, TestChild> TrueSelector { get; } = new RecordMatcher<TestParentBadProperty, TestChild>((p, c) => true);
         }
 
         public interface ITestContract : IPhormContract

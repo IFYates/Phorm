@@ -47,7 +47,7 @@ namespace IFY.Phorm.Data
         /// The true type of the value, even if null
         /// Can be different to property value
         /// </summary>
-        public Type ValueType { get; init; }
+        public Type ValueType { get; protected set; }
         /// <summary>
         /// Relevant attributes for this contract member.
         /// </summary>
@@ -95,7 +95,7 @@ namespace IFY.Phorm.Data
             {
                 if (obj == null)
                 {
-                    return addReturnValue(new()).ToArray();
+                    return addReturnValue(new List<ContractMember>()).ToArray();
                 }
                 contractType = obj.GetType();
             }
@@ -125,28 +125,25 @@ namespace IFY.Phorm.Data
                 }
 
                 // Wrap as ContractMember, if not already
-                if (value is not ContractMember memb)
+                if (value is ContractMember memb)
                 {
-                    if (!hasContract)
-                    {
-                        memb = In(prop.Name, value);
-                    }
-                    else if (!prop.CanWrite)
-                    {
-                        memb = In(prop.Name, value, prop);
-                    }
-                    else if (prop.CanRead)
-                    {
-                        memb = InOut(prop.Name, value, prop);
-                    }
-                    else
-                    {
-                        memb = Out<object>(prop.Name, prop);
-                    }
+                    memb.Name = prop.Name;
+                }
+                else if (!hasContract)
+                {
+                    memb = In(prop.Name, value);
+                }
+                else if (!prop.CanWrite)
+                {
+                    memb = In(prop.Name, value, prop);
+                }
+                else if (prop.CanRead)
+                {
+                    memb = InOut(prop.Name, value, prop);
                 }
                 else
                 {
-                    memb.Name = prop.Name;
+                    memb = Out<object>(prop.Name, prop);
                 }
 
                 members.Add(memb);
@@ -173,7 +170,7 @@ namespace IFY.Phorm.Data
             IList<ContractMember> addReturnValue(List<ContractMember> members)
             {
                 if (!members.Any(p => p.Direction == ParameterDirection.ReturnValue))
-                {                    
+                {
                     // Allow for a return value on the object
                     var retPar = obj?.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public)
                         .Where(p => p.PropertyType == typeof(ContractMember<int>))
@@ -201,7 +198,11 @@ namespace IFY.Phorm.Data
             var param = cmd.CreateParameter();
             param.ParameterName = "@" + Name;
             param.Direction = Direction;
+#if NETSTANDARD
+            if (Direction.IsOneOf(ParameterDirection.Output, ParameterDirection.InputOutput))
+#else
             if (Direction is ParameterDirection.Output or ParameterDirection.InputOutput)
+#endif
             {
                 param.Size = Size > 0 ? Size : 256;
             }
@@ -318,14 +319,14 @@ namespace IFY.Phorm.Data
 
     public class ContractMember<T> : ContractMember
     {
-        public new T? Value => (T?)base.Value;
+        public new T Value => (T)base.Value!;
 
-        internal ContractMember(string name, T? value, ParameterDirection dir)
+        internal ContractMember(string name, T value, ParameterDirection dir)
             : base(name, value, dir, null)
         {
             ValueType = typeof(T);
         }
-        internal ContractMember(string name, T? value, ParameterDirection dir, PropertyInfo? sourceProperty)
+        internal ContractMember(string name, T value, ParameterDirection dir, PropertyInfo? sourceProperty)
             : base(name, value, dir, sourceProperty)
         {
             if (ValueType == typeof(object))

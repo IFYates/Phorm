@@ -32,7 +32,11 @@ namespace IFY.Phorm
         {
             var cmd = connection.CreateCommand();
 
+#if NETSTANDARD
+            if (objectType.IsOneOf(DbObjectType.Table, DbObjectType.View))
+#else
             if (objectType is DbObjectType.Table or DbObjectType.View)
+#endif
             {
                 cmd.CommandType = CommandType.Text;
                 // TODO: Could replace '*' with desired column names, validated by cached SchemaOnly call

@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Text.Json;
+using Newtonsoft.Json;
 
 namespace IFY.Phorm.Transformation
 {
@@ -12,12 +12,13 @@ namespace IFY.Phorm.Transformation
 
         public override object? FromDatasource(Type type, object? data)
         {
-            return data != null ? JsonSerializer.Deserialize((string)data, type) : null;
+            return data != null ? JsonConvert.DeserializeObject((string)data, type) : null;
         }
 
         public override object? ToDatasource(object? data)
         {
-            return data != null ? JsonSerializer.Serialize(data) : null;
+            // TODO: settings
+            return data != null ? JsonConvert.SerializeObject(data) : null;
         }
     }
 }

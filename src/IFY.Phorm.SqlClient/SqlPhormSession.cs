@@ -11,9 +11,33 @@ namespace IFY.Phorm.SqlClient
     {
         private readonly string? _connectionName;
 
-        public string ViewPrefix { get; init; } = "vw_";
-        public string ProcedurePrefix { get; init; } = "usp_";
-        public string TablePrefix { get; init; } = "";
+        public string ViewPrefix
+        {
+            get;
+#if NETSTANDARD
+            set;
+#else
+            init;
+#endif
+        } = "vw_";
+        public string ProcedurePrefix
+        {
+            get;
+#if NETSTANDARD
+            set;
+#else
+            init;
+#endif
+        } = "usp_";
+        public string TablePrefix
+        {
+            get;
+#if NETSTANDARD
+            set;
+#else
+            init;
+#endif
+        } = "";
 
         public SqlPhormSession(string databaseConnectionString, string? connectionName = null)
             : this(new SqlConnectionProvider(databaseConnectionString), connectionName)

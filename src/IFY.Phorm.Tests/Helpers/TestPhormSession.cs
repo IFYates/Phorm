@@ -9,7 +9,7 @@ namespace IFY.Phorm.Tests
     {
         public TestPhormConnectionProvider? TestConnectionProvider => _connectionProvider as TestPhormConnectionProvider;
 
-        public List<IAsyncDbCommand> Commands { get; } = new();
+        public List<IAsyncDbCommand> Commands { get; } = new List<IAsyncDbCommand>();
 
         public override bool SupportsTransactions => false;
 

@@ -9,7 +9,11 @@ namespace IFY.Phorm.Data
     /// Note: Transformations are not supported on calculated values.
     /// </summary>
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
+#if NETSTANDARD
+    [ExcludeFromCodeCoverage]
+#else
     [ExcludeFromCodeCoverage(Justification = "No logic")]
+#endif
     public class CalculatedValueAttribute : Attribute, IContractMemberAttribute
     {
         public void SetContext(object? context) { }

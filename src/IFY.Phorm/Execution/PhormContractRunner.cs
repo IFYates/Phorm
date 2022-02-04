@@ -77,10 +77,18 @@ namespace IFY.Phorm
             var cmd = _session.CreateCommand(_schema, _objectName, _objectType);
 
             // Build WHERE clause from members
+#if NETSTANDARD
+            if (_objectType.IsOneOf(DbObjectType.Table, DbObjectType.View))
+#else
             if (_objectType is DbObjectType.Table or DbObjectType.View)
+#endif
             {
                 var sb = new StringBuilder();
+#if NETSTANDARD
+                foreach (var memb in members.Where(m => m.Direction.IsOneOf(ParameterDirection.Input, ParameterDirection.InputOutput))
+#else
                 foreach (var memb in members.Where(m => m.Direction is ParameterDirection.Input or ParameterDirection.InputOutput)
+#endif
                     .Where(m => m.Value != null && m.Value != DBNull.Value))
                 {
                     // TODO: Ignore members without value
@@ -210,7 +218,11 @@ namespace IFY.Phorm
             var returnValue = 0;
             foreach (IDataParameter param in cmd.Parameters)
             {
+#if NETSTANDARD
+                if (contract != null && param.Direction.IsOneOf(ParameterDirection.Output, ParameterDirection.InputOutput))
+#else
                 if (contract != null && param.Direction is ParameterDirection.Output or ParameterDirection.InputOutput)
+#endif
                 {
                     var memb = members.Single(a => a.Name == param.ParameterName[1..]);
                     memb.FromDatasource(param.Value); // NOTE: Always given as VARCHAR

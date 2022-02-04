@@ -9,8 +9,24 @@ namespace IFY.Phorm.Tests
     public class TestDbReader : DbDataReader
     {
         public Dictionary<string, object>? Tuple { get; private set; } = null;
-        public List<Dictionary<string, object>> Data { get; init; } = new();
-        public List<Dictionary<string, object>[]> Results { get; init; } = new();
+        public List<Dictionary<string, object>> Data
+        {
+            get;
+#if NETSTANDARD
+            set;
+#else
+            init;
+#endif
+        } = new List<Dictionary<string, object>>();
+        public List<Dictionary<string, object>[]> Results
+        {
+            get;
+#if NETSTANDARD
+            set;
+#else
+            init;
+#endif
+        } = new List<Dictionary<string, object>[]>();
 
         public override object this[int ordinal] => throw new NotImplementedException();
 

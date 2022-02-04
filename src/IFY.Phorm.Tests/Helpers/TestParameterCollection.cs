@@ -8,7 +8,7 @@ namespace IFY.Phorm.Tests
 {
     internal class TestParameterCollection : IDataParameterCollection
     {
-        private readonly List<IDbDataParameter> _parameters = new();
+        private readonly List<IDbDataParameter> _parameters = new List<IDbDataParameter>();
 
         public object this[string parameterName] { get => _parameters.First(p => p.ParameterName == parameterName); set => throw new NotImplementedException(); }
         public object? this[int index] { get => _parameters[index]; set => throw new NotImplementedException(); }
@@ -21,7 +21,7 @@ namespace IFY.Phorm.Tests
 
         public bool IsSynchronized => false;
 
-        public object SyncRoot { get; } = new();
+        public object SyncRoot { get; } = new object();
 
         public int Add(object? value)
         {
