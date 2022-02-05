@@ -2,6 +2,7 @@
 using IFY.Phorm.Encryption;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
+using System.Runtime.Serialization;
 
 namespace IFY.Phorm.SqlClient.IntegrationTests
 {
@@ -11,9 +12,9 @@ namespace IFY.Phorm.SqlClient.IntegrationTests
         [PhormContract(Name = "DataTable")]
         public class DataItem
         {
-            public long Id { get; }
-            public int Num { get; }
-            [SecureValue("class", nameof(Num))] public string Data { get; }
+            public long Id { get; set; }
+            [DataMember(Name = "Int")] public int Num { get; set; }
+            [SecureValue("class", nameof(Num))] public string Data { get; set; }
 
             public DataItem(long id, int num, string data)
             {
@@ -28,9 +29,8 @@ namespace IFY.Phorm.SqlClient.IntegrationTests
         [PhormContract]
         public interface IUpsert : IPhormContract
         {
-            int Int { get; }
-            [SecureValue("class", nameof(DataItem.Num))]
-            string Data { get; }
+            [DataMember(Name = "Int")] int Num { get; }
+            [SecureValue("class", nameof(Num))] string Data { get; }
         }
 
         private class TestEncryptionProvider : IEncryptionProvider
@@ -73,8 +73,6 @@ namespace IFY.Phorm.SqlClient.IntegrationTests
             // Act
             var res = phorm.CallAsync<IUpsert>(new { Num = randInt, Data = randStr }).Result;
             var obj = phorm.GetAsync<DataItem>().Result!;
-
-            phorm.Get<DataItem[]>();
 
             // Assert
             Assert.AreEqual(1, res);

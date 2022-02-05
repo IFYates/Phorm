@@ -119,7 +119,7 @@ namespace IFY.Phorm.SqlClient.IntegrationTests
             var randDT = DateTime.UtcNow;
 
             // Act
-            var res = phorm.Call("Upsert", new { Num = randNum, Text = randStr, Data = randData, DateTime = randDT });
+            var res = phorm.Call("Upsert", new { Int = randNum, Text = randStr, Data = randData, DateTime = randDT });
             var obj = phorm.Get<DataItem>()!;
 
             // Assert
