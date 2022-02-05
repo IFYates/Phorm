@@ -8,21 +8,21 @@
 		<PublishRepositoryUrl>true</PublishRepositoryUrl>
 		<IncludeSymbols>true</IncludeSymbols>
 		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+		<TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);CopyProjectReferencesToPackage</TargetsForTfmSpecificBuildOutput>
 
 		<Authors>IFYates</Authors>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
-		<Version>1.1.0-beta3</Version>
+		<Version>1.1.1-beta</Version>
 		<PackageProjectUrl>https://github.com/IFYates/Phorm</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/IFYates/Phorm</RepositoryUrl>
 		<RepositoryType>GitHub</RepositoryType>
 		<PackageReleaseNotes>
+			v1.1.1-beta - Supports .NET Standard 2.1
 			v1.1.0-beta - New syntax
 			v1.0.0-beta - First fully-functional release
 		</PackageReleaseNotes>
 		<Copyright>(c) IFYates</Copyright>
 		<Description>SqlClient implementation of the Procedure-heavy object-relational mapping framework.</Description>
-
-		<TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);CopyProjectReferencesToPackage</TargetsForTfmSpecificBuildOutput>
 	</PropertyGroup>
 
 	<Target DependsOnTargets="ResolveReferences" Name="CopyProjectReferencesToPackage">
