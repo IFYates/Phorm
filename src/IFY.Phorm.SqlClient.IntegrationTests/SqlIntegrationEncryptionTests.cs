@@ -71,7 +71,7 @@ namespace IFY.Phorm.SqlClient.IntegrationTests
             GlobalSettings.EncryptionProvider = provider;
 
             // Act
-            var res = phorm.CallAsync<IUpsert>(new { Int = randInt, Data = randStr }).Result;
+            var res = phorm.CallAsync<IUpsert>(new { Num = randInt, Data = randStr }).Result;
             var obj = phorm.GetAsync<DataItem>().Result!;
 
             phorm.Get<DataItem[]>();

@@ -32,7 +32,7 @@ namespace IFY.Phorm
         {
             var cmd = connection.CreateCommand();
 
-#if NETSTANDARD
+#if NETSTANDARD || NETCOREAPP
             if (objectType.IsOneOf(DbObjectType.Table, DbObjectType.View))
 #else
             if (objectType is DbObjectType.Table or DbObjectType.View)

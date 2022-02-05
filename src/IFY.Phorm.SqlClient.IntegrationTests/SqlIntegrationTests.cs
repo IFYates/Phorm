@@ -11,16 +11,46 @@ namespace IFY.Phorm.SqlClient.IntegrationTests
     public class SqlIntegrationTests
     {
         [PhormContract(Name = "DataTable")]
-        public record DataItem(long Id, int? Int, string? Text, byte[]? Data, DateTime? DateTime)
-            : IUpsert, IUpsertOnlyIntWithId, IUpsertWithId
+        public class DataItem : IUpsert, IUpsertOnlyIntWithId, IUpsertWithId
         {
+            public long Id { get; set; }
+            [DataMember(Name = "Int")]
+            public int? Num { get; set; }
+            public string? Text { get; set; }
+            public byte[]? Data { get; set; }
+            public DateTime? DateTime { get; set; }
+
+            public DataItem(long id, int? num, string? text, byte[]? data, DateTime? dateTime)
+            {
+                Id = id;
+                Num = num;
+                Text = text;
+                Data = data;
+                DateTime = dateTime;
+            }
             public DataItem() : this(default, default, default, default, default)
             { }
         }
 
         [PhormContract(Name = "DataTable")]
-        public record DataItemWithoutText(long Id, int? Int, [property: IgnoreDataMember] string? Text, byte[]? Data, DateTime? DateTime)
+        public class DataItemWithoutText
         {
+            public long Id { get; set; }
+            [DataMember(Name = "Int")]
+            public int? Num { get; set; }
+            [IgnoreDataMember]
+            public string? Text { get; set; }
+            public byte[]? Data { get; set; }
+            public DateTime? DateTime { get; set; }
+
+            public DataItemWithoutText(long id, int? num, string? text, byte[]? data, DateTime? dateTime)
+            {
+                Id = id;
+                Num = num;
+                Text = text;
+                Data = data;
+                DateTime = dateTime;
+            }
             public DataItemWithoutText() : this(default, default, default, default, default)
             { }
         }
@@ -28,7 +58,8 @@ namespace IFY.Phorm.SqlClient.IntegrationTests
         [PhormContract]
         public interface IUpsert : IPhormContract
         {
-            int? Int { get; }
+            [DataMember(Name = "Int")]
+            int? Num { get; }
             string? Text { get; }
             byte[]? Data { get; }
             DateTime? DateTime { get; }
@@ -36,14 +67,14 @@ namespace IFY.Phorm.SqlClient.IntegrationTests
         [PhormContract(Name = "Upsert")]
         public interface IUpsertWithId : IUpsert
         {
-            long Id { init; }
+            long Id { set; }
         }
 
         [PhormContract]
         public interface IGetAll : IPhormContract
         {
             //long Id { get; }
-            //int? Int { get; }
+            //int? Num { get; }
             //string? Text { get; }
             //byte[]? Data { get; }
             //DateTime? DateTime { get; }
@@ -52,8 +83,9 @@ namespace IFY.Phorm.SqlClient.IntegrationTests
         [PhormContract(Name = "Upsert")]
         public interface IUpsertOnlyIntWithId : IPhormContract
         {
-            long Id { init; }
-            int? Int { get; }
+            long Id { set; }
+            [DataMember(Name = "Int")]
+            int? Num { get; }
         }
 
         private static IPhormSession getPhormSession()
@@ -87,12 +119,12 @@ namespace IFY.Phorm.SqlClient.IntegrationTests
             var randDT = DateTime.UtcNow;
 
             // Act
-            var res = phorm.Call("Upsert", new { Int = randNum, Text = randStr, Data = randData, DateTime = randDT });
+            var res = phorm.Call("Upsert", new { Num = randNum, Text = randStr, Data = randData, DateTime = randDT });
             var obj = phorm.Get<DataItem>()!;
 
             // Assert
             Assert.AreEqual(1, res);
-            Assert.AreEqual(randNum, obj.Int);
+            Assert.AreEqual(randNum, obj.Num);
             Assert.AreEqual(randStr, obj.Text);
             CollectionAssert.AreEqual(randData, obj.Data);
             Assert.AreEqual(randDT, obj.DateTime);
@@ -110,12 +142,12 @@ namespace IFY.Phorm.SqlClient.IntegrationTests
             var randDT = DateTime.UtcNow;
 
             // Act
-            var res = phorm.Call<IUpsert>(new { Int = randNum, Text = randStr, Data = randData, DateTime = randDT });
+            var res = phorm.Call<IUpsert>(new { Num = randNum, Text = randStr, Data = randData, DateTime = randDT });
             var obj = phorm.Get<DataItem>()!;
 
             // Assert
             Assert.AreEqual(1, res);
-            Assert.AreEqual(randNum, obj.Int);
+            Assert.AreEqual(randNum, obj.Num);
             Assert.AreEqual(randStr, obj.Text);
             CollectionAssert.AreEqual(randData, obj.Data);
             Assert.AreEqual(randDT, obj.DateTime);
@@ -140,7 +172,7 @@ namespace IFY.Phorm.SqlClient.IntegrationTests
 
             // Assert
             Assert.AreEqual(1, res);
-            Assert.AreEqual(arg.Int, obj.Int);
+            Assert.AreEqual(arg.Num, obj.Num);
             Assert.AreEqual(arg.Text, obj.Text);
             CollectionAssert.AreEqual(arg.Data, obj.Data);
             Assert.AreEqual(arg.DateTime, obj.DateTime);
@@ -246,7 +278,7 @@ namespace IFY.Phorm.SqlClient.IntegrationTests
 
             // Assert
             Assert.AreEqual(3, res.Length);
-            Assert.IsTrue(res.All(e => e.Int == 1));
+            Assert.IsTrue(res.All(e => e.Num == 1));
         }
 
         [TestMethod]

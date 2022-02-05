@@ -9,7 +9,7 @@ namespace IFY.Phorm.Data
     /// Note: Transformations are not supported on calculated values.
     /// </summary>
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
-#if NETSTANDARD
+#if NETSTANDARD || NETCOREAPP
     [ExcludeFromCodeCoverage]
 #else
     [ExcludeFromCodeCoverage(Justification = "No logic")]

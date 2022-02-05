@@ -77,14 +77,14 @@ namespace IFY.Phorm
             var cmd = _session.CreateCommand(_schema, _objectName, _objectType);
 
             // Build WHERE clause from members
-#if NETSTANDARD
+#if NETSTANDARD || NETCOREAPP
             if (_objectType.IsOneOf(DbObjectType.Table, DbObjectType.View))
 #else
             if (_objectType is DbObjectType.Table or DbObjectType.View)
 #endif
             {
                 var sb = new StringBuilder();
-#if NETSTANDARD
+#if NETSTANDARD || NETCOREAPP
                 foreach (var memb in members.Where(m => m.Direction.IsOneOf(ParameterDirection.Input, ParameterDirection.InputOutput))
 #else
                 foreach (var memb in members.Where(m => m.Direction is ParameterDirection.Input or ParameterDirection.InputOutput)
@@ -108,7 +108,7 @@ namespace IFY.Phorm
             foreach (var memb in members)
             {
                 var param = memb.ToDataParameter(cmd);
-                if (param.Value != null && param.Value != DBNull.Value)
+                if (param.Direction != ParameterDirection.Input || (param.Value != null && param.Value != DBNull.Value))
                 {
                     cmd.Parameters.Add(param);
                 }
@@ -218,7 +218,7 @@ namespace IFY.Phorm
             var returnValue = 0;
             foreach (IDataParameter param in cmd.Parameters)
             {
-#if NETSTANDARD
+#if NETSTANDARD || NETCOREAPP
                 if (contract != null && param.Direction.IsOneOf(ParameterDirection.Output, ParameterDirection.InputOutput))
 #else
                 if (contract != null && param.Direction is ParameterDirection.Output or ParameterDirection.InputOutput)

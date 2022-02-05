@@ -198,7 +198,7 @@ namespace IFY.Phorm.Data
             var param = cmd.CreateParameter();
             param.ParameterName = "@" + Name;
             param.Direction = Direction;
-#if NETSTANDARD
+#if NETSTANDARD || NETCOREAPP
             if (Direction.IsOneOf(ParameterDirection.Output, ParameterDirection.InputOutput))
 #else
             if (Direction is ParameterDirection.Output or ParameterDirection.InputOutput)

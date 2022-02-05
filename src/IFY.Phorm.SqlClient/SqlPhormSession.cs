@@ -14,7 +14,7 @@ namespace IFY.Phorm.SqlClient
         public string ViewPrefix
         {
             get;
-#if NETSTANDARD
+#if NETSTANDARD || NETCOREAPP
             set;
 #else
             init;
@@ -23,7 +23,7 @@ namespace IFY.Phorm.SqlClient
         public string ProcedurePrefix
         {
             get;
-#if NETSTANDARD
+#if NETSTANDARD || NETCOREAPP
             set;
 #else
             init;
@@ -32,7 +32,7 @@ namespace IFY.Phorm.SqlClient
         public string TablePrefix
         {
             get;
-#if NETSTANDARD
+#if NETSTANDARD || NETCOREAPP
             set;
 #else
             init;

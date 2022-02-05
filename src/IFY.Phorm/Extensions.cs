@@ -79,10 +79,10 @@ namespace IFY.Phorm
             }
 
             var def = Activator.CreateInstance(resultType);
-#if NETSTANDARD
+#if NETSTANDARD || NETCOREAPP
             switch (def)
             {
-                case byte _: return bytes;
+                case byte _: return bytes.Single();
                 case char _: return BitConverter.ToChar(bytes);
                 case double _: return BitConverter.ToDouble(bytes);
                 case float _: return BitConverter.ToSingle(bytes);
@@ -108,7 +108,7 @@ namespace IFY.Phorm
 #endif
         }
 
-#if NETSTANDARD
+#if NETSTANDARD || NETCOREAPP
         public static bool IsOneOf<T>(this T value, params T[] values)
         {
             return values.Contains(value);

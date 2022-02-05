@@ -39,7 +39,7 @@ namespace IFY.Phorm.Transformation.Tests
             var attr = new JsonValueAttribute();
 
             // Act
-            Assert.ThrowsException<JsonException>(() =>
+            Assert.ThrowsException<JsonReaderException>(() =>
             {
                 attr.FromDatasource(typeof(int), "invalid");
             });

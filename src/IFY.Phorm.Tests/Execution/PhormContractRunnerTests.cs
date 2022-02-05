@@ -25,7 +25,7 @@ namespace IFY.Phorm.Tests
         {
         }
 
-#if NETSTANDARD
+#if NETSTANDARD || NETCOREAPP
         private static T getFieldValue<T>(object obj, string fieldName)
         {
             return (T)obj.GetType().GetField(fieldName, BindingFlags.NonPublic | BindingFlags.Instance)?.GetValue(obj)!;
@@ -73,7 +73,7 @@ namespace IFY.Phorm.Tests
             string? Arg3 { get; set; }
         }
 
-#region Constructor
+        #region Constructor
 
         [TestMethod]
         public void PhormContractRunner__Anonymous_Gets_contract_info()
@@ -181,9 +181,9 @@ namespace IFY.Phorm.Tests
             Assert.AreEqual(DbObjectType.View, getFieldValue<DbObjectType>(runner, "_objectType"));
         }
 
-#endregion Constructor
+        #endregion Constructor
 
-#region Many
+        #region Many
 
         [TestMethod]
         public void Many__Procedure_by_anon_object()
@@ -659,9 +659,9 @@ namespace IFY.Phorm.Tests
             CollectionAssert.AreEqual(100.GetBytes(), encrMock.Object.Authenticator);
         }
 
-#endregion Many
+        #endregion Many
 
-#region One
+        #region One
 
         [TestMethod]
         public void One__Multiple_records__Exception()
@@ -1074,6 +1074,6 @@ namespace IFY.Phorm.Tests
             CollectionAssert.AreEqual(100.GetBytes(), encrMock.Object.Authenticator);
         }
 
-#endregion One
+        #endregion One
     }
 }

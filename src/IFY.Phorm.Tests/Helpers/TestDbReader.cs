@@ -12,7 +12,7 @@ namespace IFY.Phorm.Tests
         public List<Dictionary<string, object>> Data
         {
             get;
-#if NETSTANDARD
+#if NETSTANDARD || NETCOREAPP
             set;
 #else
             init;
@@ -21,7 +21,7 @@ namespace IFY.Phorm.Tests
         public List<Dictionary<string, object>[]> Results
         {
             get;
-#if NETSTANDARD
+#if NETSTANDARD || NETCOREAPP
             set;
 #else
             init;

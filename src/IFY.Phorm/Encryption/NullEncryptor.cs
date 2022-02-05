@@ -6,7 +6,7 @@ namespace IFY.Phorm.Encryption
     /// <summary>
     /// An implementation of an encryption and decryption handler that makes no changes.
     /// </summary>
-#if NETSTANDARD
+#if NETSTANDARD || NETCOREAPP
     [ExcludeFromCodeCoverage]
 #else
     [ExcludeFromCodeCoverage(Justification = "No logic")]
