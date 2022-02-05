@@ -3,7 +3,8 @@ Pho/rm - The **P**rocedure-**h**eavy **o**bject-**r**elational **m**apping frame
 
 ## Goals
 - An O/RM framework utilising stored procedures as the primary database interaction
-- Solving a specific style of data access - not a one-size-fits-all solution
+- Enable decoupling of the database using well-defined contracts
+- Easy to determine the behaviour from the code (no "magic")
 
 ## Driving principals
 The are many, brilliant O/RM frameworks available using different paradigms for database interaction.  
@@ -16,59 +17,74 @@ Our goal is to have a strongly-typed data surface and allow for a mutable physic
 With this approach, the data management team can provide access contracts to meet the business logic requirements, which the implementing team can rely on without concern over the underlying structures.
 
 ## Features
-- Simple control over stored procedure features and support
+- Invoke stored procedures using natural language
+- Read from tables and views
+- Supports output arguments and return values
+- Supports multiple result sets
 - Datasource agnostic (SqlClient support provided by default)
 - Fully interfaced for DI and mocking
-- Supports multiple result sets
-- Supports procedure output and return values
-- Supports transactions
-- Detailed logging (NLog)
+- Transaction support
 - DTO field aliasing
-- DTO field transformation via extensions (JSON, enum, encryption included by default)
-- DTO read/write to implicitly named sprocs
-- Test helper for checking anonymous objects
-- Read from table/view, but not write to
+- DTO field transformation via extensions (e.g., JSON)
+- Application-level field encryption/decryption
+
+### Remaining
+- Detailed logging (Microsoft.Extensions.Logging)
+- Useful test helpers
 
 ## Antithesis
 Pho/rm requires significant code to wire the data layer to the business logic; this is intentional to the design and will not be resolved by this project.
 
+## Basic example
 For typical entity CRUD support, a Pho/rm solution would require a minimum of:
 1. Existing tables in the data source
-1. A code object to represent the entity (DTO); ideally with a contract for each action
-1. A sproc to fetch the entity
-1. At least one sproc to handle create, update, delete (though, ideally, one for each)
+1. A POCO to represent the entity (DTO); ideally with a contract for each database action
+1. A stored procedure to fetch the entity
+1. At least one stored procedure to handle create, update, delete (though, ideally, one for each)
 
-## Basic example
 A simple Pho/rm use would have the structure:
-```CSharp
-// DTO + contracts
-[DataContract] public record RecordDTO (long Id, string Name, DateTime LastModified, [property: IgnoreDataMember] string NotFromDatasource) : IRecord_GetById;
-[PhormContract] public interface IRecord_GetById { long Id { get; } }
-[PhormContract] public interface IRecord_UpdateName { long Id { get; }, string Name { get; }, DateTime LastModified { set; } }
+```SQL
+CREATE TABLE [dbo].[Data] (
+    [Id] BIGINT NOT NULL PRIMARY KEY,
+    [Key] NVARCHAR(50) NOT NULL UNIQUE,
+    [Value] NVARCHAR(256) NULL
+)
 
-// Configured factory instance creates a data connection
-var factory = di.Resolve<IPhormDbConnectionProvider>();
-IPhormDbConnection conn = factory.GetConnection();
-
-// Data connection used to fetch an entity via a named sproc in different ways
-RecordDTO? data = conn.From("Record_GetById", new { Id = id }).Get<RecordDTO>(); // Fully ad hoc
-RecordDTO? data = conn.From<IRecord_GetById>(new { Id = id }).Get<RecordDTO>(); // Anon parameters
-
-IRecord_GetById q = new RecordDTO { Id = id }; // Or any IRecord_GetById implementation
-RecordDTO? data = conn.From("Record_GetById", q).Get<RecordDTO>(); // Ad hoc procedure
-RecordDTO? data = conn.From<IRecord_GetById>(q).Get<RecordDTO>(); // Query instance
-
-// Update the entity in different ways
-var lastModifiedProperty = ContractMember.Out<DateTime>();
-int result = conn.Call("Record_UpdateName", new { Id = id, Name = name, LastModified = lastModifiedProperty }); // Fully ad hoc
-int result = conn.Call<IRecord_UpdateName>(new { Id = id, Name = name, LastModified = lastModifiedProperty }); // Anon parameters
-int result = conn.Call("Record_UpdateName", data); // Ad hoc procedure
-int result = conn.Call<IRecord_UpdateName>(data); // Entity instance
+CREATE PROCEDURE [dbo].[usp_SaveData] (
+    @Key NVARCHAR(50),
+    @Value NVARCHAR(256),
+    @Id BIGINT = NULL OUTPUT
+) AS BEGIN
+    INSERT INTO [dbo].[Data] ([Key], [Value]) SELECT @Key, @Value
+    SET @Id = SCOPE_IDENTITY()
+    RETURN 1 -- Success
+END
 ```
+```CSharp
+// DTO and contracts
+[PhormContract(Name = "Data")]
+class DataItem : ISaveData
+{
+    public long Id { get; set; }
+    public string Key { get; set; }
+    public string Value { get; set; }
+}
+interface ISaveData
+{
+    long Id { set; } // Output
+    string Key { get; }
+    string Value { get; }
+}
 
-Each of the `Get` requests will execute something like `usp_Record_GetById @Id = {id}`.
+// Configure Pho/rm session to SQL Server
+var connection = new SqlConnectionProvider(connectionString);
+var session = new SqlPhormSession(connection, null);
 
-Each of the `Call` requests execute sometiong like `usp_Record_UpdateName @Id = {id}, @Name = {name}` and will update the `LastModified` property (`lastModifiedProperty` or `data.LastModified`).
+// Use
+var allData = session.Get<DataItem[]>();
+session.Call<ISaveData>(new { Key = "Name", Value = "T Ester" });
+var data = session.Get<DataItem>(new { Key = "Name" });
+```
 
 ## Secondary resultsets
 Pho/rm supports additional resultsets in procedure responses in order to provide parent-child data in a single request.  
