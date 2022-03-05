@@ -1,4 +1,5 @@
 ﻿using IFY.Phorm.Connectivity;
+using Microsoft.Data.SqlClient;
 using System;
 using System.Data;
 using System.Linq;
@@ -9,6 +10,7 @@ namespace IFY.Phorm.SqlClient
 
     public class SqlPhormSession : AbstractPhormSession
     {
+        private readonly string _databaseConnectionString;
         private readonly string? _connectionName;
 
         public string ViewPrefix
@@ -40,15 +42,32 @@ namespace IFY.Phorm.SqlClient
         } = "";
 
         public SqlPhormSession(string databaseConnectionString, string? connectionName = null)
-            : this(new SqlConnectionProvider(databaseConnectionString), connectionName)
-        { }
-        public SqlPhormSession(IPhormDbConnectionProvider connectionProvider, string? connectionName = null)
-            : base(connectionProvider)
         {
+            _databaseConnectionString = databaseConnectionString;
             _connectionName = connectionName;
         }
 
-        protected override string? GetConnectionName() => _connectionName;
+        protected override IPhormDbConnection GetConnection()
+        {
+            // Ensure connection identifies as the given name
+            var connStr = new SqlConnectionStringBuilder(_databaseConnectionString);
+            connStr.ApplicationName = _connectionName ?? connStr.ApplicationName;
+
+            // TODO: if conn is a reuse, use same PhormDbConnection instance
+            var conn = new SqlConnection(connStr.ToString());
+            var phormConn = new PhormDbConnection(_connectionName, conn);
+
+            // Resolve default schema
+            if (phormConn.DefaultSchema.Length == 0)
+            {
+                conn.Open();
+                using var cmd = conn.CreateCommand();
+                cmd.CommandText = "SELECT schema_name()";
+                phormConn.DefaultSchema = cmd.ExecuteScalar()?.ToString() ?? connStr.UserID;
+            }
+
+            return phormConn;
+        }
 
         protected override IAsyncDbCommand CreateCommand(IPhormDbConnection connection, string schema, string objectName, DbObjectType objectType)
         {
@@ -71,10 +90,10 @@ namespace IFY.Phorm.SqlClient
 
         public override ITransactedPhormSession BeginTransaction()
         {
-            var conn = _connectionProvider.GetConnection(_connectionName);
+            var conn = GetConnection();
             conn.Open();
             var transaction = conn.BeginTransaction();
-            return new TransactedSqlPhormSession(_connectionProvider, _connectionName, transaction);
+            return new TransactedSqlPhormSession(conn, transaction);
         }
 
         #endregion Transactions

@@ -46,8 +46,8 @@ namespace IFY.Phorm
             };
         }
 
-        public static T FromBytes<T>(this byte[]? bytes)
-            => (T)FromBytes(bytes, typeof(T));
+        public static T FromBytes<T>(this byte[]? bytes) // Nullable
+            => (T)FromBytes(bytes, typeof(T))!;
         public static object? FromBytes(this byte[]? bytes, Type resultType)
         {
             if (bytes == null)

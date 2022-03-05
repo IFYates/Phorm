@@ -8,25 +8,22 @@ namespace IFY.Phorm
 {
     public abstract partial class AbstractPhormSession : IPhormSession
     {
-        protected readonly IPhormDbConnectionProvider _connectionProvider;
-
         public bool StrictResultSize { get; set; } = true;
 
-        public AbstractPhormSession(IPhormDbConnectionProvider connectionProvider)
+        public AbstractPhormSession()
         {
-            _connectionProvider = connectionProvider;
         }
 
         #region Connection
 
         internal IAsyncDbCommand CreateCommand(string? schema, string objectName, DbObjectType objectType)
         {
-            var conn = _connectionProvider.GetConnection(GetConnectionName());
+            var conn = GetConnection();
             schema = schema?.Length > 0 ? schema : conn.DefaultSchema;
             return CreateCommand(conn, schema, objectName, objectType);
         }
 
-        protected abstract string? GetConnectionName();
+        protected abstract IPhormDbConnection GetConnection();
 
         protected virtual IAsyncDbCommand CreateCommand(IPhormDbConnection connection, string schema, string objectName, DbObjectType objectType)
         {

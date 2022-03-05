@@ -90,9 +90,7 @@ namespace IFY.Phorm.SqlClient.IntegrationTests
 
         private static IPhormSession getPhormSession()
         {
-            var connProc = new SqlConnectionProvider(@"Server=(localdb)\ProjectModels;Database=PhormTests;");
-
-            var phorm = new SqlPhormSession(connProc, "*");
+            var phorm = new SqlPhormSession(@"Server=(localdb)\ProjectModels;Database=PhormTests;", "*");
 
             phorm.Call("ClearTable");
 
