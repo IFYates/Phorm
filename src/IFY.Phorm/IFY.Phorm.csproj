@@ -24,7 +24,7 @@ v1.0.0-beta - First fully-functional release</PackageReleaseNotes>
 
     <ItemGroup>
         <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-        <PackageReference Include="Shimterface.Standard" Version="1.6.7" />
+        <PackageReference Include="Shimterface.Standard" Version="1.6.8" />
 		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
 	</ItemGroup>
 
