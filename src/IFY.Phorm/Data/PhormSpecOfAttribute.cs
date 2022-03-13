@@ -20,7 +20,7 @@ namespace IFY.Phorm.Data
         public PhormSpecOfAttribute(string genProperty, object propertyValue)
         {
             GenProperty = genProperty;
-            PropertyValue = propertyValue;
+            PropertyValue = propertyValue ?? throw new ArgumentNullException(nameof(propertyValue));
         }
     }
 }

@@ -6,11 +6,14 @@ namespace IFY.Phorm.Data
 {
     public abstract class GenSpecBase
     {
+        internal Type GenType { get; }
         internal Type[] SpecTypes { get; }
 
         internal GenSpecBase()
         {
-            SpecTypes = GetType().GenericTypeArguments[1..];
+            var typeArgs = GetType().GenericTypeArguments;
+            GenType = typeArgs[0];
+            SpecTypes = typeArgs[1..];
         }
 
         internal abstract void SetData(IEnumerable<object> data);
@@ -27,8 +30,6 @@ namespace IFY.Phorm.Data
         where T2 : TBase
     {
         private readonly List<TBase> _data = new List<TBase>();
-
-        public Type GenType { get; } = typeof(TBase);
 
         internal override void SetData(IEnumerable<object> data)
         {

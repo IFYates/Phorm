@@ -21,7 +21,7 @@ namespace IFY.Phorm.Data
         /// <summary>
         /// Name as given in stored procedure
         /// </summary>
-        public string Name { get; set; }
+        public string DbName { get; set; }
         /// <summary>
         /// Size of data to/from database
         /// 0 is unspecified / unlimited
@@ -44,6 +44,10 @@ namespace IFY.Phorm.Data
         /// </summary>
         public PropertyInfo? SourceProperty { get; }
         /// <summary>
+        /// Identifier for the property.
+        /// </summary>
+        public string? SourcePropertyId { get; }
+        /// <summary>
         /// The true type of the value, even if null
         /// Can be different to property value
         /// </summary>
@@ -53,31 +57,32 @@ namespace IFY.Phorm.Data
         /// </summary>
         public IContractMemberAttribute[] Attributes { get; set; } = Array.Empty<IContractMemberAttribute>();
 
-        protected ContractMember(string? name, object? value, ParameterDirection dir, PropertyInfo? sourceProperty)
+        protected ContractMember(string? dbName, object? value, ParameterDirection dir, PropertyInfo? sourceProperty)
         {
-            Name = name ?? string.Empty;
+            DbName = dbName ?? string.Empty;
             SourceProperty = sourceProperty;
+            SourcePropertyId = sourceProperty != null ? $"{sourceProperty.Name}@{sourceProperty.DeclaringType.FullName}" : null;
             ValueType = sourceProperty?.PropertyType ?? typeof(object);
             SetValue(value);
             Direction = dir;
             HasChanged = false;
         }
 
-        public static ContractMember<T> In<T>(string name, T value, PropertyInfo? sourceProperty = null)
+        public static ContractMember<T> In<T>(string dbName, T value, PropertyInfo? sourceProperty = null)
         {
-            return new ContractMember<T>(name, value, ParameterDirection.Input, sourceProperty);
+            return new ContractMember<T>(dbName, value, ParameterDirection.Input, sourceProperty);
         }
-        public static ContractMember<T> InOut<T>(string name, T value, PropertyInfo? sourceProperty = null)
+        public static ContractMember<T> InOut<T>(string dbName, T value, PropertyInfo? sourceProperty = null)
         {
-            return new ContractMember<T>(name, value, ParameterDirection.InputOutput, sourceProperty);
+            return new ContractMember<T>(dbName, value, ParameterDirection.InputOutput, sourceProperty);
         }
         public static ContractMember<T> Out<T>()
         {
-            return new ContractMember<T>(string.Empty, default, ParameterDirection.Output);
+            return new ContractMember<T>(string.Empty, default!, ParameterDirection.Output);
         }
-        public static ContractMember<T> Out<T>(string name, PropertyInfo? sourceProperty = null)
+        public static ContractMember<T> Out<T>(string dbName, PropertyInfo? sourceProperty = null)
         {
-            return new ContractMember<T>(name, default, ParameterDirection.Output, sourceProperty);
+            return new ContractMember<T>(dbName, default!, ParameterDirection.Output, sourceProperty);
         }
         public static ContractMember<int> RetVal()
         {
@@ -127,7 +132,7 @@ namespace IFY.Phorm.Data
                 // Wrap as ContractMember, if not already
                 if (value is ContractMember memb)
                 {
-                    memb.Name = prop.Name;
+                    memb.DbName = prop.Name;
                 }
                 else if (!hasContract)
                 {
@@ -153,12 +158,12 @@ namespace IFY.Phorm.Data
                 var dmAttr = prop?.GetCustomAttribute<DataMemberAttribute>();
                 if (dmAttr != null)
                 {
-                    memb.Name = dmAttr.Name ?? memb.Name;
+                    memb.DbName = dmAttr.Name ?? memb.DbName;
 
                     // Primitives are never "missing", so only check null
                     if (dmAttr.IsRequired && memb.Value == null)
                     {
-                        throw new ArgumentNullException(memb.Name, $"Parameter {memb.Name} for contract {contractType.FullName} is required but was null");
+                        throw new ArgumentNullException(memb.DbName, $"Parameter {memb.DbName} for contract {contractType.FullName} is required but was null");
                     }
                 }
 
@@ -196,7 +201,7 @@ namespace IFY.Phorm.Data
         public IDataParameter ToDataParameter(IAsyncDbCommand cmd)
         {
             var param = cmd.CreateParameter();
-            param.ParameterName = "@" + Name;
+            param.ParameterName = "@" + DbName;
             param.Direction = Direction;
 #if NETSTANDARD || NETCOREAPP
             if (Direction.IsOneOf(ParameterDirection.Output, ParameterDirection.InputOutput))
@@ -244,7 +249,7 @@ namespace IFY.Phorm.Data
                 // Primitives are never "missing", so only check null
                 if (dmAttr.IsRequired && val == null)
                 {
-                    throw new ArgumentNullException(Name, $"Parameter {Name} for contract {SourceProperty?.ReflectedType?.FullName} is required but was null");
+                    throw new ArgumentNullException(DbName, $"Parameter {DbName} for contract {SourceProperty?.ReflectedType?.FullName} is required but was null");
                 }
             }
 

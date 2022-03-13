@@ -1,4 +1,5 @@
 using IFY.Phorm.Data;
+using IFY.Phorm.Transformation;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Linq;
@@ -110,7 +111,7 @@ namespace IFY.Phorm.SqlClient.IntegrationTests
         {
             public long Id { get; set; }
             public string Key { get; set; }
-            [DataMember(Name = "TypeId")]
+            [DataMember(Name = "TypeId"), EnumValue]
             public DataType Type { get; set; }
         }
         [PhormSpecOf(nameof(Type), DataType.Numeric)]
@@ -118,7 +119,7 @@ namespace IFY.Phorm.SqlClient.IntegrationTests
         {
             public decimal Number { get; set; }
         }
-        [PhormSpecOf("TypeId", 2)]
+        [PhormSpecOf(nameof(Type), DataType.String)]
         public class StringGS : BaseGS
         {
             public string String { get; set; }
@@ -133,7 +134,7 @@ namespace IFY.Phorm.SqlClient.IntegrationTests
             var strs = res.OfType<StringGS>().ToList();
 
             Assert.AreEqual(2, all.Length);
-            Assert.AreEqual(12.34, nums.Single().Number);
+            Assert.AreEqual(12.34m, nums.Single().Number);
             Assert.AreEqual("Value", strs.Single().String);
         }
 
