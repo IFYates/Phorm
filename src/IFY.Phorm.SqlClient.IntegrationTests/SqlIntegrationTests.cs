@@ -105,6 +105,32 @@ namespace IFY.Phorm.SqlClient.IntegrationTests
             long? Id { get; }
         }
 
+        public abstract class BaseGS
+        {
+            public long Id { get; set; }
+            public string Key { get; set; }
+            //public int TypeId { get; set; }
+        }
+        [PhormSpecOf("TypeId", 1)]
+        public class NumGS : BaseGS
+        {
+            public decimal Number { get; set; }
+        }
+        [PhormSpecOf("TypeId", 2)]
+        public class StringGS : BaseGS
+        {
+            public string String { get; set; }
+        }
+        [TestMethod]
+        public void GenSpec_Test()
+        {
+            var phorm = getPhormSession();
+            var res = phorm.From("GenSpecTest").Get<GenSpec<BaseGS, NumGS, StringGS>>()!;
+            var all = res.All();
+            var nums = res.OfType<NumGS>().ToList();
+            var strs = res.OfType<StringGS>().ToList();
+        }
+
         #region Call
 
         [TestMethod]

@@ -51,3 +51,11 @@ BEGIN
 	RETURN @@ROWCOUNT
 END
 GO
+
+CREATE OR ALTER PROC [dbo].[usp_GenSpecTest]
+AS
+	SELECT 1 [Id], 'Aaa' [Key], 1 [TypeId], 12.34 [Number], CONVERT(VARCHAR(50), NULL) [String]
+	UNION ALL
+	SELECT 2, 'Bbb', 2, NULL, 'Value'
+RETURN 1
+GO

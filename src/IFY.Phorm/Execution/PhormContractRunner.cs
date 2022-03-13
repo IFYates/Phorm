@@ -168,7 +168,7 @@ namespace IFY.Phorm
             var secureMembers = new Dictionary<ContractMember, int>();
             for (var i = 0; i < rdr.FieldCount; ++i)
             {
-                var fieldName = rdr.GetName(i).ToLower();
+                var fieldName = rdr.GetName(i).ToUpperInvariant();
                 if (members.TryGetValue(fieldName, out var memb))
                 {
                     memb.ResolveAttributes(entity, out var isSecure);
@@ -284,43 +284,47 @@ namespace IFY.Phorm
             // Prepare execution
             var pars = ContractMember.GetMembersFromContract(_runArgs, typeof(TActionContract));
             using var cmd = startCommand(pars);
-
-            // Handle GenSpec differently
-            if (typeof(IGenSpecResult).IsAssignableFrom(typeof(TResult)))
-            {
-                return parseGenSpec<TResult>(cmd);
-            }
-
-            var resultMembers = ContractMember.GetMembersFromContract(null, entityType)
-                .ToDictionary(m => m.Name.ToLower());
-
-            // Parse resultset
             var results = new List<object>();
             using var rdr = await cmd.ExecuteReaderAsync(cancellationToken ?? CancellationToken.None);
-            if (!isArray && rdr.Read())
-            {
-                var result = getEntity(entityType, rdr, resultMembers);
-                results.Add(result);
 
-                if (_session.StrictResultSize && rdr.Read())
-                {
-                    throw new InvalidOperationException("Expected a single-record result, but more than one found.");
-                }
+            // Handle GenSpec differently
+            if (typeof(GenSpecBase).IsAssignableFrom(typeof(TResult)))
+            {
+                results.Add(parseGenSpec<TResult>(rdr));
+
+                // TODO: handle subresults
             }
             else
             {
-                while (rdr.Read())
+                var resultMembers = ContractMember.GetMembersFromContract(null, entityType)
+                    .ToDictionary(m => m.Name.ToUpperInvariant());
+
+                // Parse recordset
+                if (!isArray && rdr.Read())
                 {
                     var result = getEntity(entityType, rdr, resultMembers);
                     results.Add(result);
-                }
-            }
 
-            // Process sub results
-            var rsOrder = 0;
-            while (await rdr.NextResultAsync())
-            {
-                matchResultset(entityType, rsOrder++, rdr, results);
+                    if (_session.StrictResultSize && rdr.Read())
+                    {
+                        throw new InvalidOperationException("Expected a single-record result, but more than one found.");
+                    }
+                }
+                else
+                {
+                    while (rdr.Read())
+                    {
+                        var result = getEntity(entityType, rdr, resultMembers);
+                        results.Add(result);
+                    }
+                }
+
+                // Process sub results
+                var rsOrder = 0;
+                while (await rdr.NextResultAsync())
+                {
+                    matchResultset(entityType, rsOrder++, rdr, results);
+                }
             }
 
             parseCommandResult(cmd, _runArgs, pars);
@@ -336,9 +340,46 @@ namespace IFY.Phorm
             return (TResult)(object)resultArr;
         }
 
-        private TResult parseGenSpec<TResult>(IAsyncDbCommand cmd)
+        private TResult parseGenSpec<TResult>(IDataReader rdr)
         {
-            throw new NotImplementedException();
+            var genspec = (GenSpecBase)Activator.CreateInstance(typeof(TResult))!;
+
+            // Prepare models
+            var specs = genspec.SpecTypes.ToDictionary(t => t, t => (Attribute: t.GetCustomAttribute<PhormSpecOfAttribute>(false), Members: ContractMember.GetMembersFromContract(null, t).ToDictionary(m => m.Name.ToUpperInvariant())));
+            if (specs.Values.Any(s => s.Attribute == null))
+            {
+                throw new InvalidOperationException("Invalid GenSpec usage. Provided type was not decorated with a PhormSpecOfAttribute: " + specs.First(s => s.Value.Attribute == null).Key.FullName);
+            }
+
+            // Parse recordset
+            var results = new List<object>();
+            var tempProps = new Dictionary<string, object?>();
+            while (rdr.Read())
+            {
+                tempProps.Clear();
+                foreach (var spec in specs)
+                {
+                    // Check Gen property for the Spec type (cached)
+                    var attr = spec.Value.Attribute;
+                    if (!tempProps.TryGetValue(attr.GenProperty, out var propValue))
+                    {
+                        var propIdx = rdr.GetOrdinal(attr.GenProperty);
+                        propValue = propIdx>=0 ? rdr.GetValue(propIdx) : null;
+                        tempProps[attr.GenProperty] = propValue;
+                    }
+
+                    if (attr.PropertyValue.Equals(propValue))
+                    {
+                        // Shape
+                        var result = getEntity(spec.Key, rdr, spec.Value.Members);
+                        results.Add(result);
+                        break;
+                    }
+                }
+            }
+
+            genspec.SetData(results);
+            return (TResult)(object)genspec;
         }
     }
 }
