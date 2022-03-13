@@ -285,6 +285,12 @@ namespace IFY.Phorm
             var pars = ContractMember.GetMembersFromContract(_runArgs, typeof(TActionContract));
             using var cmd = startCommand(pars);
 
+            // Handle GenSpec differently
+            if (typeof(IGenSpecResult).IsAssignableFrom(typeof(TResult)))
+            {
+                return parseGenSpec<TResult>(cmd);
+            }
+
             var resultMembers = ContractMember.GetMembersFromContract(null, entityType)
                 .ToDictionary(m => m.Name.ToLower());
 
@@ -328,6 +334,11 @@ namespace IFY.Phorm
             var resultArr = (Array)Activator.CreateInstance(typeof(TResult), new object[] { results.Count })!;
             Array.Copy(results.ToArray(), resultArr, results.Count);
             return (TResult)(object)resultArr;
+        }
+
+        private TResult parseGenSpec<TResult>(IAsyncDbCommand cmd)
+        {
+            throw new NotImplementedException();
         }
     }
 }

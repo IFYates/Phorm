@@ -31,6 +31,9 @@ With this approach, the data management team can provide access contracts to mee
 ### Remaining
 - Detailed logging (Microsoft.Extensions.Logging)
 - Useful test helpers
+- GenSpec
+- Pass-through logging
+- Scoped execution context
 
 ## Antithesis
 Pho/rm requires significant code to wire the data layer to the business logic; this is intentional to the design and will not be resolved by this project.
@@ -229,3 +232,38 @@ TODO
 
 ## GenSpec support
 TODO
+support different shapes of same object
+? additional recordset support
+
+```SQL
+CREATE TABLE [Person] ( [Id] BIGINT PRIMARY KEY, [Name] NVARCHAR(100) )
+CREATE TABLE [Student] ( [PersonId] BIGINT, [EnrolledDate] DATETIME )
+CREATE TABLE [Faculty] ( [PersonId] BIGINT, [Department] INT )
+
+CREATE PROC [usp_GetEveryone] AS
+    SELECT P.[Id], P.[Name], 1 [TypeId], S.[EnrolledDate], NULL [Department] FROM [Person] P JOIN [Student] S ON S.[PersonId] = P.[Id]
+    UNION ALL
+    SELECT P.[Id], P.[Name], 2 [TypeId], NULL [EnrolledDate], F.[Department] FROM [Person] P JOIN [Faculty] F ON F.[PersonId] = P.[Id]
+RETURN 1
+GO
+```
+```CSharp
+// Gen
+abstract record Person (long Id, string Name, int TypeId);
+
+// Specs
+[PhormSpecOf(nameof(Person.TypeId), 1)]
+record Student(long Id, string Name, int TypeId, DateTime EnrolledDate) : Person(Id, Name, TypeId);
+[PhormSpecOf(nameof(Person.TypeId), 2)]
+record Faculty(long Id, string Name, int TypeId, string Department) : Person(Id, Name, TypeId);
+
+// Use
+var accounts = phorm.Get<GenSpec<Person, Student, Faculty>[]>("GetEveryone")!;
+
+// Result
+class GenSpec<TBase, T1, T2, ...>
+{
+    TBase[] All();
+    T[] OfType<T>();
+}
+```
