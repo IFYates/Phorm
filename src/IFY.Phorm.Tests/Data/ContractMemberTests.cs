@@ -34,7 +34,7 @@ namespace IFY.Phorm.Data.Tests
         {
             var res = ContractMember.In("name", typeof(string), null);
 
-            Assert.AreEqual("name", res.Name);
+            Assert.AreEqual("name", res.DbName);
             Assert.AreEqual(typeof(string), res.Value);
             Assert.IsFalse(res.HasChanged);
             Assert.AreEqual(ParameterDirection.Input, res.Direction);
@@ -47,7 +47,7 @@ namespace IFY.Phorm.Data.Tests
         {
             var res = ContractMember.InOut("name", typeof(string), null);
 
-            Assert.AreEqual("name", res.Name);
+            Assert.AreEqual("name", res.DbName);
             Assert.AreEqual(typeof(string), res.Value);
             Assert.IsFalse(res.HasChanged);
             Assert.AreEqual(ParameterDirection.InputOutput, res.Direction);
@@ -60,7 +60,7 @@ namespace IFY.Phorm.Data.Tests
         {
             var res = ContractMember.Out<Type>();
 
-            Assert.AreEqual(string.Empty, res.Name);
+            Assert.AreEqual(string.Empty, res.DbName);
             Assert.IsNull(res.Value);
             Assert.IsFalse(res.HasChanged);
             Assert.AreEqual(ParameterDirection.Output, res.Direction);
@@ -73,7 +73,7 @@ namespace IFY.Phorm.Data.Tests
         {
             var res = ContractMember.Out<Type>("name", null);
 
-            Assert.AreEqual("name", res.Name);
+            Assert.AreEqual("name", res.DbName);
             Assert.IsNull(res.Value);
             Assert.IsFalse(res.HasChanged);
             Assert.AreEqual(ParameterDirection.Output, res.Direction);
@@ -86,7 +86,7 @@ namespace IFY.Phorm.Data.Tests
         {
             var res = ContractMember.RetVal();
 
-            Assert.AreEqual("return", res.Name);
+            Assert.AreEqual("return", res.DbName);
             Assert.AreEqual(0, res.Value);
             Assert.IsFalse(res.HasChanged);
             Assert.AreEqual(ParameterDirection.ReturnValue, res.Direction);

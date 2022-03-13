@@ -131,7 +131,7 @@ namespace IFY.Phorm
             var recordType = rsProp.PropertyType.IsArray ? rsProp.PropertyType.GetElementType()! : rsProp.PropertyType;
             var records = new List<object>();
             var recordMembers = ContractMember.GetMembersFromContract(null, recordType)
-                .ToDictionary(m => m.DbName.ToLower());
+                .ToDictionary(m => m.DbName.ToUpperInvariant());
             while (rdr.Read())
             {
                 var res = getEntity(recordType, rdr, recordMembers);
@@ -288,11 +288,10 @@ namespace IFY.Phorm
             using var rdr = await cmd.ExecuteReaderAsync(cancellationToken ?? CancellationToken.None);
 
             // Handle GenSpec differently
+            GenSpecBase? genspec = null;
             if (typeof(GenSpecBase).IsAssignableFrom(typeof(TResult)))
             {
-                results.Add(PhormContractRunner<TActionContract>.parseGenSpec<TResult>(rdr));
-
-                // TODO: handle subresults
+                genspec = PhormContractRunner<TActionContract>.parseGenSpec<TResult>(results, rdr);
             }
             else
             {
@@ -330,6 +329,10 @@ namespace IFY.Phorm
             parseCommandResult(cmd, _runArgs, pars);
 
             // Return expected type
+            if (genspec != null)
+            {
+                return (TResult)(object)genspec;
+            }
             if (!isArray)
             {
                 return (TResult?)results.SingleOrDefault();
@@ -365,7 +368,7 @@ namespace IFY.Phorm
             }
         }
 
-        private static TResult parseGenSpec<TResult>(IDataReader rdr)
+        private static GenSpecBase parseGenSpec<TResult>(IList<object> results, IDataReader rdr)
         {
             var genspec = (GenSpecBase)Activator.CreateInstance(typeof(TResult))!;
             IDictionary<string, ContractMember>? baseMembers = null;
@@ -378,7 +381,6 @@ namespace IFY.Phorm
             }
 
             // Parse recordset
-            var results = new List<object>();
             var tempProps = new Dictionary<string, object?>();
             while (rdr.Read())
             {
@@ -391,14 +393,10 @@ namespace IFY.Phorm
                     {
                         spec.GenProperty.FromDatasource(rdr[spec.GenProperty.DbName]);
                         propValue = spec.GenProperty.Value;
-                        tempProps[spec.GenProperty.SourcePropertyId!]  = propValue;
-                    }
-                    if (propValue == null)
-                    {
-                        continue;
+                        tempProps[spec.GenProperty.SourcePropertyId!] = propValue;
                     }
 
-                    if (spec.SpecValue.Equals(propValue) == true)
+                    if (spec.SpecValue.Equals(propValue))
                     {
                         // Shape
                         var result = getEntity(spec.Type, rdr, spec.Members);
@@ -421,7 +419,7 @@ namespace IFY.Phorm
             }
 
             genspec.SetData(results);
-            return (TResult)(object)genspec;
+            return genspec;
         }
     }
 }
