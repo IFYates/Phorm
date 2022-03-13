@@ -160,7 +160,7 @@ namespace IFY.Phorm
             }
         }
 
-        private static object getEntity(Type entityType, IDataReader rdr, Dictionary<string, ContractMember> members)
+        private static object getEntity(Type entityType, IDataReader rdr, IDictionary<string, ContractMember> members)
         {
             var entity = Activator.CreateInstance(entityType) ?? new object();
 
@@ -340,38 +340,57 @@ namespace IFY.Phorm
             return (TResult)(object)resultArr;
         }
 
+        private class SpecDef
+        {
+            public Type Type { get; }
+            public ContractMember? GenProperty { get; }
+            public object? SpecValue { get; }
+            public IDictionary<string, ContractMember> Members { get; }
+
+            public SpecDef(Type type)
+            {
+                Type = type;
+                var attr = type.GetCustomAttribute<PhormSpecOfAttribute>(false);
+                Members = ContractMember.GetMembersFromContract(null, type)
+                    .ToDictionary(m => m.Name.ToUpperInvariant());
+                if (attr != null)
+                {
+                    GenProperty = Members.Values.FirstOrDefault(m => m.SourceProperty?.Name.ToUpperInvariant() == attr.GenProperty.ToUpperInvariant());
+                    SpecValue = attr.PropertyValue;
+                }
+            }
+        }
+
         private TResult parseGenSpec<TResult>(IDataReader rdr)
         {
             var genspec = (GenSpecBase)Activator.CreateInstance(typeof(TResult))!;
 
             // Prepare models
-            var specs = genspec.SpecTypes.ToDictionary(t => t, t => (Attribute: t.GetCustomAttribute<PhormSpecOfAttribute>(false), Members: ContractMember.GetMembersFromContract(null, t).ToDictionary(m => m.Name.ToUpperInvariant())));
-            if (specs.Values.Any(s => s.Attribute == null))
+            var specs = genspec.SpecTypes.Select(t => new SpecDef(t)).ToArray();
+            if (specs.Any(s => s.GenProperty == null))
             {
-                throw new InvalidOperationException("Invalid GenSpec usage. Provided type was not decorated with a PhormSpecOfAttribute: " + specs.First(s => s.Value.Attribute == null).Key.FullName);
+                throw new InvalidOperationException("Invalid GenSpec usage. Provided type was not decorated with a PhormSpecOfAttribute: " + specs.First(s => s.GenProperty == null).Type.FullName);
             }
 
             // Parse recordset
             var results = new List<object>();
-            var tempProps = new Dictionary<string, object?>();
+            var tempProps = new Dictionary<PropertyInfo, object?>();
             while (rdr.Read())
             {
                 tempProps.Clear();
                 foreach (var spec in specs)
                 {
                     // Check Gen property for the Spec type (cached)
-                    var attr = spec.Value.Attribute;
-                    if (!tempProps.TryGetValue(attr.GenProperty, out var propValue))
+                    if (!tempProps.TryGetValue(spec.GenProperty!.SourceProperty!, out var propValue))
                     {
-                        var propIdx = rdr.GetOrdinal(attr.GenProperty);
-                        propValue = propIdx>=0 ? rdr.GetValue(propIdx) : null;
-                        tempProps[attr.GenProperty] = propValue;
+                        spec.GenProperty.FromDatasource(rdr[spec.GenProperty.Name]);
+                        tempProps[spec.GenProperty.SourceProperty!]  = propValue;
                     }
 
-                    if (attr.PropertyValue.Equals(propValue))
+                    if (spec.SpecValue?.Equals(spec.GenProperty.Value) == true)
                     {
                         // Shape
-                        var result = getEntity(spec.Key, rdr, spec.Value.Members);
+                        var result = getEntity(spec.Type, rdr, spec.Members);
                         results.Add(result);
                         break;
                     }

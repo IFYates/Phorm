@@ -105,13 +105,15 @@ namespace IFY.Phorm.SqlClient.IntegrationTests
             long? Id { get; }
         }
 
+        public enum DataType { None, Numeric, String }
         public abstract class BaseGS
         {
             public long Id { get; set; }
             public string Key { get; set; }
-            //public int TypeId { get; set; }
+            [DataMember(Name = "TypeId")]
+            public DataType Type { get; set; }
         }
-        [PhormSpecOf("TypeId", 1)]
+        [PhormSpecOf(nameof(Type), DataType.Numeric)]
         public class NumGS : BaseGS
         {
             public decimal Number { get; set; }
@@ -129,6 +131,10 @@ namespace IFY.Phorm.SqlClient.IntegrationTests
             var all = res.All();
             var nums = res.OfType<NumGS>().ToList();
             var strs = res.OfType<StringGS>().ToList();
+
+            Assert.AreEqual(2, all.Length);
+            Assert.AreEqual(12.34, nums.Single().Number);
+            Assert.AreEqual("Value", strs.Single().String);
         }
 
         #region Call
