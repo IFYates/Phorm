@@ -230,16 +230,23 @@ TODO
 ## Connection context
 TODO
 
-## GenSpec support
-TODO
-support different shapes of same object
-? additional recordset support
+## Gen-Spec support
+Pho/rm supports the "Generalised-Specialised" pattern, providing some polymorphism ability.
 
+**Note:** Additional recordsets are not fully supported for GenSpec results.
+
+While Pho/rm is only interested in the shape returned by the procedure, the easiest way to model a Gen-Spec structure is using one-to-one relationships between tables.
 ```SQL
+-- The Generalised entity
 CREATE TABLE [Person] ( [Id] BIGINT PRIMARY KEY, [Name] NVARCHAR(100) )
+
+-- The Specialised entities
 CREATE TABLE [Student] ( [PersonId] BIGINT, [EnrolledDate] DATETIME )
 CREATE TABLE [Faculty] ( [PersonId] BIGINT, [Department] INT )
+```
 
+Returning a `UNION` of all rows provides the resultset structure needed.
+```SQL
 CREATE PROC [usp_GetEveryone] AS
     SELECT P.[Id], P.[Name], 1 [TypeId], S.[EnrolledDate], NULL [Department] FROM [Person] P JOIN [Student] S ON S.[PersonId] = P.[Id]
     UNION ALL
@@ -247,6 +254,8 @@ CREATE PROC [usp_GetEveryone] AS
 RETURN 1
 GO
 ```
+
+
 ```CSharp
 // Gen
 abstract record Person (long Id, string Name, int TypeId);
@@ -258,12 +267,8 @@ record Student(long Id, string Name, int TypeId, DateTime EnrolledDate) : Person
 record Faculty(long Id, string Name, int TypeId, string Department) : Person(Id, Name, TypeId);
 
 // Use
-var accounts = phorm.Get<GenSpec<Person, Student, Faculty>[]>("GetEveryone")!;
-
-// Result
-class GenSpec<TBase, T1, T2, ...>
-{
-    TBase[] All();
-    T[] OfType<T>();
-}
+var result = phorm.From("GetEveryone").Get<GenSpec<Person, Student, Faculty>>()!;
+Person[] people = result.All();
+Student[] students = result.OfType<Student>().ToArray();
+Faculty[] faculty = result.OfType<Faculty>().ToArray();
 ```
