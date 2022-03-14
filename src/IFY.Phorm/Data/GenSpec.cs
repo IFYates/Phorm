@@ -24,10 +24,8 @@ namespace IFY.Phorm.Data
     /// </summary>
     /// <typeparam name="TBase">The "Generalised" base type that the other types share.</typeparam>
     /// <typeparam name="T1">A "Specialised" type.</typeparam>
-    /// <typeparam name="T2">A "Specialised" type.</typeparam>
-    public class GenSpec<TBase, T1, T2> : GenSpecBase
+    public class GenSpec<TBase, T1> : GenSpecBase
         where T1 : TBase
-        where T2 : TBase
     {
         private readonly List<TBase> _data = new List<TBase>();
 
@@ -52,8 +50,20 @@ namespace IFY.Phorm.Data
     /// <typeparam name="TBase">The "Generalised" base type that the other types share.</typeparam>
     /// <typeparam name="T1">A "Specialised" type.</typeparam>
     /// <typeparam name="T2">A "Specialised" type.</typeparam>
-    /// <typeparam name="T3">A "Specialised" type.</typeparam>ToUpperInvariant
-    public sealed class GenSpec<TBase, T1, T2, T3> : GenSpec<TBase, T1, T2>
+    public sealed class GenSpec<TBase, T1, T2> : GenSpec<TBase, T1>
+        where T1 : TBase
+        where T2 : TBase
+    {
+    }
+
+    /// <summary>
+    /// Fetch a resultset containing "Specialised" instances with a common "Generalised" base type.
+    /// </summary>
+    /// <typeparam name="TBase">The "Generalised" base type that the other types share.</typeparam>
+    /// <typeparam name="T1">A "Specialised" type.</typeparam>
+    /// <typeparam name="T2">A "Specialised" type.</typeparam>
+    /// <typeparam name="T3">A "Specialised" type.</typeparam>
+    public sealed class GenSpec<TBase, T1, T2, T3> : GenSpec<TBase, T1>
         where T1 : TBase
         where T2 : TBase
         where T3 : TBase
@@ -67,7 +77,7 @@ namespace IFY.Phorm.Data
     /// <typeparam name="T2">A "Specialised" type.</typeparam>
     /// <typeparam name="T3">A "Specialised" type.</typeparam>
     /// <typeparam name="T4">A "Specialised" type.</typeparam>
-    public sealed class GenSpec<TBase, T1, T2, T3, T4> : GenSpec<TBase, T1, T2>
+    public sealed class GenSpec<TBase, T1, T2, T3, T4> : GenSpec<TBase, T1>
         where T1 : TBase
         where T2 : TBase
         where T3 : TBase
@@ -83,7 +93,7 @@ namespace IFY.Phorm.Data
     /// <typeparam name="T3">A "Specialised" type.</typeparam>
     /// <typeparam name="T4">A "Specialised" type.</typeparam>
     /// <typeparam name="T5">A "Specialised" type.</typeparam>
-    public sealed class GenSpec<TBase, T1, T2, T3, T4, T5> : GenSpec<TBase, T1, T2>
+    public sealed class GenSpec<TBase, T1, T2, T3, T4, T5> : GenSpec<TBase, T1>
         where T1 : TBase
         where T2 : TBase
         where T3 : TBase

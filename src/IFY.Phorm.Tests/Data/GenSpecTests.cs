@@ -1,5 +1,7 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using IFY.Phorm.Tests;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace IFY.Phorm.Data.Tests
@@ -8,37 +10,167 @@ namespace IFY.Phorm.Data.Tests
     public class GenSpecTests
     {
         // Gen
-        abstract class Person
+        abstract class AbstractBaseGenType
         {
-            public long Id { get; }
-            public string Name { get; }
-            public int TypeId { get; }
+        }
+        class BaseGenType : AbstractBaseGenType
+        {
+            public long Id { get; set; }
+            public string Name { get; set; } = string.Empty;
+            public int TypeId { get; set; }
         }
 
         // Specs
         [PhormSpecOf(nameof(TypeId), 1)]
-        class Student : Person
+        class SpecType1 : BaseGenType
         {
-            public DateTime EnrolledDate { get; set; }
+            public int IntSpecProperty { get; set; }
         }
 
         [PhormSpecOf(nameof(TypeId), 2)]
-        class Faculty : Person
+        class SpecType2 : BaseGenType
         {
-            public string Department { get; set; }
+            public string StringSpecProperty { get; set; } = string.Empty;
         }
 
-        [TestMethod, Ignore]
-        public void Test()
+        class TypeWithoutAttribute : BaseGenType
         {
-            IPhormSession phorm = null!;
+        }
 
-            var result = phorm.From("GetEveryone")
-                .Get<GenSpec<Person, Student, Faculty>>()!;
+        [PhormSpecOf("BadProperty", 2)]
+        class TypeWithBadAttribute : BaseGenType
+        {
+        }
 
-            var everyone = result.All();
-            var students = result.OfType<Student>().ToArray();
-            var faculty = result.OfType<Faculty>().ToArray();
+        private static IPhormContractRunner buildRunner()
+        {
+            var conn = new TestPhormConnection("")
+            {
+                DefaultSchema = "schema"
+            };
+
+            var cmd = new TestDbCommand(new TestDbReader
+            {
+                Results = new List<Dictionary<string, object>[]>(new[]
+                {
+                    new[]
+                    {
+                        new Dictionary<string, object>
+                        {
+                            ["Id"] = 1,
+                            ["Name"] = "Row1",
+                            ["TypeId"] = 1, // Int
+                            ["IntSpecProperty"] = 12345
+                        },
+                        new Dictionary<string, object>
+                        {
+                            ["Id"] = 2,
+                            ["Name"] = "Row2",
+                            ["TypeId"] = 2, // String
+                            ["StringSpecProperty"] = "Value"
+                        }
+                    }
+                })
+            });
+            cmd.Reader.NextResult();
+            conn.CommandQueue.Enqueue(cmd);
+
+            var phorm = new TestPhormSession(new TestPhormConnectionProvider((s) => conn));
+
+            return new PhormContractRunner<IPhormContract>(phorm, "ContractName", DbObjectType.StoredProcedure, null);
+        }
+
+        [TestMethod]
+        public void GetAsync__GenSpec__Shapes_records_by_selector()
+        {
+            // Arrange
+            var runner = buildRunner();
+
+            // Act
+            var result = runner.GetAsync<GenSpec<BaseGenType, SpecType1, SpecType2>>().Result!;
+
+            var all = result.All();
+            var spec1 = result.OfType<SpecType1>().ToArray();
+            var spec2 = result.OfType<SpecType2>().ToArray();
+
+            // Assert
+            Assert.AreEqual(2, all.Length);
+            Assert.AreEqual(12345, spec1.Single().IntSpecProperty);
+            Assert.AreEqual("Value", spec2.Single().StringSpecProperty);
+        }
+
+        [TestMethod]
+        public void GetAsync__GenSpec__Unmapped_type_returned_as_nonabstract_base()
+        {
+            // Arrange
+            var runner = buildRunner();
+
+            // Act
+            var result = runner.GetAsync<GenSpec<BaseGenType, SpecType1>>().Result!;
+
+            var all = result.All();
+            var asBase = all.Where(r => r.GetType() == typeof(BaseGenType)).ToArray();
+            var spec1 = result.OfType<SpecType1>().ToArray();
+            var spec2 = result.OfType<SpecType2>().ToArray();
+
+            // Assert
+            Assert.AreEqual(2, all.Length);
+            Assert.AreEqual(1, asBase.Length);
+            Assert.AreEqual(1, spec1.Length);
+            Assert.AreEqual(0, spec2.Length);
+        }
+
+        [TestMethod]
+        public void GetAsync__GenSpec__Unmapped_type_ignored_for_abstract_base()
+        {
+            // Arrange
+            var runner = buildRunner();
+
+            // Act
+            var result = runner.GetAsync<GenSpec<AbstractBaseGenType, SpecType1>>().Result!;
+
+            var all = result.All();
+            var spec1 = result.OfType<SpecType1>().ToArray();
+            var spec2 = result.OfType<SpecType2>().ToArray();
+
+            // Assert
+            Assert.AreEqual(1, all.Length);
+            Assert.AreEqual(1, spec1.Length);
+            Assert.AreEqual(0, spec2.Length);
+        }
+
+        [TestMethod]
+        public void GetAsync__GenSpec__Type_without_attribute__Fail()
+        {
+            // Arrange
+            var runner = buildRunner();
+
+            // Act
+            Exception ex = Assert.ThrowsException<AggregateException>(() =>
+            {
+                _ = runner.GetAsync<GenSpec<BaseGenType, TypeWithoutAttribute>>().Result!;
+            });
+
+            // Assert
+            ex = ex.InnerException!;
+            Assert.AreEqual("Invalid GenSpec usage. Provided type was not decorated with a PhormSpecOfAttribute referencing a valid property: " + typeof(TypeWithoutAttribute).FullName, ex.Message);
+        }
+
+        [TestMethod]
+        public void GetAsync__GenSpec__Type_referencing_bad_property__Fail()
+        {
+            // Arrange
+            var runner = buildRunner();
+
+            // Act
+            Exception ex = Assert.ThrowsException<AggregateException>(() =>
+            {
+                _ = runner.GetAsync<GenSpec<BaseGenType, TypeWithBadAttribute>>().Result!;
+            });
+
+            // Assert
+            ex = ex.InnerException!;
+            Assert.AreEqual("Invalid GenSpec usage. Provided type was not decorated with a PhormSpecOfAttribute referencing a valid property: " + typeof(TypeWithBadAttribute).FullName, ex.Message);
         }
     }
 }

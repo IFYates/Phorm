@@ -30,7 +30,7 @@ namespace IFY.Phorm.Tests
 
         public override object this[int ordinal] => throw new NotImplementedException();
 
-        public override object this[string name] => throw new NotImplementedException();
+        public override object this[string name] => Tuple![name];
 
         public override int Depth => throw new NotImplementedException();
 
