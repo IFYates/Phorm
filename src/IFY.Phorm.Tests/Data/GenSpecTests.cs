@@ -51,28 +51,24 @@ namespace IFY.Phorm.Data.Tests
 
             var cmd = new TestDbCommand(new TestDbReader
             {
-                Results = new List<Dictionary<string, object>[]>(new[]
+                Data = new List<Dictionary<string, object>>
                 {
-                    new[]
+                    new Dictionary<string, object>
                     {
-                        new Dictionary<string, object>
-                        {
-                            ["Id"] = 1,
-                            ["Name"] = "Row1",
-                            ["TypeId"] = 1, // Int
-                            ["IntSpecProperty"] = 12345
-                        },
-                        new Dictionary<string, object>
-                        {
-                            ["Id"] = 2,
-                            ["Name"] = "Row2",
-                            ["TypeId"] = 2, // String
-                            ["StringSpecProperty"] = "Value"
-                        }
+                        ["Id"] = 1,
+                        ["Name"] = "Row1",
+                        ["TypeId"] = 1, // Int
+                        ["IntSpecProperty"] = 12345
+                    },
+                    new Dictionary<string, object>
+                    {
+                        ["Id"] = 2,
+                        ["Name"] = "Row2",
+                        ["TypeId"] = 2, // String
+                        ["StringSpecProperty"] = "Value"
                     }
-                })
+                }
             });
-            cmd.Reader.NextResult();
             conn.CommandQueue.Enqueue(cmd);
 
             var phorm = new TestPhormSession(new TestPhormConnectionProvider((s) => conn));

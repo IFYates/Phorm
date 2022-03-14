@@ -14,6 +14,7 @@ namespace IFY.Phorm.Data.Tests
     [TestClass]
     public class ContractMemberTests
     {
+        [AttributeUsage(AttributeTargets.Property)]
         public class TestAttribute : Attribute, IContractMemberAttribute
         {
             public object? Context { get; private set; }
@@ -132,13 +133,28 @@ namespace IFY.Phorm.Data.Tests
         }
 
         [TestMethod]
-        public void GetMembersFromContract__ReturnValue_property_on_object()
+        public void GetMembersFromContract__withReturnValue__ReturnValue_property_on_object()
         {
             // Arrange
             var obj = new ObjectWithReturnValueProperty();
 
             // Act
-            var res = ContractMember.GetMembersFromContract(obj, typeof(IPhormContract));
+            var res = ContractMember.GetMembersFromContract(obj, typeof(IPhormContract), true);
+
+            // Assert
+            Assert.AreEqual(1, res.Length);
+            Assert.AreEqual(ParameterDirection.ReturnValue, ((ContractMember<int>)res[0]).Direction);
+            Assert.AreSame(obj.ReturnValue, (ContractMember<int>)res[0]);
+        }
+
+        [TestMethod]
+        public void GetMembersFromContract__Not_withReturnValue__ReturnValue_property_on_object()
+        {
+            // Arrange
+            var obj = new ObjectWithReturnValueProperty();
+
+            // Act
+            var res = ContractMember.GetMembersFromContract(obj, typeof(IPhormContract), false);
 
             // Assert
             Assert.AreEqual(1, res.Length);
@@ -564,9 +580,10 @@ namespace IFY.Phorm.Data.Tests
         public void SetValue__Converts_value_to_property_type(string propertyName, string value, object exp)
         {
             var prop = GetType().GetProperty(propertyName);
-            var member = new ContractMember<object>(propertyName, null, ParameterDirection.Input, prop);
+            var member = new ContractMember<object>(propertyName, null!, ParameterDirection.Input, prop);
 
             member.SetValue(value);
+            _ = member.SourceProperty?.GetValue(this);
 
             Assert.AreEqual(exp, member.Value);
         }

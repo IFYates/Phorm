@@ -93,7 +93,7 @@ namespace IFY.Phorm.Data
         /// <summary>
         /// Convert properties of any object to <see cref="ContractMember"/>s.
         /// </summary>
-        public static ContractMember[] GetMembersFromContract(object? obj, Type contractType)
+        public static ContractMember[] GetMembersFromContract(object? obj, Type contractType, bool withReturnValue)
         {
             var hasContract = contractType != typeof(IPhormContract);
             if (!hasContract)
@@ -170,9 +170,13 @@ namespace IFY.Phorm.Data
                 // TODO: omit unused?
             }
 
+            if (!withReturnValue)
+            {
+                return members.ToArray();
+            }
             return addReturnValue(members).ToArray();
 
-            IList<ContractMember> addReturnValue(List<ContractMember> members)
+            IList<ContractMember> addReturnValue(IList<ContractMember> members)
             {
                 if (!members.Any(p => p.Direction == ParameterDirection.ReturnValue))
                 {

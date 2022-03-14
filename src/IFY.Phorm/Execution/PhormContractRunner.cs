@@ -130,7 +130,7 @@ namespace IFY.Phorm
             // Get data
             var recordType = rsProp.PropertyType.IsArray ? rsProp.PropertyType.GetElementType()! : rsProp.PropertyType;
             var records = new List<object>();
-            var recordMembers = ContractMember.GetMembersFromContract(null, recordType)
+            var recordMembers = ContractMember.GetMembersFromContract(null, recordType, false)
                 .ToDictionary(m => m.DbName.ToUpperInvariant());
             while (rdr.Read())
             {
@@ -207,7 +207,7 @@ namespace IFY.Phorm
                 }
                 catch (Exception ex)
                 {
-                    throw new InvalidOperationException($"Failed set to property {memb.SourceProperty?.Name ?? memb.DbName}", ex);
+                    throw new InvalidOperationException($"Failed to set property {memb.SourceProperty?.Name ?? memb.DbName}", ex);
                 }
             }
         }
@@ -250,7 +250,7 @@ namespace IFY.Phorm
         public async Task<int> CallAsync(CancellationToken? cancellationToken = null)
         {
             // Prepare execution
-            var pars = ContractMember.GetMembersFromContract(_runArgs, typeof(TActionContract));
+            var pars = ContractMember.GetMembersFromContract(_runArgs, typeof(TActionContract), true);
             using var cmd = startCommand(pars);
 
             // Execution
@@ -282,7 +282,7 @@ namespace IFY.Phorm
             }
 
             // Prepare execution
-            var pars = ContractMember.GetMembersFromContract(_runArgs, typeof(TActionContract));
+            var pars = ContractMember.GetMembersFromContract(_runArgs, typeof(TActionContract), true);
             using var cmd = startCommand(pars);
             var results = new List<object>();
             using var rdr = await cmd.ExecuteReaderAsync(cancellationToken ?? CancellationToken.None);
@@ -295,7 +295,7 @@ namespace IFY.Phorm
             }
             else
             {
-                var resultMembers = ContractMember.GetMembersFromContract(null, entityType)
+                var resultMembers = ContractMember.GetMembersFromContract(null, entityType, false)
                     .ToDictionary(m => m.DbName.ToUpperInvariant());
 
                 // Parse recordset
@@ -354,7 +354,7 @@ namespace IFY.Phorm
             {
                 Type = type;
                 var attr = type.GetCustomAttribute<PhormSpecOfAttribute>(false);
-                Members = ContractMember.GetMembersFromContract(null, type)
+                Members = ContractMember.GetMembersFromContract(null, type, false)
                     .ToDictionary(m => m.DbName.ToUpperInvariant());
                 if (attr != null)
                 {
@@ -410,10 +410,14 @@ namespace IFY.Phorm
                 {
                     if (!genspec.GenType.IsAbstract)
                     {
-                        baseMembers ??= ContractMember.GetMembersFromContract(null, genspec.GenType)
+                        baseMembers ??= ContractMember.GetMembersFromContract(null, genspec.GenType, false)
                             .ToDictionary(m => m.DbName.ToUpperInvariant());
                         var result = getEntity(genspec.GenType, rdr, baseMembers);
                         results.Add(result);
+                    }
+                    else
+                    {
+                        // TODO: warnings for dropped records
                     }
                 }
             }
