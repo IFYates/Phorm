@@ -1,4 +1,5 @@
 ﻿using IFY.Phorm.Data;
+using IFY.Phorm.EventArgs;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -11,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace IFY.Phorm
 {
-    internal class PhormContractRunner<TActionContract> : IPhormContractRunner<TActionContract>
+    internal sealed class PhormContractRunner<TActionContract> : IPhormContractRunner<TActionContract>
         where TActionContract : IPhormContract
     {
         private readonly AbstractPhormSession _session;
@@ -72,7 +73,7 @@ namespace IFY.Phorm
 
         #region Execution
 
-        private IAsyncDbCommand startCommand(ContractMember[] members)
+        private IAsyncDbCommand startCommand(ContractMember[] members, out CommandExecutingEventArgs eventArgs)
         {
             var cmd = _session.CreateCommand(_schema, _objectName, _objectType);
 
@@ -114,6 +115,13 @@ namespace IFY.Phorm
                 }
             }
 
+            eventArgs = new CommandExecutingEventArgs
+            {
+                CommandGuid = Guid.NewGuid(),
+                CommandText = cmd.CommandText,
+                CommandParameters = cmd.Parameters.Cast<IDbDataParameter>().ToDictionary(p => p.ParameterName, p => p.Value)
+            };
+            _session.OnCommandExecuting(eventArgs);
             return cmd;
         }
 
@@ -212,7 +220,7 @@ namespace IFY.Phorm
             }
         }
 
-        private static int parseCommandResult(IAsyncDbCommand cmd, object? contract, ContractMember[] members)
+        private int parseCommandResult(IAsyncDbCommand cmd, object? contract, ContractMember[] members, CommandExecutingEventArgs eventArgs, int? resultCount)
         {
             // Update parameters for output values
             var returnValue = 0;
@@ -242,6 +250,15 @@ namespace IFY.Phorm
                     }
                 }
             }
+
+            _session.OnCommandExecuted(new CommandExecutedEventArgs
+            {
+                CommandGuid = eventArgs.CommandGuid,
+                CommandText = eventArgs.CommandText,
+                CommandParameters = eventArgs.CommandParameters,
+                ResultCount = resultCount,
+                ReturnValue = returnValue
+            });
             return returnValue;
         }
 
@@ -251,7 +268,7 @@ namespace IFY.Phorm
         {
             // Prepare execution
             var pars = ContractMember.GetMembersFromContract(_runArgs, typeof(TActionContract));
-            using var cmd = startCommand(pars);
+            using var cmd = startCommand(pars, out var eventArgs);
 
             // Execution
             using var rdr = await cmd.ExecuteReaderAsync(cancellationToken ?? CancellationToken.None);
@@ -260,7 +277,7 @@ namespace IFY.Phorm
                 throw new InvalidOperationException("Non-result request returned a result.");
             }
 
-            return parseCommandResult(cmd, _runArgs, pars);
+            return parseCommandResult(cmd, _runArgs, pars, eventArgs, null);
         }
 
         public TResult? Get<TResult>()
@@ -283,7 +300,7 @@ namespace IFY.Phorm
 
             // Prepare execution
             var pars = ContractMember.GetMembersFromContract(_runArgs, typeof(TActionContract));
-            using var cmd = startCommand(pars);
+            using var cmd = startCommand(pars, out var eventArgs);
 
             var resultMembers = ContractMember.GetMembersFromContract(null, entityType)
                 .ToDictionary(m => m.Name.ToLower());
@@ -317,7 +334,7 @@ namespace IFY.Phorm
                 matchResultset(entityType, rsOrder++, rdr, results);
             }
 
-            parseCommandResult(cmd, _runArgs, pars);
+            parseCommandResult(cmd, _runArgs, pars, eventArgs, results.Count);
 
             // Return expected type
             if (!isArray)

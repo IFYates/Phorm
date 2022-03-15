@@ -1,5 +1,7 @@
 ﻿using IFY.Phorm.Connectivity;
 using IFY.Phorm.Data;
+using IFY.Phorm.EventArgs;
+using System;
 using System.Data;
 using System.Threading;
 using System.Threading.Tasks;
@@ -9,6 +11,24 @@ namespace IFY.Phorm
     public abstract partial class AbstractPhormSession : IPhormSession
     {
         protected readonly IPhormDbConnectionProvider _connectionProvider;
+
+        #region Events
+
+        public event EventHandler<CommandExecutingEventArgs>? CommandExecuting;
+        internal void OnCommandExecuting(CommandExecutingEventArgs args)
+        {
+            try { CommandExecuting?.Invoke(this, args); } catch { }
+            Events.OnCommandExecuting(this, args);
+        }
+
+        public event EventHandler<CommandExecutedEventArgs>? CommandExecuted;
+        internal void OnCommandExecuted(CommandExecutedEventArgs args)
+        {
+            try { CommandExecuted?.Invoke(this, args); } catch { }
+            Events.OnCommandExecuted(this, args);
+        }
+
+        #endregion Events
 
         public bool StrictResultSize { get; set; } = GlobalSettings.StrictResultSize;
 
