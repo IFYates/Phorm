@@ -14,18 +14,22 @@ namespace IFY.Phorm.Tests
         private void invokeHandler(object? sender, CommandExecutingEventArgs args) => _globalCommandExecuting?.Invoke(sender, args);
         private Action<object?, CommandExecutedEventArgs>? _globalCommandExecuted = null;
         private void invokeHandler(object? sender, CommandExecutedEventArgs args) => _globalCommandExecuted?.Invoke(sender, args);
+        private Action<object?, UnexpectedRecordColumnEventArgs>? _globalUnexpectedRecordColumn = null;
+        private void invokeHandler(object? sender, UnexpectedRecordColumnEventArgs args) => _globalUnexpectedRecordColumn?.Invoke(sender, args);
 
         [TestInitialize]
         public void Init()
         {
             Events.CommandExecuting += invokeHandler;
             Events.CommandExecuted += invokeHandler;
+            Events.UnexpectedRecordColumn += invokeHandler;
         }
         [TestCleanup]
         public void Clean()
         {
             Events.CommandExecuting -= invokeHandler;
             Events.CommandExecuted -= invokeHandler;
+            Events.UnexpectedRecordColumn -= invokeHandler;
         }
 
         [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
@@ -96,6 +100,39 @@ namespace IFY.Phorm.Tests
 
             // Act
             phorm.OnCommandExecuted(new CommandExecutedEventArgs());
+
+            // Assert
+            Assert.IsTrue(wasCalled);
+        }
+
+        [TestMethod]
+        [DataRow(false, DisplayName = "Instance")]
+        [DataRow(true, DisplayName = "Global")]
+        public void OnUnexpectedRecordColumn__Ignores_exceptions(bool isGlobal)
+        {
+            // Arrange
+            var phorm = new TestPhormSession();
+
+            var wasCalled = false;
+            if (isGlobal)
+            {
+                _globalUnexpectedRecordColumn = (_, __) =>
+                {
+                    wasCalled = true;
+                    throw new Exception();
+                };
+            }
+            else
+            {
+                phorm.UnexpectedRecordColumn += (_, __) =>
+                {
+                    wasCalled = true;
+                    throw new Exception();
+                };
+            }
+
+            // Act
+            phorm.OnUnexpectedRecordColumn(new UnexpectedRecordColumnEventArgs());
 
             // Assert
             Assert.IsTrue(wasCalled);
@@ -182,13 +219,16 @@ namespace IFY.Phorm.Tests
                 globalEvent = (sender, args);
             };
 
-            phorm.CommandExecuting += (_, __) =>
+            Guid? commandGuid = null;
+            phorm.CommandExecuting += (_, a) =>
             {
+                Assert.AreEqual(commandGuid ??= a.CommandGuid, a.CommandGuid);
                 Assert.IsNull(instanceEvent);
                 Assert.IsNull(globalEvent);
             };
-            _globalCommandExecuting = (_, __) =>
+            _globalCommandExecuting = (_, a) =>
             {
+                Assert.AreEqual(commandGuid ??= a.CommandGuid, a.CommandGuid);
                 Assert.IsNull(instanceEvent);
                 Assert.IsNull(globalEvent);
             };
@@ -201,6 +241,7 @@ namespace IFY.Phorm.Tests
 
             // Assert
             Assert.AreSame(phorm, instanceEvent!.Value.sender);
+            Assert.AreEqual(commandGuid, instanceEvent.Value.args.CommandGuid);
             Assert.AreEqual("[schema].[CallTest]", instanceEvent.Value.args.CommandText);
             Assert.AreEqual(3, instanceEvent.Value.args.CommandParameters.Count); // + return
             Assert.AreEqual(1, (int)instanceEvent.Value.args.CommandParameters["@Arg1"]!);
@@ -302,13 +343,16 @@ namespace IFY.Phorm.Tests
                 globalEvent = (sender, args);
             };
 
-            phorm.CommandExecuting += (_, __) =>
+            Guid? commandGuid = null;
+            phorm.CommandExecuting += (_, a) =>
             {
+                Assert.AreEqual(commandGuid ??= a.CommandGuid, a.CommandGuid);
                 Assert.IsNull(instanceEvent);
                 Assert.IsNull(globalEvent);
             };
-            _globalCommandExecuting = (_, __) =>
+            _globalCommandExecuting = (_, a) =>
             {
+                Assert.AreEqual(commandGuid ??= a.CommandGuid, a.CommandGuid);
                 Assert.IsNull(instanceEvent);
                 Assert.IsNull(globalEvent);
             };
@@ -321,6 +365,7 @@ namespace IFY.Phorm.Tests
 
             // Assert
             Assert.AreSame(phorm, instanceEvent!.Value.sender);
+            Assert.AreEqual(commandGuid, instanceEvent.Value.args.CommandGuid);
             Assert.AreEqual("[schema].[CallTest]", instanceEvent.Value.args.CommandText);
             Assert.AreEqual(3, instanceEvent.Value.args.CommandParameters.Count); // + return
             Assert.AreEqual(1, (int)instanceEvent.Value.args.CommandParameters["@Arg1"]!);
@@ -329,6 +374,73 @@ namespace IFY.Phorm.Tests
             Assert.AreEqual(cmd.ReturnValue, instanceEvent.Value.args.ReturnValue);
             Assert.AreSame(phorm, globalEvent!.Value.sender);
             Assert.AreSame(instanceEvent.Value.args, globalEvent.Value.args);
+        }
+
+        [TestMethod]
+        public void Get__Unmapped_record_column__Invokes_both_UnexpectedRecordColumn_events()
+        {
+            // Arrange
+            var conn = new TestPhormConnection("")
+            {
+                DefaultSchema = "schema",
+            };
+
+            var cmd = new TestDbCommand(new TestDbReader
+            {
+                Data = new List<Dictionary<string, object>>
+                {
+                    new Dictionary<string, object>
+                    {
+                        ["Column"] = "data"
+                    }
+                }
+            })
+            {
+                ReturnValue = DateTime.UtcNow.Millisecond
+            };
+            conn.CommandQueue.Enqueue(cmd);
+
+            var phorm = new TestPhormSession(new TestPhormConnectionProvider((s) => conn));
+
+            (object? sender, UnexpectedRecordColumnEventArgs args)? instanceEvent = null;
+            phorm.UnexpectedRecordColumn += (object? sender, UnexpectedRecordColumnEventArgs args) =>
+            {
+                instanceEvent = (sender, args);
+            };
+
+            (object? sender, UnexpectedRecordColumnEventArgs args)? globalEvent = null;
+            _globalUnexpectedRecordColumn = (object? sender, UnexpectedRecordColumnEventArgs args) =>
+            {
+                globalEvent = (sender, args);
+            };
+
+            Guid? commandGuid = null;
+            phorm.CommandExecuting += (_, a) =>
+            {
+                Assert.AreEqual(commandGuid ??= a.CommandGuid, a.CommandGuid);
+                Assert.IsNull(instanceEvent);
+                Assert.IsNull(globalEvent);
+            };
+            _globalCommandExecuting = (_, a) =>
+            {
+                Assert.AreEqual(commandGuid ??= a.CommandGuid, a.CommandGuid);
+                Assert.IsNull(instanceEvent);
+                Assert.IsNull(globalEvent);
+            };
+
+            var runner = new PhormContractRunner<IPhormContract>(phorm, "CallTest", DbObjectType.StoredProcedure,
+                new { Arg1 = 1, Arg2 = "2" });
+
+            // Act
+            var res = runner.Get<object[]>()!;
+
+            // Assert
+            Assert.AreSame(phorm, instanceEvent!.Value.sender);
+            Assert.AreEqual(commandGuid, instanceEvent.Value.args.CommandGuid);
+            Assert.AreEqual(typeof(object), instanceEvent.Value.args.EntityType);
+            Assert.AreEqual("Column", instanceEvent.Value.args.ColumnName);
+            Assert.AreSame(phorm, globalEvent!.Value.sender);
+            Assert.AreSame(instanceEvent.Value.args, globalEvent!.Value.args);
         }
     }
 }

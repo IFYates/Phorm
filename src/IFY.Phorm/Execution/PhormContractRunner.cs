@@ -125,7 +125,7 @@ namespace IFY.Phorm
             return cmd;
         }
 
-        private static void matchResultset(Type entityType, int order, IDataReader rdr, IEnumerable<object> parents)
+        private void matchResultset(Type entityType, int order, IDataReader rdr, IEnumerable<object> parents, Guid commandGuid)
         {
             // Find resultset target
             var rsProp = entityType.GetProperties()
@@ -142,7 +142,7 @@ namespace IFY.Phorm
                 .ToDictionary(m => m.Name.ToLower());
             while (rdr.Read())
             {
-                var res = getEntity(recordType, rdr, recordMembers);
+                var res = getEntity(recordType, rdr, recordMembers, commandGuid);
                 records.Add(res);
             }
 
@@ -168,7 +168,7 @@ namespace IFY.Phorm
             }
         }
 
-        private static object getEntity(Type entityType, IDataReader rdr, Dictionary<string, ContractMember> members)
+        private object getEntity(Type entityType, IDataReader rdr, Dictionary<string, ContractMember> members, Guid commandGuid)
         {
             var entity = Activator.CreateInstance(entityType) ?? new object();
 
@@ -176,8 +176,8 @@ namespace IFY.Phorm
             var secureMembers = new Dictionary<ContractMember, int>();
             for (var i = 0; i < rdr.FieldCount; ++i)
             {
-                var fieldName = rdr.GetName(i).ToLower();
-                if (members.TryGetValue(fieldName, out var memb))
+                var fieldName = rdr.GetName(i);
+                if (members.TryGetValue(fieldName.ToLower(), out var memb))
                 {
                     memb.ResolveAttributes(entity, out var isSecure);
                     if (isSecure)
@@ -192,7 +192,13 @@ namespace IFY.Phorm
                 }
                 else
                 {
-                    // TODO: Warnings for unexpected columns
+                    // Report unexpected column
+                    _session.OnUnexpectedRecordColumn(new UnexpectedRecordColumnEventArgs
+                    {
+                        CommandGuid = commandGuid,
+                        EntityType = entityType,
+                        ColumnName = fieldName
+                    });
                 }
             }
 
@@ -310,7 +316,7 @@ namespace IFY.Phorm
             using var rdr = await cmd.ExecuteReaderAsync(cancellationToken ?? CancellationToken.None);
             if (!isArray && rdr.Read())
             {
-                var result = getEntity(entityType, rdr, resultMembers);
+                var result = getEntity(entityType, rdr, resultMembers, eventArgs.CommandGuid);
                 results.Add(result);
 
                 if (_session.StrictResultSize && rdr.Read())
@@ -322,7 +328,7 @@ namespace IFY.Phorm
             {
                 while (rdr.Read())
                 {
-                    var result = getEntity(entityType, rdr, resultMembers);
+                    var result = getEntity(entityType, rdr, resultMembers, eventArgs.CommandGuid);
                     results.Add(result);
                 }
             }
@@ -331,7 +337,7 @@ namespace IFY.Phorm
             var rsOrder = 0;
             while (await rdr.NextResultAsync())
             {
-                matchResultset(entityType, rsOrder++, rdr, results);
+                matchResultset(entityType, rsOrder++, rdr, results, eventArgs.CommandGuid);
             }
 
             parseCommandResult(cmd, _runArgs, pars, eventArgs, results.Count);

@@ -28,6 +28,13 @@ namespace IFY.Phorm
             Events.OnCommandExecuted(this, args);
         }
 
+        public event EventHandler<UnexpectedRecordColumnEventArgs>? UnexpectedRecordColumn;
+        internal void OnUnexpectedRecordColumn(UnexpectedRecordColumnEventArgs args)
+        {
+            try { UnexpectedRecordColumn?.Invoke(this, args); } catch { }
+            Events.OnUnexpectedRecordColumn(this, args);
+        }
+
         #endregion Events
 
         public bool StrictResultSize { get; set; } = GlobalSettings.StrictResultSize;

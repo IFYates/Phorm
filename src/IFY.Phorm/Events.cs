@@ -35,5 +35,19 @@ namespace IFY.Phorm
         }
 
         #endregion CommandExecuted
+
+        #region UnexpectedRecordColumn
+
+        /// <summary>
+        /// A result record contained a column not specified in the target entity type.
+        /// </summary>
+        public static event EventHandler<UnexpectedRecordColumnEventArgs>? UnexpectedRecordColumn;
+
+        internal static void OnUnexpectedRecordColumn(object sender, UnexpectedRecordColumnEventArgs args)
+        {
+            try { UnexpectedRecordColumn?.Invoke(sender, args); } catch { }
+        }
+
+        #endregion UnexpectedRecordColumn
     }
 }
