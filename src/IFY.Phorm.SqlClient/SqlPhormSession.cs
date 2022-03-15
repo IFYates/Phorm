@@ -4,7 +4,6 @@ using Microsoft.Data.SqlClient;
 using System;
 using System.Data;
 using System.Linq;
-using System.Text;
 
 namespace IFY.Phorm.SqlClient
 {
@@ -74,14 +73,15 @@ namespace IFY.Phorm.SqlClient
 
         #region Console capture
 
-        public class SqlConsoleCapture : IConsoleCapture
+        public class SqlConsoleCapture : IDisposable
         {
             private readonly SqlConnection _conn;
-            private readonly StringBuilder _consoleOutput = new StringBuilder();
+            private readonly Action<ConsoleEvent> _consoleEventConsumer;
 
-            public SqlConsoleCapture(SqlConnection conn)
+            public SqlConsoleCapture(SqlConnection conn, Action<ConsoleEvent> consoleEventConsumer)
             {
                 _conn = conn;
+                _consoleEventConsumer = consoleEventConsumer;
                 conn.InfoMessage += captureInfoMessage;
             }
 
@@ -91,26 +91,29 @@ namespace IFY.Phorm.SqlClient
                 {
                     // TODO: possible only for cmd?
                     // TODO: other info
-                    _consoleOutput.AppendLine(err.Message);
+                    _consoleEventConsumer.Invoke(new ConsoleEvent
+                    {
+                        Level = 1, // TODO
+                        Message = err.Message
+                    });
                 }
             }
 
-            public string Complete()
+            public void Dispose()
             {
                 _conn.InfoMessage -= captureInfoMessage;
-                var res = _consoleOutput.ToString();
-                _consoleOutput.Clear();
-                return res;
+                GC.SuppressFinalize(this);
             }
         }
-        protected override IConsoleCapture StartConsoleCapture(IAsyncDbCommand cmd)
+
+        protected override IDisposable StartConsoleCapture(IAsyncDbCommand cmd, Action<ConsoleEvent> consoleEventConsumer)
         {
             if (cmd.Connection is SqlConnection sql)
             {
-                return new SqlConsoleCapture(sql);
+                return new SqlConsoleCapture(sql, consoleEventConsumer);
             }
 
-            return NullConsoleCapture.Instance;
+            return base.StartConsoleCapture(cmd, consoleEventConsumer);
         }
 
         #endregion Console capture

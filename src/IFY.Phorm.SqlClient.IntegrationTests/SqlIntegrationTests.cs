@@ -7,7 +7,6 @@ using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace IFY.Phorm.SqlClient.IntegrationTests
 {

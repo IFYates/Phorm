@@ -1,10 +1,9 @@
 ﻿using IFY.Phorm.Connectivity;
 using IFY.Phorm.Data;
 using IFY.Phorm.EventArgs;
-using System;
 using IFY.Phorm.Execution;
+using System;
 using System.Data;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -92,7 +91,13 @@ namespace IFY.Phorm
         /// </summary>
         /// <param name="cmd">The command to capture console output for.</param>
         /// <returns>The object that will be provide the final console output.</returns>
-        protected internal virtual IConsoleCapture StartConsoleCapture(IAsyncDbCommand cmd) => NullConsoleCapture.Instance;
+        protected internal virtual IDisposable StartConsoleCapture(IAsyncDbCommand cmd, Action<ConsoleEvent> consoleEventConsumer) => NullDisposable.Instance;
+        private class NullDisposable : IDisposable
+        {
+            public static readonly NullDisposable Instance = new NullDisposable();
+            private NullDisposable() { }
+            public void Dispose() { }
+        }
 
         #endregion Connection
 
