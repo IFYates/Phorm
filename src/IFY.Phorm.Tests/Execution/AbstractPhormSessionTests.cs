@@ -12,6 +12,10 @@ namespace IFY.Phorm.Tests
         {
         }
 
+        public class TestEntity : ITestContract
+        {
+        }
+
         [TestMethod]
         public void From__No_typearg()
         {
@@ -26,14 +30,28 @@ namespace IFY.Phorm.Tests
         }
 
         [TestMethod]
-        public void From_With_typearg()
+        public void From__With_typearg()
         {
             // Arrange
             var phorm = new TestPhormSession();
 
-
             // Act
             var runner = phorm.From<ITestContract>();
+
+            // Assert
+            Assert.IsInstanceOfType(runner, typeof(PhormContractRunner<ITestContract>));
+        }
+
+        [TestMethod]
+        public void From__With_typed_arg()
+        {
+            // Arrange
+            var phorm = new TestPhormSession();
+
+            var arg = new Mock<ITestContract>().Object;
+
+            // Act
+            var runner = phorm.From(arg);
 
             // Assert
             Assert.IsInstanceOfType(runner, typeof(PhormContractRunner<ITestContract>));
@@ -114,6 +132,31 @@ namespace IFY.Phorm.Tests
             Assert.AreEqual(1, res);
             Assert.AreEqual("[dbo].[TestContract]", phorm.Commands[0].CommandText);
             Assert.AreEqual(CommandType.StoredProcedure, phorm.Commands[0].CommandType);
+        }
+
+        [TestMethod]
+        [DataRow(false)]
+        [DataRow(true)]
+        public void Get__By_typed_arg(bool byAsync)
+        {
+            // Arrange
+            var phorm = new TestPhormSession();
+
+            var arg = new TestEntity();
+
+            // Act
+            ITestContract? result;
+            if (byAsync)
+            {
+                result = phorm.GetAsync(arg).Result;
+            }
+            else
+            {
+                result = phorm.Get(arg);
+            }
+
+            // Assert
+            Assert.IsNull(result);
         }
     }
 }
