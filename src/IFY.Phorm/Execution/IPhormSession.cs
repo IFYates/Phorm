@@ -1,4 +1,6 @@
 ﻿using IFY.Phorm.Data;
+using IFY.Phorm.EventArgs;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -6,6 +8,20 @@ namespace IFY.Phorm
 {
     public interface IPhormSession
     {
+        #region Events
+
+        /// <summary>
+        /// The event invoked when a command is about to be executed.
+        /// </summary>
+        event EventHandler<CommandExecutingEventArgs>? CommandExecuting;
+
+        /// <summary>
+        /// The event invoked when a command has finished executing.
+        /// </summary>
+        event EventHandler<CommandExecutedEventArgs>? CommandExecuted;
+
+        #endregion Events
+
         /// <summary>
         /// Whether to throw an exception if an invocation result includes more records than expected.
         /// Defaults to true.

@@ -2,6 +2,7 @@
 using IFY.Phorm.Encryption;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.Serialization;
 
 namespace IFY.Phorm.SqlClient.IntegrationTests
@@ -33,6 +34,7 @@ namespace IFY.Phorm.SqlClient.IntegrationTests
             [SecureValue("class", nameof(Num))] string Data { get; }
         }
 
+        [ExcludeFromCodeCoverage]
         private class TestEncryptionProvider : IEncryptionProvider
         {
             public IEncryptor Encryptor { get; } = new NullEncryptor();

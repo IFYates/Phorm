@@ -1,4 +1,5 @@
 ﻿using IFY.Phorm.Data;
+using IFY.Phorm.EventArgs;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -11,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace IFY.Phorm
 {
-    internal class PhormContractRunner<TActionContract> : IPhormContractRunner<TActionContract>
+    internal sealed class PhormContractRunner<TActionContract> : IPhormContractRunner<TActionContract>
         where TActionContract : IPhormContract
     {
         private readonly AbstractPhormSession _session;
@@ -72,7 +73,7 @@ namespace IFY.Phorm
 
         #region Execution
 
-        private IAsyncDbCommand startCommand(ContractMember[] members)
+        private IAsyncDbCommand startCommand(ContractMember[] members, out CommandExecutingEventArgs eventArgs)
         {
             var cmd = _session.CreateCommand(_schema, _objectName, _objectType);
 
@@ -84,11 +85,7 @@ namespace IFY.Phorm
 #endif
             {
                 var sb = new StringBuilder();
-#if NETSTANDARD || NETCOREAPP
-                foreach (var memb in members.Where(m => m.Direction.IsOneOf(ParameterDirection.Input, ParameterDirection.InputOutput))
-#else
-                foreach (var memb in members.Where(m => m.Direction is ParameterDirection.Input or ParameterDirection.InputOutput)
-#endif
+                foreach (var memb in members.Where(m => (m.Direction & ParameterDirection.Input) > 0)
                     .Where(m => m.Value != null && m.Value != DBNull.Value))
                 {
                     // TODO: Ignore members without value
@@ -114,10 +111,17 @@ namespace IFY.Phorm
                 }
             }
 
+            eventArgs = new CommandExecutingEventArgs
+            {
+                CommandGuid = Guid.NewGuid(),
+                CommandText = cmd.CommandText,
+                CommandParameters = cmd.Parameters.Cast<IDbDataParameter>().ToDictionary(p => p.ParameterName, p => p.Value)
+            };
+            _session.OnCommandExecuting(eventArgs);
             return cmd;
         }
 
-        private static void matchResultset(Type entityType, int order, IDataReader rdr, IEnumerable<object> parents)
+        private void matchResultset(Type entityType, int order, IDataReader rdr, IEnumerable<object> parents, Guid commandGuid)
         {
             // Find resultset target
             var rsProp = entityType.GetProperties()
@@ -134,7 +138,7 @@ namespace IFY.Phorm
                 .ToDictionary(m => m.DbName.ToUpperInvariant());
             while (rdr.Read())
             {
-                var res = getEntity(recordType, rdr, recordMembers);
+                var res = getEntity(recordType, rdr, recordMembers, commandGuid);
                 records.Add(res);
             }
 
@@ -160,47 +164,64 @@ namespace IFY.Phorm
             }
         }
 
-        private static object getEntity(Type entityType, IDataReader rdr, IDictionary<string, ContractMember> members)
+        private object getEntity(Type entityType, IDataReader rdr, IDictionary<string, ContractMember> members, Guid commandGuid)
         {
-            var entity = Activator.CreateInstance(entityType) ?? new object();
+            members = members.ToDictionary(k => k.Key, v => v.Value); // Copy
+            var entity = Activator.CreateInstance(entityType)!;
 
             // Resolve member values
-            var secureMembers = new Dictionary<ContractMember, int>();
+            var secureMembers = new Dictionary<ContractMember, object>();
             for (var i = 0; i < rdr.FieldCount; ++i)
             {
-                var fieldName = rdr.GetName(i).ToUpperInvariant();
-                if (members.TryGetValue(fieldName, out var memb))
+                var fieldName = rdr.GetName(i);
+                if (members.Remove(fieldName.ToUpperInvariant(), out var memb))
                 {
                     memb.ResolveAttributes(entity, out var isSecure);
                     if (isSecure)
                     {
                         // Defer secure members until after non-secure, to allow for authenticator properties
-                        secureMembers[memb] = i;
+                        secureMembers[memb] = rdr.GetValue(i);
                     }
                     else
                     {
-                        setEntityValue(entity, memb, rdr, i);
+                        setEntityValue(entity, memb, rdr.GetValue(i));
                     }
                 }
                 else
                 {
-                    // TODO: Warnings for unexpected columns
+                    // Report unexpected column
+                    _session.OnUnexpectedRecordColumn(new UnexpectedRecordColumnEventArgs
+                    {
+                        CommandGuid = commandGuid,
+                        EntityType = entityType,
+                        ColumnName = fieldName
+                    });
                 }
             }
 
             // Apply secure values
             foreach (var kvp in secureMembers)
             {
-                setEntityValue(entity, kvp.Key, rdr, kvp.Value);
+                setEntityValue(entity, kvp.Key, kvp.Value);
             }
 
-            // TODO: Warnings for missing expected columns
+            // Warnings for missing expected columns
+            if (members.Count > 0)
+            {
+                _session.OnUnresolvedContractMember(new UnresolvedContractMemberEventArgs
+                {
+                    CommandGuid = commandGuid,
+                    EntityType = entityType,
+                    MemberNames = members.Values.Where(m => (m.Direction & ParameterDirection.Output) > 0 && m.Direction != ParameterDirection.ReturnValue)
+                        .Select(m => m.SourceProperty?.Name ?? m.DbName).ToArray()
+                });
+            }
 
             return entity;
 
-            static void setEntityValue(object entity, ContractMember memb, IDataReader rdr, int idx)
+            static void setEntityValue(object entity, ContractMember memb, object value)
             {
-                memb.FromDatasource(rdr.GetValue(idx));
+                memb.FromDatasource(value);
                 try
                 {
                     memb.SourceProperty?.SetValue(entity, memb.Value);
@@ -212,17 +233,21 @@ namespace IFY.Phorm
             }
         }
 
-        private static int parseCommandResult(IAsyncDbCommand cmd, object? contract, ContractMember[] members)
+        private int parseCommandResult(IAsyncDbCommand cmd, object? contract, ContractMember[] members, CommandExecutingEventArgs eventArgs, int? resultCount)
         {
             // Update parameters for output values
             var returnValue = 0;
             foreach (IDataParameter param in cmd.Parameters)
             {
-#if NETSTANDARD || NETCOREAPP
-                if (contract != null && param.Direction.IsOneOf(ParameterDirection.Output, ParameterDirection.InputOutput))
-#else
-                if (contract != null && param.Direction is ParameterDirection.Output or ParameterDirection.InputOutput)
-#endif
+                if (param.Direction == ParameterDirection.ReturnValue)
+                {
+                    returnValue = (int?)param.Value ?? 0;
+                    foreach (var memb in members.Where(a => a.Direction == ParameterDirection.ReturnValue))
+                    {
+                        memb.SetValue(returnValue);
+                    }
+                }
+                else if (contract != null && (param.Direction & ParameterDirection.Output) > 0)
                 {
                     var memb = members.Single(a => a.DbName == param.ParameterName[1..]);
                     memb.FromDatasource(param.Value); // NOTE: Always given as VARCHAR
@@ -233,15 +258,16 @@ namespace IFY.Phorm
                     }
                     prop?.SetValue(contract, memb.Value);
                 }
-                else if (param.Direction == ParameterDirection.ReturnValue)
-                {
-                    returnValue = (int?)param.Value ?? 0;
-                    foreach (var memb in members.Where(a => a.Direction == ParameterDirection.ReturnValue))
-                    {
-                        memb.SetValue(returnValue);
-                    }
-                }
             }
+
+            _session.OnCommandExecuted(new CommandExecutedEventArgs
+            {
+                CommandGuid = eventArgs.CommandGuid,
+                CommandText = eventArgs.CommandText,
+                CommandParameters = eventArgs.CommandParameters,
+                ResultCount = resultCount,
+                ReturnValue = returnValue
+            });
             return returnValue;
         }
 
@@ -251,7 +277,7 @@ namespace IFY.Phorm
         {
             // Prepare execution
             var pars = ContractMember.GetMembersFromContract(_runArgs, typeof(TActionContract), true);
-            using var cmd = startCommand(pars);
+            using var cmd = startCommand(pars, out var eventArgs);
 
             // Execution
             using var rdr = await cmd.ExecuteReaderAsync(cancellationToken ?? CancellationToken.None);
@@ -260,7 +286,7 @@ namespace IFY.Phorm
                 throw new InvalidOperationException("Non-result request returned a result.");
             }
 
-            return parseCommandResult(cmd, _runArgs, pars);
+            return parseCommandResult(cmd, _runArgs, pars, eventArgs, null);
         }
 
         public TResult? Get<TResult>()
@@ -283,7 +309,7 @@ namespace IFY.Phorm
 
             // Prepare execution
             var pars = ContractMember.GetMembersFromContract(_runArgs, typeof(TActionContract), true);
-            using var cmd = startCommand(pars);
+            using var cmd = startCommand(pars, out var eventArgs);
             var results = new List<object>();
             using var rdr = await cmd.ExecuteReaderAsync(cancellationToken ?? CancellationToken.None);
 
@@ -291,7 +317,7 @@ namespace IFY.Phorm
             GenSpecBase? genspec = null;
             if (typeof(GenSpecBase).IsAssignableFrom(typeof(TResult)))
             {
-                genspec = PhormContractRunner<TActionContract>.parseGenSpec<TResult>(results, rdr);
+                genspec = parseGenSpec<TResult>(results, rdr, eventArgs.CommandGuid);
             }
             else
             {
@@ -301,7 +327,7 @@ namespace IFY.Phorm
                 // Parse recordset
                 if (!isArray && rdr.Read())
                 {
-                    var result = getEntity(entityType, rdr, resultMembers);
+                    var result = getEntity(entityType, rdr, resultMembers, eventArgs.CommandGuid);
                     results.Add(result);
 
                     if (_session.StrictResultSize && rdr.Read())
@@ -313,7 +339,7 @@ namespace IFY.Phorm
                 {
                     while (rdr.Read())
                     {
-                        var result = getEntity(entityType, rdr, resultMembers);
+                        var result = getEntity(entityType, rdr, resultMembers, eventArgs.CommandGuid);
                         results.Add(result);
                     }
                 }
@@ -322,11 +348,11 @@ namespace IFY.Phorm
                 var rsOrder = 0;
                 while (await rdr.NextResultAsync())
                 {
-                    matchResultset(entityType, rsOrder++, rdr, results);
+                    matchResultset(entityType, rsOrder++, rdr, results, eventArgs.CommandGuid);
                 }
             }
 
-            parseCommandResult(cmd, _runArgs, pars);
+            parseCommandResult(cmd, _runArgs, pars, eventArgs, results.Count);
 
             // Return expected type
             if (genspec != null)
@@ -368,7 +394,7 @@ namespace IFY.Phorm
             }
         }
 
-        private static GenSpecBase parseGenSpec<TResult>(IList<object> results, IDataReader rdr)
+        private GenSpecBase parseGenSpec<TResult>(IList<object> results, IDataReader rdr, Guid commandGuid)
         {
             var genspec = (GenSpecBase)Activator.CreateInstance(typeof(TResult))!;
             IDictionary<string, ContractMember>? baseMembers = null;
@@ -399,7 +425,7 @@ namespace IFY.Phorm
                     if (spec.SpecValue.Equals(propValue))
                     {
                         // Shape
-                        var result = getEntity(spec.Type, rdr, spec.Members);
+                        var result = getEntity(spec.Type, rdr, spec.Members, commandGuid);
                         results.Add(result);
                         included = true;
                         break;
@@ -412,7 +438,7 @@ namespace IFY.Phorm
                     {
                         baseMembers ??= ContractMember.GetMembersFromContract(null, genspec.GenType, false)
                             .ToDictionary(m => m.DbName.ToUpperInvariant());
-                        var result = getEntity(genspec.GenType, rdr, baseMembers);
+                        var result = getEntity(genspec.GenType, rdr, baseMembers, commandGuid);
                         results.Add(result);
                     }
                     else
