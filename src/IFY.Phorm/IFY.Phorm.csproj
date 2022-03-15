@@ -10,7 +10,7 @@
 		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
 
 		<Authors>IFYates</Authors>
-		<PackageLicenseExpression>MPL-2</PackageLicenseExpression>
+		<PackageLicenseExpression>MPL-2.0</PackageLicenseExpression>
 		<Version>1.2.0-beta</Version>
 		<PackageProjectUrl>https://github.com/IFYates/Phorm</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/IFYates/Phorm</RepositoryUrl>
