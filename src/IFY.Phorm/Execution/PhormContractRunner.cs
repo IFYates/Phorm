@@ -173,7 +173,7 @@ namespace IFY.Phorm
             var entity = Activator.CreateInstance(entityType) ?? new object();
 
             // Resolve member values
-            var secureMembers = new Dictionary<ContractMember, int>();
+            var secureMembers = new Dictionary<ContractMember, object>();
             for (var i = 0; i < rdr.FieldCount; ++i)
             {
                 var fieldName = rdr.GetName(i);
@@ -183,11 +183,11 @@ namespace IFY.Phorm
                     if (isSecure)
                     {
                         // Defer secure members until after non-secure, to allow for authenticator properties
-                        secureMembers[memb] = i;
+                        secureMembers[memb] = rdr.GetValue(i);
                     }
                     else
                     {
-                        setEntityValue(entity, memb, rdr, i);
+                        setEntityValue(entity, memb, rdr.GetValue(i));
                     }
                 }
                 else
@@ -205,16 +205,16 @@ namespace IFY.Phorm
             // Apply secure values
             foreach (var kvp in secureMembers)
             {
-                setEntityValue(entity, kvp.Key, rdr, kvp.Value);
+                setEntityValue(entity, kvp.Key, kvp.Value);
             }
 
             // TODO: Warnings for missing expected columns
 
             return entity;
 
-            static void setEntityValue(object entity, ContractMember memb, IDataReader rdr, int idx)
+            static void setEntityValue(object entity, ContractMember memb, object value)
             {
-                memb.FromDatasource(rdr.GetValue(idx));
+                memb.FromDatasource(value);
                 try
                 {
                     memb.SourceProperty?.SetValue(entity, memb.Value);
