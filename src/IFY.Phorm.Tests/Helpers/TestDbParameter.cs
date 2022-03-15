@@ -6,6 +6,7 @@ namespace IFY.Phorm.Tests
     /// <summary>
     /// Mockable test object with useful default implementation.
     /// </summary>
+    [ExcludeFromCodeCoverage]
     internal class TestDbParameter : IDbDataParameter
     {
         public virtual byte Precision { get; set; }

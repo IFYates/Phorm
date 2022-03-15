@@ -2,10 +2,12 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Data.Common;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 namespace IFY.Phorm.Tests
 {
+    [ExcludeFromCodeCoverage]
     public class TestDbReader : DbDataReader
     {
         public Dictionary<string, object>? Tuple { get; private set; } = null;

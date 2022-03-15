@@ -5,6 +5,7 @@ using Moq;
 using System;
 using System.Data;
 using System.Data.SqlTypes;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization;
@@ -26,6 +27,7 @@ namespace IFY.Phorm.Data.Tests
         }
 
         [Test]
+        [ExcludeFromCodeCoverage]
         public string? StringProperty { get; set; }
         public int IntProperty { get; set; }
         public int? NullableIntProperty { get; set; }
@@ -173,6 +175,7 @@ namespace IFY.Phorm.Data.Tests
         }
 
         [DataMember(IsRequired = true)]
+        [ExcludeFromCodeCoverage]
         public string? RequiredProperty { get; set; }
 
         private static void getDbMocks(out Mock<IAsyncDbCommand> cmdMock, out Mock<IDbDataParameter> dbpMock)
@@ -493,6 +496,7 @@ namespace IFY.Phorm.Data.Tests
         }
 
         [TestTransphorm]
+        [ExcludeFromCodeCoverage]
         public string? TransphormedStringProperty { get; set; }
 
         public class TestSecureAttribute : AbstractSecureValueAttribute
@@ -508,6 +512,7 @@ namespace IFY.Phorm.Data.Tests
             }
         }
 
+        [ExcludeFromCodeCoverage]
         [TestSecure]
         public byte[]? SecureDataProperty { get; set; }
 

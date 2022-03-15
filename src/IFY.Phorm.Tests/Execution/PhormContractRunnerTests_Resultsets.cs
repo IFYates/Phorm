@@ -30,6 +30,7 @@ namespace IFY.Phorm.Tests
             public string? Value { get; set; }
         }
 
+        [ExcludeFromCodeCoverage]
         class TestParentBadResultsetProperty
         {
             [ExcludeFromCodeCoverage]
