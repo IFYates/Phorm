@@ -14,8 +14,7 @@ namespace System.Data
         CommandType CommandType { get; set; }
         [Shim(typeof(IDbCommand))] IDataParameterCollection Parameters { get; }
 
-        [Shim(typeof(IDbCommand))]
-        IDbDataParameter CreateParameter();
+        [Shim(typeof(IDbCommand))] IDbDataParameter CreateParameter();
         Task<DbDataReader> ExecuteReaderAsync(CancellationToken cancellationToken);
     }
 }

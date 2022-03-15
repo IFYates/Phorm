@@ -5,6 +5,7 @@ using Moq;
 using System;
 using System.Data;
 using System.Data.SqlTypes;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization;
@@ -14,6 +15,7 @@ namespace IFY.Phorm.Data.Tests
     [TestClass]
     public class ContractMemberTests
     {
+        [AttributeUsage(AttributeTargets.Property)]
         public class TestAttribute : Attribute, IContractMemberAttribute
         {
             public object? Context { get; private set; }
@@ -25,6 +27,7 @@ namespace IFY.Phorm.Data.Tests
         }
 
         [Test]
+        [ExcludeFromCodeCoverage]
         public string? StringProperty { get; set; }
         public int IntProperty { get; set; }
         public int? NullableIntProperty { get; set; }
@@ -34,7 +37,7 @@ namespace IFY.Phorm.Data.Tests
         {
             var res = ContractMember.In("name", typeof(string), null);
 
-            Assert.AreEqual("name", res.Name);
+            Assert.AreEqual("name", res.DbName);
             Assert.AreEqual(typeof(string), res.Value);
             Assert.IsFalse(res.HasChanged);
             Assert.AreEqual(ParameterDirection.Input, res.Direction);
@@ -47,7 +50,7 @@ namespace IFY.Phorm.Data.Tests
         {
             var res = ContractMember.InOut("name", typeof(string), null);
 
-            Assert.AreEqual("name", res.Name);
+            Assert.AreEqual("name", res.DbName);
             Assert.AreEqual(typeof(string), res.Value);
             Assert.IsFalse(res.HasChanged);
             Assert.AreEqual(ParameterDirection.InputOutput, res.Direction);
@@ -60,7 +63,7 @@ namespace IFY.Phorm.Data.Tests
         {
             var res = ContractMember.Out<Type>();
 
-            Assert.AreEqual(string.Empty, res.Name);
+            Assert.AreEqual(string.Empty, res.DbName);
             Assert.IsNull(res.Value);
             Assert.IsFalse(res.HasChanged);
             Assert.AreEqual(ParameterDirection.Output, res.Direction);
@@ -73,7 +76,7 @@ namespace IFY.Phorm.Data.Tests
         {
             var res = ContractMember.Out<Type>("name", null);
 
-            Assert.AreEqual("name", res.Name);
+            Assert.AreEqual("name", res.DbName);
             Assert.IsNull(res.Value);
             Assert.IsFalse(res.HasChanged);
             Assert.AreEqual(ParameterDirection.Output, res.Direction);
@@ -86,7 +89,7 @@ namespace IFY.Phorm.Data.Tests
         {
             var res = ContractMember.RetVal();
 
-            Assert.AreEqual("return", res.Name);
+            Assert.AreEqual("return", res.DbName);
             Assert.AreEqual(0, res.Value);
             Assert.IsFalse(res.HasChanged);
             Assert.AreEqual(ParameterDirection.ReturnValue, res.Direction);
@@ -132,13 +135,28 @@ namespace IFY.Phorm.Data.Tests
         }
 
         [TestMethod]
-        public void GetMembersFromContract__ReturnValue_property_on_object()
+        public void GetMembersFromContract__withReturnValue__ReturnValue_property_on_object()
         {
             // Arrange
             var obj = new ObjectWithReturnValueProperty();
 
             // Act
-            var res = ContractMember.GetMembersFromContract(obj, typeof(IPhormContract));
+            var res = ContractMember.GetMembersFromContract(obj, typeof(IPhormContract), true);
+
+            // Assert
+            Assert.AreEqual(1, res.Length);
+            Assert.AreEqual(ParameterDirection.ReturnValue, ((ContractMember<int>)res[0]).Direction);
+            Assert.AreSame(obj.ReturnValue, (ContractMember<int>)res[0]);
+        }
+
+        [TestMethod]
+        public void GetMembersFromContract__Not_withReturnValue__ReturnValue_property_on_object()
+        {
+            // Arrange
+            var obj = new ObjectWithReturnValueProperty();
+
+            // Act
+            var res = ContractMember.GetMembersFromContract(obj, typeof(IPhormContract), false);
 
             // Assert
             Assert.AreEqual(1, res.Length);
@@ -157,6 +175,7 @@ namespace IFY.Phorm.Data.Tests
         }
 
         [DataMember(IsRequired = true)]
+        [ExcludeFromCodeCoverage]
         public string? RequiredProperty { get; set; }
 
         private static void getDbMocks(out Mock<IAsyncDbCommand> cmdMock, out Mock<IDbDataParameter> dbpMock)
@@ -477,6 +496,7 @@ namespace IFY.Phorm.Data.Tests
         }
 
         [TestTransphorm]
+        [ExcludeFromCodeCoverage]
         public string? TransphormedStringProperty { get; set; }
 
         public class TestSecureAttribute : AbstractSecureValueAttribute
@@ -492,6 +512,7 @@ namespace IFY.Phorm.Data.Tests
             }
         }
 
+        [ExcludeFromCodeCoverage]
         [TestSecure]
         public byte[]? SecureDataProperty { get; set; }
 
@@ -564,9 +585,10 @@ namespace IFY.Phorm.Data.Tests
         public void SetValue__Converts_value_to_property_type(string propertyName, string value, object exp)
         {
             var prop = GetType().GetProperty(propertyName);
-            var member = new ContractMember<object>(propertyName, null, ParameterDirection.Input, prop);
+            var member = new ContractMember<object>(propertyName, null!, ParameterDirection.Input, prop);
 
             member.SetValue(value);
+            _ = member.SourceProperty?.GetValue(this);
 
             Assert.AreEqual(exp, member.Value);
         }

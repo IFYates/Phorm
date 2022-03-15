@@ -12,6 +12,7 @@ namespace IFY.Phorm.Tests
     /// Mockable test object with useful default implementation.
     /// </summary>
     [SuppressMessage("Design", "CA1061:Do not hide base class methods")]
+    [ExcludeFromCodeCoverage]
     public partial class TestDbCommand : DbCommand, IAsyncDbCommand, IDbCommand
     {
         public int ReturnValue { get; set; } = 1;
