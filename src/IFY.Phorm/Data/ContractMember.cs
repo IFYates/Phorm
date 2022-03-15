@@ -58,7 +58,7 @@ namespace IFY.Phorm.Data
         /// </summary>
         public IContractMemberAttribute[] Attributes { get; set; } = Array.Empty<IContractMemberAttribute>();
 
-        protected ContractMember(string? dbName, object? value, ParameterType dir, PropertyInfo? sourceProperty)
+        internal ContractMember(string? dbName, object? value, ParameterType dir, PropertyInfo? sourceProperty)
         {
             DbName = dbName ?? string.Empty;
             SourceProperty = sourceProperty;
@@ -89,9 +89,9 @@ namespace IFY.Phorm.Data
         {
             return new ContractMember<int>("return", 0, ParameterType.ReturnValue);
         }
-        public static ContractMember<ConsoleEvent[]> Console()
+        public static ConsoleLogMember Console()
         {
-            return new ContractMember<ConsoleEvent[]>("console", Array.Empty<ConsoleEvent>(), ParameterType.Console);
+            return new ConsoleLogMember();
         }
 
         // TODO: Cache members by type?
@@ -381,6 +381,14 @@ namespace IFY.Phorm.Data
                 base.Value = value;
                 HasChanged = true;
             }
+        }
+    }
+
+    public sealed class ConsoleLogMember : ContractMember<ConsoleMessage[]>
+    {
+        public ConsoleLogMember()
+            : base("console", Array.Empty<ConsoleMessage>(), ParameterType.Console)
+        {
         }
     }
 }

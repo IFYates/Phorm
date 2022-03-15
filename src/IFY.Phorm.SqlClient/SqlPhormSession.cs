@@ -7,8 +7,6 @@ using System.Linq;
 
 namespace IFY.Phorm.SqlClient
 {
-    // TODO: handle errors and log messages
-
     public class SqlPhormSession : AbstractPhormSession
     {
         private readonly string? _connectionName;
@@ -73,15 +71,14 @@ namespace IFY.Phorm.SqlClient
 
         #region Console capture
 
-        public class SqlConsoleCapture : IDisposable
+        public class SqlConsoleMessageCapture : AbstractConsoleMessageCapture
         {
             private readonly SqlConnection _conn;
-            private readonly Action<ConsoleEvent> _consoleEventConsumer;
 
-            public SqlConsoleCapture(SqlConnection conn, Action<ConsoleEvent> consoleEventConsumer)
+            public SqlConsoleMessageCapture(AbstractPhormSession session, Guid commandGuid, SqlConnection conn)
+                : base(session, commandGuid)
             {
                 _conn = conn;
-                _consoleEventConsumer = consoleEventConsumer;
                 conn.InfoMessage += captureInfoMessage;
             }
 
@@ -91,29 +88,30 @@ namespace IFY.Phorm.SqlClient
                 {
                     // TODO: possible only for cmd?
                     // TODO: other info
-                    _consoleEventConsumer.Invoke(new ConsoleEvent
+                    OnConsoleMessage(new ConsoleMessage
                     {
-                        Level = 1, // TODO
+                        Level = err.Class,
+                        Source = $"{err.Procedure} @ {err.LineNumber}",
                         Message = err.Message
                     });
                 }
             }
 
-            public void Dispose()
+            public override void Dispose()
             {
                 _conn.InfoMessage -= captureInfoMessage;
                 GC.SuppressFinalize(this);
             }
         }
 
-        protected override IDisposable StartConsoleCapture(IAsyncDbCommand cmd, Action<ConsoleEvent> consoleEventConsumer)
+        protected override AbstractConsoleMessageCapture StartConsoleCapture(Guid commandGuid, IAsyncDbCommand cmd)
         {
             if (cmd.Connection is SqlConnection sql)
             {
-                return new SqlConsoleCapture(sql, consoleEventConsumer);
+                return new SqlConsoleMessageCapture(this, commandGuid, sql);
             }
 
-            return base.StartConsoleCapture(cmd, consoleEventConsumer);
+            return base.StartConsoleCapture(commandGuid, cmd);
         }
 
         #endregion Console capture

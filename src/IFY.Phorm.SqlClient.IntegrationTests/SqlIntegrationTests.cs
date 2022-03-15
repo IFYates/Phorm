@@ -1,6 +1,5 @@
 using IFY.Phorm.Connectivity;
 using IFY.Phorm.Data;
-using IFY.Phorm.Execution;
 using IFY.Phorm.Transformation;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
@@ -109,56 +108,6 @@ namespace IFY.Phorm.SqlClient.IntegrationTests
         {
             long? Id { get; }
         }
-
-        #region Console output
-
-        public interface IPrintTest : IPhormContract
-        {
-            string? Text { get; }
-        }
-        public class PrintTest : IPrintTest
-        {
-            public string? Text { get; set; }
-
-            public ContractMember<ConsoleEvent[]> ConsoleEvents { get; set; } = ContractMember.Console();
-        }
-
-        private static void setConsoleOutputContract(IPhormDbConnectionProvider connProv)
-        {
-            using var conn = connProv.GetConnection(null);
-            using var cmd = conn.CreateCommand();
-            cmd.CommandType = System.Data.CommandType.Text;
-            cmd.CommandText = @"CREATE OR ALTER PROC [dbo].[usp_PrintTest]
-	@Text VARCHAR(256) = NULL
-AS
-	SET NOCOUNT ON
-	RAISERROR (@Text, 0, 1) WITH NOWAIT;
-RETURN 1";
-            _ = cmd.ExecuteReaderAsync(CancellationToken.None);
-        }
-
-        [TestMethod]
-        public void Call__Can_raises_nonerror_as_console_output()
-        {
-            // Arrange
-            var phorm = getPhormSession(out var connProv);
-            setConsoleOutputContract(connProv);
-
-            var arg = new PrintTest
-            {
-                Text = "TEXT"
-            };
-
-            // Act
-            var res = phorm.Call<IPrintTest>(arg);
-
-            // Assert
-            Assert.AreEqual(1, res);
-            Assert.AreEqual(arg.Text, arg.ConsoleEvents.Value.Single());
-        }
-
-
-        #endregion Console output
 
         #region Call
 

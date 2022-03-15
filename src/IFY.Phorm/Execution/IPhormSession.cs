@@ -20,6 +20,16 @@ namespace IFY.Phorm
         /// </summary>
         event EventHandler<CommandExecutedEventArgs>? CommandExecuted;
 
+        /// <summary>
+        /// A result record contained a column not specified in the target entity type.
+        /// </summary>
+        event EventHandler<UnresolvedContractMemberEventArgs>? UnresolvedContractMember;
+
+        /// <summary>
+        /// A log message was received during execution.
+        /// </summary>
+        event EventHandler<ConsoleMessageEventArgs>? ConsoleMessage;
+
         #endregion Events
 
         /// <summary>

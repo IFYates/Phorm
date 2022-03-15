@@ -127,13 +127,61 @@ namespace IFY.Phorm.Data.Tests
 
         #region GetMembersFromContract
 
+        class ObjectWithoutReturnValueProperty
+        {
+        }
         class ObjectWithReturnValueProperty
         {
             public ContractMember ReturnValue { get; } = ContractMember.RetVal();
         }
 
         [TestMethod]
-        public void GetMembersFromContract__withReturnValue__ReturnValue_property_on_object()
+        public void GetMembersFromContract__ConsoleLogMember_ignored()
+        {
+            // Arrange
+            var obj = new
+            {
+                Text = "Abcd",
+                ConsoleLogMember = new ConsoleLogMember()
+            };
+
+            // Act
+            var res = ContractMember.GetMembersFromContract(obj, typeof(IPhormContract), false);
+
+            // Assert
+            Assert.AreEqual(1, res.Length);
+            Assert.AreEqual("Text", res[0].DbName);
+        }
+
+        [TestMethod]
+        public void GetMembersFromContract__withReturnValue__ReturnValue_property_added_to_object()
+        {
+            // Arrange
+            var obj = new ObjectWithoutReturnValueProperty();
+
+            // Act
+            var res = ContractMember.GetMembersFromContract(obj, typeof(IPhormContract), true);
+
+            // Assert
+            Assert.AreEqual(1, res.Length);
+            Assert.AreEqual(ParameterType.ReturnValue, ((ContractMember<int>)res[0]).Direction);
+        }
+
+        [TestMethod]
+        public void GetMembersFromContract__Not_withReturnValue__ReturnValue_property_not_on_object()
+        {
+            // Arrange
+            var obj = new ObjectWithoutReturnValueProperty();
+
+            // Act
+            var res = ContractMember.GetMembersFromContract(obj, typeof(IPhormContract), false);
+
+            // Assert
+            Assert.AreEqual(0, res.Length);
+        }
+
+        [TestMethod]
+        public void GetMembersFromContract__withReturnValue__Uses_existing_ReturnValue_property()
         {
             // Arrange
             var obj = new ObjectWithReturnValueProperty();
@@ -148,7 +196,7 @@ namespace IFY.Phorm.Data.Tests
         }
 
         [TestMethod]
-        public void GetMembersFromContract__Not_withReturnValue__ReturnValue_property_on_object()
+        public void GetMembersFromContract__Not_withReturnValue__Uses_existing_ReturnValue_property()
         {
             // Arrange
             var obj = new ObjectWithReturnValueProperty();

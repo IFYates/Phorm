@@ -43,6 +43,13 @@ namespace IFY.Phorm
             Events.OnUnresolvedContractMember(this, args);
         }
 
+        public event EventHandler<ConsoleMessageEventArgs>? ConsoleMessage;
+        internal void OnConsoleMessage(ConsoleMessageEventArgs args)
+        {
+            try { ConsoleMessage?.Invoke(this, args); } catch { }
+            Events.OnConsoleMessage(this, args);
+        }
+
         #endregion Events
 
         public bool StrictResultSize { get; set; } = GlobalSettings.StrictResultSize;
@@ -87,16 +94,18 @@ namespace IFY.Phorm
 
         /// <summary>
         /// If the connection implementation supports capture of console output (print statements),
-        /// this method returns a new <see cref="IConsoleCapture"/> that will receive the output.
+        /// this method returns a new <see cref="AbstractConsoleMessageCapture"/> that will receive the output.
         /// </summary>
         /// <param name="cmd">The command to capture console output for.</param>
         /// <returns>The object that will be provide the final console output.</returns>
-        protected internal virtual IDisposable StartConsoleCapture(IAsyncDbCommand cmd, Action<ConsoleEvent> consoleEventConsumer) => NullDisposable.Instance;
-        private class NullDisposable : IDisposable
+        protected internal virtual AbstractConsoleMessageCapture StartConsoleCapture(Guid commandGuid, IAsyncDbCommand cmd)
+            => NullConsoleMessageCapture.Instance;
+
+        private class NullConsoleMessageCapture : AbstractConsoleMessageCapture
         {
-            public static readonly NullDisposable Instance = new NullDisposable();
-            private NullDisposable() { }
-            public void Dispose() { }
+            public static readonly NullConsoleMessageCapture Instance = new NullConsoleMessageCapture();
+            private NullConsoleMessageCapture() : base(null!, Guid.Empty) { }
+            public override void Dispose() { }
         }
 
         #endregion Connection

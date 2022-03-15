@@ -2,7 +2,6 @@
 using IFY.Phorm.EventArgs;
 using IFY.Phorm.Execution;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -75,8 +74,9 @@ namespace IFY.Phorm
 
         #region Execution
 
-        private IAsyncDbCommand startCommand(ContractMember[] members, out CommandExecutingEventArgs eventArgs)
+        private IAsyncDbCommand startCommand(out ContractMember[] members, out CommandExecutingEventArgs eventArgs)
         {
+            members = ContractMember.GetMembersFromContract(_runArgs, typeof(TActionContract), true);
             var cmd = _session.CreateCommand(_schema, _objectName, _objectType);
 
             // Build WHERE clause from members
@@ -120,6 +120,7 @@ namespace IFY.Phorm
                 CommandParameters = cmd.Parameters.Cast<IDbDataParameter>().ToDictionary(p => p.ParameterName, p => p.Value)
             };
             _session.OnCommandExecuting(eventArgs);
+
             return cmd;
         }
 
@@ -235,7 +236,7 @@ namespace IFY.Phorm
             }
         }
 
-        private int parseCommandResult(IAsyncDbCommand cmd, object? contract, ContractMember[] members, IEnumerable<ConsoleEvent> consoleEvents, CommandExecutingEventArgs eventArgs, int? resultCount)
+        private int parseCommandResult(IAsyncDbCommand cmd, object? contract, ContractMember[] members, IEnumerable<ConsoleMessage> consoleEvents, CommandExecutingEventArgs eventArgs, int? resultCount)
         {
             // Update parameters for output values
             var returnValue = 0;
@@ -267,12 +268,10 @@ namespace IFY.Phorm
             if (consoleEvents?.Count() > 0)
             {
                 var consoleProp = contract?.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public)
-                    .Where(p => p.PropertyType == typeof(ContractMember<ConsoleEvent[]>))
-                    .Select(p => p.GetValue(contract) as ContractMember<ConsoleEvent[]>)
+                    .Where(p => typeof(ContractMember<ConsoleMessage[]>).IsAssignableFrom(p.PropertyType))
+                    .Select(p => p.GetValue(contract) as ContractMember<ConsoleMessage[]>)
                     .FirstOrDefault(v => v?.Direction == ParameterType.Console);
                 consoleProp?.SetValue(consoleEvents.ToArray());
-
-                // TODO: event?
             }
 
             _session.OnCommandExecuted(new CommandExecutedEventArgs
@@ -291,10 +290,8 @@ namespace IFY.Phorm
         public async Task<int> CallAsync(CancellationToken? cancellationToken = null)
         {
             // Prepare execution
-            var consoleEvents = new List<ConsoleEvent>();
-            var pars = ContractMember.GetMembersFromContract(_runArgs, typeof(TActionContract), true);
-            using var cmd = startCommand(pars, out var eventArgs);
-            using var console = _session.StartConsoleCapture(cmd, consoleEvents.Add);
+            using var cmd = startCommand(out var pars, out var eventArgs);
+            using var console = _session.StartConsoleCapture(eventArgs.CommandGuid, cmd);
 
             // Execution
             using var rdr = await cmd.ExecuteReaderAsync(cancellationToken ?? CancellationToken.None);
@@ -303,7 +300,7 @@ namespace IFY.Phorm
                 throw new InvalidOperationException("Non-result request returned a result.");
             }
 
-            return parseCommandResult(cmd, _runArgs, pars, consoleEvents, eventArgs, null);
+            return parseCommandResult(cmd, _runArgs, pars, console.GetConsoleMessages(), eventArgs, null);
         }
 
         public TResult? Get<TResult>()
@@ -325,17 +322,16 @@ namespace IFY.Phorm
             }
 
             // Prepare execution
-            var consoleEvents = new List<ConsoleEvent>();
-            var pars = ContractMember.GetMembersFromContract(_runArgs, typeof(TActionContract), true);
-            using var cmd = startCommand(pars, out var eventArgs);
-            using var console = _session.StartConsoleCapture(cmd, consoleEvents.Add);
-            var results = new List<object>();
-            using var rdr = await cmd.ExecuteReaderAsync(cancellationToken ?? CancellationToken.None);
+            using var cmd = startCommand(out var pars, out var eventArgs);
+            using var console = _session.StartConsoleCapture(eventArgs.CommandGuid, cmd);
 
-            // Handle GenSpec differently
+            // Execution
+            using var rdr = await cmd.ExecuteReaderAsync(cancellationToken ?? CancellationToken.None);
+            var results = new List<object>();
             GenSpecBase? genspec = null;
             if (typeof(GenSpecBase).IsAssignableFrom(typeof(TResult)))
             {
+                // Handle GenSpec differently
                 genspec = parseGenSpec<TResult>(results, rdr, eventArgs.CommandGuid);
             }
             else
@@ -371,7 +367,7 @@ namespace IFY.Phorm
                 }
             }
 
-            parseCommandResult(cmd, _runArgs, pars, consoleEvents, eventArgs, results.Count);
+            parseCommandResult(cmd, _runArgs, pars, console.GetConsoleMessages(), eventArgs, results.Count);
 
             // Return expected type
             if (genspec != null)
