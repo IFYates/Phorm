@@ -27,11 +27,11 @@ With this approach, the data management team can provide access contracts to mee
 - DTO field aliasing
 - DTO field transformation via extensions (e.g., JSON)
 - Application-level field encryption/decryption
+- GenSpec
+- Execution events for external handling / logging
 
 ### Remaining
-- Detailed logging (Microsoft.Extensions.Logging)
 - Useful test helpers
-- GenSpec
 - Pass-through logging
 - Scoped execution context
 
