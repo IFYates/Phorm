@@ -11,6 +11,7 @@ namespace IFY.Phorm.Tests
     /// <summary>
     /// Mockable test object with useful default implementation.
     /// </summary>
+    [ExcludeFromCodeCoverage]
     public partial class TestDbCommand : DbCommand, IAsyncDbCommand, IDbCommand
     {
         public int ReturnValue { get; set; } = 1;

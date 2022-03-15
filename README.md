@@ -27,10 +27,13 @@ With this approach, the data management team can provide access contracts to mee
 - DTO field aliasing
 - DTO field transformation via extensions (e.g., JSON)
 - Application-level field encryption/decryption
+- GenSpec
+- Execution events for external handling / logging
 
 ### Remaining
-- Detailed logging (Microsoft.Extensions.Logging)
 - Useful test helpers
+- Pass-through logging
+- Scoped execution context
 
 ## Antithesis
 Pho/rm requires significant code to wire the data layer to the business logic; this is intentional to the design and will not be resolved by this project.
@@ -227,5 +230,45 @@ TODO
 ## Connection context
 TODO
 
-## GenSpec support
-TODO
+## Gen-Spec support
+Pho/rm supports the "Generalised-Specialised" pattern, providing some polymorphism ability.
+
+**Note:** Additional recordsets are not fully supported for GenSpec results.
+
+While Pho/rm is only interested in the shape returned by the procedure, the easiest way to model a Gen-Spec structure is using one-to-one relationships between tables.
+```SQL
+-- The Generalised entity
+CREATE TABLE [Person] ( [Id] BIGINT PRIMARY KEY, [Name] NVARCHAR(100) )
+
+-- The Specialised entities
+CREATE TABLE [Student] ( [PersonId] BIGINT, [EnrolledDate] DATETIME )
+CREATE TABLE [Faculty] ( [PersonId] BIGINT, [Department] INT )
+```
+
+Returning a `UNION` of all rows provides the resultset structure needed.
+```SQL
+CREATE PROC [usp_GetEveryone] AS
+    SELECT P.[Id], P.[Name], 1 [TypeId], S.[EnrolledDate], NULL [Department] FROM [Person] P JOIN [Student] S ON S.[PersonId] = P.[Id]
+    UNION ALL
+    SELECT P.[Id], P.[Name], 2 [TypeId], NULL [EnrolledDate], F.[Department] FROM [Person] P JOIN [Faculty] F ON F.[PersonId] = P.[Id]
+RETURN 1
+GO
+```
+
+
+```CSharp
+// Gen
+abstract record Person (long Id, string Name, int TypeId);
+
+// Specs
+[PhormSpecOf(nameof(Person.TypeId), 1)]
+record Student(long Id, string Name, int TypeId, DateTime EnrolledDate) : Person(Id, Name, TypeId);
+[PhormSpecOf(nameof(Person.TypeId), 2)]
+record Faculty(long Id, string Name, int TypeId, string Department) : Person(Id, Name, TypeId);
+
+// Use
+var result = phorm.From("GetEveryone").Get<GenSpec<Person, Student, Faculty>>()!;
+Person[] people = result.All();
+Student[] students = result.OfType<Student>().ToArray();
+Faculty[] faculty = result.OfType<Faculty>().ToArray();
+```

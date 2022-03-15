@@ -2,10 +2,12 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Data.Common;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 namespace IFY.Phorm.Tests
 {
+    [ExcludeFromCodeCoverage]
     public class TestDbReader : DbDataReader
     {
         public Dictionary<string, object>? Tuple { get; private set; } = null;
@@ -30,7 +32,7 @@ namespace IFY.Phorm.Tests
 
         public override object this[int ordinal] => throw new NotImplementedException();
 
-        public override object this[string name] => throw new NotImplementedException();
+        public override object this[string name] => Tuple![name];
 
         public override int Depth => throw new NotImplementedException();
 

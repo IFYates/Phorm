@@ -11,12 +11,13 @@
 		<TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);CopyProjectReferencesToPackage</TargetsForTfmSpecificBuildOutput>
 
 		<Authors>IFYates</Authors>
-		<PackageLicenseExpression>MIT</PackageLicenseExpression>
-		<Version>1.1.1-beta</Version>
+		<PackageLicenseExpression>MPL-2</PackageLicenseExpression>
+		<Version>1.2.0-beta</Version>
 		<PackageProjectUrl>https://github.com/IFYates/Phorm</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/IFYates/Phorm</RepositoryUrl>
 		<RepositoryType>GitHub</RepositoryType>
 		<PackageReleaseNotes>
+			v1.2.0-beta - GenSpec support and event system
 			v1.1.1-beta - Supports .NET Standard 2.1
 			v1.1.0-beta - New syntax
 			v1.0.0-beta - First fully-functional release
