@@ -35,6 +35,13 @@ namespace IFY.Phorm
             Events.OnUnexpectedRecordColumn(this, args);
         }
 
+        public event EventHandler<UnresolvedContractMemberEventArgs>? UnresolvedContractMember;
+        internal void OnUnresolvedContractMember(UnresolvedContractMemberEventArgs args)
+        {
+            try { UnresolvedContractMember?.Invoke(this, args); } catch { }
+            Events.OnUnresolvedContractMember(this, args);
+        }
+
         #endregion Events
 
         public bool StrictResultSize { get; set; } = GlobalSettings.StrictResultSize;

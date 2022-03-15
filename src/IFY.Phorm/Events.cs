@@ -49,5 +49,19 @@ namespace IFY.Phorm
         }
 
         #endregion UnexpectedRecordColumn
+
+        #region UnresolvedContractMember
+
+        /// <summary>
+        /// A result record contained a column not specified in the target entity type.
+        /// </summary>
+        public static event EventHandler<UnresolvedContractMemberEventArgs>? UnresolvedContractMember;
+
+        internal static void OnUnresolvedContractMember(object sender, UnresolvedContractMemberEventArgs args)
+        {
+            try { UnresolvedContractMember?.Invoke(sender, args); } catch { }
+        }
+
+        #endregion UnresolvedContractMember
     }
 }

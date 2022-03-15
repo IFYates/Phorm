@@ -85,11 +85,7 @@ namespace IFY.Phorm
 #endif
             {
                 var sb = new StringBuilder();
-#if NETSTANDARD || NETCOREAPP
-                foreach (var memb in members.Where(m => m.Direction.IsOneOf(ParameterDirection.Input, ParameterDirection.InputOutput))
-#else
-                foreach (var memb in members.Where(m => m.Direction is ParameterDirection.Input or ParameterDirection.InputOutput)
-#endif
+                foreach (var memb in members.Where(m => (m.Direction & ParameterDirection.Input) > 0)
                     .Where(m => m.Value != null && m.Value != DBNull.Value))
                 {
                     // TODO: Ignore members without value
@@ -170,14 +166,15 @@ namespace IFY.Phorm
 
         private object getEntity(Type entityType, IDataReader rdr, Dictionary<string, ContractMember> members, Guid commandGuid)
         {
-            var entity = Activator.CreateInstance(entityType) ?? new object();
+            members = members.ToDictionary(k => k.Key, v => v.Value); // Copy
+            var entity = Activator.CreateInstance(entityType)!;
 
             // Resolve member values
             var secureMembers = new Dictionary<ContractMember, object>();
             for (var i = 0; i < rdr.FieldCount; ++i)
             {
                 var fieldName = rdr.GetName(i);
-                if (members.TryGetValue(fieldName.ToLower(), out var memb))
+                if (members.Remove(fieldName.ToLower(), out var memb))
                 {
                     memb.ResolveAttributes(entity, out var isSecure);
                     if (isSecure)
@@ -208,7 +205,16 @@ namespace IFY.Phorm
                 setEntityValue(entity, kvp.Key, kvp.Value);
             }
 
-            // TODO: Warnings for missing expected columns
+            // Warnings for missing expected columns
+            if (members.Count > 0)
+            {
+                _session.OnUnresolvedContractMember(new UnresolvedContractMemberEventArgs
+                {
+                    CommandGuid = commandGuid,
+                    EntityType = entityType,
+                    MemberNames = members.Values.Where(m => (m.Direction & ParameterDirection.Output) > 0 && m.Direction != ParameterDirection.ReturnValue).Select(m => m.Name).ToArray()
+                });
+            }
 
             return entity;
 
@@ -232,11 +238,15 @@ namespace IFY.Phorm
             var returnValue = 0;
             foreach (IDataParameter param in cmd.Parameters)
             {
-#if NETSTANDARD || NETCOREAPP
-                if (contract != null && param.Direction.IsOneOf(ParameterDirection.Output, ParameterDirection.InputOutput))
-#else
-                if (contract != null && param.Direction is ParameterDirection.Output or ParameterDirection.InputOutput)
-#endif
+                if (param.Direction == ParameterDirection.ReturnValue)
+                {
+                    returnValue = (int?)param.Value ?? 0;
+                    foreach (var memb in members.Where(a => a.Direction == ParameterDirection.ReturnValue))
+                    {
+                        memb.SetValue(returnValue);
+                    }
+                }
+                else if (contract != null && (param.Direction & ParameterDirection.Output) > 0)
                 {
                     var memb = members.Single(a => a.Name == param.ParameterName[1..]);
                     memb.FromDatasource(param.Value); // NOTE: Always given as VARCHAR
@@ -246,14 +256,6 @@ namespace IFY.Phorm
                         prop = contract.GetType().GetProperty(prop.Name);
                     }
                     prop?.SetValue(contract, memb.Value);
-                }
-                else if (param.Direction == ParameterDirection.ReturnValue)
-                {
-                    returnValue = (int?)param.Value ?? 0;
-                    foreach (var memb in members.Where(a => a.Direction == ParameterDirection.ReturnValue))
-                    {
-                        memb.SetValue(returnValue);
-                    }
                 }
             }
 
