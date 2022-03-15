@@ -1,9 +1,12 @@
+using IFY.Phorm.Connectivity;
 using IFY.Phorm.Data;
+using IFY.Phorm.Transformation;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace IFY.Phorm.SqlClient.IntegrationTests
@@ -12,16 +15,46 @@ namespace IFY.Phorm.SqlClient.IntegrationTests
     public class SqlIntegrationTests
     {
         [PhormContract(Name = "DataTable")]
-        public record DataItem(long Id, int? Int, string? Text, byte[]? Data, DateTime? DateTime)
-            : IUpsert, IUpsertOnlyIntWithId, IUpsertWithId
+        public class DataItem : IUpsert, IUpsertOnlyIntWithId, IUpsertWithId
         {
+            public long Id { get; set; }
+            [DataMember(Name = "Int")]
+            public int? Num { get; set; }
+            public string? Text { get; set; }
+            public byte[]? Data { get; set; }
+            public DateTime? DateTime { get; set; }
+
+            public DataItem(long id, int? num, string? text, byte[]? data, DateTime? dateTime)
+            {
+                Id = id;
+                Num = num;
+                Text = text;
+                Data = data;
+                DateTime = dateTime;
+            }
             public DataItem() : this(default, default, default, default, default)
             { }
         }
 
         [PhormContract(Name = "DataTable")]
-        public record DataItemWithoutText(long Id, int? Int, [property: IgnoreDataMember] string? Text, byte[]? Data, DateTime? DateTime)
+        public class DataItemWithoutText
         {
+            public long Id { get; set; }
+            [DataMember(Name = "Int")]
+            public int? Num { get; set; }
+            [IgnoreDataMember]
+            public string? Text { get; set; }
+            public byte[]? Data { get; set; }
+            public DateTime? DateTime { get; set; }
+
+            public DataItemWithoutText(long id, int? num, string? text, byte[]? data, DateTime? dateTime)
+            {
+                Id = id;
+                Num = num;
+                Text = text;
+                Data = data;
+                DateTime = dateTime;
+            }
             public DataItemWithoutText() : this(default, default, default, default, default)
             { }
         }
@@ -29,7 +62,8 @@ namespace IFY.Phorm.SqlClient.IntegrationTests
         [PhormContract]
         public interface IUpsert : IPhormContract
         {
-            int? Int { get; }
+            [DataMember(Name = "Int")]
+            int? Num { get; }
             string? Text { get; }
             byte[]? Data { get; }
             DateTime? DateTime { get; }
@@ -37,14 +71,14 @@ namespace IFY.Phorm.SqlClient.IntegrationTests
         [PhormContract(Name = "Upsert")]
         public interface IUpsertWithId : IUpsert
         {
-            long Id { init; }
+            long Id { set; }
         }
 
         [PhormContract]
         public interface IGetAll : IPhormContract
         {
             //long Id { get; }
-            //int? Int { get; }
+            //int? Num { get; }
             //string? Text { get; }
             //byte[]? Data { get; }
             //DateTime? DateTime { get; }
@@ -53,15 +87,17 @@ namespace IFY.Phorm.SqlClient.IntegrationTests
         [PhormContract(Name = "Upsert")]
         public interface IUpsertOnlyIntWithId : IPhormContract
         {
-            long Id { init; }
-            int? Int { get; }
+            long Id { set; }
+            [DataMember(Name = "Int")]
+            int? Num { get; }
         }
 
-        private static SqlPhormSession getPhormSession()
+        private static IPhormSession getPhormSession() => getPhormSession(out _);
+        private static IPhormSession getPhormSession(out SqlConnectionProvider connProv)
         {
-            var connProc = new SqlConnectionProvider(@"Server=(localdb)\ProjectModels;Database=PhormTests;");
+            connProv = new SqlConnectionProvider(@"Server=(localdb)\ProjectModels;Database=PhormTests;");
 
-            var phorm = new SqlPhormSession(connProc, "*");
+            var phorm = new SqlPhormSession(connProv, "*");
 
             phorm.Call("ClearTable");
 
@@ -89,11 +125,11 @@ namespace IFY.Phorm.SqlClient.IntegrationTests
 
             // Act
             var res = phorm.Call("Upsert", new { Int = randNum, Text = randStr, Data = randData, DateTime = randDT });
-            var obj = phorm.From("DataTable", objectType: DbObjectType.Table).One<DataItem>()!;
+            var obj = phorm.Get<DataItem>()!;
 
             // Assert
             Assert.AreEqual(1, res);
-            Assert.AreEqual(randNum, obj.Int);
+            Assert.AreEqual(randNum, obj.Num);
             Assert.AreEqual(randStr, obj.Text);
             CollectionAssert.AreEqual(randData, obj.Data);
             Assert.AreEqual(randDT, obj.DateTime);
@@ -111,12 +147,12 @@ namespace IFY.Phorm.SqlClient.IntegrationTests
             var randDT = DateTime.UtcNow;
 
             // Act
-            var res = phorm.Call<IUpsert>(new { Int = randNum, Text = randStr, Data = randData, DateTime = randDT });
-            var obj = phorm.From("DataTable", objectType: DbObjectType.Table).One<DataItem>()!;
+            var res = phorm.Call<IUpsert>(new { Num = randNum, Text = randStr, Data = randData, DateTime = randDT });
+            var obj = phorm.Get<DataItem>()!;
 
             // Assert
             Assert.AreEqual(1, res);
-            Assert.AreEqual(randNum, obj.Int);
+            Assert.AreEqual(randNum, obj.Num);
             Assert.AreEqual(randStr, obj.Text);
             CollectionAssert.AreEqual(randData, obj.Data);
             Assert.AreEqual(randDT, obj.DateTime);
@@ -137,11 +173,11 @@ namespace IFY.Phorm.SqlClient.IntegrationTests
 
             // Act
             var res = phorm.Call<IUpsert>(arg);
-            var obj = phorm.From("DataTable", objectType: DbObjectType.Table).One<DataItem>()!;
+            var obj = phorm.Get<DataItem>()!;
 
             // Assert
             Assert.AreEqual(1, res);
-            Assert.AreEqual(arg.Int, obj.Int);
+            Assert.AreEqual(arg.Num, obj.Num);
             Assert.AreEqual(arg.Text, obj.Text);
             CollectionAssert.AreEqual(arg.Data, obj.Data);
             Assert.AreEqual(arg.DateTime, obj.DateTime);
@@ -160,7 +196,7 @@ namespace IFY.Phorm.SqlClient.IntegrationTests
 
             // Act
             var res = phorm.Call("Upsert", arg);
-            var obj = phorm.From("DataTable", objectType: DbObjectType.Table).One<DataItem>()!;
+            var obj = phorm.Get<DataItem>()!;
 
             // Assert
             Assert.AreEqual(1, res);
@@ -177,7 +213,7 @@ namespace IFY.Phorm.SqlClient.IntegrationTests
 
             // Act
             var res = phorm.Call<IUpsertOnlyIntWithId>(arg);
-            var obj = phorm.From("DataTable", objectType: DbObjectType.Table).One<DataItem>()!;
+            var obj = phorm.Get<DataItem>()!;
 
             // Assert
             Assert.AreEqual(1, res);
@@ -199,7 +235,8 @@ namespace IFY.Phorm.SqlClient.IntegrationTests
             phorm.Call("Upsert");
 
             var obj = new { ReturnValue = ContractMember.RetVal() };
-            var x = phorm.From<IGetAll>().Many<DataItem>(obj);
+            var x = phorm.From<IGetAll>(obj)
+                .Get<DataItem[]>()!;
 
             Assert.AreEqual(1, obj.ReturnValue.Value);
             Assert.AreEqual(4, x.Length);
@@ -218,7 +255,8 @@ namespace IFY.Phorm.SqlClient.IntegrationTests
             var res2 = phorm.Call<IUpsertWithId>(obj2);
 
             // Act
-            var res3 = phorm.From<IDataView>().Many<DataItem>(new { obj2.Id });
+            var res3 = phorm.From<IDataView>(new { obj2.Id })
+                .Get<DataItem[]>()!;
 
             // Assert
             Assert.AreEqual(1, res1);
@@ -240,11 +278,12 @@ namespace IFY.Phorm.SqlClient.IntegrationTests
             phorm.Call("Upsert", new { Int = 1, IsInView = true });
 
             // Act
-            var res = phorm.From<IDataView>().Many<DataItem>();
+            var res = phorm.From<IDataView>()
+                .Get<DataItem[]>()!;
 
             // Assert
             Assert.AreEqual(3, res.Length);
-            Assert.IsTrue(res.All(e => e.Int == 1));
+            Assert.IsTrue(res.All(e => e.Num == 1));
         }
 
         [TestMethod]
@@ -254,7 +293,8 @@ namespace IFY.Phorm.SqlClient.IntegrationTests
 
             var res = phorm.Call("Upsert");
 
-            var x = phorm.From<IDataView>().Many<DataItem>(new { Id = 1 });
+            var x = phorm.From<IDataView>(new { Id = 1 })
+                .Get<DataItem[]>()!;
 
             Assert.AreEqual(1, res);
             Assert.AreEqual(1, x.Single().Id);
@@ -271,7 +311,8 @@ namespace IFY.Phorm.SqlClient.IntegrationTests
 
             var res = phorm.Call("Upsert");
 
-            var obj = phorm.From<IDataView>().One<DataItemWithoutText>(new { Id = 1 })!;
+            var obj = phorm.From<IDataView>(new { Id = 1 })
+                .Get<DataItemWithoutText>()!;
 
             Assert.AreEqual(1, res);
             Assert.IsNull(obj.Text);
@@ -279,42 +320,119 @@ namespace IFY.Phorm.SqlClient.IntegrationTests
 
         #endregion One
 
-        [TestMethod]
-        public void Can_get_print_messages_by_anon()
+        #region GenSpec
+
+        public enum DataType { None, Numeric, String }
+
+        public abstract class BaseDataItem
         {
-            var phorm = getPhormSession();
+            public long Id { get; set; }
+            public string Key { get; set; } = string.Empty;
+            [DataMember(Name = "TypeId"), EnumValue]
+            public DataType Type { get; set; }
+        }
 
-            var randStr = DateTime.Now.ToString("o");
+        [PhormSpecOf(nameof(Type), DataType.Numeric)]
+        public class NumericDataItem : BaseDataItem
+        {
+            public decimal Number { get; set; }
+        }
 
-            var arg = new
-            {
-                Text = randStr,
-                Print = ContractMember.Console()
-            };
+        [PhormSpecOf(nameof(Type), DataType.String)]
+        public class TextDataItem : BaseDataItem
+        {
+            public string String { get; set; } = string.Empty;
+        }
 
-            var res = phorm.Call("PrintTest", arg);
-
-            Assert.AreEqual(1, res);
-            Assert.AreEqual(randStr, arg.Print.Value?.Trim());
+        private static void setGenSpecContract(IPhormDbConnectionProvider connProv)
+        {
+            using var conn = connProv.GetConnection(null);
+            using var cmd = conn.CreateCommand();
+            cmd.CommandType = System.Data.CommandType.Text;
+            cmd.CommandText = @"CREATE OR ALTER PROC [dbo].[usp_GetAllDataItems]
+AS
+	SELECT 1 [Id], 'Aaa' [Key], 1 [TypeId], 12.34 [Number], CONVERT(VARCHAR(50), NULL) [String]
+	UNION ALL
+	SELECT 2, 'Bbb', 2, NULL, 'Value'
+RETURN 1";
+            _ = cmd.ExecuteReaderAsync(CancellationToken.None);
         }
 
         [TestMethod]
-        public async Task Can_get_error_message_by_anon()
+        public void GenSpec__Can_retrieve_and_handle_many_types()
         {
-            var phorm = getPhormSession();
+            // Arrange
+            var phorm = getPhormSession(out var connProv);
+            setGenSpecContract(connProv);
 
-            var randStr = DateTime.Now.ToString("o");
+            // Act
+            var res = phorm.From("GetAllDataItems")
+                .Get<GenSpec<BaseDataItem, NumericDataItem, TextDataItem>>()!;
 
-            var arg = new
-            {
-                Text = randStr,
-                Print = ContractMember.Console()
-            };
+            var all = res.All();
+            var nums = res.OfType<NumericDataItem>().ToArray();
+            var strs = res.OfType<TextDataItem>().ToArray();
 
-            var res = await phorm.CallAsync("ErrorTest", arg);
-
-            Assert.AreEqual(1, res);
-            Assert.AreEqual(randStr, arg.Print.Value?.Trim());
+            // Assert
+            Assert.AreEqual(2, all.Length);
+            Assert.AreEqual(12.34m, nums.Single().Number);
+            Assert.AreEqual("Value", strs.Single().String);
         }
+
+        [TestMethod]
+        public void GenSpec__Unknown_type_Abstract_base__Returns_only_shaped_items()
+        {
+            // Arrange
+            var phorm = getPhormSession(out var connProv);
+            setGenSpecContract(connProv);
+
+            // Act
+            var res = phorm.From("GetAllDataItems")
+                .Get<GenSpec<BaseDataItem, TextDataItem>>()!;
+
+            var all = res.All();
+            var strs = res.OfType<TextDataItem>().ToArray();
+
+            // Assert
+            Assert.AreEqual(1, all.Length);
+            Assert.AreEqual(1, strs.Length);
+        }
+
+        public class BaseDataItemNonabstract
+        {
+            public long Id { get; set; }
+            public string Key { get; set; } = string.Empty;
+            [DataMember(Name = "TypeId"), EnumValue]
+            public DataType Type { get; set; }
+        }
+
+        [PhormSpecOf(nameof(Type), DataType.Numeric)]
+        public class NumericDataItem2 : BaseDataItemNonabstract
+        {
+            public decimal Number { get; set; }
+        }
+
+        [TestMethod]
+        public void GenSpec__Unknown_type_Nonabstract_base__Returns_item_as_base()
+        {
+            // Arrange
+            var phorm = getPhormSession(out var connProv);
+            setGenSpecContract(connProv);
+
+            // Act
+            var res = phorm.From("GetAllDataItems")
+                .Get<GenSpec<BaseDataItemNonabstract, NumericDataItem2>>()!;
+
+            var all = res.All();
+            var asBase = all.Where(r => r.GetType() == typeof(BaseDataItemNonabstract)).ToArray();
+            var nums = res.OfType<NumericDataItem2>().ToArray();
+
+            // Assert
+            Assert.AreEqual(2, all.Length);
+            Assert.AreEqual(1, nums.Length);
+            Assert.AreEqual(1, asBase.Length);
+        }
+
+        #endregion GenSpec
     }
 }

@@ -4,6 +4,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 namespace IFY.Phorm.Tests.Encryption
@@ -23,12 +24,14 @@ namespace IFY.Phorm.Tests.Encryption
             string? Value { get; }
         }
 
+        [ExcludeFromCodeCoverage]
         class TransformToSourceAttribute : AbstractTransphormAttribute
         {
             public override object? FromDatasource(Type type, object? data) => throw new NotImplementedException();
             public override object? ToDatasource(object? data) => "ToSource_" + (string?)data;
         }
 
+        [ExcludeFromCodeCoverage]
         class TransformFromSourceAttribute : AbstractTransphormAttribute
         {
             public override object? FromDatasource(Type type, object? data) => "FromSource_" + (string?)data;
@@ -72,7 +75,7 @@ namespace IFY.Phorm.Tests.Encryption
             runner.TestConnectionProvider?.TestConnection?.CommandQueue.Enqueue(cmd);
 
             // Act
-            var res = runner.From("Get").One<DataObject>();
+            var res = runner.From("Get").Get<DataObject>();
 
             // Assert
             Assert.IsNotNull(res);

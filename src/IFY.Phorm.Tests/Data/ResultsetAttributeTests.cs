@@ -1,5 +1,6 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 namespace IFY.Phorm.Data.Tests
@@ -7,6 +8,7 @@ namespace IFY.Phorm.Data.Tests
     [TestClass]
     public class ResultsetAttributeTests
     {
+        [ExcludeFromCodeCoverage]
         public class ParentObject
         {
             public long Id { get; set; }

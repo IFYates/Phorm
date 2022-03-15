@@ -11,7 +11,7 @@ namespace IFY.Phorm.Tests
     /// <summary>
     /// Mockable test object with useful default implementation.
     /// </summary>
-    [SuppressMessage("Design", "CA1061:Do not hide base class methods")]
+    [ExcludeFromCodeCoverage]
     public partial class TestDbCommand : DbCommand, IAsyncDbCommand, IDbCommand
     {
         public int ReturnValue { get; set; } = 1;
@@ -24,7 +24,6 @@ namespace IFY.Phorm.Tests
 
         public new virtual IDataParameterCollection Parameters { get; } = new TestParameterCollection();
 
-
         public new virtual IDbTransaction? Transaction { get; set; }
         public override UpdateRowSource UpdatedRowSource { get; set; }
 
@@ -32,6 +31,8 @@ namespace IFY.Phorm.Tests
         protected override DbParameterCollection DbParameterCollection => throw new NotImplementedException();
         protected override DbTransaction? DbTransaction { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         public override bool DesignTimeVisible { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+
+        public Action? OnExecuteReaderAsync { get; set; }
 
         public TestDbCommand()
         {
@@ -81,6 +82,7 @@ namespace IFY.Phorm.Tests
 
         public new virtual Task<DbDataReader> ExecuteReaderAsync(CancellationToken cancellationToken)
         {
+            OnExecuteReaderAsync?.Invoke();
             var retvalParam = Parameters.AsParameters()
                 .FirstOrDefault(p => p.Direction == ParameterDirection.ReturnValue);
             if (retvalParam != null)

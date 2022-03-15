@@ -5,7 +5,6 @@ using Moq;
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Reflection;
 using System.Runtime.Serialization;
 
 namespace IFY.Phorm.Tests
@@ -45,9 +44,7 @@ namespace IFY.Phorm.Tests
         }
 
         [TestMethod]
-        [DataRow(false)]
-        [DataRow(true)]
-        public void Call_by_anon_object(bool byAsync)
+        public void Call_by_anon_object()
         {
             // Arrange
             var conn = new TestPhormConnection("")
@@ -60,12 +57,10 @@ namespace IFY.Phorm.Tests
 
             var phorm = new TestPhormSession(new TestPhormConnectionProvider((s) => conn));
 
-            var runner = new PhormContractRunner<IPhormContract>(phorm, "CallTest", DbObjectType.StoredProcedure);
+            var runner = new PhormContractRunner<IPhormContract>(phorm, "CallTest", DbObjectType.StoredProcedure, new { Arg = 1 });
 
             // Act
-            var res = byAsync
-                ? runner.CallAsync(new { Arg = 1 }).Result
-                : runner.Call(new { Arg = 1 });
+            var res = runner.CallAsync().Result;
 
             // Assert
             Assert.AreEqual(1, res);
@@ -80,9 +75,7 @@ namespace IFY.Phorm.Tests
         }
 
         [TestMethod]
-        [DataRow(false)]
-        [DataRow(true)]
-        public void Call_by_contract(bool byAsync)
+        public void Call_by_contract()
         {
             // Arrange
             var conn = new TestPhormConnection("")
@@ -95,12 +88,10 @@ namespace IFY.Phorm.Tests
 
             var phorm = new TestPhormSession(new TestPhormConnectionProvider((s) => conn));
 
-            var runner = new PhormContractRunner<TestContract>(phorm, null, DbObjectType.StoredProcedure);
+            var runner = new PhormContractRunner<TestContract>(phorm, null, DbObjectType.StoredProcedure, new TestContract { Arg = 1 });
 
             // Act
-            var res = byAsync
-                ? runner.CallAsync(new TestContract { Arg = 1 }).Result
-                : runner.Call(new TestContract { Arg = 1 });
+            var res = runner.CallAsync().Result;
 
             // Assert
             Assert.AreEqual(1, res);
@@ -115,9 +106,7 @@ namespace IFY.Phorm.Tests
         }
 
         [TestMethod]
-        [DataRow(false)]
-        [DataRow(true)]
-        public void Call__Contract_and_arg_rename(bool byAsync)
+        public void Call__Contract_and_arg_rename()
         {
             // Arrange
             var conn = new TestPhormConnection("")
@@ -130,12 +119,10 @@ namespace IFY.Phorm.Tests
 
             var phorm = new TestPhormSession(new TestPhormConnectionProvider((s) => conn));
 
-            var runner = new PhormContractRunner<IMemberTestContract>(phorm, null, DbObjectType.Default);
+            var runner = new PhormContractRunner<IMemberTestContract>(phorm, null, DbObjectType.Default, new TestContract { Arg = 1 });
 
             // Act
-            var res = byAsync
-                ? runner.CallAsync(new TestContract { Arg = 1 }).Result
-                : runner.Call(new TestContract { Arg = 1 });
+            var res = runner.CallAsync().Result;
 
             // Assert
             Assert.AreEqual(1, res);
@@ -148,9 +135,7 @@ namespace IFY.Phorm.Tests
         }
 
         [TestMethod]
-        [DataRow(false)]
-        [DataRow(true)]
-        public void Call__Out_arg(bool byAsync)
+        public void Call__Out_arg()
         {
             // Arrange
             var conn = new TestPhormConnection("")
@@ -163,12 +148,10 @@ namespace IFY.Phorm.Tests
 
             var phorm = new TestPhormSession(new TestPhormConnectionProvider((s) => conn));
 
-            var runner = new PhormContractRunner<IMemberTestContract>(phorm, null, DbObjectType.Default);
+            var runner = new PhormContractRunner<IMemberTestContract>(phorm, null, DbObjectType.Default, new TestContract { Arg = 1 });
 
             // Act
-            var res = byAsync
-                ? runner.CallAsync(new TestContract { Arg = 1 }).Result
-                : runner.Call(new TestContract { Arg = 1 });
+            var res = runner.CallAsync().Result;
 
             // Assert
             var pars = cmd.Parameters.AsParameters();
@@ -179,9 +162,7 @@ namespace IFY.Phorm.Tests
         }
 
         [TestMethod]
-        [DataRow(false)]
-        [DataRow(true)]
-        public void Call__Required_arg_null__Exception(bool byAsync)
+        public void Call__Required_arg_null__Exception()
         {
             // Arrange
             var conn = new TestPhormConnection("")
@@ -194,23 +175,14 @@ namespace IFY.Phorm.Tests
 
             var phorm = new TestPhormSession(new TestPhormConnectionProvider((s) => conn));
 
-            var runner = new PhormContractRunner<IMemberTestContract>(phorm, null, DbObjectType.Default);
+            var runner = new PhormContractRunner<IMemberTestContract>(phorm, null, DbObjectType.Default, new TestContract { Arg3 = null! });
 
             // Act
-            if (byAsync)
-            {
-                Assert.ThrowsException<AggregateException>(() => runner.CallAsync(new TestContract { Arg3 = null! }).Result);
-            }
-            else
-            {
-                Assert.ThrowsException<ArgumentNullException>(() => runner.Call(new TestContract { Arg3 = null! }));
-            }
+            Assert.ThrowsException<AggregateException>(() => runner.CallAsync().Result);
         }
 
         [TestMethod]
-        [DataRow(false)]
-        [DataRow(true)]
-        public void Call__SecureValue_sent_encrypted_received_decrypted_by_authenticator(bool byAsync)
+        public void Call__SecureValue_sent_encrypted_received_decrypted_by_authenticator()
         {
             // Arrange
             var conn = new TestPhormConnection("")
@@ -237,14 +209,12 @@ namespace IFY.Phorm.Tests
                 .Returns(() => encrMock.Object);
             GlobalSettings.EncryptionProvider = provMock.Object;
 
-            var runner = new PhormContractRunner<ISecureTestContract>(phorm, null, DbObjectType.Default);
-
             var dto = new TestContract { Arg = 100, Arg3 = "secure_value" };
 
+            var runner = new PhormContractRunner<ISecureTestContract>(phorm, null, DbObjectType.Default, dto);
+
             // Act
-            var res = byAsync
-                ? runner.CallAsync(dto).Result
-                : runner.Call(dto);
+            var res = runner.CallAsync().Result;
 
             // Assert
             Assert.AreEqual(1, res);
@@ -253,9 +223,7 @@ namespace IFY.Phorm.Tests
         }
 
         [TestMethod]
-        [DataRow(false)]
-        [DataRow(true)]
-        public void Call__Returns_result__Exception(bool byAsync)
+        public void Call__Returns_result__Exception()
         {
             // Arrange
             var conn = new TestPhormConnection("")
@@ -277,17 +245,10 @@ namespace IFY.Phorm.Tests
 
             var phorm = new TestPhormSession(new TestPhormConnectionProvider((s) => conn));
 
-            var runner = new PhormContractRunner<IPhormContract>(phorm, "CallTest", DbObjectType.StoredProcedure);
+            var runner = new PhormContractRunner<IPhormContract>(phorm, "CallTest", DbObjectType.StoredProcedure, new { Arg = 1 });
 
             // Act
-            if (byAsync)
-            {
-                Assert.ThrowsException<AggregateException>(() => runner.CallAsync(new { Arg = 1 }).Result);
-            }
-            else
-            {
-                Assert.ThrowsException<InvalidOperationException>(() => runner.Call(new { Arg = 1 }));
-            }
+            Assert.ThrowsException<AggregateException>(() => runner.CallAsync().Result);
         }
     }
 }

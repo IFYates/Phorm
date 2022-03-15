@@ -3,8 +3,7 @@ Pho/rm - The **P**rocedure-**h**eavy **o**bject-**r**elational **m**apping frame
 
 ## Goals
 - An O/RM framework utilising stored procedures as the primary database interaction
-- Enable decoupling of the database using well-defined contracts
-- Easy to determine the behaviour from the code (no "magic")
+- Solving a specific style of data access - not a one-size-fits-all solution
 
 ## Driving principals
 The are many, brilliant O/RM frameworks available using different paradigms for database interaction.  
@@ -17,77 +16,63 @@ Our goal is to have a strongly-typed data surface and allow for a mutable physic
 With this approach, the data management team can provide access contracts to meet the business logic requirements, which the implementing team can rely on without concern over the underlying structures.
 
 ## Features
-- Invoke stored procedures using natural language
-- Read from tables and views
-- Supports output arguments and return values
-- Supports multiple result sets
+- Simple control over stored procedure features and support
 - Datasource agnostic (SqlClient support provided by default)
 - Fully interfaced for DI and mocking
-- Transaction support
+- Supports multiple result sets
+- Supports procedure output and return values
+- Supports transactions
+- Detailed logging (NLog)
 - DTO field aliasing
-- DTO field transformation via extensions (e.g., JSON)
-- Application-level field encryption/decryption
-- GenSpec
-- Execution events for external handling / logging
-
-### Remaining
-- Useful test helpers
-- Pass-through logging
-- Scoped execution context
+- DTO field transformation via extensions (JSON, enum, encryption included by default)
+- DTO read/write to implicitly named sprocs
+- Test helper for checking anonymous objects
+- Read from table/view, but not write to
 
 ## Antithesis
 Pho/rm requires significant code to wire the data layer to the business logic; this is intentional to the design and will not be resolved by this project.
 
-## Basic example
 For typical entity CRUD support, a Pho/rm solution would require a minimum of:
 1. Existing tables in the data source
-1. A POCO to represent the entity (DTO); ideally with a contract for each database action
-1. A stored procedure to fetch the entity
-1. At least one stored procedure to handle create, update, delete (though, ideally, one for each)
+1. A code object to represent the entity (DTO); ideally with a contract for each action
+1. A sproc to fetch the entity
+1. At least one sproc to handle create, update, delete (though, ideally, one for each)
 
+## Basic example
 A simple Pho/rm use would have the structure:
-```SQL
-CREATE TABLE [dbo].[Data] (
-    [Id] BIGINT NOT NULL PRIMARY KEY,
-    [Key] NVARCHAR(50) NOT NULL UNIQUE,
-    [Value] NVARCHAR(256) NULL
-)
-
-CREATE PROCEDURE [dbo].[usp_SaveData] (
-    @Key NVARCHAR(50),
-    @Value NVARCHAR(256),
-    @Id BIGINT = NULL OUTPUT
-) AS BEGIN
-    INSERT INTO [dbo].[Data] ([Key], [Value]) SELECT @Key, @Value
-    SET @Id = SCOPE_IDENTITY()
-    RETURN 1 -- Success
-END
-```
 ```CSharp
-// DTO and contracts
-[PhormContract(Name = "Data")]
-class DataItem : ISaveData
-{
-    public long Id { get; set; }
-    public string Key { get; set; }
-    public string Value { get; set; }
-}
-interface ISaveData
-{
-    long Id { set; } // Output
-    string Key { get; }
-    string Value { get; }
-}
-
-// Configure Pho/rm session to SQL Server
-var connection = new SqlConnectionProvider(connectionString);
-var session = new SqlPhormSession(connection, null);
-
-// Use
-var allData = session.Get<DataItem[]>();
-session.Call<ISaveData>(new { Key = "Name", Value = "T Ester" });
-var data = session.Get<DataItem>(new { Key = "Name" });
 ```
+
+## A taster of everything
+```CSharp
+// DTO + contracts
+[DataContract] public record RecordDTO (long Id, string Name, DateTime LastModified, [property: IgnoreDataMember] string NotFromDatasource) : IRecord_GetById;
+[PhormContract] public interface IRecord_GetById { long Id { get; } }
+[PhormContract] public interface IRecord_UpdateName { long Id { get; }, string Name { get; }, DateTime LastModified { set; } }
+
+// Configured factory instance creates a data connection
+var factory = di.Resolve<IPhormDbConnectionProvider>();
+IPhormDbConnection conn = factory.GetConnection();
+
+// Data connection used to fetch an entity via a named sproc in different ways
+RecordDTO? data = conn.From("Record_GetById", new { Id = id }).Get<RecordDTO>(); // Fully ad hoc
+RecordDTO? data = conn.From<IRecord_GetById>(new { Id = id }).Get<RecordDTO>(); // Anon parameters
+
+IRecord_GetById q = new RecordDTO { Id = id }; // Or any IRecord_GetById implementation
+RecordDTO? data = conn.From("Record_GetById", q).Get<RecordDTO>(); // Ad hoc procedure
+RecordDTO? data = conn.From<IRecord_GetById>(q).Get<RecordDTO>(); // Query instance
+
+// Update the entity in different ways
+var lastModifiedProperty = ContractMember.Out<DateTime>();
+int result = conn.Call("Record_UpdateName", new { Id = id, Name = name, LastModified = lastModifiedProperty }); // Fully ad hoc
+int result = conn.Call<IRecord_UpdateName>(new { Id = id, Name = name, LastModified = lastModifiedProperty }); // Anon parameters
+int result = conn.Call("Record_UpdateName", data); // Ad hoc procedure
+int result = conn.Call<IRecord_UpdateName>(data); // Entity instance
+```
+
+Each of the `Get` requests will execute something like `usp_Record_GetById @Id = {id}`.
+
+Each of the `Call` requests execute sometiong like `usp_Record_UpdateName @Id = {id}, @Name = {name}` and will update the `LastModified` property (`lastModifiedProperty` or `data.LastModified`).
 
 ## Secondary resultsets
 Pho/rm supports additional resultsets in procedure responses in order to provide parent-child data in a single request.  
@@ -230,45 +215,5 @@ TODO
 ## Connection context
 TODO
 
-## Gen-Spec support
-Pho/rm supports the "Generalised-Specialised" pattern, providing some polymorphism ability.
-
-**Note:** Additional recordsets are not fully supported for GenSpec results.
-
-While Pho/rm is only interested in the shape returned by the procedure, the easiest way to model a Gen-Spec structure is using one-to-one relationships between tables.
-```SQL
--- The Generalised entity
-CREATE TABLE [Person] ( [Id] BIGINT PRIMARY KEY, [Name] NVARCHAR(100) )
-
--- The Specialised entities
-CREATE TABLE [Student] ( [PersonId] BIGINT, [EnrolledDate] DATETIME )
-CREATE TABLE [Faculty] ( [PersonId] BIGINT, [Department] INT )
-```
-
-Returning a `UNION` of all rows provides the resultset structure needed.
-```SQL
-CREATE PROC [usp_GetEveryone] AS
-    SELECT P.[Id], P.[Name], 1 [TypeId], S.[EnrolledDate], NULL [Department] FROM [Person] P JOIN [Student] S ON S.[PersonId] = P.[Id]
-    UNION ALL
-    SELECT P.[Id], P.[Name], 2 [TypeId], NULL [EnrolledDate], F.[Department] FROM [Person] P JOIN [Faculty] F ON F.[PersonId] = P.[Id]
-RETURN 1
-GO
-```
-
-
-```CSharp
-// Gen
-abstract record Person (long Id, string Name, int TypeId);
-
-// Specs
-[PhormSpecOf(nameof(Person.TypeId), 1)]
-record Student(long Id, string Name, int TypeId, DateTime EnrolledDate) : Person(Id, Name, TypeId);
-[PhormSpecOf(nameof(Person.TypeId), 2)]
-record Faculty(long Id, string Name, int TypeId, string Department) : Person(Id, Name, TypeId);
-
-// Use
-var result = phorm.From("GetEveryone").Get<GenSpec<Person, Student, Faculty>>()!;
-Person[] people = result.All();
-Student[] students = result.OfType<Student>().ToArray();
-Faculty[] faculty = result.OfType<Faculty>().ToArray();
-```
+## GenSpec support
+TODO

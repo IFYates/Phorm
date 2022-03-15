@@ -6,9 +6,10 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace IFY.Phorm.Tests
 {
+    [ExcludeFromCodeCoverage]
     public class TestPhormConnection : IPhormDbConnection
     {
-        public Queue<TestDbCommand> CommandQueue { get; } = new();
+        public Queue<IAsyncDbCommand> CommandQueue { get; } = new Queue<IAsyncDbCommand>();
 
         public virtual string? ConnectionName { get; }
 

@@ -2,14 +2,16 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics.CodeAnalysis;
 
 namespace IFY.Phorm.Tests
 {
+    [ExcludeFromCodeCoverage]
     internal class TestPhormSession : AbstractPhormSession
     {
         public TestPhormConnectionProvider? TestConnectionProvider => _connectionProvider as TestPhormConnectionProvider;
 
-        public List<IAsyncDbCommand> Commands { get; } = new();
+        public List<IAsyncDbCommand> Commands { get; } = new List<IAsyncDbCommand>();
 
         public override bool SupportsTransactions => false;
 

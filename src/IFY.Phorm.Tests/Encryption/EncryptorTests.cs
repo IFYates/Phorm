@@ -7,12 +7,14 @@ using System.Data;
 using System.Linq;
 using System.Text;
 using IFY.Phorm.Data;
+using System.Diagnostics.CodeAnalysis;
 
 namespace IFY.Phorm.Tests.Encryption
 {
     [TestClass]
     public class EncryptorTests
     {
+        [ExcludeFromCodeCoverage]
         class DataObject
         {
             public string? Authenticator { get; set; }
@@ -38,6 +40,7 @@ namespace IFY.Phorm.Tests.Encryption
             [SecureValue("Test")]
             string? Value { get; }
         }
+        [ExcludeFromCodeCoverage]
         class ReverseStringAttribute : AbstractTransphormAttribute
         {
             public override object? FromDatasource(Type type, object? data)

@@ -1,8 +1,8 @@
 ﻿using IFY.Phorm.Connectivity;
 using IFY.Phorm.Execution;
+using Microsoft.Data.SqlClient;
 using System;
 using System.Data;
-using System.Data.SqlClient;
 using System.Linq;
 using System.Text;
 
@@ -14,11 +14,38 @@ namespace IFY.Phorm.SqlClient
     {
         private readonly string? _connectionName;
 
-        public string ViewPrefix { get; init; } = "vw_";
-        public string ProcedurePrefix { get; init; } = "usp_";
-        public string TablePrefix { get; init; } = "";
+        public string ViewPrefix
+        {
+            get;
+#if NETSTANDARD || NETCOREAPP
+            set;
+#else
+            init;
+#endif
+        } = "vw_";
+        public string ProcedurePrefix
+        {
+            get;
+#if NETSTANDARD || NETCOREAPP
+            set;
+#else
+            init;
+#endif
+        } = "usp_";
+        public string TablePrefix
+        {
+            get;
+#if NETSTANDARD || NETCOREAPP
+            set;
+#else
+            init;
+#endif
+        } = "";
 
-        public SqlPhormSession(IPhormDbConnectionProvider connectionProvider, string? connectionName)
+        public SqlPhormSession(string databaseConnectionString, string? connectionName = null)
+            : this(new SqlConnectionProvider(databaseConnectionString), connectionName)
+        { }
+        public SqlPhormSession(IPhormDbConnectionProvider connectionProvider, string? connectionName = null)
             : base(connectionProvider)
         {
             _connectionName = connectionName;
@@ -50,7 +77,7 @@ namespace IFY.Phorm.SqlClient
         public class SqlConsoleCapture : IConsoleCapture
         {
             private readonly SqlConnection _conn;
-            private readonly StringBuilder _consoleOutput = new();
+            private readonly StringBuilder _consoleOutput = new StringBuilder();
 
             public SqlConsoleCapture(SqlConnection conn)
             {

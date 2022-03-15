@@ -2,6 +2,8 @@
 using IFY.Phorm.Encryption;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
+using System.Diagnostics.CodeAnalysis;
+using System.Runtime.Serialization;
 
 namespace IFY.Phorm.SqlClient.IntegrationTests
 {
@@ -9,19 +11,30 @@ namespace IFY.Phorm.SqlClient.IntegrationTests
     public class SqlIntegrationEncryptionTests
     {
         [PhormContract(Name = "DataTable")]
-        public record DataItem(long Id, int Int, [property: SecureValue("class", nameof(DataItem.Int))] string Data)
+        public class DataItem
         {
+            public long Id { get; set; }
+            [DataMember(Name = "Int")] public int Num { get; set; }
+            [SecureValue("class", nameof(Num))] public string Data { get; set; }
+
+            public DataItem(long id, int num, string data)
+            {
+                Id = id;
+                Num = num;
+                Data = data;
+            }
+
             public DataItem() : this(default, default, default!)
             { }
         }
         [PhormContract]
         public interface IUpsert : IPhormContract
         {
-            int Int { get; }
-            [SecureValue("class", nameof(DataItem.Int))]
-            string Data { get; }
+            [DataMember(Name = "Int")] int Num { get; }
+            [SecureValue("class", nameof(Num))] string Data { get; }
         }
 
+        [ExcludeFromCodeCoverage]
         private class TestEncryptionProvider : IEncryptionProvider
         {
             public IEncryptor Encryptor { get; } = new NullEncryptor();
@@ -60,9 +73,8 @@ namespace IFY.Phorm.SqlClient.IntegrationTests
             GlobalSettings.EncryptionProvider = provider;
 
             // Act
-            var res = phorm.CallAsync<IUpsert>(new { Int = randInt, Data = randStr }).Result;
-            var obj = phorm.From("DataTable", objectType: DbObjectType.Table)
-                .OneAsync<DataItem>().Result!;
+            var res = phorm.CallAsync<IUpsert>(new { Num = randInt, Data = randStr }).Result;
+            var obj = phorm.GetAsync<DataItem>().Result!;
 
             // Assert
             Assert.AreEqual(1, res);

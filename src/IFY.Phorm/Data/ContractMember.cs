@@ -21,7 +21,7 @@ namespace IFY.Phorm.Data
         /// <summary>
         /// Name as given in stored procedure
         /// </summary>
-        public string Name { get; set; }
+        public string DbName { get; set; }
         /// <summary>
         /// Size of data to/from database
         /// 0 is unspecified / unlimited
@@ -44,40 +44,45 @@ namespace IFY.Phorm.Data
         /// </summary>
         public PropertyInfo? SourceProperty { get; }
         /// <summary>
+        /// Identifier for the property.
+        /// </summary>
+        public string? SourcePropertyId { get; }
+        /// <summary>
         /// The true type of the value, even if null
         /// Can be different to property value
         /// </summary>
-        public Type ValueType { get; init; }
+        public Type ValueType { get; protected set; }
         /// <summary>
         /// Relevant attributes for this contract member.
         /// </summary>
         public IContractMemberAttribute[] Attributes { get; set; } = Array.Empty<IContractMemberAttribute>();
 
-        protected ContractMember(string? name, object? value, ParameterType dir, PropertyInfo? sourceProperty)
+        protected ContractMember(string? dbName, object? value, ParameterType dir, PropertyInfo? sourceProperty)
         {
-            Name = name ?? string.Empty;
+            DbName = dbName ?? string.Empty;
             SourceProperty = sourceProperty;
+            SourcePropertyId = sourceProperty != null ? $"{sourceProperty.Name}@{sourceProperty.DeclaringType.FullName}" : null;
             ValueType = sourceProperty?.PropertyType ?? typeof(object);
             SetValue(value);
             Direction = dir;
             HasChanged = false;
         }
 
-        public static ContractMember<T> In<T>(string name, T value, PropertyInfo? sourceProperty = null)
+        public static ContractMember<T> In<T>(string dbName, T value, PropertyInfo? sourceProperty = null)
         {
-            return new ContractMember<T>(name, value, ParameterType.Input, sourceProperty);
+            return new ContractMember<T>(dbName, value, ParameterType.Input, sourceProperty);
         }
-        public static ContractMember<T> InOut<T>(string name, T value, PropertyInfo? sourceProperty = null)
+        public static ContractMember<T> InOut<T>(string dbName, T value, PropertyInfo? sourceProperty = null)
         {
-            return new ContractMember<T>(name, value, ParameterType.InputOutput, sourceProperty);
+            return new ContractMember<T>(dbName, value, ParameterType.InputOutput, sourceProperty);
         }
         public static ContractMember<T> Out<T>()
         {
-            return new ContractMember<T>(string.Empty, default, ParameterType.Output);
+            return new ContractMember<T>(string.Empty, default!, ParameterType.Output);
         }
-        public static ContractMember<T> Out<T>(string name, PropertyInfo? sourceProperty = null)
+        public static ContractMember<T> Out<T>(string dbName, PropertyInfo? sourceProperty = null)
         {
-            return new ContractMember<T>(name, default, ParameterType.Output, sourceProperty);
+            return new ContractMember<T>(dbName, default!, ParameterType.Output, sourceProperty);
         }
         public static ContractMember<int> RetVal()
         {
@@ -88,17 +93,18 @@ namespace IFY.Phorm.Data
             return new ContractMember<string>("console", null, ParameterType.Console);
         }
 
+        // TODO: Cache members by type?
         /// <summary>
         /// Convert properties of any object to <see cref="ContractMember"/>s.
         /// </summary>
-        public static ContractMember[] GetMembersFromContract(object? obj, Type contractType)
+        public static ContractMember[] GetMembersFromContract(object? obj, Type contractType, bool withReturnValue)
         {
             var hasContract = contractType != typeof(IPhormContract);
             if (!hasContract)
             {
                 if (obj == null)
                 {
-                    return addReturnValue(new()).ToArray();
+                    return addReturnValue(new List<ContractMember>()).ToArray();
                 }
                 contractType = obj.GetType();
             }
@@ -128,7 +134,7 @@ namespace IFY.Phorm.Data
                 }
 
                 // Wrap as ContractMember, if not already
-                if (value is not ContractMember memb)
+                if (!(value is ContractMember memb))
                 {
                     if (!hasContract)
                     {
@@ -153,7 +159,7 @@ namespace IFY.Phorm.Data
                 }
                 else
                 {
-                    memb.Name = prop.Name;
+                    memb.DbName = prop.Name;
                 }
 
                 members.Add(memb);
@@ -163,19 +169,25 @@ namespace IFY.Phorm.Data
                 var dmAttr = prop?.GetCustomAttribute<DataMemberAttribute>();
                 if (dmAttr != null)
                 {
-                    memb.Name = dmAttr.Name ?? memb.Name;
+                    memb.DbName = dmAttr.Name ?? memb.DbName;
 
                     // Primitives are never "missing", so only check null
                     if (dmAttr.IsRequired && memb.Value == null)
                     {
-                        throw new ArgumentNullException(memb.Name, $"Parameter {memb.Name} for contract {contractType.FullName} is required but was null");
+                        throw new ArgumentNullException(memb.DbName, $"Parameter {memb.DbName} for contract {contractType.FullName} is required but was null");
                     }
                 }
+
+                // TODO: omit unused?
             }
 
+            if (!withReturnValue)
+            {
+                return members.ToArray();
+            }
             return addReturnValue(members).ToArray();
 
-            IList<ContractMember> addReturnValue(List<ContractMember> members)
+            IList<ContractMember> addReturnValue(IList<ContractMember> members)
             {
                 if (!members.Any(p => p.Direction == ParameterType.ReturnValue))
                 {
@@ -204,9 +216,13 @@ namespace IFY.Phorm.Data
         public IDataParameter ToDataParameter(IAsyncDbCommand cmd)
         {
             var param = cmd.CreateParameter();
-            param.ParameterName = "@" + Name;
-            param.Direction = (System.Data.ParameterDirection)(int)Direction;
+            param.ParameterName = "@" + DbName;
+            param.Direction = (ParameterDirection)(int)Direction;
+#if NETSTANDARD || NETCOREAPP
+            if (Direction.IsOneOf(ParameterType.Output, ParameterType.InputOutput))
+#else
             if (Direction is ParameterType.Output or ParameterType.InputOutput)
+#endif
             {
                 param.Size = Size > 0 ? Size : 256;
             }
@@ -248,7 +264,7 @@ namespace IFY.Phorm.Data
                 // Primitives are never "missing", so only check null
                 if (dmAttr.IsRequired && val == null)
                 {
-                    throw new ArgumentNullException(Name, $"Parameter {Name} for contract {SourceProperty?.ReflectedType?.FullName} is required but was null");
+                    throw new ArgumentNullException(DbName, $"Parameter {DbName} for contract {SourceProperty?.ReflectedType?.FullName} is required but was null");
                 }
             }
 
@@ -323,14 +339,14 @@ namespace IFY.Phorm.Data
 
     public class ContractMember<T> : ContractMember
     {
-        public new T? Value => (T?)base.Value;
+        public new T Value => (T)base.Value!;
 
-        internal ContractMember(string name, T? value, ParameterType dir)
+        internal ContractMember(string name, T value, ParameterType dir)
             : base(name, value, dir, null)
         {
             ValueType = typeof(T);
         }
-        internal ContractMember(string name, T? value, ParameterType dir, PropertyInfo? sourceProperty)
+        internal ContractMember(string name, T value, ParameterType dir, PropertyInfo? sourceProperty)
             : base(name, value, dir, sourceProperty)
         {
             if (ValueType == typeof(object))

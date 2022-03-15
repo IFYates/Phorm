@@ -24,7 +24,11 @@ namespace IFY.Phorm.Data
             if (_lastSelectorType != parent.GetType())
             {
                 var selectorProp = parent.GetType().GetProperty(SelectorPropertyName);
+#if NETSTANDARD || NETCOREAPP
+                if (selectorProp?.PropertyType == null || !typeof(IRecordMatcher).IsAssignableFrom(selectorProp.PropertyType))
+#else
                 if (selectorProp?.PropertyType.IsAssignableTo(typeof(IRecordMatcher)) != true)
+#endif
                 {
                     throw new InvalidCastException($"Selector property '{SelectorPropertyName}' does not return IRecordMatcher.");
                 }

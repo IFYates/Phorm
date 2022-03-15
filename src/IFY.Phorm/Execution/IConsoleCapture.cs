@@ -7,7 +7,7 @@
 
     public class NullConsoleCapture : IConsoleCapture
     {
-        public static readonly NullConsoleCapture Instance = new();
+        public static readonly NullConsoleCapture Instance = new NullConsoleCapture();
         public string Complete() => string.Empty;
     }
 }

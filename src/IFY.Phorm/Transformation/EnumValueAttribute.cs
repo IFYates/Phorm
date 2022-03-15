@@ -17,7 +17,7 @@ namespace IFY.Phorm.Transformation
         /// 
         /// Note: will honour <see cref="System.Runtime.Serialization.EnumMemberAttribute"/> decoration on the enum values, if exist.
         /// </summary>
-        public bool SendAsString { get; init; }
+        public bool SendAsString { get; set; }
 
         public override object? FromDatasource(Type type, object? data)
         {
