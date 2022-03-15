@@ -10,7 +10,7 @@ namespace IFY.Phorm
     {
         protected readonly IPhormDbConnectionProvider _connectionProvider;
 
-        public bool StrictResultSize { get; set; } = true;
+        public bool StrictResultSize { get; set; } = GlobalSettings.StrictResultSize;
 
         public AbstractPhormSession(IPhormDbConnectionProvider connectionProvider)
         {
