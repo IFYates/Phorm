@@ -1,4 +1,5 @@
 ﻿using IFY.Phorm.Encryption;
+using IFY.Phorm.Execution;
 using IFY.Phorm.Transformation;
 using System;
 using System.Collections.Generic;
@@ -88,9 +89,9 @@ namespace IFY.Phorm.Data
         {
             return new ContractMember<int>("return", 0, ParameterType.ReturnValue);
         }
-        public static ContractMember<string> Console()
+        public static ContractMember<ConsoleEvent[]> Console()
         {
-            return new ContractMember<string>("console", null, ParameterType.Console);
+            return new ContractMember<ConsoleEvent[]>("console", Array.Empty<ConsoleEvent>(), ParameterType.Console);
         }
 
         // TODO: Cache members by type?
