@@ -1,5 +1,6 @@
 ﻿using IFY.Phorm.Data;
 using IFY.Phorm.Encryption;
+using IFY.Phorm.Execution;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using System;
@@ -248,7 +249,108 @@ namespace IFY.Phorm.Tests
             var runner = new PhormContractRunner<IPhormContract>(phorm, "CallTest", DbObjectType.StoredProcedure, new { Arg = 1 });
 
             // Act
-            Assert.ThrowsException<AggregateException>(() => runner.CallAsync().Result);
+            var ex = (InvalidOperationException)Assert.ThrowsException<AggregateException>(() =>
+            {
+                _ = runner.CallAsync().Result;
+            }).InnerException!;
+
+            // Assert
+            Assert.AreEqual("Non-result request returned a result.", ex.Message);
         }
+
+        #region Console messages
+
+        interface IConsoleLogContract : IPhormContract
+        {
+            int Arg { get; }
+            ConsoleLogMember ConsoleLogs { get; }
+        }
+
+        class ConsoleLogContract : IConsoleLogContract
+        {
+            public int Arg { get; set; }
+
+            public ConsoleLogMember ConsoleLogs { get; } = ContractMember.Console();
+        }
+
+        [TestMethod]
+        public void Call__Contract_can_receive_console_messages()
+        {
+            // Arrange
+            var conn = new TestPhormConnection("")
+            {
+                DefaultSchema = "schema"
+            };
+
+            var cmd = new TestDbCommand();
+            conn.CommandQueue.Enqueue(cmd);
+
+            var phorm = new TestPhormSession(new TestPhormConnectionProvider((s) => conn))
+            {
+                ProcessConsoleMessages = true
+            };
+
+            phorm.ConsoleMessages.Add(new ConsoleMessage { Message = "Message1" });
+            phorm.ConsoleMessages.Add(new ConsoleMessage { Message = "Message2" });
+            phorm.ConsoleMessages.Add(new ConsoleMessage { Message = "Message3" });
+
+            var arg = new ConsoleLogContract { Arg = 1 };
+
+            var runner = new PhormContractRunner<IConsoleLogContract>(phorm, null, DbObjectType.Default, arg);
+
+            // Act
+            var res = runner.CallAsync().Result;
+
+            // Assert
+            Assert.AreEqual(1, res);
+
+            Assert.AreEqual(3, arg.ConsoleLogs.Value.Length);
+            Assert.AreEqual("Message1", arg.ConsoleLogs.Value[0].Message);
+            Assert.AreEqual("Message2", arg.ConsoleLogs.Value[1].Message);
+            Assert.AreEqual("Message3", arg.ConsoleLogs.Value[2].Message);
+        }
+
+        [TestMethod]
+        public void Call__Anonymous_contract_can_receive_console_messages()
+        {
+            // Arrange
+            var conn = new TestPhormConnection("")
+            {
+                DefaultSchema = "schema"
+            };
+
+            var cmd = new TestDbCommand();
+            conn.CommandQueue.Enqueue(cmd);
+
+            var phorm = new TestPhormSession(new TestPhormConnectionProvider((s) => conn))
+            {
+                ProcessConsoleMessages = true
+            };
+
+            phorm.ConsoleMessages.Add(new ConsoleMessage { Message = "Message1" });
+            phorm.ConsoleMessages.Add(new ConsoleMessage { Message = "Message2" });
+            phorm.ConsoleMessages.Add(new ConsoleMessage { Message = "Message3" });
+
+            var arg = new
+            {
+                Arg = 1,
+                ConsoleLogs = ContractMember.Console()
+            };
+
+            var runner = new PhormContractRunner<IConsoleLogContract>(phorm, null, DbObjectType.Default, arg);
+
+            // Act
+            var res = runner.CallAsync().Result;
+
+            // Assert
+            Assert.AreEqual(1, res);
+
+            Assert.AreEqual(3, arg.ConsoleLogs.Value.Length);
+            Assert.AreEqual("Message1", arg.ConsoleLogs.Value[0].Message);
+            Assert.AreEqual("Message2", arg.ConsoleLogs.Value[1].Message);
+            Assert.AreEqual("Message3", arg.ConsoleLogs.Value[2].Message);
+        }
+
+        #endregion Console messages
     }
 }

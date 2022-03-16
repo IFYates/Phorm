@@ -1,5 +1,6 @@
 ﻿using IFY.Phorm.Data;
 using IFY.Phorm.EventArgs;
+using IFY.Phorm.Execution;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
@@ -18,6 +19,8 @@ namespace IFY.Phorm.Tests
         private void invokeHandler(object? sender, UnexpectedRecordColumnEventArgs args) => _globalUnexpectedRecordColumn?.Invoke(sender, args);
         private Action<object?, UnresolvedContractMemberEventArgs>? _globalUnresolvedContractMember = null;
         private void invokeHandler(object? sender, UnresolvedContractMemberEventArgs args) => _globalUnresolvedContractMember?.Invoke(sender, args);
+        private Action<object?, ConsoleMessageEventArgs>? _globalConsoleMessage = null;
+        private void invokeHandler(object? sender, ConsoleMessageEventArgs args) => _globalConsoleMessage?.Invoke(sender, args);
 
         public class TestEntity
         {
@@ -33,6 +36,7 @@ namespace IFY.Phorm.Tests
             Events.CommandExecuted += invokeHandler;
             Events.UnexpectedRecordColumn += invokeHandler;
             Events.UnresolvedContractMember += invokeHandler;
+            Events.ConsoleMessage += invokeHandler;
         }
         [TestCleanup]
         public void Clean()
@@ -41,6 +45,7 @@ namespace IFY.Phorm.Tests
             Events.CommandExecuted -= invokeHandler;
             Events.UnexpectedRecordColumn -= invokeHandler;
             Events.UnresolvedContractMember -= invokeHandler;
+            Events.ConsoleMessage -= invokeHandler;
         }
 
         [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
@@ -551,6 +556,98 @@ namespace IFY.Phorm.Tests
             Assert.AreEqual("Setter", instanceEvent.Value.args.MemberNames[1]);
             Assert.AreSame(phorm, globalEvent!.Value.sender);
             Assert.AreSame(instanceEvent.Value.args, globalEvent!.Value.args);
+        }
+
+        [TestMethod]
+        [DataRow(false, DisplayName = "Instance")]
+        [DataRow(true, DisplayName = "Global")]
+        public void Call__Events_can_receive_console_messages(bool asGlobal)
+        {
+            // Arrange
+            var conn = new TestPhormConnection("")
+            {
+                DefaultSchema = "schema"
+            };
+
+            var cmd = new TestDbCommand();
+            conn.CommandQueue.Enqueue(cmd);
+
+            var phorm = new TestPhormSession(new TestPhormConnectionProvider((s) => conn))
+            {
+                ProcessConsoleMessages = true
+            };
+
+            var consoleMessages = new List<ConsoleMessage>();
+            if (asGlobal)
+            {
+                _globalConsoleMessage = (_, a) => consoleMessages.Add(a.ConsoleMessage);
+            }
+            else
+            {
+                phorm.ConsoleMessage += (_, a) => consoleMessages.Add(a.ConsoleMessage);
+            }
+
+            phorm.ConsoleMessages.Add(new ConsoleMessage { Message = "Message1" });
+            phorm.ConsoleMessages.Add(new ConsoleMessage { Message = "Message2" });
+            phorm.ConsoleMessages.Add(new ConsoleMessage { Message = "Message3" });
+
+            var runner = new PhormContractRunner<IPhormContract>(phorm, "Test", DbObjectType.Default, null);
+
+            // Act
+            var res = runner.CallAsync().Result;
+
+            // Assert
+            Assert.AreEqual(1, res);
+
+            Assert.AreEqual(3, consoleMessages.Count);
+            Assert.AreEqual("Message1", consoleMessages[0].Message);
+            Assert.AreEqual("Message2", consoleMessages[1].Message);
+            Assert.AreEqual("Message3", consoleMessages[2].Message);
+        }
+
+        [TestMethod]
+        [DataRow(false, DisplayName = "Instance")]
+        [DataRow(true, DisplayName = "Global")]
+        public void Get__Events_can_receive_console_messages(bool asGlobal)
+        {
+            // Arrange
+            var conn = new TestPhormConnection("")
+            {
+                DefaultSchema = "schema"
+            };
+
+            var cmd = new TestDbCommand();
+            conn.CommandQueue.Enqueue(cmd);
+
+            var phorm = new TestPhormSession(new TestPhormConnectionProvider((s) => conn))
+            {
+                ProcessConsoleMessages = true
+            };
+
+            var consoleMessages = new List<ConsoleMessage>();
+            if (asGlobal)
+            {
+                _globalConsoleMessage = (_, a) => consoleMessages.Add(a.ConsoleMessage);
+            }
+            else
+            {
+                phorm.ConsoleMessage += (_, a) => consoleMessages.Add(a.ConsoleMessage);
+            }
+
+            phorm.ConsoleMessages.Add(new ConsoleMessage { Message = "Message1" });
+            phorm.ConsoleMessages.Add(new ConsoleMessage { Message = "Message2" });
+            phorm.ConsoleMessages.Add(new ConsoleMessage { Message = "Message3" });
+
+            var runner = new PhormContractRunner<IPhormContract>(phorm, "Test", DbObjectType.Default, null);
+
+            // Act
+            _ = runner.GetAsync<object>().Result;
+
+            // Assert
+            Assert.AreEqual(3, consoleMessages.Count);
+            Assert.AreEqual("Message1", consoleMessages[0].Message);
+            Assert.AreEqual("Message2", consoleMessages[1].Message);
+            Assert.AreEqual("Message3", consoleMessages[2].Message);
         }
     }
 }

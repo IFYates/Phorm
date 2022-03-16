@@ -10,8 +10,8 @@ namespace IFY.Phorm.Execution
     public abstract class AbstractConsoleMessageCapture : IDisposable
     {
         private readonly List<ConsoleMessage> _consoleEvents = new List<ConsoleMessage>();
-        private readonly AbstractPhormSession _session;
-        private readonly Guid _commandGuid;
+        protected readonly AbstractPhormSession _session;
+        protected readonly Guid _commandGuid;
 
         public AbstractConsoleMessageCapture(AbstractPhormSession session, Guid commandGuid)
         {
