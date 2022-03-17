@@ -1,4 +1,5 @@
 ﻿using IFY.Phorm.Encryption;
+using IFY.Phorm.Execution;
 using IFY.Phorm.Transformation;
 using System;
 using System.Collections.Generic;
@@ -36,9 +37,9 @@ namespace IFY.Phorm.Data
         /// </summary>
         public bool HasChanged { get; protected set; }
         /// <summary>
-        /// Allowed direction of value from POV of sproc
+        /// Type of parameter from POV of datasource.
         /// </summary>
-        public ParameterDirection Direction { get; }
+        public ParameterType Direction { get; }
         /// <summary>
         /// Property of underlying DTO/Contract used to map types
         /// </summary>
@@ -57,7 +58,7 @@ namespace IFY.Phorm.Data
         /// </summary>
         public IContractMemberAttribute[] Attributes { get; set; } = Array.Empty<IContractMemberAttribute>();
 
-        protected ContractMember(string? dbName, object? value, ParameterDirection dir, PropertyInfo? sourceProperty)
+        internal ContractMember(string? dbName, object? value, ParameterType dir, PropertyInfo? sourceProperty)
         {
             DbName = dbName ?? string.Empty;
             SourceProperty = sourceProperty;
@@ -70,23 +71,27 @@ namespace IFY.Phorm.Data
 
         public static ContractMember<T> In<T>(string dbName, T value, PropertyInfo? sourceProperty = null)
         {
-            return new ContractMember<T>(dbName, value, ParameterDirection.Input, sourceProperty);
+            return new ContractMember<T>(dbName, value, ParameterType.Input, sourceProperty);
         }
         public static ContractMember<T> InOut<T>(string dbName, T value, PropertyInfo? sourceProperty = null)
         {
-            return new ContractMember<T>(dbName, value, ParameterDirection.InputOutput, sourceProperty);
+            return new ContractMember<T>(dbName, value, ParameterType.InputOutput, sourceProperty);
         }
         public static ContractMember<T> Out<T>()
         {
-            return new ContractMember<T>(string.Empty, default!, ParameterDirection.Output);
+            return new ContractMember<T>(string.Empty, default!, ParameterType.Output);
         }
         public static ContractMember<T> Out<T>(string dbName, PropertyInfo? sourceProperty = null)
         {
-            return new ContractMember<T>(dbName, default!, ParameterDirection.Output, sourceProperty);
+            return new ContractMember<T>(dbName, default!, ParameterType.Output, sourceProperty);
         }
         public static ContractMember<int> RetVal()
         {
-            return new ContractMember<int>("return", 0, ParameterDirection.ReturnValue);
+            return new ContractMember<int>("return", 0, ParameterType.ReturnValue);
+        }
+        public static ConsoleLogMember Console()
+        {
+            return new ConsoleLogMember();
         }
 
         // TODO: Cache members by type?
@@ -130,25 +135,32 @@ namespace IFY.Phorm.Data
                 }
 
                 // Wrap as ContractMember, if not already
-                if (value is ContractMember memb)
+                if (!(value is ContractMember memb))
                 {
-                    memb.DbName = prop.Name;
+                    if (!hasContract)
+                    {
+                        memb = In(prop.Name, value);
+                    }
+                    else if (!prop.CanWrite)
+                    {
+                        memb = In(prop.Name, value, prop);
+                    }
+                    else if (prop.CanRead)
+                    {
+                        memb = InOut(prop.Name, value, prop);
+                    }
+                    else
+                    {
+                        memb = Out<object>(prop.Name, prop);
+                    }
                 }
-                else if (!hasContract)
+                else if ((int)memb.Direction > 6)
                 {
-                    memb = In(prop.Name, value);
-                }
-                else if (!prop.CanWrite)
-                {
-                    memb = In(prop.Name, value, prop);
-                }
-                else if (prop.CanRead)
-                {
-                    memb = InOut(prop.Name, value, prop);
+                    continue;
                 }
                 else
                 {
-                    memb = Out<object>(prop.Name, prop);
+                    memb.DbName = prop.Name;
                 }
 
                 members.Add(memb);
@@ -178,13 +190,13 @@ namespace IFY.Phorm.Data
 
             IList<ContractMember> addReturnValue(IList<ContractMember> members)
             {
-                if (!members.Any(p => p.Direction == ParameterDirection.ReturnValue))
+                if (!members.Any(p => p.Direction == ParameterType.ReturnValue))
                 {
                     // Allow for a return value on the object
                     var retPar = obj?.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public)
                         .Where(p => p.PropertyType == typeof(ContractMember<int>))
                         .Select(p => p.GetValue(obj) as ContractMember<int>)
-                        .FirstOrDefault(v => v?.Direction == ParameterDirection.ReturnValue);
+                        .FirstOrDefault(v => v?.Direction == ParameterType.ReturnValue);
 
                     members.Add(retPar ?? RetVal());
                 }
@@ -206,11 +218,11 @@ namespace IFY.Phorm.Data
         {
             var param = cmd.CreateParameter();
             param.ParameterName = "@" + DbName;
-            param.Direction = Direction;
+            param.Direction = (ParameterDirection)(int)Direction;
 #if NETSTANDARD || NETCOREAPP
-            if (Direction.IsOneOf(ParameterDirection.Output, ParameterDirection.InputOutput))
+            if (Direction.IsOneOf(ParameterType.Output, ParameterType.InputOutput))
 #else
-            if (Direction is ParameterDirection.Output or ParameterDirection.InputOutput)
+            if (Direction is ParameterType.Output or ParameterType.InputOutput)
 #endif
             {
                 param.Size = Size > 0 ? Size : 256;
@@ -262,7 +274,7 @@ namespace IFY.Phorm.Data
             if (val == null)
             {
                 // NOTE: Ignoring for Output as breaks fixed-char args - do not know full impact
-                if (ValueType == typeof(string) && Direction != ParameterDirection.Output)
+                if (ValueType == typeof(string) && Direction != ParameterType.Output)
                 {
                     // Fixes execution issue
                     param.Size = Size > 0 ? Size : 256;
@@ -330,12 +342,12 @@ namespace IFY.Phorm.Data
     {
         public new T Value => (T)base.Value!;
 
-        internal ContractMember(string name, T value, ParameterDirection dir)
+        internal ContractMember(string name, T value, ParameterType dir)
             : base(name, value, dir, null)
         {
             ValueType = typeof(T);
         }
-        internal ContractMember(string name, T value, ParameterDirection dir, PropertyInfo? sourceProperty)
+        internal ContractMember(string name, T value, ParameterType dir, PropertyInfo? sourceProperty)
             : base(name, value, dir, sourceProperty)
         {
             if (ValueType == typeof(object))
@@ -369,6 +381,14 @@ namespace IFY.Phorm.Data
                 base.Value = value;
                 HasChanged = true;
             }
+        }
+    }
+
+    public sealed class ConsoleLogMember : ContractMember<ConsoleMessage[]>
+    {
+        public ConsoleLogMember()
+            : base("console", Array.Empty<ConsoleMessage>(), ParameterType.Console)
+        {
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using IFY.Phorm.Data;
 using IFY.Phorm.EventArgs;
+using IFY.Phorm.Execution;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -21,13 +22,13 @@ namespace IFY.Phorm
         private readonly DbObjectType _objectType;
         private readonly object? _runArgs;
 
-        public PhormContractRunner(AbstractPhormSession runner, string? objectName, DbObjectType objectType, object? args)
-            : this(runner, typeof(TActionContract), objectName, objectType, args)
+        public PhormContractRunner(AbstractPhormSession session, string? objectName, DbObjectType objectType, object? args)
+            : this(session, typeof(TActionContract), objectName, objectType, args)
         {
         }
-        public PhormContractRunner(AbstractPhormSession runner, Type contractType, string? objectName, DbObjectType objectType, object? args)
+        public PhormContractRunner(AbstractPhormSession session, Type contractType, string? objectName, DbObjectType objectType, object? args)
         {
-            _session = runner;
+            _session = session;
 
             contractType = contractType.IsArray ? contractType.GetElementType()! : contractType;
             var contractName = contractType.Name;
@@ -73,8 +74,9 @@ namespace IFY.Phorm
 
         #region Execution
 
-        private IAsyncDbCommand startCommand(ContractMember[] members, out CommandExecutingEventArgs eventArgs)
+        private IAsyncDbCommand startCommand(out ContractMember[] members, out CommandExecutingEventArgs eventArgs)
         {
+            members = ContractMember.GetMembersFromContract(_runArgs, typeof(TActionContract), true);
             var cmd = _session.CreateCommand(_schema, _objectName, _objectType);
 
             // Build WHERE clause from members
@@ -85,7 +87,7 @@ namespace IFY.Phorm
 #endif
             {
                 var sb = new StringBuilder();
-                foreach (var memb in members.Where(m => (m.Direction & ParameterDirection.Input) > 0)
+                foreach (var memb in members.Where(m => (m.Direction & ParameterType.Input) > 0)
                     .Where(m => m.Value != null && m.Value != DBNull.Value))
                 {
                     // TODO: Ignore members without value
@@ -118,10 +120,11 @@ namespace IFY.Phorm
                 CommandParameters = cmd.Parameters.Cast<IDbDataParameter>().ToDictionary(p => p.ParameterName, p => p.Value)
             };
             _session.OnCommandExecuting(eventArgs);
+
             return cmd;
         }
 
-        private void matchResultset(Type entityType, int order, IDataReader rdr, IEnumerable<object> parents, Guid commandGuid)
+        private void matchResultset(Type entityType, int order, IDataReader rdr, IEnumerable<object> parents, Guid commandGuid, AbstractConsoleMessageCapture console)
         {
             // Find resultset target
             var rsProp = entityType.GetProperties()
@@ -136,7 +139,7 @@ namespace IFY.Phorm
             var records = new List<object>();
             var recordMembers = ContractMember.GetMembersFromContract(null, recordType, false)
                 .ToDictionary(m => m.DbName.ToUpperInvariant());
-            while (rdr.Read())
+            while (safeRead(rdr, console))
             {
                 var res = getEntity(recordType, rdr, recordMembers, commandGuid);
                 records.Add(res);
@@ -212,7 +215,7 @@ namespace IFY.Phorm
                 {
                     CommandGuid = commandGuid,
                     EntityType = entityType,
-                    MemberNames = members.Values.Where(m => (m.Direction & ParameterDirection.Output) > 0 && m.Direction != ParameterDirection.ReturnValue)
+                    MemberNames = members.Values.Where(m => (m.Direction & ParameterType.Output) > 0 && m.Direction != ParameterType.ReturnValue)
                         .Select(m => m.SourceProperty?.Name ?? m.DbName).ToArray()
                 });
             }
@@ -233,7 +236,7 @@ namespace IFY.Phorm
             }
         }
 
-        private int parseCommandResult(IAsyncDbCommand cmd, object? contract, ContractMember[] members, CommandExecutingEventArgs eventArgs, int? resultCount)
+        private int parseCommandResult(IAsyncDbCommand cmd, object? contract, ContractMember[] members, IEnumerable<ConsoleMessage> consoleEvents, CommandExecutingEventArgs eventArgs, int? resultCount)
         {
             // Update parameters for output values
             var returnValue = 0;
@@ -242,7 +245,7 @@ namespace IFY.Phorm
                 if (param.Direction == ParameterDirection.ReturnValue)
                 {
                     returnValue = (int?)param.Value ?? 0;
-                    foreach (var memb in members.Where(a => a.Direction == ParameterDirection.ReturnValue))
+                    foreach (var memb in members.Where(a => a.Direction == ParameterType.ReturnValue))
                     {
                         memb.SetValue(returnValue);
                     }
@@ -260,6 +263,17 @@ namespace IFY.Phorm
                 }
             }
 
+            // TODO: only if needed
+            // Support console capture
+            if (consoleEvents?.Count() > 0)
+            {
+                var consoleProp = contract?.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public)
+                    .Where(p => typeof(ContractMember<ConsoleMessage[]>).IsAssignableFrom(p.PropertyType))
+                    .Select(p => p.GetValue(contract) as ContractMember<ConsoleMessage[]>)
+                    .FirstOrDefault(v => v?.Direction == ParameterType.Console);
+                consoleProp?.SetValue(consoleEvents.ToArray());
+            }
+
             _session.OnCommandExecuted(new CommandExecutedEventArgs
             {
                 CommandGuid = eventArgs.CommandGuid,
@@ -271,22 +285,44 @@ namespace IFY.Phorm
             return returnValue;
         }
 
+        private bool safeRead(IDataReader rdr, AbstractConsoleMessageCapture console)
+        {
+            if (_session.ErrorsAsConsoleMessage)
+            {
+                try
+                {
+                    return rdr.Read();
+                }
+                catch (Exception ex)
+                {
+                    if (!console.ProcessException(ex))
+                    {
+                        throw;
+                    }
+                    return false;
+                }
+            }
+
+            return rdr.Read();
+        }
+
         #endregion Execution
 
         public async Task<int> CallAsync(CancellationToken? cancellationToken = null)
         {
             // Prepare execution
-            var pars = ContractMember.GetMembersFromContract(_runArgs, typeof(TActionContract), true);
-            using var cmd = startCommand(pars, out var eventArgs);
+            using var cmd = startCommand(out var pars, out var eventArgs);
+            using var console = _session.StartConsoleCapture(eventArgs.CommandGuid, cmd);
 
             // Execution
             using var rdr = await cmd.ExecuteReaderAsync(cancellationToken ?? CancellationToken.None);
-            if (_session.StrictResultSize && rdr.Read())
+
+            if (safeRead(rdr, console) && _session.StrictResultSize)
             {
                 throw new InvalidOperationException("Non-result request returned a result.");
             }
 
-            return parseCommandResult(cmd, _runArgs, pars, eventArgs, null);
+            return parseCommandResult(cmd, _runArgs, pars, console.GetConsoleMessages(), eventArgs, null);
         }
 
         public TResult? Get<TResult>()
@@ -308,16 +344,17 @@ namespace IFY.Phorm
             }
 
             // Prepare execution
-            var pars = ContractMember.GetMembersFromContract(_runArgs, typeof(TActionContract), true);
-            using var cmd = startCommand(pars, out var eventArgs);
-            var results = new List<object>();
-            using var rdr = await cmd.ExecuteReaderAsync(cancellationToken ?? CancellationToken.None);
+            using var cmd = startCommand(out var pars, out var eventArgs);
+            using var console = _session.StartConsoleCapture(eventArgs.CommandGuid, cmd);
 
-            // Handle GenSpec differently
+            // Execution
+            using var rdr = await cmd.ExecuteReaderAsync(cancellationToken ?? CancellationToken.None);
+            var results = new List<object>();
             GenSpecBase? genspec = null;
             if (typeof(GenSpecBase).IsAssignableFrom(typeof(TResult)))
             {
-                genspec = parseGenSpec<TResult>(results, rdr, eventArgs.CommandGuid);
+                // Handle GenSpec differently
+                genspec = parseGenSpec<TResult>(results, rdr, eventArgs.CommandGuid, console);
             }
             else
             {
@@ -325,19 +362,19 @@ namespace IFY.Phorm
                     .ToDictionary(m => m.DbName.ToUpperInvariant());
 
                 // Parse recordset
-                if (!isArray && rdr.Read())
+                if (!isArray && safeRead(rdr, console))
                 {
                     var result = getEntity(entityType, rdr, resultMembers, eventArgs.CommandGuid);
                     results.Add(result);
 
-                    if (_session.StrictResultSize && rdr.Read())
+                    if (_session.StrictResultSize && safeRead(rdr, console))
                     {
                         throw new InvalidOperationException("Expected a single-record result, but more than one found.");
                     }
                 }
-                else
+                else if (isArray)
                 {
-                    while (rdr.Read())
+                    while (safeRead(rdr, console))
                     {
                         var result = getEntity(entityType, rdr, resultMembers, eventArgs.CommandGuid);
                         results.Add(result);
@@ -345,14 +382,17 @@ namespace IFY.Phorm
                 }
 
                 // Process sub results
-                var rsOrder = 0;
-                while (await rdr.NextResultAsync())
+                if (!console.HasError)
                 {
-                    matchResultset(entityType, rsOrder++, rdr, results, eventArgs.CommandGuid);
+                    var rsOrder = 0;
+                    while (await rdr.NextResultAsync())
+                    {
+                        matchResultset(entityType, rsOrder++, rdr, results, eventArgs.CommandGuid, console);
+                    }
                 }
             }
 
-            parseCommandResult(cmd, _runArgs, pars, eventArgs, results.Count);
+            parseCommandResult(cmd, _runArgs, pars, console.GetConsoleMessages(), eventArgs, results.Count);
 
             // Return expected type
             if (genspec != null)
@@ -394,7 +434,7 @@ namespace IFY.Phorm
             }
         }
 
-        private GenSpecBase parseGenSpec<TResult>(IList<object> results, IDataReader rdr, Guid commandGuid)
+        private GenSpecBase parseGenSpec<TResult>(IList<object> results, IDataReader rdr, Guid commandGuid, AbstractConsoleMessageCapture console)
         {
             var genspec = (GenSpecBase)Activator.CreateInstance(typeof(TResult))!;
             IDictionary<string, ContractMember>? baseMembers = null;
@@ -408,7 +448,7 @@ namespace IFY.Phorm
 
             // Parse recordset
             var tempProps = new Dictionary<string, object?>();
-            while (rdr.Read())
+            while (safeRead(rdr, console))
             {
                 var included = false;
                 tempProps.Clear();

@@ -12,6 +12,7 @@ namespace System.Data
     {
         string CommandText { get; set; }
         CommandType CommandType { get; set; }
+        [Shim(typeof(IDbCommand))] IDbConnection Connection { get; }
         [Shim(typeof(IDbCommand))] IDataParameterCollection Parameters { get; }
 
         [Shim(typeof(IDbCommand))] IDbDataParameter CreateParameter();

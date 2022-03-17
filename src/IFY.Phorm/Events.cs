@@ -63,5 +63,19 @@ namespace IFY.Phorm
         }
 
         #endregion UnresolvedContractMember
+
+        #region ConsoleMessage
+
+        /// <summary>
+        /// A log message was received during execution.
+        /// </summary>
+        public static event EventHandler<ConsoleMessageEventArgs>? ConsoleMessage;
+
+        internal static void OnConsoleMessage(object sender, ConsoleMessageEventArgs args)
+        {
+            try { ConsoleMessage?.Invoke(sender, args); } catch { }
+        }
+
+        #endregion ConsoleMessage
     }
 }

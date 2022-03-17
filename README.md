@@ -225,7 +225,29 @@ public interface IRecord_Update
 This will call the action contract with an additional `@NewParameter = 'NewValue'`.
 
 ## Console/Error messages
-TODO
+There are two ways to retrieve console/error messages from the execution logic.
+
+By session/global event:
+```CSharp
+// Every log message on every session
+Events.ConsoleLog += consoleLogEventHandler;
+
+// Every log message on this session
+((IPhormSession)phorm).ConsoleLog += consoleLogEventHandler;
+```
+
+By contract:
+```CSharp
+interface IMyContract : IPhormContract
+{
+    ConsoleLogMember Logs { get; }
+}
+
+var arg = new { Logs = ContractMember.Console() };
+phorm.Call<IMyContract>(arg);
+
+// Logs available through: arg.Logs.Value
+```
 
 ## Connection context
 TODO
@@ -254,7 +276,6 @@ CREATE PROC [usp_GetEveryone] AS
 RETURN 1
 GO
 ```
-
 
 ```CSharp
 // Gen

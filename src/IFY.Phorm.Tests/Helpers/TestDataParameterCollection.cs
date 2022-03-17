@@ -8,7 +8,7 @@ using System.Linq;
 namespace IFY.Phorm.Tests
 {
     [ExcludeFromCodeCoverage]
-    internal class TestParameterCollection : IDataParameterCollection
+    internal class TestDataParameterCollection : IDataParameterCollection
     {
         private readonly List<IDbDataParameter> _parameters = new List<IDbDataParameter>();
 

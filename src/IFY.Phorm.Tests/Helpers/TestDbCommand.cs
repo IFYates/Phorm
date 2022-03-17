@@ -22,7 +22,7 @@ namespace IFY.Phorm.Tests
         public override CommandType CommandType { get; set; }
         public new virtual IDbConnection? Connection { get; set; }
 
-        public new virtual IDataParameterCollection Parameters { get; } = new TestParameterCollection();
+        public new virtual IDataParameterCollection Parameters { get; } = new TestDataParameterCollection();
 
         public new virtual IDbTransaction? Transaction { get; set; }
         public override UpdateRowSource UpdatedRowSource { get; set; }
@@ -36,7 +36,7 @@ namespace IFY.Phorm.Tests
 
         public TestDbCommand()
         {
-            Reader = new TestDbReader();
+            Reader = new TestDbDataReader();
         }
         public TestDbCommand(DbDataReader reader)
         {
@@ -49,7 +49,7 @@ namespace IFY.Phorm.Tests
 
         public new virtual IDbDataParameter CreateParameter()
         {
-            return new TestDbParameter();
+            return new TestDbDataParameter();
         }
 
         public new virtual void Dispose()

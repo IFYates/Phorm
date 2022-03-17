@@ -38,7 +38,7 @@ namespace IFY.Phorm.Data.Tests
             Assert.AreEqual("name", res.DbName);
             Assert.AreEqual(typeof(string), res.Value);
             Assert.IsFalse(res.HasChanged);
-            Assert.AreEqual(ParameterDirection.Input, res.Direction);
+            Assert.AreEqual(ParameterType.Input, res.Direction);
             Assert.IsNull(res.SourceProperty);
             Assert.AreEqual(typeof(Type), res.ValueType);
         }
@@ -51,7 +51,7 @@ namespace IFY.Phorm.Data.Tests
             Assert.AreEqual("name", res.DbName);
             Assert.AreEqual(typeof(string), res.Value);
             Assert.IsFalse(res.HasChanged);
-            Assert.AreEqual(ParameterDirection.InputOutput, res.Direction);
+            Assert.AreEqual(ParameterType.InputOutput, res.Direction);
             Assert.IsNull(res.SourceProperty);
             Assert.AreEqual(typeof(Type), res.ValueType);
         }
@@ -64,7 +64,7 @@ namespace IFY.Phorm.Data.Tests
             Assert.AreEqual(string.Empty, res.DbName);
             Assert.IsNull(res.Value);
             Assert.IsFalse(res.HasChanged);
-            Assert.AreEqual(ParameterDirection.Output, res.Direction);
+            Assert.AreEqual(ParameterType.Output, res.Direction);
             Assert.IsNull(res.SourceProperty);
             Assert.AreEqual(typeof(Type), res.ValueType);
         }
@@ -77,7 +77,7 @@ namespace IFY.Phorm.Data.Tests
             Assert.AreEqual("name", res.DbName);
             Assert.IsNull(res.Value);
             Assert.IsFalse(res.HasChanged);
-            Assert.AreEqual(ParameterDirection.Output, res.Direction);
+            Assert.AreEqual(ParameterType.Output, res.Direction);
             Assert.IsNull(res.SourceProperty);
             Assert.AreEqual(typeof(Type), res.ValueType);
         }
@@ -90,7 +90,7 @@ namespace IFY.Phorm.Data.Tests
             Assert.AreEqual("return", res.DbName);
             Assert.AreEqual(0, res.Value);
             Assert.IsFalse(res.HasChanged);
-            Assert.AreEqual(ParameterDirection.ReturnValue, res.Direction);
+            Assert.AreEqual(ParameterType.ReturnValue, res.Direction);
             Assert.IsNull(res.SourceProperty);
             Assert.AreEqual(typeof(int), res.ValueType);
         }
@@ -127,13 +127,61 @@ namespace IFY.Phorm.Data.Tests
 
         #region GetMembersFromContract
 
+        class ObjectWithoutReturnValueProperty
+        {
+        }
         class ObjectWithReturnValueProperty
         {
             public ContractMember ReturnValue { get; } = ContractMember.RetVal();
         }
 
         [TestMethod]
-        public void GetMembersFromContract__withReturnValue__ReturnValue_property_on_object()
+        public void GetMembersFromContract__ConsoleLogMember_ignored()
+        {
+            // Arrange
+            var obj = new
+            {
+                Text = "Abcd",
+                ConsoleLogMember = new ConsoleLogMember()
+            };
+
+            // Act
+            var res = ContractMember.GetMembersFromContract(obj, typeof(IPhormContract), false);
+
+            // Assert
+            Assert.AreEqual(1, res.Length);
+            Assert.AreEqual("Text", res[0].DbName);
+        }
+
+        [TestMethod]
+        public void GetMembersFromContract__withReturnValue__ReturnValue_property_added_to_object()
+        {
+            // Arrange
+            var obj = new ObjectWithoutReturnValueProperty();
+
+            // Act
+            var res = ContractMember.GetMembersFromContract(obj, typeof(IPhormContract), true);
+
+            // Assert
+            Assert.AreEqual(1, res.Length);
+            Assert.AreEqual(ParameterType.ReturnValue, ((ContractMember<int>)res[0]).Direction);
+        }
+
+        [TestMethod]
+        public void GetMembersFromContract__Not_withReturnValue__ReturnValue_property_not_on_object()
+        {
+            // Arrange
+            var obj = new ObjectWithoutReturnValueProperty();
+
+            // Act
+            var res = ContractMember.GetMembersFromContract(obj, typeof(IPhormContract), false);
+
+            // Assert
+            Assert.AreEqual(0, res.Length);
+        }
+
+        [TestMethod]
+        public void GetMembersFromContract__withReturnValue__Uses_existing_ReturnValue_property()
         {
             // Arrange
             var obj = new ObjectWithReturnValueProperty();
@@ -143,12 +191,12 @@ namespace IFY.Phorm.Data.Tests
 
             // Assert
             Assert.AreEqual(1, res.Length);
-            Assert.AreEqual(ParameterDirection.ReturnValue, ((ContractMember<int>)res[0]).Direction);
+            Assert.AreEqual(ParameterType.ReturnValue, ((ContractMember<int>)res[0]).Direction);
             Assert.AreSame(obj.ReturnValue, (ContractMember<int>)res[0]);
         }
 
         [TestMethod]
-        public void GetMembersFromContract__Not_withReturnValue__ReturnValue_property_on_object()
+        public void GetMembersFromContract__Not_withReturnValue__Uses_existing_ReturnValue_property()
         {
             // Arrange
             var obj = new ObjectWithReturnValueProperty();
@@ -158,7 +206,7 @@ namespace IFY.Phorm.Data.Tests
 
             // Assert
             Assert.AreEqual(1, res.Length);
-            Assert.AreEqual(ParameterDirection.ReturnValue, ((ContractMember<int>)res[0]).Direction);
+            Assert.AreEqual(ParameterType.ReturnValue, ((ContractMember<int>)res[0]).Direction);
             Assert.AreSame(obj.ReturnValue, (ContractMember<int>)res[0]);
         }
 
@@ -567,7 +615,7 @@ namespace IFY.Phorm.Data.Tests
         public void SetValue__Converts_value_to_type_T(Type memberType, string value, object exp)
         {
             var c = memberType.GetConstructors(BindingFlags.NonPublic | BindingFlags.Instance);
-            var member = (ContractMember)c[0].Invoke(new object?[] { "", null, ParameterDirection.Input });
+            var member = (ContractMember)c[0].Invoke(new object?[] { "", null, ParameterType.Input });
 
             member.SetValue(value);
 
@@ -580,7 +628,7 @@ namespace IFY.Phorm.Data.Tests
         public void SetValue__Converts_value_to_property_type(string propertyName, string value, object exp)
         {
             var prop = GetType().GetProperty(propertyName);
-            var member = new ContractMember<object>(propertyName, null!, ParameterDirection.Input, prop);
+            var member = new ContractMember<object>(propertyName, null!, ParameterType.Input, prop);
 
             member.SetValue(value);
             _ = member.SourceProperty?.GetValue(this);

@@ -1,6 +1,7 @@
 ﻿using IFY.Phorm.Connectivity;
 using IFY.Phorm.Data;
 using IFY.Phorm.EventArgs;
+using IFY.Phorm.Execution;
 using System;
 using System.Data;
 using System.Threading;
@@ -42,7 +43,16 @@ namespace IFY.Phorm
             Events.OnUnresolvedContractMember(this, args);
         }
 
+        public event EventHandler<ConsoleMessageEventArgs>? ConsoleMessage;
+        internal void OnConsoleMessage(ConsoleMessageEventArgs args)
+        {
+            try { ConsoleMessage?.Invoke(this, args); } catch { }
+            Events.OnConsoleMessage(this, args);
+        }
+
         #endregion Events
+
+        public bool ErrorsAsConsoleMessage { get; set; } = GlobalSettings.ErrorsAsConsoleMessage;
 
         public bool StrictResultSize { get; set; } = GlobalSettings.StrictResultSize;
 
@@ -82,6 +92,23 @@ namespace IFY.Phorm
             cmd.CommandType = CommandType.StoredProcedure;
             cmd.CommandText = $"[{schema}].[{objectName}]";
             return cmd;
+        }
+
+        /// <summary>
+        /// If the connection implementation supports capture of console output (print statements),
+        /// this method returns a new <see cref="AbstractConsoleMessageCapture"/> that will receive the output.
+        /// </summary>
+        /// <param name="cmd">The command to capture console output for.</param>
+        /// <returns>The object that will be provide the final console output.</returns>
+        protected internal virtual AbstractConsoleMessageCapture StartConsoleCapture(Guid commandGuid, IAsyncDbCommand cmd)
+            => NullConsoleMessageCapture.Instance;
+
+        private class NullConsoleMessageCapture : AbstractConsoleMessageCapture
+        {
+            public static readonly NullConsoleMessageCapture Instance = new NullConsoleMessageCapture();
+            private NullConsoleMessageCapture() : base(null!, Guid.Empty) { }
+            public override bool ProcessException(Exception ex) => false;
+            public override void Dispose() { }
         }
 
         #endregion Connection

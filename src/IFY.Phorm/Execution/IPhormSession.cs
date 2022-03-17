@@ -20,13 +20,28 @@ namespace IFY.Phorm
         /// </summary>
         event EventHandler<CommandExecutedEventArgs>? CommandExecuted;
 
+        /// <summary>
+        /// A result record contained a column not specified in the target entity type.
+        /// </summary>
+        event EventHandler<UnresolvedContractMemberEventArgs>? UnresolvedContractMember;
+
+        /// <summary>
+        /// A log message was received during execution.
+        /// </summary>
+        event EventHandler<ConsoleMessageEventArgs>? ConsoleMessage;
+
         #endregion Events
 
         /// <summary>
-        /// Whether to throw an exception if an invocation result includes more records than expected.
-        /// Defaults to true.
+        /// If true, will consume execution errors and treat like a console message.
+        /// Defaults to value in <see cref="GlobalSettings.ErrorsAsConsoleMessage"/>.
         /// </summary>
-        /// <exception cref="System.InvalidOperationException"></exception>
+        bool ErrorsAsConsoleMessage { get; set; }
+
+        /// <summary>
+        /// Whether to throw a <see cref="System.InvalidOperationException"/> if an invocation result includes more records than expected.
+        /// Defaults to value in <see cref="GlobalSettings.StrictResultSize"/>.
+        /// </summary>
         bool StrictResultSize { get; set; }
 
         #region Call/get from action contract

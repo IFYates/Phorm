@@ -15,16 +15,21 @@ namespace IFY.Phorm
         public static IEncryptionProvider? EncryptionProvider { get; set; }
 
         /// <summary>
+        /// If true, will consume execution errors and treat like a console message.
+        /// Defaults to false.
+        /// </summary>
+        public static bool ErrorsAsConsoleMessage { get; set; }
+
+        /// <summary>
         /// The global <see cref="JsonSerializerSettings"/> to use when dealing with JSON.
         /// If null, uses library defaults.
         /// </summary>
         public static JsonSerializerSettings? NewtonsoftJsonSerializerSettings { get; set; }
 
         /// <summary>
-        /// Whether to throw an exception if an invocation result includes more records than expected.
+        /// Whether to throw a <see cref="System.InvalidOperationException"/> if an invocation result includes more records than expected.
         /// Defaults to true.
         /// </summary>
-        /// <exception cref="System.InvalidOperationException"></exception>
         public static bool StrictResultSize { get; set; } = true;
     }
 }

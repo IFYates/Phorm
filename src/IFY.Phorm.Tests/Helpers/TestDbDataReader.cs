@@ -8,7 +8,7 @@ using System.Linq;
 namespace IFY.Phorm.Tests
 {
     [ExcludeFromCodeCoverage]
-    public class TestDbReader : DbDataReader
+    public class TestDbDataReader : DbDataReader
     {
         public Dictionary<string, object>? Tuple { get; private set; } = null;
         public List<Dictionary<string, object>> Data

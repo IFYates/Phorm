@@ -49,7 +49,7 @@ namespace IFY.Phorm.Data.Tests
                 DefaultSchema = "schema"
             };
 
-            var cmd = new TestDbCommand(new TestDbReader
+            var cmd = new TestDbCommand(new TestDbDataReader
             {
                 Data = new List<Dictionary<string, object>>
                 {
