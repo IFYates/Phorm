@@ -134,24 +134,41 @@ namespace IFY.Phorm.Data
                     continue;
                 }
 
+                // Check for ContractMember attribute
+                var cmAttr = prop.GetCustomAttribute<ContractMemberAttribute>();
+
                 // Wrap as ContractMember, if not already
                 if (!(value is ContractMember memb))
                 {
                     if (!hasContract)
                     {
+                        if (cmAttr?.DisableInput == true)
+                        {
+                            continue;
+                        }
+
                         memb = In(prop.Name, value);
-                    }
-                    else if (!prop.CanWrite)
-                    {
-                        memb = In(prop.Name, value, prop);
-                    }
-                    else if (prop.CanRead)
-                    {
-                        memb = InOut(prop.Name, value, prop);
                     }
                     else
                     {
-                        memb = Out<object>(prop.Name, prop);
+                        var readable = prop.CanRead && cmAttr?.DisableInput != true;
+                        var writable = prop.CanWrite && cmAttr?.DisableOutput != true;
+                        if (!readable && !writable)
+                        {
+                            continue;
+                        }
+                        if (!writable)
+                        {
+                            memb = In(prop.Name, value, prop);
+                        }
+                        else if (!readable)
+                        {
+                            memb = Out<object>(prop.Name, prop);
+                        }
+                        else
+                        {
+                            memb = InOut(prop.Name, value, prop);
+                        }
                     }
                 }
                 else if ((int)memb.Direction > 6)
@@ -167,7 +184,7 @@ namespace IFY.Phorm.Data
                 memb.ResolveAttributes(obj, out _);
 
                 // Check for DataMemberAttribute
-                var dmAttr = prop?.GetCustomAttribute<DataMemberAttribute>();
+                var dmAttr = prop.GetCustomAttribute<DataMemberAttribute>();
                 if (dmAttr != null)
                 {
                     memb.DbName = dmAttr.Name ?? memb.DbName;
