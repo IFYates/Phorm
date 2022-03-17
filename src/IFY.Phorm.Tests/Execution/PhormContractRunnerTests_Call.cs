@@ -232,7 +232,7 @@ namespace IFY.Phorm.Tests
                 DefaultSchema = "schema"
             };
 
-            var cmd = new TestDbCommand(new TestDbReader
+            var cmd = new TestDbCommand(new TestDbDataReader
             {
                 Data = new List<Dictionary<string, object>>
                 {
@@ -287,7 +287,7 @@ namespace IFY.Phorm.Tests
 
             var phorm = new TestPhormSession(new TestPhormConnectionProvider((s) => conn))
             {
-                ProcessConsoleMessages = true
+                ConsoleMessageCaptureProvider = (s, g) => new TestConsoleMessageCapture(s, g)
             };
 
             phorm.ConsoleMessages.Add(new ConsoleMessage { Message = "Message1" });
@@ -324,7 +324,7 @@ namespace IFY.Phorm.Tests
 
             var phorm = new TestPhormSession(new TestPhormConnectionProvider((s) => conn))
             {
-                ProcessConsoleMessages = true
+                ConsoleMessageCaptureProvider = (s, g) => new TestConsoleMessageCapture(s, g)
             };
 
             phorm.ConsoleMessages.Add(new ConsoleMessage { Message = "Message1" });

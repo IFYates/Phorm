@@ -8,13 +8,14 @@ using System.Diagnostics.CodeAnalysis;
 namespace IFY.Phorm.Tests
 {
     [ExcludeFromCodeCoverage]
-    internal class TestPhormSession : AbstractPhormSession
+    internal partial class TestPhormSession : AbstractPhormSession
     {
         public TestPhormConnectionProvider? TestConnectionProvider => _connectionProvider as TestPhormConnectionProvider;
 
-        public List<IAsyncDbCommand> Commands { get; } = new List<IAsyncDbCommand>();
+        public IReadOnlyList<IAsyncDbCommand> Commands => _commands.AsReadOnly();
+        private readonly List<IAsyncDbCommand> _commands = new List<IAsyncDbCommand>();
 
-        public bool ProcessConsoleMessages { get; set; }
+        public Func<TestPhormSession, Guid, AbstractConsoleMessageCapture>? ConsoleMessageCaptureProvider { get; set; }
         public List<ConsoleMessage> ConsoleMessages { get; } = new List<ConsoleMessage>();
 
         public override bool SupportsTransactions => false;
@@ -38,53 +39,16 @@ namespace IFY.Phorm.Tests
         protected override IAsyncDbCommand CreateCommand(IPhormDbConnection connection, string schema, string objectName, DbObjectType objectType)
         {
             var cmd = base.CreateCommand(connection, schema, objectName, objectType);
-            Commands.Add(cmd);
+            _commands.Add(cmd);
             return cmd;
         }
 
         protected override string? GetConnectionName() => null;
 
-        class TestConsoleMessageCapture : AbstractConsoleMessageCapture
-        {
-            private readonly new TestPhormSession _session;
-
-            public TestConsoleMessageCapture(TestPhormSession session, Guid commandGuid)
-                : base(session, commandGuid)
-            {
-                _session = session;
-                sendAllMessages();
-            }
-
-            private void sendAllMessages()
-            {
-                var messages = _session.ConsoleMessages.ToArray();
-                _session.ConsoleMessages.Clear();
-                foreach (var message in messages)
-                {
-                    OnConsoleMessage(new ConsoleMessage
-                    {
-                        Level = message.Level,
-                        Source = message.Source,
-                        Message = message.Message
-                    });
-                }
-            }
-
-            public override bool ProcessException(Exception ex)
-            {
-                return false;
-            }
-
-            public override void Dispose()
-            {
-                sendAllMessages();
-            }
-        }
         protected internal override AbstractConsoleMessageCapture StartConsoleCapture(Guid commandGuid, IAsyncDbCommand cmd)
         {
-            return ProcessConsoleMessages
-                ? new TestConsoleMessageCapture(this, commandGuid)
-                : base.StartConsoleCapture(commandGuid, cmd);
+            return ConsoleMessageCaptureProvider?.Invoke(this, commandGuid)
+                ?? base.StartConsoleCapture(commandGuid, cmd);
         }
     }
 }

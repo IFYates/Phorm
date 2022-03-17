@@ -60,7 +60,7 @@ namespace IFY.Phorm.Tests.Encryption
         public void Can_transform_value_from_datasource()
         {
             // Arrange
-            var cmd = new TestDbCommand(new TestDbReader
+            var cmd = new TestDbCommand(new TestDbDataReader
             {
                 Data = new List<Dictionary<string, object>>
                 {

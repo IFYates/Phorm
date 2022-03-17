@@ -101,7 +101,7 @@ namespace IFY.Phorm.Tests
                 DefaultSchema = "schema"
             };
 
-            var cmd = new TestDbCommand(new TestDbReader
+            var cmd = new TestDbCommand(new TestDbDataReader
             {
                 Data = new List<Dictionary<string, object>>
                 {
@@ -138,7 +138,7 @@ namespace IFY.Phorm.Tests
                 DefaultSchema = "schema"
             };
 
-            var cmd = new TestDbCommand(new TestDbReader
+            var cmd = new TestDbCommand(new TestDbDataReader
             {
                 Data = new List<Dictionary<string, object>>
                 {
@@ -187,7 +187,7 @@ namespace IFY.Phorm.Tests
                 DefaultSchema = "schema"
             };
 
-            var cmd = new TestDbCommand(new TestDbReader
+            var cmd = new TestDbCommand(new TestDbDataReader
             {
                 Data = new List<Dictionary<string, object>>
                 {
@@ -234,7 +234,7 @@ namespace IFY.Phorm.Tests
                 DefaultSchema = "schema"
             };
 
-            var cmd = new TestDbCommand(new TestDbReader
+            var cmd = new TestDbCommand(new TestDbDataReader
             {
                 Data = new List<Dictionary<string, object>>
                 {
@@ -283,7 +283,7 @@ namespace IFY.Phorm.Tests
                 DefaultSchema = "schema"
             };
 
-            var cmd = new TestDbCommand(new TestDbReader
+            var cmd = new TestDbCommand(new TestDbDataReader
             {
                 Data = new List<Dictionary<string, object>>
                 {
@@ -334,7 +334,7 @@ namespace IFY.Phorm.Tests
                 DefaultSchema = "schema"
             };
 
-            var cmd = new TestDbCommand(new TestDbReader
+            var cmd = new TestDbCommand(new TestDbDataReader
             {
                 Data = new List<Dictionary<string, object>>
                 {
