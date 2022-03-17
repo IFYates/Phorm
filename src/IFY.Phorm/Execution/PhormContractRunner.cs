@@ -124,7 +124,7 @@ namespace IFY.Phorm
             return cmd;
         }
 
-        private void matchResultset(Type entityType, int order, IDataReader rdr, IEnumerable<object> parents, Guid commandGuid)
+        private void matchResultset(Type entityType, int order, IDataReader rdr, IEnumerable<object> parents, Guid commandGuid, AbstractConsoleMessageCapture console)
         {
             // Find resultset target
             var rsProp = entityType.GetProperties()
@@ -139,7 +139,7 @@ namespace IFY.Phorm
             var records = new List<object>();
             var recordMembers = ContractMember.GetMembersFromContract(null, recordType, false)
                 .ToDictionary(m => m.DbName.ToUpperInvariant());
-            while (rdr.Read())
+            while (safeRead(rdr, console))
             {
                 var res = getEntity(recordType, rdr, recordMembers, commandGuid);
                 records.Add(res);
@@ -285,6 +285,27 @@ namespace IFY.Phorm
             return returnValue;
         }
 
+        private bool safeRead(IDataReader rdr, AbstractConsoleMessageCapture console)
+        {
+            if (_session.ErrorsAsConsoleMessage)
+            {
+                try
+                {
+                    return rdr.Read();
+                }
+                catch (Exception ex)
+                {
+                    if (!console.ProcessException(ex))
+                    {
+                        throw;
+                    }
+                    return false;
+                }
+            }
+
+            return rdr.Read();
+        }
+
         #endregion Execution
 
         public async Task<int> CallAsync(CancellationToken? cancellationToken = null)
@@ -295,7 +316,8 @@ namespace IFY.Phorm
 
             // Execution
             using var rdr = await cmd.ExecuteReaderAsync(cancellationToken ?? CancellationToken.None);
-            if (_session.StrictResultSize && rdr.Read())
+
+            if (safeRead(rdr, console) && _session.StrictResultSize)
             {
                 throw new InvalidOperationException("Non-result request returned a result.");
             }
@@ -332,7 +354,7 @@ namespace IFY.Phorm
             if (typeof(GenSpecBase).IsAssignableFrom(typeof(TResult)))
             {
                 // Handle GenSpec differently
-                genspec = parseGenSpec<TResult>(results, rdr, eventArgs.CommandGuid);
+                genspec = parseGenSpec<TResult>(results, rdr, eventArgs.CommandGuid, console);
             }
             else
             {
@@ -340,19 +362,19 @@ namespace IFY.Phorm
                     .ToDictionary(m => m.DbName.ToUpperInvariant());
 
                 // Parse recordset
-                if (!isArray && rdr.Read())
+                if (!isArray && safeRead(rdr, console))
                 {
                     var result = getEntity(entityType, rdr, resultMembers, eventArgs.CommandGuid);
                     results.Add(result);
 
-                    if (_session.StrictResultSize && rdr.Read())
+                    if (_session.StrictResultSize && safeRead(rdr, console))
                     {
                         throw new InvalidOperationException("Expected a single-record result, but more than one found.");
                     }
                 }
-                else
+                else if (isArray)
                 {
-                    while (rdr.Read())
+                    while (safeRead(rdr, console))
                     {
                         var result = getEntity(entityType, rdr, resultMembers, eventArgs.CommandGuid);
                         results.Add(result);
@@ -360,10 +382,13 @@ namespace IFY.Phorm
                 }
 
                 // Process sub results
-                var rsOrder = 0;
-                while (await rdr.NextResultAsync())
+                if (!console.HasError)
                 {
-                    matchResultset(entityType, rsOrder++, rdr, results, eventArgs.CommandGuid);
+                    var rsOrder = 0;
+                    while (await rdr.NextResultAsync())
+                    {
+                        matchResultset(entityType, rsOrder++, rdr, results, eventArgs.CommandGuid, console);
+                    }
                 }
             }
 
@@ -409,7 +434,7 @@ namespace IFY.Phorm
             }
         }
 
-        private GenSpecBase parseGenSpec<TResult>(IList<object> results, IDataReader rdr, Guid commandGuid)
+        private GenSpecBase parseGenSpec<TResult>(IList<object> results, IDataReader rdr, Guid commandGuid, AbstractConsoleMessageCapture console)
         {
             var genspec = (GenSpecBase)Activator.CreateInstance(typeof(TResult))!;
             IDictionary<string, ContractMember>? baseMembers = null;
@@ -423,7 +448,7 @@ namespace IFY.Phorm
 
             // Parse recordset
             var tempProps = new Dictionary<string, object?>();
-            while (rdr.Read())
+            while (safeRead(rdr, console))
             {
                 var included = false;
                 tempProps.Clear();

@@ -13,6 +13,11 @@ namespace IFY.Phorm.Execution
         protected readonly AbstractPhormSession _session;
         protected readonly Guid _commandGuid;
 
+        /// <summary>
+        /// Becomes true if this instance has captured at least one error.
+        /// </summary>
+        public bool HasError { get; protected set; }
+
         public AbstractConsoleMessageCapture(AbstractPhormSession session, Guid commandGuid)
         {
             _session = session;
@@ -31,6 +36,8 @@ namespace IFY.Phorm.Execution
         }
 
         public ConsoleMessage[] GetConsoleMessages() => _consoleEvents.ToArray();
+
+        public abstract bool ProcessException(Exception ex);
 
         public abstract void Dispose();
     }

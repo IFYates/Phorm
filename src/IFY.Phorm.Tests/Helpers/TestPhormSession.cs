@@ -70,6 +70,11 @@ namespace IFY.Phorm.Tests
                 }
             }
 
+            public override bool ProcessException(Exception ex)
+            {
+                return false;
+            }
+
             public override void Dispose()
             {
                 sendAllMessages();

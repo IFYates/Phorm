@@ -52,6 +52,8 @@ namespace IFY.Phorm
 
         #endregion Events
 
+        public bool ErrorsAsConsoleMessage { get; set; } = GlobalSettings.ErrorsAsConsoleMessage;
+
         public bool StrictResultSize { get; set; } = GlobalSettings.StrictResultSize;
 
         public AbstractPhormSession(IPhormDbConnectionProvider connectionProvider)
@@ -105,6 +107,7 @@ namespace IFY.Phorm
         {
             public static readonly NullConsoleMessageCapture Instance = new NullConsoleMessageCapture();
             private NullConsoleMessageCapture() : base(null!, Guid.Empty) { }
+            public override bool ProcessException(Exception ex) => false;
             public override void Dispose() { }
         }
 

@@ -82,14 +82,31 @@ namespace IFY.Phorm.SqlClient
                 conn.InfoMessage += captureInfoMessage;
             }
 
+            public override bool ProcessException(Exception ex)
+            {
+                if (ex is SqlException sqlException)
+                {
+                    HasError = true;
+                    fromSqlErrors(sqlException.Errors, true);
+                    return true;
+                }
+                return false;
+            }
+
             private void captureInfoMessage(object sender, SqlInfoMessageEventArgs e)
             {
-                foreach (SqlError err in e.Errors)
+                // TODO: possible only for cmd?
+                fromSqlErrors(e.Errors, false);
+            }
+
+            private void fromSqlErrors(SqlErrorCollection errors, bool isException)
+            {
+                foreach (SqlError err in errors)
                 {
-                    // TODO: possible only for cmd?
                     // TODO: other info
                     OnConsoleMessage(new ConsoleMessage
                     {
+                        IsError = isException,
                         Level = err.Class,
                         Source = $"{err.Procedure} @ {err.LineNumber}",
                         Message = err.Message
