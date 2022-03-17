@@ -230,10 +230,10 @@ There are two ways to retrieve console/error messages from the execution logic.
 By session/global event:
 ```CSharp
 // Every log message on every session
-Events.ConsoleLog += consoleLogEventHandler;
+Events.ConsoleMessage += consoleLogEventHandler;
 
 // Every log message on this session
-((IPhormSession)phorm).ConsoleLog += consoleLogEventHandler;
+((IPhormSession)phorm).ConsoleMessage += consoleLogEventHandler;
 ```
 
 By contract:
