@@ -28,11 +28,8 @@ With this approach, the data management team can provide access contracts to mee
 - DTO field transformation via extensions (e.g., JSON)
 - Application-level field encryption/decryption
 - GenSpec
-- Execution events for external handling / logging
-
-### Remaining
-- Useful test helpers
 - Pass-through logging
+- Execution events for external handling / logging
 - Scoped execution context
 
 ## Antithesis
@@ -250,7 +247,16 @@ phorm.Call<IMyContract>(arg);
 ```
 
 ## Connection context
-TODO
+Pho/rm will reuse connections based on a "context" name. This name is also shared with the database provider, based on implementation.
+
+For SQL Server, this comes through in the `APP_NAME()` function.
+
+Example:
+```CSharp
+var session = new SqlPhormSession(connectionProvider, "MyConnectionName");
+
+session.Call<IMyContract>(); // usp_MyContract will have APP_NAME() = 'MyConnectionName'
+```
 
 ## Gen-Spec support
 Pho/rm supports the "Generalised-Specialised" pattern, providing some polymorphism ability.
