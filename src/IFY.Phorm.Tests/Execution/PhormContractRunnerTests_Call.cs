@@ -13,7 +13,7 @@ namespace IFY.Phorm.Tests
     [TestClass]
     public class PhormContractRunnerTests_Call
     {
-        public class TestContract : IPhormContract, IMemberTestContract
+        public class TestContract : IMemberTestContract
         {
             public int Arg { get; set; }
             [IgnoreDataMember]
@@ -22,6 +22,17 @@ namespace IFY.Phorm.Tests
             public string Arg3 { get; set; } = string.Empty;
             [IgnoreDataMember]
             public ContractMember Arg4 { get; set; } = ContractMember.Out<string>("InvalidRename");
+        }
+
+        public class TestContract2 : IPhormContract
+        {
+            [ContractMember(DisableOutput = true)]
+            public string Input { get; set; } = string.Empty;
+            [ContractMember(DisableInput = true)]
+            public string Output { get; set; } = string.Empty;
+            public string InputOutput { get; set; } = string.Empty;
+            [ContractMember(DisableInput = true, DisableOutput = true)]
+            public string Ignored { get; set; } = string.Empty;
         }
 
         [PhormContract(Name = "IAmRenamedContract", Namespace = "otherSchema")]
@@ -133,6 +144,39 @@ namespace IFY.Phorm.Tests
             var pars = cmd.Parameters.AsParameters();
             Assert.AreEqual("@RenamedArg", pars[0].ParameterName);
             Assert.AreEqual(ParameterDirection.Input, pars[0].Direction);
+        }
+
+        [TestMethod]
+        public void Call__Concrete_contract_with_input_and_output()
+        {
+            // Arrange
+            var conn = new TestPhormConnection("")
+            {
+                DefaultSchema = "schema"
+            };
+
+            var cmd = new TestDbCommand();
+            conn.CommandQueue.Enqueue(cmd);
+
+            var phorm = new TestPhormSession(new TestPhormConnectionProvider((s) => conn));
+
+            var runner = new PhormContractRunner<TestContract2>(phorm, null, DbObjectType.Default, new TestContract2());
+
+            // Act
+            var res = runner.CallAsync().Result;
+
+            // Assert
+            Assert.AreEqual(1, res);
+
+            var pars = cmd.Parameters.AsParameters();
+            Assert.AreEqual(4, pars.Length); // + return
+            Assert.AreEqual("@Input", pars[0].ParameterName);
+            Assert.AreEqual(ParameterDirection.Input, pars[0].Direction);
+            Assert.AreEqual("@Output", pars[1].ParameterName);
+            Assert.AreEqual(ParameterDirection.Output, pars[1].Direction);
+            Assert.AreEqual("@InputOutput", pars[2].ParameterName);
+            Assert.AreEqual(ParameterDirection.InputOutput, pars[2].Direction);
+            Assert.AreEqual(ParameterDirection.ReturnValue, pars[3].Direction);
         }
 
         [TestMethod]
