@@ -1,6 +1,8 @@
 ﻿using IFY.Phorm.Connectivity;
 using System;
 using Microsoft.Data.SqlClient;
+using System.Collections.Concurrent;
+using System.Data;
 
 namespace IFY.Phorm.SqlClient
 {
@@ -9,6 +11,8 @@ namespace IFY.Phorm.SqlClient
         public string DatabaseConnectionString { get; }
 
         public event EventHandler<IPhormDbConnection>? Connected;
+
+        private static readonly ConcurrentDictionary<string, PhormDbConnection> _connectionPool = new ConcurrentDictionary<string, PhormDbConnection>();
 
         public SqlConnectionProvider(string databaseConnectionString)
         {
@@ -27,16 +31,30 @@ namespace IFY.Phorm.SqlClient
         {
             // Ensure application name is known user
             var connectionString = GetConnectionString(connectionName);
+            var sqlConnStr = connectionString.ToString();
 
-            // TODO: if conn is a reuse, use same PhormDbConnection instance
-            var conn = new SqlConnection(connectionString.ToString());
-            var phormConn = new PhormDbConnection(connectionName, conn);
+            // Reuse existing connections, where possible
+            PhormDbConnection getNewConnection()
+            {
+                var conn = new SqlConnection(sqlConnStr);
+                return new PhormDbConnection(connectionName, conn);
+            }
+            var phormConn = _connectionPool.AddOrUpdate(sqlConnStr,
+                _ => getNewConnection(),
+                (_, c) =>
+                {
+                    if (c.State != ConnectionState.Open)
+                    {
+                        c = getNewConnection();
+                    }
+                    return c;
+                });
 
             // Resolve default schema
             if (phormConn.DefaultSchema.Length == 0)
             {
-                conn.Open();
-                using var cmd = conn.CreateCommand();
+                phormConn.Open();
+                using var cmd = ((IDbConnection)phormConn).CreateCommand();
                 cmd.CommandText = "SELECT schema_name()";
                 phormConn.DefaultSchema = cmd.ExecuteScalar()?.ToString() ?? connectionString.UserID;
             }
