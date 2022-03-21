@@ -44,6 +44,13 @@ namespace IFY.Phorm
         /// </summary>
         bool StrictResultSize { get; set; }
 
+        /// <summary>
+        /// Get a new instance of this session scoped with a different connection name.
+        /// </summary>
+        /// <param name="connectionName">The connection name to use when scoping the new session instance.</param>
+        /// <returns>A new instance of this session with a different connection name.</returns>
+        IPhormSession SetConnectionName(string connectionName);
+
         #region Call/get from action contract
 
         int Call(string contractName, object? args = null);

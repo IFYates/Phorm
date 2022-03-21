@@ -45,6 +45,12 @@ namespace IFY.Phorm.Tests
 
         protected override string? GetConnectionName() => null;
 
+        [ExcludeFromCodeCoverage]
+        public override IPhormSession SetConnectionName(string connectionName)
+        {
+            throw new NotImplementedException();
+        }
+
         protected internal override AbstractConsoleMessageCapture StartConsoleCapture(Guid commandGuid, IAsyncDbCommand cmd)
         {
             return ConsoleMessageCaptureProvider?.Invoke(this, commandGuid)

@@ -50,6 +50,11 @@ namespace IFY.Phorm.SqlClient
 
         protected override string? GetConnectionName() => _connectionName;
 
+        public override IPhormSession SetConnectionName(string connectionName)
+        {
+            return new SqlPhormSession(_connectionProvider, connectionName);
+        }
+
         protected override IAsyncDbCommand CreateCommand(IPhormDbConnection connection, string schema, string objectName, DbObjectType objectType)
         {
             // Complete object name

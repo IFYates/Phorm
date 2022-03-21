@@ -66,5 +66,10 @@ namespace IFY.Phorm.SqlClient
             catch { }
             return phormConn;
         }
+
+        public IPhormSession GetSession(string? connectionName = null)
+        {
+            return new SqlPhormSession(this, connectionName);
+        }
     }
 }

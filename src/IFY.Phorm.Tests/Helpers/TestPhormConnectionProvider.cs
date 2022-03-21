@@ -1,8 +1,10 @@
 ﻿using IFY.Phorm.Connectivity;
 using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace IFY.Phorm.Tests
 {
+    [ExcludeFromCodeCoverage]
     internal class TestPhormConnectionProvider : IPhormDbConnectionProvider
     {
         public TestPhormConnection? TestConnection { get; } = null;
@@ -24,6 +26,11 @@ namespace IFY.Phorm.Tests
         public IPhormDbConnection GetConnection(string? connectionName)
         {
             return _provider(connectionName);
+        }
+
+        public IPhormSession GetSession(string? connectionName = null)
+        {
+            throw new NotImplementedException();
         }
     }
 }

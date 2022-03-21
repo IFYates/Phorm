@@ -63,14 +63,16 @@ namespace IFY.Phorm
 
         #region Connection
 
+        protected abstract string? GetConnectionName();
+
+        public abstract IPhormSession SetConnectionName(string connectionName);
+
         internal IAsyncDbCommand CreateCommand(string? schema, string objectName, DbObjectType objectType)
         {
             var conn = _connectionProvider.GetConnection(GetConnectionName());
             schema = schema?.Length > 0 ? schema : conn.DefaultSchema;
             return CreateCommand(conn, schema, objectName, objectType);
         }
-
-        protected abstract string? GetConnectionName();
 
         protected virtual IAsyncDbCommand CreateCommand(IPhormDbConnection connection, string schema, string objectName, DbObjectType objectType)
         {

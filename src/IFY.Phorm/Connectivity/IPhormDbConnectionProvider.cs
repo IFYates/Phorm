@@ -18,5 +18,12 @@ namespace IFY.Phorm.Connectivity
         /// <param name="connectionName">The name of the connection to scope this connection for.</param>
         /// <returns>A datasource connection for the given context.</returns>
         IPhormDbConnection GetConnection(string? connectionName = null);
+
+        /// <summary>
+        /// Create a new session based on this connection provider.
+        /// </summary>
+        /// <param name="connectionName">The name of the connection to scope the new session for.</param>
+        /// <returns>A new session instance based on this connection provider</returns>
+        IPhormSession GetSession(string? connectionName = null);
     }
 }
