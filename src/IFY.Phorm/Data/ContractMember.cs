@@ -142,11 +142,6 @@ namespace IFY.Phorm.Data
                 {
                     if (!hasContract)
                     {
-                        if (cmAttr?.DisableInput == true)
-                        {
-                            continue;
-                        }
-
                         memb = In(prop.Name, value);
                     }
                     else
