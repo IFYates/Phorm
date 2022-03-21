@@ -208,6 +208,21 @@ RETURN @@ROWCOUNT");
         }
 
         [TestMethod]
+        public void Many__All_from_table()
+        {
+            var phorm = getPhormSession(out var connProv);
+            setupGetTestSchema(connProv);
+
+            _ = phorm.Call("GetTest_Upsert");
+            _ = phorm.Call("GetTest_Upsert");
+            _ = phorm.Call("GetTest_Upsert");
+
+            var res = phorm.Get<DataItemWithoutText[]>()!;
+
+            Assert.AreEqual(3, res.Length);
+        }
+
+        [TestMethod]
         public void Many__Filtered_from_table()
         {
             var phorm = getPhormSession(out var connProv);
