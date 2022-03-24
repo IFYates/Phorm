@@ -105,5 +105,29 @@ RETURN 1");
             Assert.AreNotEqual(res1.SPID, res3.SPID);
             Assert.AreNotEqual(res1.SPID, res4.SPID);
         }
+
+        [TestMethod]
+        public void Number_of_connections_does_not_increase_significantly()
+        {
+            // Arrange
+            var phorm1 = getPhormSession(out var connProv, "TestContext1");
+
+            SqlTestHelpers.ApplySql(connProv, @"CREATE OR ALTER PROC [dbo].[usp_GetConnectionCount]
+AS
+	SET NOCOUNT ON
+    DECLARE @Count INT = (SELECT COUNT(1) FROM sys.sysprocesses WHERE DB_NAME([dbid]) = DB_NAME())
+RETURN @Count");
+
+            // Act
+            var res1 = phorm1.Call("GetConnectionCount");
+            for (var i = 0; i < 1000; ++i)
+            {
+                _ = phorm1.Call("GetConnectionCount");
+            }
+            var res2 = phorm1.Call("GetConnectionCount");
+
+            // Assert
+            Assert.IsTrue((res2 - res1) < 10, $"First:{res1}, Last:{res2}");
+        }
     }
 }

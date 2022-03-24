@@ -45,6 +45,7 @@ namespace IFY.Phorm.SqlClient
                 {
                     if (c.State != ConnectionState.Open)
                     {
+                        c.Dispose();
                         c = getNewConnection();
                     }
                     return c;
