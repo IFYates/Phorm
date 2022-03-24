@@ -1,4 +1,5 @@
-﻿using IFY.Phorm.Data;
+﻿using IFY.Phorm.Connectivity;
+using IFY.Phorm.Data;
 using IFY.Phorm.Encryption;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
@@ -8,30 +9,21 @@ using System.Runtime.Serialization;
 namespace IFY.Phorm.SqlClient.IntegrationTests
 {
     [TestClass]
-    public class SqlIntegrationEncryptionTests
+    public class EncryptionTests : SqlIntegrationTestBase
     {
-        [PhormContract(Name = "DataTable")]
-        public class DataItem
+        [PhormContract(Name = "EncryptionTable")]
+        public class DataItem : IUpsert
         {
             public long Id { get; set; }
             [DataMember(Name = "Int")] public int Num { get; set; }
-            [SecureValue("class", nameof(Num))] public string Data { get; set; }
-
-            public DataItem(long id, int num, string data)
-            {
-                Id = id;
-                Num = num;
-                Data = data;
-            }
-
-            public DataItem() : this(default, default, default!)
-            { }
+            [SecureValue("test", nameof(Num))] public string Data { get; set; } = string.Empty;
         }
-        [PhormContract]
+
+        [PhormContract(Name = "Encryption_Upsert")]
         public interface IUpsert : IPhormContract
         {
             [DataMember(Name = "Int")] int Num { get; }
-            [SecureValue("class", nameof(Num))] string Data { get; }
+            [SecureValue("test", nameof(Num))] string Data { get; }
         }
 
         [ExcludeFromCodeCoverage]
@@ -43,28 +35,47 @@ namespace IFY.Phorm.SqlClient.IntegrationTests
             {
                 return dataClassification switch
                 {
-                    "class" => Encryptor,
+                    "test" => Encryptor,
                     _ => throw new NotImplementedException(),
                 };
             }
         }
 
-        private static IPhormSession getPhormSession()
+        private void setupEncryptionSchema(IPhormDbConnectionProvider connProv)
         {
-            var connProc = new SqlConnectionProvider(@"Server=(localdb)\ProjectModels;Database=PhormTests;");
+            SqlTestHelpers.ApplySql(connProv, @"DROP TABLE IF EXISTS [dbo].[EncryptionTable]");
+            SqlTestHelpers.ApplySql(connProv, @"CREATE TABLE [dbo].[EncryptionTable] (
+	[Id] BIGINT NOT NULL IDENTITY(1,1) PRIMARY KEY,
+	[Int] INT NULL,
+	[Data] VARBINARY(MAX) NULL
+)");
 
-            var phorm = new SqlPhormSession(connProc, "*");
+            SqlTestHelpers.ApplySql(connProv, @"CREATE OR ALTER PROC [dbo].[usp_Encryption_Upsert]
+	@Id BIGINT = NULL OUTPUT,
+	@Int INT = NULL,
+	@Data VARBINARY(MAX) = NULL
+AS
+	SET NOCOUNT ON
+	IF (@Id IS NULL) BEGIN
+		INSERT [dbo].[EncryptionTable] ([Int], [Data])
+			SELECT @Int, @Data
+		SET @Id = SCOPE_IDENTITY()
+		RETURN 1
+	END
 
-            phorm.Call("ClearTable");
-
-            return phorm;
+	UPDATE [dbo].[EncryptionTable] SET
+		[Int] = @Int,
+		[Data] = @Data
+		WHERE [Id] = @Id
+RETURN @@ROWCOUNT");
         }
 
         [TestMethod]
         public void String_encryption_full()
         {
             // Arrange
-            var phorm = getPhormSession();
+            var phorm = getPhormSession(out var connProv);
+            setupEncryptionSchema(connProv);
 
             var randInt = DateTime.UtcNow.Millisecond;
             var randStr = Guid.NewGuid().ToString();

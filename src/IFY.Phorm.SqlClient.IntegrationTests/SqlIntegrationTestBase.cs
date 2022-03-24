@@ -35,15 +35,12 @@ namespace IFY.Phorm.SqlClient.IntegrationTests
             Events.ConsoleMessage -= invokeHandler;
         }
 
-        protected static IPhormSession getPhormSession() => getPhormSession(out _);
-        protected static IPhormSession getPhormSession(out SqlConnectionProvider connProv)
+        protected static IPhormSession getPhormSession(string? connectionName = null) => getPhormSession(out _, connectionName);
+        protected static IPhormSession getPhormSession(out SqlConnectionProvider connProv, string? connectionName = null)
         {
             connProv = new SqlConnectionProvider(@"Server=(localdb)\ProjectModels;Database=PhormTests;");
 
-            var phorm = new SqlPhormSession(connProv, "*");
-
-            phorm.Call("ClearTable");
-
+            var phorm = new SqlPhormSession(connProv, connectionName);
             return phorm;
         }
     }
