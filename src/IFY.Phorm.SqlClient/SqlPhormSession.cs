@@ -42,6 +42,10 @@ namespace IFY.Phorm.SqlClient
         public SqlPhormSession(string databaseConnectionString, string? connectionName = null)
             : this(new SqlConnectionProvider(databaseConnectionString), connectionName)
         { }
+        public SqlPhormSession(IPhormDbConnectionProvider connectionProvider)
+            : this(connectionProvider, null)
+        {
+        }
         public SqlPhormSession(IPhormDbConnectionProvider connectionProvider, string? connectionName = null)
             : base(connectionProvider)
         {
