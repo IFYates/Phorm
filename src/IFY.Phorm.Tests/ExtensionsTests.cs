@@ -20,6 +20,7 @@ namespace IFY.Phorm.Tests
         }
 
         [TestMethod]
+        [DataRow(new byte[] { 7, 23, 69, 137, 156, 205, 217, 8 }, "2022-01-02 03:04:05.1234567", typeof(DateTime))]
         [DataRow(new byte[] { 210, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0 }, 12.34, typeof(decimal))]
         [DataRow(new byte[] { 1, 2, 3, 4 }, new byte[] { 1, 2, 3, 4 }, typeof(byte[]))]
         [DataRow(new byte[] { 123 }, 123, typeof(byte))]
@@ -88,6 +89,7 @@ namespace IFY.Phorm.Tests
         }
 
         [TestMethod]
+        [DataRow(new byte[] { 7, 23, 69, 137, 156, 205, 217, 8 }, "2022-01-02 03:04:05.1234567", typeof(DateTime))]
         [DataRow(new byte[] { 210, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0 }, 12.34, typeof(decimal))]
         [DataRow(new byte[] { 1, 2, 3, 4 }, new byte[] { 1, 2, 3, 4 }, typeof(byte[]))]
         [DataRow(new byte[] { 123 }, 123, typeof(byte))]
