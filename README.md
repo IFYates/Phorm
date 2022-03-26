@@ -26,7 +26,7 @@ Our goal is to have a strongly-typed data surface and allow for a mutable physic
 
 With this approach, the data management team can provide access contracts to meet the business logic requirements, which the implementing team can rely on without concern over the underlying structures and query efficiency.
 
-## Basic example
+## Common example
 For typical entity CRUD support, a Pho/rm solution would require a minimum of:
 1. Existing tables in the data source
 1. A POCO to represent the entity (DTO); ideally with a contract for each database action
@@ -45,11 +45,12 @@ CREATE PROCEDURE [dbo].[usp_SaveData] (
     @Key NVARCHAR(50),
     @Value NVARCHAR(256),
     @Id BIGINT = NULL OUTPUT
-) AS BEGIN
-    INSERT INTO [dbo].[Data] ([Key], [Value]) SELECT @Key, @Value
+) AS
+    SET NOCOUNT ON
+    INSERT INTO [dbo].[Data] ([Key], [Value])
+        SELECT @Key, @Value
     SET @Id = SCOPE_IDENTITY()
-    RETURN 1 -- Success
-END
+RETURN 1 -- Success
 ```
 ```CSharp
 // DTO and contracts
@@ -57,67 +58,26 @@ END
 class DataItem : ISaveData
 {
     public long Id { get; set; }
-    public string Key { get; set; }
-    public string Value { get; set; }
+    public string Key { get; set; } = string.Empty;
+    public string? Value { get; set; }
 }
-interface ISaveData
+interface ISaveData : IPhormContract
 {
     long Id { set; } // Output
     string Key { get; }
-    string Value { get; }
+    string? Value { get; }
 }
 
 // Configure Pho/rm session to SQL Server
-var connection = new SqlConnectionProvider(connectionString);
-var session = new SqlPhormSession(connection, null);
+IPhormSession session = new SqlPhormSession(connectionString);
 
-// Use
-var allData = session.Get<DataItem[]>();
-session.Call<ISaveData>(new { Key = "Name", Value = "T Ester" });
-var data = session.Get<DataItem>(new { Key = "Name" });
+// Get all existing records from the table
+DataItem[] allData = session.Get<DataItem[]>()!;
+
+// Add a new record to the table, getting back the new id
+var newItem = new { Id = ContractMember.Out<long>(), Key = "Name", Value = "T Ester" };
+int result = session.Call<ISaveData>(newItem);
+
+DataItem? itemById = session.Get<DataItem>(new { Id = newItem.Id });
+DataItem? itemByKey = session.Get<DataItem>(new { Key = "Name" });
 ```
-
-## Data encryption
-Pho/rm supports application-level encryption of data in either direction to the datasource.
-
-```CSharp
-[DataContract] public record RecordDTO ( long Id ) { [SecureValue("Test", nameof(Id))] public string Data { get; set; } }
-[PhormContract] public interface IRecord_UpdateData { long Id { get; } [SecureValue("DataClassification", nameof(Id))] string Data { get; } }
-
-public class MyEncryptionProvider : IEncryptionProvider
-{
-    public IEncryptor GetInstance(string dataClassification) => new MyEncryptor() { DataClassification = dataClassification };
-}
-// Registered at startup: phormSettings.EncryptionProvider = new MyEncryptionProvider();
-
-public class MyEncryptor : IEncryptor
-{
-        public string DataClassification { get; init; }
-        public byte[] Authenticator { get; set; }
-        public byte[] InitialVector { get; init; }
-
-        public byte[] Encrypt(byte[] data)
-        {
-            // TODO: encrypt data using this state
-        }
-
-        public byte[] Decrypt(byte[] data)
-        {
-            // TODO: decrypt data using this state
-        }
-}
-```
-
-## Calculated parameters
-For action contracts, additional parameters can be defined directly in the contract:
-```CSharp
-[PhormContract]
-public interface IRecord_Update
-{
-    long Id { get; }
-
-    [CalculatedValue] public string NewParameter() { return "NewValue"; }
-}
-```
-
-This will call the action contract with an additional `@NewParameter = 'NewValue'`.
