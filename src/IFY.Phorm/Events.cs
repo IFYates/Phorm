@@ -53,7 +53,7 @@ namespace IFY.Phorm
         #region UnresolvedContractMember
 
         /// <summary>
-        /// A result record contained a column not specified in the target entity type.
+        /// A result record did not contain a column specified in the target entity type.
         /// </summary>
         public static event EventHandler<UnresolvedContractMemberEventArgs>? UnresolvedContractMember;
 

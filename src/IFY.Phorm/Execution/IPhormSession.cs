@@ -23,6 +23,11 @@ namespace IFY.Phorm
         /// <summary>
         /// A result record contained a column not specified in the target entity type.
         /// </summary>
+        event EventHandler<UnexpectedRecordColumnEventArgs>? UnexpectedRecordColumn;
+
+        /// <summary>
+        /// A result record did not contain a column specified in the target entity type.
+        /// </summary>
         event EventHandler<UnresolvedContractMemberEventArgs>? UnresolvedContractMember;
 
         /// <summary>
