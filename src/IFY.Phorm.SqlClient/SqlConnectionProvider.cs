@@ -12,7 +12,9 @@ namespace IFY.Phorm.SqlClient
 
         public event EventHandler<IPhormDbConnection>? Connected;
 
-        private static readonly ConcurrentDictionary<string, PhormDbConnection> _connectionPool = new ConcurrentDictionary<string, PhormDbConnection>();
+        private static readonly ConcurrentDictionary<string, IPhormDbConnection> _connectionPool = new ConcurrentDictionary<string, IPhormDbConnection>();
+
+        internal Func<string?, IDbConnection, IPhormDbConnection> _connectionBuilder = (connectionName, conn) => new PhormDbConnection(connectionName, conn);
 
         public SqlConnectionProvider(string databaseConnectionString)
         {
@@ -34,10 +36,10 @@ namespace IFY.Phorm.SqlClient
             var sqlConnStr = connectionString.ToString();
 
             // Reuse existing connections, where possible
-            PhormDbConnection getNewConnection()
+            IPhormDbConnection getNewConnection()
             {
                 var conn = new SqlConnection(sqlConnStr);
-                return new PhormDbConnection(connectionName, conn);
+                return _connectionBuilder(connectionName, conn);
             }
             var phormConn = _connectionPool.AddOrUpdate(sqlConnStr,
                 _ => getNewConnection(),
