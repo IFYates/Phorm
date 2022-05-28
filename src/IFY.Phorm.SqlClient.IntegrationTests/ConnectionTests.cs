@@ -110,7 +110,7 @@ RETURN 1");
         public void Number_of_connections_does_not_increase_significantly()
         {
             // Arrange
-            var phorm1 = getPhormSession(out var connProv, "TestContext1");
+            var phorm = getPhormSession(out var connProv, "TestContext");
 
             SqlTestHelpers.ApplySql(connProv, @"CREATE OR ALTER PROC [dbo].[usp_GetConnectionCount]
 AS
@@ -119,12 +119,12 @@ AS
 RETURN @Count");
 
             // Act
-            var res1 = phorm1.Call("GetConnectionCount");
-            for (var i = 0; i < 1000; ++i)
+            var res1 = phorm.Call("GetConnectionCount");
+            for (var i = 0; i < 100; ++i)
             {
-                _ = phorm1.Call("GetConnectionCount");
+                _ = getPhormSession("TestContext" + i).Call("GetConnectionCount");
             }
-            var res2 = phorm1.Call("GetConnectionCount");
+            var res2 = phorm.Call("GetConnectionCount");
 
             // Assert
             Assert.IsTrue((res2 - res1) < 10, $"First:{res1}, Last:{res2}");
