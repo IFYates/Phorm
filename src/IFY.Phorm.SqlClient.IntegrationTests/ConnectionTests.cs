@@ -122,7 +122,11 @@ RETURN @Count");
             var res1 = phorm.Call("GetConnectionCount");
             for (var i = 0; i < 100; ++i)
             {
-                _ = getPhormSession("TestContext" + i).Call("GetConnectionCount");
+                var t = new Thread(() =>
+                {
+                    _ = getPhormSession("TestContext").Call("GetConnectionCount");
+                });
+                t.Start();
             }
             var res2 = phorm.Call("GetConnectionCount");
 

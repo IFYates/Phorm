@@ -38,7 +38,7 @@ namespace IFY.Phorm.SqlClient.IntegrationTests
         protected static IPhormSession getPhormSession(string? connectionName = null) => getPhormSession(out _, connectionName);
         protected static IPhormSession getPhormSession(out SqlConnectionProvider connProv, string? connectionName = null)
         {
-            connProv = new SqlConnectionProvider(@"Server=(localdb)\ProjectModels;Database=PhormTests;");
+            connProv = new SqlConnectionProvider(@"Server=(localdb)\ProjectModels;Database=PhormTests;MultipleActiveResultSets=True");
 
             var phorm = new SqlPhormSession(connProv, connectionName);
             return phorm;
