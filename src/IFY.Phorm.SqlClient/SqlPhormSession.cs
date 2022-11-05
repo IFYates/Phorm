@@ -19,7 +19,7 @@ namespace IFY.Phorm.SqlClient
 #else
             init;
 #endif
-        } = "vw_";
+        } = GlobalSettings.ViewPrefix;
         public string ProcedurePrefix
         {
             get;
@@ -28,7 +28,7 @@ namespace IFY.Phorm.SqlClient
 #else
             init;
 #endif
-        } = "usp_";
+        } = GlobalSettings.ProcedurePrefix;
         public string TablePrefix
         {
             get;
@@ -37,7 +37,7 @@ namespace IFY.Phorm.SqlClient
 #else
             init;
 #endif
-        } = "";
+        } = GlobalSettings.TablePrefix;
 
         public SqlPhormSession(string databaseConnectionString, string? connectionName = null)
             : this(new SqlConnectionProvider(databaseConnectionString), connectionName)
