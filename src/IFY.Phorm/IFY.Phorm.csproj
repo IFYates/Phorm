@@ -11,11 +11,12 @@
 
 		<Authors>IFYates</Authors>
 		<PackageLicenseExpression>MPL-2.0</PackageLicenseExpression>
-		<Version>1.4.0-beta</Version>
+		<Version>1.4.1-beta</Version>
 		<PackageProjectUrl>https://github.com/IFYates/Phorm</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/IFYates/Phorm</RepositoryUrl>
 		<RepositoryType>GitHub</RepositoryType>
 		<PackageReleaseNotes>
+			v1.4.1-beta - Reduced wasted connections. Replaced Shimterface with Shimr
 			v1.4.0-beta - New ContractMemberAttribute and improved connection handling
 			v1.3.0-beta - Console logs and errors
 			v1.2.0-beta - GenSpec support and event system
@@ -29,7 +30,7 @@
 
     <ItemGroup>
         <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-        <PackageReference Include="Shimterface.Standard" Version="1.6.8" />
+        <PackageReference Include="IFY.Shimr" Version="2.0.0" />
 		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
 	</ItemGroup>
 

@@ -19,6 +19,10 @@ namespace IFY.Phorm
                 return Array.Empty<byte>();
             }
 
+            if (value is DateTime dt)
+            {
+                value = dt.Ticks;
+            }
             if (value is decimal dec)
             {
                 var ints = decimal.GetBits(dec);
@@ -58,6 +62,10 @@ namespace IFY.Phorm
             if (resultType == typeof(byte[]))
             {
                 return bytes;
+            }
+            if (resultType == typeof(DateTime))
+            {
+                return new DateTime(BitConverter.ToInt64(bytes));
             }
             if (resultType == typeof(decimal))
             {

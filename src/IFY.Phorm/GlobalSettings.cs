@@ -31,5 +31,34 @@ namespace IFY.Phorm
         /// Defaults to true.
         /// </summary>
         public static bool StrictResultSize { get; set; } = true;
+
+        public static string ViewPrefix
+        {
+            get;
+#if NETSTANDARD || NETCOREAPP
+            set;
+#else
+            init;
+#endif
+        } = "vw_";
+        public static string ProcedurePrefix
+        {
+            get;
+#if NETSTANDARD || NETCOREAPP
+            set;
+#else
+            init;
+#endif
+        } = "usp_";
+        public static string TablePrefix
+        {
+            get;
+#if NETSTANDARD || NETCOREAPP
+            set;
+#else
+            init;
+#endif
+        } = "";
+
     }
 }
