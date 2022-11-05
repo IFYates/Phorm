@@ -3,7 +3,7 @@ using Microsoft.Data.SqlClient;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using System;
-using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Data;
 
 namespace IFY.Phorm.SqlClient.Tests
@@ -18,7 +18,7 @@ namespace IFY.Phorm.SqlClient.Tests
         public void Init()
         {
             // Reset static state
-            ((ConcurrentDictionary<string, IPhormDbConnection>)typeof(SqlConnectionProvider).GetField("_connectionPool", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!
+            ((Dictionary<string, IPhormDbConnection>)typeof(SqlConnectionProvider).GetField("_connectionPool", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!
                 .GetValue(null)!).Clear();
         }
 

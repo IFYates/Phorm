@@ -1,7 +1,7 @@
 ﻿using IFY.Phorm.Connectivity;
-using System;
 using Microsoft.Data.SqlClient;
-using System.Collections.Concurrent;
+using System;
+using System.Collections.Generic;
 using System.Data;
 
 namespace IFY.Phorm.SqlClient
@@ -12,7 +12,7 @@ namespace IFY.Phorm.SqlClient
 
         public event EventHandler<IPhormDbConnection>? Connected;
 
-        private static readonly ConcurrentDictionary<string, IPhormDbConnection> _connectionPool = new ConcurrentDictionary<string, IPhormDbConnection>();
+        private static readonly Dictionary<string, IPhormDbConnection> _connectionPool = new Dictionary<string, IPhormDbConnection>();
 
         internal Func<string?, IDbConnection, IPhormDbConnection> _connectionBuilder = (connectionName, conn) => new PhormDbConnection(connectionName, conn);
 
@@ -21,52 +21,47 @@ namespace IFY.Phorm.SqlClient
             DatabaseConnectionString = databaseConnectionString;
         }
 
-        protected virtual SqlConnectionStringBuilder GetConnectionString(string? connectionName)
-        {
-            // The connection will identify as the given name
-            var connStr = new SqlConnectionStringBuilder(DatabaseConnectionString);
-            connStr.ApplicationName = connectionName ?? connStr.ApplicationName;
-            return connStr;
-        }
-
         public IPhormDbConnection GetConnection(string? connectionName)
         {
-            // Ensure application name is known user
-            var connectionString = GetConnectionString(connectionName);
-            var sqlConnStr = connectionString.ToString();
-
             // Reuse existing connections, where possible
-            IPhormDbConnection getNewConnection()
+            if (!_connectionPool.TryGetValue(connectionName ?? string.Empty, out var phormConn)
+                || phormConn.State != ConnectionState.Open)
             {
-                var conn = new SqlConnection(sqlConnStr);
-                return _connectionBuilder(connectionName, conn);
-            }
-            var phormConn = _connectionPool.AddOrUpdate(sqlConnStr,
-                _ => getNewConnection(),
-                (_, c) =>
+                lock (_connectionPool)
                 {
-                    if (c.State != ConnectionState.Open)
+                    if (!_connectionPool.TryGetValue(connectionName ?? string.Empty, out phormConn)
+                        || phormConn.State != ConnectionState.Open)
                     {
-                        c.Dispose();
-                        c = getNewConnection();
+                        // Create new connection
+                        phormConn?.Dispose();
+
+                        // Ensure application name is known user
+                        var connectionString = new SqlConnectionStringBuilder(DatabaseConnectionString);
+                        connectionString.ApplicationName = connectionName ?? connectionString.ApplicationName;
+                        var sqlConnStr = connectionString.ToString();
+
+                        // Open connection
+                        var db = new SqlConnection(sqlConnStr);
+                        phormConn = _connectionBuilder(connectionName, db);
+
+                        // Resolve default schema
+                        if (phormConn.DefaultSchema.Length == 0)
+                        {
+                            phormConn.Open();
+                            using var cmd = ((IDbConnection)phormConn).CreateCommand();
+                            cmd.CommandText = "SELECT schema_name()";
+                            phormConn.DefaultSchema = cmd.ExecuteScalar()?.ToString() ?? connectionString.UserID;
+                        }
+                        _connectionPool[connectionName ?? string.Empty] = phormConn;
+
+                        try
+                        {
+                            Connected?.Invoke(this, phormConn);
+                        }
+                        catch { }
                     }
-                    return c;
-                });
-
-            // Resolve default schema
-            if (phormConn.DefaultSchema.Length == 0)
-            {
-                phormConn.Open();
-                using var cmd = ((IDbConnection)phormConn).CreateCommand();
-                cmd.CommandText = "SELECT schema_name()";
-                phormConn.DefaultSchema = cmd.ExecuteScalar()?.ToString() ?? connectionString.UserID;
+                }
             }
-
-            try
-            {
-                Connected?.Invoke(this, phormConn);
-            }
-            catch { }
             return phormConn;
         }
 
