@@ -1,4 +1,4 @@
-﻿using Shimterface;
+﻿using IFY.Shimr.Extensions;
 using System.Data;
 using System.Diagnostics.CodeAnalysis;
 
