@@ -16,7 +16,7 @@
 		<RepositoryUrl>https://github.com/IFYates/Phorm</RepositoryUrl>
 		<RepositoryType>GitHub</RepositoryType>
 		<PackageReleaseNotes>
-			v1.5.0-beta - More tests. Replaced Shimterface with Shimr
+			v1.5.0-beta - Reduced wasted connections. Replaced Shimterface with Shimr
 			v1.4.0-beta - New ContractMemberAttribute and improved connection handling
 			v1.3.0-beta - Console logs and errors
 			v1.2.0-beta - GenSpec support and event system
