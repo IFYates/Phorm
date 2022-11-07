@@ -11,7 +11,7 @@ namespace IFY.Phorm.SqlClient.IntegrationTests
     [TestClass]
     public class EncryptionTests : SqlIntegrationTestBase
     {
-        [PhormContract(Name = "EncryptionTable")]
+        [PhormContract(Name = "EncryptionTable", Target = DbObjectType.Table)]
         public class DataItem : IUpsert
         {
             public long Id { get; set; }

@@ -176,7 +176,7 @@ namespace IFY.Phorm
         public TResult? Get<TResult>(object? args = null)
             where TResult : class
         {
-            var runner = new PhormContractRunner<IPhormContract>(this, typeof(TResult), null, DbObjectType.Table, args);
+            var runner = new PhormContractRunner<IPhormContract>(this, typeof(TResult), null, DbObjectType.View, args);
             return runner.Get<TResult>();
         }
 
@@ -186,7 +186,7 @@ namespace IFY.Phorm
         public Task<TResult?> GetAsync<TResult>(object? args = null, CancellationToken? cancellationToken = null)
             where TResult : class
         {
-            var runner = new PhormContractRunner<IPhormContract>(this, typeof(TResult), null, DbObjectType.Table, args);
+            var runner = new PhormContractRunner<IPhormContract>(this, typeof(TResult), null, DbObjectType.View, args);
             return runner.GetAsync<TResult>(cancellationToken);
         }
 

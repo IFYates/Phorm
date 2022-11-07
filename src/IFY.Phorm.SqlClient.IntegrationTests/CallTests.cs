@@ -10,7 +10,7 @@ namespace IFY.Phorm.SqlClient.IntegrationTests
     [TestClass]
     public class CallTests : SqlIntegrationTestBase
     {
-        [PhormContract(Name = "CallTestTable")]
+        [PhormContract(Name = "CallTestTable", Target = DbObjectType.Table)]
         public class DataItem : IUpsert, IUpsertOnlyIntWithId
         {
             public long Id { get; set; }
@@ -32,7 +32,7 @@ namespace IFY.Phorm.SqlClient.IntegrationTests
             { }
         }
 
-        [PhormContract(Name = "CallTestTable")]
+        [PhormContract(Name = "CallTestTable", Target = DbObjectType.Table)]
         public class DataItemWithoutText
         {
             public long Id { get; set; }
