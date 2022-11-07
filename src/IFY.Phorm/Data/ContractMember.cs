@@ -46,32 +46,33 @@ namespace IFY.Phorm.Data
         /// <summary>
         /// Whether this member is marked as required on the contract.
         /// </summary>
-        public bool IsRequired { get; }
+        public bool IsRequired { get; private set; }
         /// <summary>
         /// Relevant attributes for this contract member.
         /// </summary>
         public IContractMemberAttribute[] Attributes { get; set; } = Array.Empty<IContractMemberAttribute>();
 
-        internal ContractMemberDefinition(string? dbName, ParameterType dir, PropertyInfo? sourceProperty)
+        internal ContractMemberDefinition(string? dbName, ParameterType dir, PropertyInfo? sourceProperty, Type valueType)
         {
             DbName = dbName ?? string.Empty;
             SourceProperty = sourceProperty;
             SourcePropertyId = sourceProperty != null ? $"{sourceProperty.Name}@{sourceProperty.DeclaringType!.FullName}" : null;
-            ValueType = sourceProperty?.PropertyType ?? typeof(object);
+            ValueType = sourceProperty?.PropertyType ?? valueType;
             Direction = dir;
         }
 
+        // TODO: Cache members by type?
         /// <summary>
         /// Convert properties of any object to <see cref="ContractMemberDefinition"/>s.
         /// </summary>
-        public static ContractMemberDefinition[] ResolveContract(object? obj, Type contractType, bool withReturnValue)
+        public static ContractMemberDefinition[] ResolveContract(object? obj, Type contractType)
         {
             var hasContract = contractType != typeof(IPhormContract);
             if (!hasContract)
             {
                 if (obj == null)
                 {
-                    return addReturnValue(new List<ContractMemberDefinition>()).ToArray();
+                    return Array.Empty<ContractMemberDefinition>();
                 }
                 contractType = obj.GetType();
             }
@@ -85,7 +86,7 @@ namespace IFY.Phorm.Data
             {
                 var prop = isContract
                     ? property
-                    : objType?.GetProperty(property.Name, BindingFlags.Instance | BindingFlags.Public) // Allow use of non-contract
+                    : objType?.GetProperty(property.Name, BindingFlags.Instance | BindingFlags.Public) // Support non-contract
                     ?? property;
 
                 var cmAttr = prop.GetCustomAttribute<ContractMemberAttribute>();
@@ -97,13 +98,22 @@ namespace IFY.Phorm.Data
                     continue;
                 }
 
+                // Skip console members
+                if (prop.PropertyType == typeof(ConsoleLogMember))
+                {
+                    continue;
+                }
+
                 // Check for DataMemberAttribute
                 var dmAttr = prop.GetCustomAttribute<DataMemberAttribute>();
 
                 var memb = new ContractMemberDefinition(
                     dmAttr?.Name ?? prop.Name,
                     (canRead ? ParameterType.Input : 0) | (canWrite ? ParameterType.Output : 0),
-                    property);
+                    property, typeof(object))
+                {
+                    IsRequired = dmAttr?.IsRequired == true
+                };
 
                 members.Add(memb);
                 memb.ResolveAttributes(obj, out _);
@@ -123,32 +133,13 @@ namespace IFY.Phorm.Data
                     continue;
                 }
 
-                var memb = new ContractMemberDefinition(method.Name, ParameterType.Input, null); // TODO
+                var memb = new ContractMemberDefinition(method.Name, ParameterType.Input, null, typeof(object)); // TODO
 
                 members.Add(memb);
                 memb.ResolveAttributes(obj, out _);
             }
 
-            if (!withReturnValue)
-            {
-                return members.ToArray();
-            }
-            return addReturnValue(members).ToArray();
-
-            IList<ContractMemberDefinition> addReturnValue(IList<ContractMemberDefinition> members)
-            {
-                if (!members.Any(p => p.Direction == ParameterType.ReturnValue))
-                {
-                    // Allow for a return value on the object
-                    var retPar = obj?.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public)
-                        .Where(p => p.PropertyType == typeof(ContractMember<int>))
-                        .Select(p => p.GetValue(obj) as ContractMember<int>)
-                        .FirstOrDefault(v => v?.Direction == ParameterType.ReturnValue);
-
-                    members.Add(retPar ?? RetVal());
-                }
-                return members;
-            }
+            return members.ToArray();
         }
 
         public void ResolveAttributes(object? context, out bool isSecure)
@@ -160,11 +151,46 @@ namespace IFY.Phorm.Data
             Attributes.ToList().ForEach(a => a.SetContext(context));
             isSecure = Attributes.OfType<AbstractSecureValueAttribute>().Any();
         }
+
+        public ContractMember Fill(object obj)
+        {
+            object? value = null;
+            if (obj != null && SourceProperty != null)
+            {
+                var objType = obj.GetType();
+                if (SourceProperty.DeclaringType == objType)
+                {
+                    value = SourceProperty.GetValue(obj);
+                }
+                else
+                {
+                    // Support non-contract
+                    value = objType?.GetProperty(SourceProperty.Name, BindingFlags.Instance | BindingFlags.Public).GetValue(obj);
+                }
+            }
+
+            // Wrap as ContractMember, if not already
+#if !NET5_0_OR_GREATER
+            if (!(value is ContractMember memb))
+#else
+            if (value is not ContractMember memb)
+#endif
+            {
+            }
+            else if (memb.Direction == ParameterType.ReturnValue)
+            {
+                return memb;
+            }
+
+            memb = ContractMember.In(DbName, value, SourceProperty); // TODO: other properties (Attributes, ...)
+            memb.Attributes = Attributes;
+            return memb;
+        }
     }
     public class ContractMemberDefinition<T> : ContractMemberDefinition
     {
-        internal ContractMemberDefinition(string? dbName, ParameterType dir, PropertyInfo? sourceProperty)
-            : base(dbName, dir, sourceProperty)
+        internal ContractMemberDefinition(string? dbName, ParameterType dir, PropertyInfo? sourceProperty, Type valueType)
+            : base(dbName, dir, sourceProperty, valueType)
         { }
 
         public ContractMember<T> SetValue(T value)
@@ -187,11 +213,11 @@ namespace IFY.Phorm.Data
         /// </summary>
         public bool HasChanged { get; protected set; }
 
-        internal ContractMember(string? dbName, ParameterType dir, PropertyInfo? sourceProperty)
-            : base(dbName, dir, sourceProperty)
+        internal ContractMember(string? dbName, ParameterType dir, PropertyInfo? sourceProperty, Type valueType)
+            : base(dbName, dir, sourceProperty, valueType)
         { }
-        internal ContractMember(string? dbName, object? value, ParameterType dir, PropertyInfo? sourceProperty)
-            : this(dbName, dir, sourceProperty)
+        internal ContractMember(string? dbName, object? value, ParameterType dir, PropertyInfo? sourceProperty, Type valueType)
+            : this(dbName, dir, sourceProperty, valueType)
         {
             SetValue(value);
             HasChanged = false;
@@ -226,126 +252,45 @@ namespace IFY.Phorm.Data
             return new ConsoleLogMember();
         }
 
-        // TODO: Cache members by type?
         /// <summary>
         /// Convert properties of any object to <see cref="ContractMember"/>s.
         /// </summary>
         public static ContractMember[] GetMembersFromContract(object? obj, Type contractType, bool withReturnValue)
         {
             var hasContract = contractType != typeof(IPhormContract);
-            if (!hasContract)
-            {
-                if (obj == null)
-                {
-                    return addReturnValue(new List<ContractMember>()).ToArray();
-                }
-                contractType = obj.GetType();
-            }
-
-            // Map all member properties
             var objType = obj?.GetType();
             var isContract = hasContract && (obj == null || contractType.IsAssignableFrom(objType));
+
+            var defs = ContractMemberDefinition.ResolveContract(obj, contractType);
+
+            // Resolve member values
             var props = contractType.GetProperties(BindingFlags.Instance | BindingFlags.Public);
             var members = new List<ContractMember>(props.Length);
-            foreach (var prop in props)
+            foreach (var def in defs)
             {
-                if (prop.GetCustomAttribute<IgnoreDataMemberAttribute>() != null)
-                {
-                    continue;
-                }
-
-                object? value;
-                if (!isContract)
-                {
-                    // Allow use of non-contract
-                    var objProp = objType?.GetProperty(prop.Name, BindingFlags.Instance | BindingFlags.Public);
-                    value = obj != null && objProp?.CanRead == true ? objProp.GetValue(obj) : null;
-                }
-                else
-                {
-                    value = obj != null && prop.CanRead ? prop.GetValue(obj) : null;
-                }
-
-                // Wrap as ContractMember, if not already
 #if !NET5_0_OR_GREATER
-                if (!(value is ContractMember memb))
+                if (def.Direction.IsOneOf(ParameterType.Output, ParameterType.ReturnValue, ParameterType.Console))
 #else
-                if (value is not ContractMember memb)
+                if (def.Direction is ParameterType.Output or ParameterType.ReturnValue or ParameterType.Console)
 #endif
                 {
-                    if (!hasContract)
-                    {
-                        memb = In(prop.Name, value);
-                    }
-                    else
-                    {
-                        var cmAttr = prop.GetCustomAttribute<ContractMemberAttribute>();
-                        var readable = prop.CanRead && cmAttr?.DisableInput != true;
-                        var writable = prop.CanWrite && cmAttr?.DisableOutput != true;
-                        if (!readable && !writable)
-                        {
-                            continue;
-                        }
-                        if (!writable)
-                        {
-                            memb = In(prop.Name, value, prop);
-                        }
-                        else if (!readable)
-                        {
-                            memb = Out<object>(prop.Name, prop);
-                        }
-                        else
-                        {
-                            memb = InOut(prop.Name, value, prop);
-                        }
-                    }
+                    var memb = def.Fill(null!);
+                    members.Add(memb);
                 }
-                else if ((int)memb.Direction > 6)
+                else if (obj != null)
                 {
-                    continue;
-                }
-                else
-                {
-                    memb.DbName = prop.Name;
-                }
-
-                members.Add(memb);
-                memb.ResolveAttributes(obj, out _);
-
-                // Check for DataMemberAttribute
-                var dmAttr = prop.GetCustomAttribute<DataMemberAttribute>();
-                if (dmAttr != null)
-                {
-                    memb.DbName = dmAttr.Name ?? memb.DbName;
+                    var memb = def.Fill(obj);
+                    members.Add(memb);
 
                     // Primitives are never "missing", so only check null
-                    if (dmAttr.IsRequired && memb.Value == null)
+                    if (def.IsRequired && memb.Value == null)
                     {
                         throw new ArgumentNullException(memb.DbName, $"Parameter {memb.DbName} for contract {contractType.FullName} is required but was null");
                     }
                 }
-
-                // TODO: omit unused?
             }
 
-            // Map additional member methods
-            var methods = contractType.GetMethods(BindingFlags.Instance | BindingFlags.Public)
-                .Where(m => m.GetParameters().Length == 0).ToArray();
-            foreach (var method in methods)
-            {
-                // Must have attribute
-                var attr = method.GetCustomAttribute<ContractMemberAttribute>();
-                if (attr == null)
-                {
-                    continue;
-                }
-
-                var value = method.Invoke(obj, Array.Empty<object>());
-                var memb = In(method.Name, value, null);
-
-                members.Add(memb);
-                memb.ResolveAttributes(obj, out _);
-            }
+            // TODO: omit unused?
 
             if (!withReturnValue)
             {
@@ -497,26 +442,14 @@ namespace IFY.Phorm.Data
         public new T Value => (T)base.Value!;
 
         internal ContractMember(string name, T value, ParameterType dir)
-            : base(name, value, dir, null)
-        {
-            ValueType = typeof(T);
-        }
+            : base(name, value, dir, null, typeof(T))
+        { }
         internal ContractMember(string name, T value, ParameterType dir, PropertyInfo? sourceProperty)
-            : base(name, value, dir, sourceProperty)
-        {
-            if (ValueType == typeof(object))
-            {
-                ValueType = typeof(T);
-            }
-        }
+            : base(name, value, dir, sourceProperty, typeof(T))
+        { }
         internal ContractMember(string name, ParameterType dir, PropertyInfo? sourceProperty)
-            : base(name, dir, sourceProperty)
-        {
-            if (ValueType == typeof(object))
-            {
-                ValueType = typeof(T);
-            }
-        }
+            : base(name, dir, sourceProperty, typeof(T))
+        { }
 
         public override void SetValue(object? value)
         {
