@@ -1,6 +1,5 @@
 ﻿using IFY.Shimr.Extensions;
 using System.Data;
-using System.Diagnostics.CodeAnalysis;
 
 namespace IFY.Phorm.Connectivity
 {
@@ -15,7 +14,7 @@ namespace IFY.Phorm.Connectivity
         public string? ConnectionName { get; }
         public string DefaultSchema { get; set; } = string.Empty;
 
-        public string ConnectionString { get => _db.ConnectionString; [param: AllowNull] set => _db.ConnectionString = value; }
+        public string ConnectionString { get => _db.ConnectionString; set => _db.ConnectionString = value; }
         public int ConnectionTimeout => _db.ConnectionTimeout;
         public string Database => _db.Database;
         public ConnectionState State => _db.State;

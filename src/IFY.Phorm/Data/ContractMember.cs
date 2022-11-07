@@ -60,7 +60,7 @@ namespace IFY.Phorm.Data
         {
             DbName = dbName ?? string.Empty;
             SourceProperty = sourceProperty;
-            SourcePropertyId = sourceProperty != null ? $"{sourceProperty.Name}@{sourceProperty.DeclaringType.FullName}" : null;
+            SourcePropertyId = sourceProperty != null ? $"{sourceProperty.Name}@{sourceProperty.DeclaringType!.FullName}" : null;
             ValueType = sourceProperty?.PropertyType ?? typeof(object);
             SetValue(value);
             Direction = dir;

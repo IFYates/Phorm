@@ -18,6 +18,6 @@ namespace IFY.Phorm.EventArgs
         /// <summary>
         /// The parameters of the command being executed.
         /// </summary>
-        public Dictionary<string, object> CommandParameters { get; internal set; } = new Dictionary<string, object>();
+        public Dictionary<string, object?> CommandParameters { get; internal set; } = new Dictionary<string, object?>();
     }
 }

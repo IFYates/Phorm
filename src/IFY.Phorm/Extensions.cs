@@ -50,8 +50,13 @@ namespace IFY.Phorm
             };
         }
 
+#if !NET5_0_OR_GREATER
         public static T FromBytes<T>(this byte[]? bytes)
             => (T)FromBytes(bytes, typeof(T));
+#else
+        public static T? FromBytes<T>(this byte[]? bytes)
+            => (T?)FromBytes(bytes, typeof(T));
+#endif
         public static object? FromBytes(this byte[]? bytes, Type resultType)
         {
             if (bytes == null)

@@ -14,7 +14,7 @@ namespace IFY.Phorm.Tests
         public virtual string? ConnectionName { get; }
 
         public virtual string DefaultSchema { get; set; } = "dbo";
-        public virtual string ConnectionString { get => throw new NotImplementedException(); [param: AllowNull] set => throw new NotImplementedException(); }
+        public virtual string ConnectionString { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
         public virtual int ConnectionTimeout => throw new NotImplementedException();
 

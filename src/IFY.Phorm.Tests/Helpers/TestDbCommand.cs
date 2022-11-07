@@ -17,7 +17,7 @@ namespace IFY.Phorm.Tests
         public int ReturnValue { get; set; } = 1;
         public DbDataReader Reader { get; set; }
 
-        public override string CommandText { get; [param: AllowNull] set; } = string.Empty;
+        public override string CommandText { get; set; } = string.Empty;
         public override int CommandTimeout { get; set; }
         public override CommandType CommandType { get; set; }
         public new virtual IDbConnection? Connection { get; set; }

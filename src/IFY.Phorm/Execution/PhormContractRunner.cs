@@ -117,7 +117,8 @@ namespace IFY.Phorm
             {
                 CommandGuid = Guid.NewGuid(),
                 CommandText = cmd.CommandText,
-                CommandParameters = cmd.Parameters.Cast<IDbDataParameter>().ToDictionary(p => p.ParameterName, p => p.Value)
+                CommandParameters = cmd.Parameters.Cast<IDbDataParameter>()
+                    .ToDictionary(p => p.ParameterName, p => p.Value)
             };
             _session.OnCommandExecuting(eventArgs);
 
