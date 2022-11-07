@@ -4,6 +4,7 @@ using IFY.Phorm.EventArgs;
 using IFY.Phorm.Execution;
 using System;
 using System.Data;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -12,6 +13,36 @@ namespace IFY.Phorm
     public abstract partial class AbstractPhormSession : IPhormSession
     {
         protected readonly IPhormDbConnectionProvider _connectionProvider;
+
+        protected readonly string? _connectionName;
+
+        public string ViewPrefix
+        {
+            get;
+#if NETSTANDARD || NETCOREAPP
+            set;
+#else
+            init;
+#endif
+        } = GlobalSettings.ViewPrefix;
+        public string ProcedurePrefix
+        {
+            get;
+#if NETSTANDARD || NETCOREAPP
+            set;
+#else
+            init;
+#endif
+        } = GlobalSettings.ProcedurePrefix;
+        public string TablePrefix
+        {
+            get;
+#if NETSTANDARD || NETCOREAPP
+            set;
+#else
+            init;
+#endif
+        } = GlobalSettings.TablePrefix;
 
         #region Events
 
@@ -56,14 +87,15 @@ namespace IFY.Phorm
 
         public bool StrictResultSize { get; set; } = GlobalSettings.StrictResultSize;
 
-        public AbstractPhormSession(IPhormDbConnectionProvider connectionProvider)
+        public AbstractPhormSession(IPhormDbConnectionProvider connectionProvider, string? connectionName)
         {
             _connectionProvider = connectionProvider;
+            _connectionName = connectionName;
         }
 
         #region Connection
 
-        protected abstract string? GetConnectionName();
+        protected virtual string? GetConnectionName() => _connectionName;
 
         public abstract IPhormSession SetConnectionName(string connectionName);
 
@@ -76,6 +108,16 @@ namespace IFY.Phorm
 
         protected virtual IAsyncDbCommand CreateCommand(IPhormDbConnection connection, string schema, string objectName, DbObjectType objectType)
         {
+            // Complete object name
+            objectName = objectType switch
+            {
+                DbObjectType.StoredProcedure => objectName.FirstOrDefault() == '#'
+                    ? objectName : ProcedurePrefix + objectName, // Support temp sprocs
+                DbObjectType.View => ViewPrefix + objectName,
+                DbObjectType.Table => TablePrefix + objectName,
+                _ => throw new NotSupportedException($"Unsupported object type: {objectType}")
+            };
+
             var cmd = connection.CreateCommand();
 
 #if NETSTANDARD || NETCOREAPP

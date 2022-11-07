@@ -27,7 +27,7 @@ namespace IFY.Phorm.Tests
         {
         }
         public TestPhormSession(IPhormDbConnectionProvider connectionProvider)
-            : base(connectionProvider)
+            : base(connectionProvider, null)
         {
         }
 

@@ -231,7 +231,7 @@ namespace IFY.Phorm.Tests
             // Assert
             Assert.AreEqual(0, _unwantedInvocations);
             Assert.AreSame(phorm, instanceEvent!.Value.sender);
-            Assert.AreEqual("[schema].[CallTest]", instanceEvent.Value.args.CommandText);
+            Assert.AreEqual("[schema].[usp_CallTest]", instanceEvent.Value.args.CommandText);
             Assert.AreEqual(3, instanceEvent.Value.args.CommandParameters.Count); // + return
             Assert.AreEqual(1, (int)instanceEvent.Value.args.CommandParameters["@Arg1"]!);
             Assert.AreEqual("2", (string)instanceEvent.Value.args.CommandParameters["@Arg2"]!);
@@ -291,7 +291,7 @@ namespace IFY.Phorm.Tests
             // Assert
             Assert.AreSame(phorm, instanceEvent!.Value.sender);
             Assert.AreEqual(commandGuid, instanceEvent.Value.args.CommandGuid);
-            Assert.AreEqual("[schema].[CallTest]", instanceEvent.Value.args.CommandText);
+            Assert.AreEqual("[schema].[usp_CallTest]", instanceEvent.Value.args.CommandText);
             Assert.AreEqual(3, instanceEvent.Value.args.CommandParameters.Count); // + return
             Assert.AreEqual(1, (int)instanceEvent.Value.args.CommandParameters["@Arg1"]!);
             Assert.AreEqual("2", (string)instanceEvent.Value.args.CommandParameters["@Arg2"]!);
@@ -345,7 +345,7 @@ namespace IFY.Phorm.Tests
             // Assert
             Assert.AreEqual(0, _unwantedInvocations);
             Assert.AreSame(phorm, instanceEvent!.Value.sender);
-            Assert.AreEqual("[schema].[CallTest]", instanceEvent.Value.args.CommandText);
+            Assert.AreEqual("[schema].[usp_CallTest]", instanceEvent.Value.args.CommandText);
             Assert.AreEqual(3, instanceEvent.Value.args.CommandParameters.Count); // + return
             Assert.AreEqual(1, (int)instanceEvent.Value.args.CommandParameters["@Arg1"]!);
             Assert.AreEqual("2", (string)instanceEvent.Value.args.CommandParameters["@Arg2"]!);
@@ -415,7 +415,7 @@ namespace IFY.Phorm.Tests
             // Assert
             Assert.AreSame(phorm, instanceEvent!.Value.sender);
             Assert.AreEqual(commandGuid, instanceEvent.Value.args.CommandGuid);
-            Assert.AreEqual("[schema].[CallTest]", instanceEvent.Value.args.CommandText);
+            Assert.AreEqual("[schema].[usp_CallTest]", instanceEvent.Value.args.CommandText);
             Assert.AreEqual(3, instanceEvent.Value.args.CommandParameters.Count); // + return
             Assert.AreEqual(1, (int)instanceEvent.Value.args.CommandParameters["@Arg1"]!);
             Assert.AreEqual("2", (string)instanceEvent.Value.args.CommandParameters["@Arg2"]!);

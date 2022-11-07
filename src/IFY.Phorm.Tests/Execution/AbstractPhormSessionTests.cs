@@ -78,7 +78,7 @@ namespace IFY.Phorm.Tests
 
             // Assert
             Assert.AreEqual(1, res);
-            Assert.AreEqual("[dbo].[TestContract]", phorm.Commands[0].CommandText);
+            Assert.AreEqual("[dbo].[usp_TestContract]", phorm.Commands[0].CommandText);
             Assert.AreEqual(CommandType.StoredProcedure, phorm.Commands[0].CommandType);
         }
 
@@ -103,7 +103,7 @@ namespace IFY.Phorm.Tests
 
             // Assert
             Assert.AreEqual(1, res);
-            Assert.AreEqual("[dbo].[TestContract]", phorm.Commands[0].CommandText);
+            Assert.AreEqual("[dbo].[usp_TestContract]", phorm.Commands[0].CommandText);
             Assert.AreEqual(CommandType.StoredProcedure, phorm.Commands[0].CommandType);
         }
 
@@ -130,7 +130,7 @@ namespace IFY.Phorm.Tests
 
             // Assert
             Assert.AreEqual(1, res);
-            Assert.AreEqual("[dbo].[TestContract]", phorm.Commands[0].CommandText);
+            Assert.AreEqual("[dbo].[usp_TestContract]", phorm.Commands[0].CommandText);
             Assert.AreEqual(CommandType.StoredProcedure, phorm.Commands[0].CommandType);
         }
 

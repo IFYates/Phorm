@@ -77,7 +77,7 @@ namespace IFY.Phorm.Tests
             // Assert
             Assert.AreEqual(1, res);
             Assert.AreEqual(CommandType.StoredProcedure, cmd.CommandType);
-            Assert.AreEqual("[schema].[CallTest]", cmd.CommandText);
+            Assert.AreEqual("[schema].[usp_CallTest]", cmd.CommandText);
 
             var pars = cmd.Parameters.AsParameters();
             Assert.AreEqual(2, pars.Length);
@@ -108,7 +108,7 @@ namespace IFY.Phorm.Tests
             // Assert
             Assert.AreEqual(1, res);
             Assert.AreEqual(CommandType.StoredProcedure, cmd.CommandType);
-            Assert.AreEqual("[schema].[TestContract]", cmd.CommandText);
+            Assert.AreEqual("[schema].[usp_TestContract]", cmd.CommandText);
 
             var pars = cmd.Parameters.AsParameters();
             Assert.AreEqual(2, pars.Length);
@@ -139,7 +139,7 @@ namespace IFY.Phorm.Tests
             // Assert
             Assert.AreEqual(1, res);
             Assert.AreEqual(CommandType.StoredProcedure, cmd.CommandType);
-            Assert.AreEqual("[otherSchema].[IAmRenamedContract]", cmd.CommandText);
+            Assert.AreEqual("[otherSchema].[usp_IAmRenamedContract]", cmd.CommandText);
 
             var pars = cmd.Parameters.AsParameters();
             Assert.AreEqual("@RenamedArg", pars[0].ParameterName);
