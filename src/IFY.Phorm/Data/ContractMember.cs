@@ -15,31 +15,23 @@ namespace IFY.Phorm.Data
     /// A property on a contract, with type helping.
     /// Supports in (to database) and out (from database) as well as the special-case return-value
     /// </summary>
-    public abstract class ContractMember
+    public class ContractMemberDefinition
     {
         /// <summary>
-        /// Name as given in stored procedure
+        /// Name as given in stored procedure.
         /// </summary>
-        public string DbName { get; set; }
+        public string DbName { get; }
         /// <summary>
-        /// Size of data to/from database
-        /// 0 is unspecified / unlimited
+        /// Size of data to/from database.
+        /// 0 is unspecified / unlimited.
         /// </summary>
         public int Size { get; } // TODO: Not yet used. Drop if not needed.
-        /// <summary>
-        /// Value being passed to or returned from stored procedure
-        /// </summary>
-        public object? Value { get; protected set; }
-        /// <summary>
-        /// Value has changed since originally set.
-        /// </summary>
-        public bool HasChanged { get; protected set; }
         /// <summary>
         /// Type of parameter from POV of datasource.
         /// </summary>
         public ParameterType Direction { get; }
         /// <summary>
-        /// Property of underlying DTO/Contract used to map types
+        /// Property of underlying DTO/Contract used to map types.
         /// </summary>
         public PropertyInfo? SourceProperty { get; }
         /// <summary>
@@ -47,31 +39,173 @@ namespace IFY.Phorm.Data
         /// </summary>
         public string? SourcePropertyId { get; }
         /// <summary>
-        /// The true type of the value, even if null
-        /// Can be different to property value
+        /// The true type of the value, even if null.
+        /// Can be different to property value.
         /// </summary>
-        public Type ValueType { get; protected set; }
+        public Type ValueType { get; }
+        /// <summary>
+        /// Whether this member is marked as required on the contract.
+        /// </summary>
+        public bool IsRequired { get; }
         /// <summary>
         /// Relevant attributes for this contract member.
         /// </summary>
         public IContractMemberAttribute[] Attributes { get; set; } = Array.Empty<IContractMemberAttribute>();
 
-        internal ContractMember(string? dbName, object? value, ParameterType dir, PropertyInfo? sourceProperty)
+        internal ContractMemberDefinition(string? dbName, ParameterType dir, PropertyInfo? sourceProperty)
         {
             DbName = dbName ?? string.Empty;
             SourceProperty = sourceProperty;
             SourcePropertyId = sourceProperty != null ? $"{sourceProperty.Name}@{sourceProperty.DeclaringType!.FullName}" : null;
             ValueType = sourceProperty?.PropertyType ?? typeof(object);
-            SetValue(value);
             Direction = dir;
+        }
+
+        /// <summary>
+        /// Convert properties of any object to <see cref="ContractMemberDefinition"/>s.
+        /// </summary>
+        public static ContractMemberDefinition[] ResolveContract(object? obj, Type contractType, bool withReturnValue)
+        {
+            var hasContract = contractType != typeof(IPhormContract);
+            if (!hasContract)
+            {
+                if (obj == null)
+                {
+                    return addReturnValue(new List<ContractMemberDefinition>()).ToArray();
+                }
+                contractType = obj.GetType();
+            }
+
+            // Map all member properties
+            var objType = obj?.GetType();
+            var isContract = hasContract && (obj == null || contractType.IsAssignableFrom(objType));
+            var props = contractType.GetProperties(BindingFlags.Instance | BindingFlags.Public);
+            var members = new List<ContractMemberDefinition>(props.Length);
+            foreach (var property in props)
+            {
+                var prop = isContract
+                    ? property
+                    : objType?.GetProperty(property.Name, BindingFlags.Instance | BindingFlags.Public) // Allow use of non-contract
+                    ?? property;
+
+                var cmAttr = prop.GetCustomAttribute<ContractMemberAttribute>();
+                var canRead = prop.CanRead && cmAttr?.DisableInput != true;
+                var canWrite = prop.CanWrite && cmAttr?.DisableOutput != true;
+
+                if (prop.GetCustomAttribute<IgnoreDataMemberAttribute>() != null)
+                {
+                    continue;
+                }
+
+                // Check for DataMemberAttribute
+                var dmAttr = prop.GetCustomAttribute<DataMemberAttribute>();
+
+                var memb = new ContractMemberDefinition(
+                    dmAttr?.Name ?? prop.Name,
+                    (canRead ? ParameterType.Input : 0) | (canWrite ? ParameterType.Output : 0),
+                    property);
+
+                members.Add(memb);
+                memb.ResolveAttributes(obj, out _);
+
+                // TODO: omit unused?
+            }
+
+            // Map additional member methods
+            var methods = contractType.GetMethods(BindingFlags.Instance | BindingFlags.Public)
+                .Where(m => m.GetParameters().Length == 0).ToArray();
+            foreach (var method in methods)
+            {
+                // Must have attribute
+                var attr = method.GetCustomAttribute<ContractMemberAttribute>();
+                if (attr == null)
+                {
+                    continue;
+                }
+
+                var memb = new ContractMemberDefinition(method.Name, ParameterType.Input, null); // TODO
+
+                members.Add(memb);
+                memb.ResolveAttributes(obj, out _);
+            }
+
+            if (!withReturnValue)
+            {
+                return members.ToArray();
+            }
+            return addReturnValue(members).ToArray();
+
+            IList<ContractMemberDefinition> addReturnValue(IList<ContractMemberDefinition> members)
+            {
+                if (!members.Any(p => p.Direction == ParameterType.ReturnValue))
+                {
+                    // Allow for a return value on the object
+                    var retPar = obj?.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public)
+                        .Where(p => p.PropertyType == typeof(ContractMember<int>))
+                        .Select(p => p.GetValue(obj) as ContractMember<int>)
+                        .FirstOrDefault(v => v?.Direction == ParameterType.ReturnValue);
+
+                    members.Add(retPar ?? RetVal());
+                }
+                return members;
+            }
+        }
+
+        public void ResolveAttributes(object? context, out bool isSecure)
+        {
+            if (SourceProperty != null && Attributes.Length == 0)
+            {
+                Attributes = SourceProperty.GetCustomAttributes().OfType<IContractMemberAttribute>().ToArray();
+            }
+            Attributes.ToList().ForEach(a => a.SetContext(context));
+            isSecure = Attributes.OfType<AbstractSecureValueAttribute>().Any();
+        }
+    }
+    public class ContractMemberDefinition<T> : ContractMemberDefinition
+    {
+        internal ContractMemberDefinition(string? dbName, ParameterType dir, PropertyInfo? sourceProperty)
+            : base(dbName, dir, sourceProperty)
+        { }
+
+        public ContractMember<T> SetValue(T value)
+        {
+            return new ContractMember<T>(DbName, value, Direction, SourceProperty);
+        }
+    }
+
+    /// <summary>
+    /// The current instance value of a contract member.
+    /// </summary>
+    public abstract class ContractMember : ContractMemberDefinition
+    {
+        /// <summary>
+        /// Value being passed to or returned from stored procedure.
+        /// </summary>
+        public object? Value { get; protected set; }
+        /// <summary>
+        /// Value has changed since originally set.
+        /// </summary>
+        public bool HasChanged { get; protected set; }
+
+        internal ContractMember(string? dbName, ParameterType dir, PropertyInfo? sourceProperty)
+            : base(dbName, dir, sourceProperty)
+        { }
+        internal ContractMember(string? dbName, object? value, ParameterType dir, PropertyInfo? sourceProperty)
+            : this(dbName, dir, sourceProperty)
+        {
+            SetValue(value);
             HasChanged = false;
         }
 
-        public static ContractMember<T> In<T>(string dbName, T value, PropertyInfo? sourceProperty = null)
+        internal static ContractMember<T> In<T>(string dbName, T value, PropertyInfo? sourceProperty = null)
         {
             return new ContractMember<T>(dbName, value, ParameterType.Input, sourceProperty);
         }
-        public static ContractMember<T> InOut<T>(string dbName, T value, PropertyInfo? sourceProperty = null)
+        internal static ContractMember<T> InOut<T>(T value)
+        {
+            return new ContractMember<T>(string.Empty, value, ParameterType.InputOutput);
+        }
+        internal static ContractMember<T> InOut<T>(string dbName, T value, PropertyInfo? sourceProperty = null)
         {
             return new ContractMember<T>(dbName, value, ParameterType.InputOutput, sourceProperty);
         }
@@ -79,9 +213,9 @@ namespace IFY.Phorm.Data
         {
             return new ContractMember<T>(string.Empty, default!, ParameterType.Output);
         }
-        public static ContractMember<T> Out<T>(string dbName, PropertyInfo? sourceProperty = null)
+        internal static ContractMember<T> Out<T>(string dbName, PropertyInfo? sourceProperty = null)
         {
-            return new ContractMember<T>(dbName, default!, ParameterType.Output, sourceProperty);
+            return new ContractMember<T>(dbName, ParameterType.Output, sourceProperty);
         }
         public static ContractMember<int> RetVal()
         {
@@ -115,6 +249,11 @@ namespace IFY.Phorm.Data
             var members = new List<ContractMember>(props.Length);
             foreach (var prop in props)
             {
+                if (prop.GetCustomAttribute<IgnoreDataMemberAttribute>() != null)
+                {
+                    continue;
+                }
+
                 object? value;
                 if (!isContract)
                 {
@@ -127,16 +266,12 @@ namespace IFY.Phorm.Data
                     value = obj != null && prop.CanRead ? prop.GetValue(obj) : null;
                 }
 
-                if (prop.GetCustomAttribute<IgnoreDataMemberAttribute>() != null)
-                {
-                    continue;
-                }
-
-                // Check for ContractMember attribute
-                var cmAttr = prop.GetCustomAttribute<ContractMemberAttribute>();
-
                 // Wrap as ContractMember, if not already
+#if !NET5_0_OR_GREATER
                 if (!(value is ContractMember memb))
+#else
+                if (value is not ContractMember memb)
+#endif
                 {
                     if (!hasContract)
                     {
@@ -144,6 +279,7 @@ namespace IFY.Phorm.Data
                     }
                     else
                     {
+                        var cmAttr = prop.GetCustomAttribute<ContractMemberAttribute>();
                         var readable = prop.CanRead && cmAttr?.DisableInput != true;
                         var writable = prop.CanWrite && cmAttr?.DisableOutput != true;
                         if (!readable && !writable)
@@ -231,16 +367,6 @@ namespace IFY.Phorm.Data
                 }
                 return members;
             }
-        }
-
-        public void ResolveAttributes(object? context, out bool isSecure)
-        {
-            if (SourceProperty != null && Attributes.Length == 0)
-            {
-                Attributes = SourceProperty.GetCustomAttributes().OfType<IContractMemberAttribute>().ToArray();
-            }
-            Attributes.ToList().ForEach(a => a.SetContext(context));
-            isSecure = Attributes.OfType<AbstractSecureValueAttribute>().Any();
         }
 
         public IDataParameter ToDataParameter(IAsyncDbCommand cmd)
@@ -377,6 +503,14 @@ namespace IFY.Phorm.Data
         }
         internal ContractMember(string name, T value, ParameterType dir, PropertyInfo? sourceProperty)
             : base(name, value, dir, sourceProperty)
+        {
+            if (ValueType == typeof(object))
+            {
+                ValueType = typeof(T);
+            }
+        }
+        internal ContractMember(string name, ParameterType dir, PropertyInfo? sourceProperty)
+            : base(name, dir, sourceProperty)
         {
             if (ValueType == typeof(object))
             {

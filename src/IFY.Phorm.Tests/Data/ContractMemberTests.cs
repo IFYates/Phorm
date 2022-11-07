@@ -234,6 +234,22 @@ namespace IFY.Phorm.Data.Tests
             Assert.AreSame(obj.ReturnValue, (ContractMember<int>)res[0]);
         }
 
+        [TestMethod]
+        public void GetMembersFromContract__()
+        {
+            // Arrange
+            var obj = new ObjectWithReturnValueProperty();
+
+            // Act
+            var res = ContractMember.GetMembersFromContract(obj, typeof(IPhormContract), false);
+
+            // Assert
+            Assert.Inconclusive();
+            Assert.AreEqual(1, res.Length);
+            Assert.AreEqual(ParameterType.ReturnValue, ((ContractMember<int>)res[0]).Direction);
+            Assert.AreSame(obj.ReturnValue, (ContractMember<int>)res[0]);
+        }
+
         #endregion GetMembersFromContract
 
         #region ToDataParameter
