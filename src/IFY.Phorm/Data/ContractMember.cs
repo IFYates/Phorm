@@ -110,18 +110,18 @@ namespace IFY.Phorm.Data
                 contractType = obj.GetType();
             }
 
+            // Map all member properties
             var objType = obj?.GetType();
             var isContract = hasContract && (obj == null || contractType.IsAssignableFrom(objType));
             var props = contractType.GetProperties(BindingFlags.Instance | BindingFlags.Public);
             var members = new List<ContractMember>(props.Length);
             foreach (var prop in props)
             {
-                PropertyInfo? objProp = null;
                 object? value;
                 if (!isContract)
                 {
                     // Allow use of non-contract
-                    objProp = objType?.GetProperty(prop.Name, BindingFlags.Instance | BindingFlags.Public);
+                    var objProp = objType?.GetProperty(prop.Name, BindingFlags.Instance | BindingFlags.Public);
                     value = obj != null && objProp?.CanRead == true ? objProp.GetValue(obj) : null;
                 }
                 else
@@ -192,6 +192,25 @@ namespace IFY.Phorm.Data
                 }
 
                 // TODO: omit unused?
+            }
+
+            // Map additional member methods
+            var methods = contractType.GetMethods(BindingFlags.Instance | BindingFlags.Public)
+                .Where(m => m.GetParameters().Length == 0).ToArray();
+            foreach (var method in methods)
+            {
+                // Must have attribute
+                var attr = method.GetCustomAttribute<ContractMemberAttribute>();
+                if (attr == null)
+                {
+                    continue;
+                }
+
+                var value = method.Invoke(obj, Array.Empty<object>());
+                var memb = In(method.Name, value, null);
+
+                members.Add(memb);
+                memb.ResolveAttributes(obj, out _);
             }
 
             if (!withReturnValue)
