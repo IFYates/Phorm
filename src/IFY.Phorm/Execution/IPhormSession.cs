@@ -39,9 +39,9 @@ namespace IFY.Phorm
 
         /// <summary>
         /// If true, will consume execution errors and treat like a console message.
-        /// Defaults to value in <see cref="GlobalSettings.ErrorsAsConsoleMessage"/>.
+        /// Defaults to value in <see cref="GlobalSettings.ExceptionsAsConsoleMessage"/>.
         /// </summary>
-        bool ErrorsAsConsoleMessage { get; set; }
+        bool ExceptionsAsConsoleMessage { get; set; }
 
         /// <summary>
         /// Whether to throw a <see cref="System.InvalidOperationException"/> if an invocation result includes more records than expected.

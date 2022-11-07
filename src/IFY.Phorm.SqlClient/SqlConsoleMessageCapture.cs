@@ -28,7 +28,7 @@ namespace IFY.Phorm.SqlClient
 
         private void captureInfoMessage(object sender, SqlInfoMessageEventArgs e)
         {
-            // TODO: possible only for cmd?
+            // TODO: How to limit to only events for this session?
             fromSqlErrors(e.Errors, false);
         }
 
@@ -36,7 +36,6 @@ namespace IFY.Phorm.SqlClient
         {
             foreach (SqlError err in errors)
             {
-                // TODO: other info
                 OnConsoleMessage(new ConsoleMessage
                 {
                     IsError = isException,

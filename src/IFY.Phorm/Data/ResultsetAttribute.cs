@@ -24,7 +24,7 @@ namespace IFY.Phorm.Data
             if (_lastSelectorType != parent.GetType())
             {
                 var selectorProp = parent.GetType().GetProperty(SelectorPropertyName);
-#if NETSTANDARD || NETCOREAPP
+#if !NET5_0_OR_GREATER
                 if (selectorProp?.PropertyType == null || !typeof(IRecordMatcher).IsAssignableFrom(selectorProp.PropertyType))
 #else
                 if (selectorProp?.PropertyType.IsAssignableTo(typeof(IRecordMatcher)) != true)

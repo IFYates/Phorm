@@ -9,13 +9,11 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization;
 
-// TODO: simplify
 namespace IFY.Phorm.Data
 {
     /// <summary>
     /// A property on a contract, with type helping.
     /// Supports in (to database) and out (from database) as well as the special-case return-value
-    /// TODO: Column cover
     /// </summary>
     public abstract class ContractMember
     {
@@ -27,7 +25,7 @@ namespace IFY.Phorm.Data
         /// Size of data to/from database
         /// 0 is unspecified / unlimited
         /// </summary>
-        public int Size { get; } // TODO: not yet set
+        public int Size { get; } // TODO: Not yet used. Drop if not needed.
         /// <summary>
         /// Value being passed to or returned from stored procedure
         /// </summary>
@@ -250,7 +248,7 @@ namespace IFY.Phorm.Data
             var param = cmd.CreateParameter();
             param.ParameterName = "@" + DbName;
             param.Direction = (ParameterDirection)(int)Direction;
-#if NETSTANDARD || NETCOREAPP
+#if !NET5_0_OR_GREATER
             if (Direction.IsOneOf(ParameterType.Output, ParameterType.InputOutput))
 #else
             if (Direction is ParameterType.Output or ParameterType.InputOutput)
@@ -288,7 +286,6 @@ namespace IFY.Phorm.Data
                 }
             }
 
-            // TODO: Is this needed as also in PhormContractRunner?
             // Check for DataMemberAttribute
             var dmAttr = SourceProperty?.GetCustomAttribute<DataMemberAttribute>();
             if (dmAttr != null)

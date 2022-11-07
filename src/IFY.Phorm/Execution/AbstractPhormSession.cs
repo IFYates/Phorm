@@ -19,7 +19,7 @@ namespace IFY.Phorm
         public string ProcedurePrefix
         {
             get;
-#if NETSTANDARD || NETCOREAPP
+#if !NET5_0_OR_GREATER
             set;
 #else
             init;
@@ -28,7 +28,7 @@ namespace IFY.Phorm
         public string TablePrefix
         {
             get;
-#if NETSTANDARD || NETCOREAPP
+#if !NET5_0_OR_GREATER
             set;
 #else
             init;
@@ -37,7 +37,7 @@ namespace IFY.Phorm
         public string ViewPrefix
         {
             get;
-#if NETSTANDARD || NETCOREAPP
+#if !NET5_0_OR_GREATER
             set;
 #else
             init;
@@ -83,7 +83,7 @@ namespace IFY.Phorm
 
         #endregion Events
 
-        public bool ErrorsAsConsoleMessage { get; set; } = GlobalSettings.ErrorsAsConsoleMessage;
+        public bool ExceptionsAsConsoleMessage { get; set; } = GlobalSettings.ExceptionsAsConsoleMessage;
 
         public bool StrictResultSize { get; set; } = GlobalSettings.StrictResultSize;
 
@@ -120,7 +120,7 @@ namespace IFY.Phorm
 
             var cmd = connection.CreateCommand();
 
-#if NETSTANDARD || NETCOREAPP
+#if !NET5_0_OR_GREATER
             if (objectType.IsOneOf(DbObjectType.Table, DbObjectType.View))
 #else
             if (objectType is DbObjectType.Table or DbObjectType.View)
@@ -128,7 +128,7 @@ namespace IFY.Phorm
             {
                 cmd.CommandType = CommandType.Text;
                 // TODO: Could replace '*' with desired column names, validated by cached SchemaOnly call
-                // TODO: Can do TOP 2 if want to check for first item
+                // TODO: Can do TOP 2 if we know single entity Get, to know only 1 item
                 cmd.CommandText = $"SELECT * FROM [{schema}].[{objectName}]";
                 return cmd;
             }

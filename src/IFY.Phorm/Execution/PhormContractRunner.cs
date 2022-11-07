@@ -80,7 +80,7 @@ namespace IFY.Phorm
             var cmd = _session.CreateCommand(_schema, _objectName, _objectType);
 
             // Build WHERE clause from members
-#if NETSTANDARD || NETCOREAPP
+#if !NET5_0_OR_GREATER
             if (_objectType.IsOneOf(DbObjectType.Table, DbObjectType.View))
 #else
             if (_objectType is DbObjectType.Table or DbObjectType.View)
@@ -263,7 +263,6 @@ namespace IFY.Phorm
                 }
             }
 
-            // TODO: only if needed
             // Support console capture
             if (consoleEvents?.Count() > 0)
             {
@@ -287,7 +286,7 @@ namespace IFY.Phorm
 
         private bool safeRead(IDataReader rdr, AbstractConsoleMessageCapture console)
         {
-            if (_session.ErrorsAsConsoleMessage)
+            if (_session.ExceptionsAsConsoleMessage)
             {
                 try
                 {
@@ -483,7 +482,7 @@ namespace IFY.Phorm
                     }
                     else
                     {
-                        // TODO: warnings for dropped records
+                        // TODO: Warning events for dropped records
                     }
                 }
             }

@@ -31,7 +31,7 @@ namespace IFY.Phorm.Tests
 
             var phorm = new TestPhormSession(new TestPhormConnectionProvider(_ => conn))
             {
-                ErrorsAsConsoleMessage = true
+                ExceptionsAsConsoleMessage = true
             };
 
             // Act
@@ -63,7 +63,7 @@ namespace IFY.Phorm.Tests
                 {
                     ProcessExceptionLogic = (e) => e == readException
                 },
-                ErrorsAsConsoleMessage = true
+                ExceptionsAsConsoleMessage = true
             };
 
             // Act
@@ -88,7 +88,7 @@ namespace IFY.Phorm.Tests
 
             var phorm = new TestPhormSession(new TestPhormConnectionProvider(_ => conn))
             {
-                ErrorsAsConsoleMessage = true
+                ExceptionsAsConsoleMessage = true
             };
 
             // Act
@@ -120,7 +120,7 @@ namespace IFY.Phorm.Tests
                 {
                     ProcessExceptionLogic = (e) => e == readException
                 },
-                ErrorsAsConsoleMessage = true
+                ExceptionsAsConsoleMessage = true
             };
 
             // Act
