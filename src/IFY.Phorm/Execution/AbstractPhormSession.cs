@@ -147,7 +147,7 @@ namespace IFY.Phorm
         protected internal virtual AbstractConsoleMessageCapture StartConsoleCapture(Guid commandGuid, IAsyncDbCommand cmd)
             => NullConsoleMessageCapture.Instance;
 
-        private class NullConsoleMessageCapture : AbstractConsoleMessageCapture
+        protected internal class NullConsoleMessageCapture : AbstractConsoleMessageCapture
         {
             public static readonly NullConsoleMessageCapture Instance = new NullConsoleMessageCapture();
             private NullConsoleMessageCapture() : base(null!, Guid.Empty) { }

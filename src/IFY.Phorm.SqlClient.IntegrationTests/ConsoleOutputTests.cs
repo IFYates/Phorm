@@ -186,7 +186,7 @@ RETURN 1");
         {
             // Arrange
             var phorm = getPhormSession(out var connProv);
-            phorm.ErrorsAsConsoleMessage = true;
+            phorm.ExceptionsAsConsoleMessage  = true;
             setConsoleOutputErrorContract(connProv);
 
             var arg = new ConsoleTest();
@@ -213,7 +213,7 @@ RETURN 1");
         {
             // Arrange
             var phorm = getPhormSession(out var connProv);
-            phorm.ErrorsAsConsoleMessage = false;
+            phorm.ExceptionsAsConsoleMessage = false;
             setConsoleOutputErrorContract(connProv);
 
             var arg = new ConsoleTest();
@@ -233,7 +233,7 @@ RETURN 1");
         {
             // Arrange
             var phorm = getPhormSession(out var connProv);
-            phorm.ErrorsAsConsoleMessage = true;
+            phorm.ExceptionsAsConsoleMessage = true;
             setConsoleOutputErrorContract(connProv);
 
             var arg = new
@@ -264,7 +264,7 @@ RETURN 1");
         {
             // Arrange
             var phorm = getPhormSession(out var connProv);
-            phorm.ErrorsAsConsoleMessage = false;
+            phorm.ExceptionsAsConsoleMessage = false;
             setConsoleOutputErrorContract(connProv);
 
             var arg = new ConsoleTest();

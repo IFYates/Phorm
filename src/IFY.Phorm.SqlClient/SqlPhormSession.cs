@@ -30,7 +30,7 @@ namespace IFY.Phorm.SqlClient
                 return new SqlConsoleMessageCapture(this, commandGuid, sql);
             }
 
-            return base.StartConsoleCapture(commandGuid, cmd);
+            return NullConsoleMessageCapture.Instance;
         }
 
         #endregion Console capture

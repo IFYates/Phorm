@@ -57,7 +57,11 @@ RETURN 1");
                 for (var i = 0; i < 5; ++i)
                 {
                     var res = phorm1.From("ContextTest").Get<ContextTest>()!;
-                    results.Add("1:" + res.Context);
+                    lock (results)
+                    {
+                        results.Add("1:" + res.Context);
+                    }
+
                     Thread.Sleep(i * 10);
                 }
             });
@@ -66,13 +70,18 @@ RETURN 1");
                 for (var i = 0; i < 5; ++i)
                 {
                     var res = phorm2.From("ContextTest").Get<ContextTest>()!;
-                    results.Add("2:" + res.Context);
+                    lock (results)
+                    {
+                        results.Add("2:" + res.Context);
+                    }
+
                     Thread.Sleep((5 - i) * 10);
                 }
             });
             Task.WaitAll(t1, t2);
 
             // Assert
+            Assert.AreEqual(10, results.Count);
             Assert.AreEqual(5, results.Count(r => r == "1:TestContext1"));
             Assert.AreEqual(5, results.Count(r => r == "2:TestContext2"));
         }

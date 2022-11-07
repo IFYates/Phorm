@@ -1,52 +1,16 @@
 ﻿using IFY.Phorm.EventArgs;
+using IFY.Phorm.SqlClient.Tests.Helpers;
 using Microsoft.Data.SqlClient;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
 
 namespace IFY.Phorm.SqlClient.Tests
 {
     [TestClass]
     public class SqlConsoleMessageCaptureTests
     {
-        #region Microsoft.Data.SqlClient helpers
-        private static SqlException newSqlException(string message, SqlErrorCollection errs)
-        {
-            return (SqlException)typeof(SqlException).GetConstructors(BindingFlags.Instance | BindingFlags.NonPublic)
-                .First().Invoke(new object[] { message, errs, null!, Guid.Empty });
-        }
-        private static SqlError newSqlError(int number, byte state, byte errorClass, string server, string message, string procedure, int lineNumber, uint win32ErrCode, Exception innerException)
-        {
-            return (SqlError)typeof(SqlError).GetConstructors(BindingFlags.Instance | BindingFlags.NonPublic)
-                .First().Invoke(new object[] { number, state, errorClass, server, message, procedure, lineNumber, win32ErrCode, innerException });
-        }
-        private static SqlErrorCollection newSqlErrorCollection()
-        {
-            return (SqlErrorCollection)Activator.CreateInstance(typeof(SqlErrorCollection), true)!;
-        }
-        private static void addErrorToCollection(SqlErrorCollection coll, SqlError err)
-        {
-            var addErr = coll.GetType().GetMethod("Add", BindingFlags.Instance | BindingFlags.NonPublic);
-            addErr!.Invoke(coll, new object[] { err });
-        }
-        private static SqlInfoMessageEventArgs newSqlInfoMessageEventArgs(SqlException ex)
-        {
-            return (SqlInfoMessageEventArgs)typeof(SqlInfoMessageEventArgs).GetConstructors(BindingFlags.Instance | BindingFlags.NonPublic)
-                .First().Invoke(new object[] { ex });
-        }
-        private static void fireInfoMessageEvent(SqlConnection conn, SqlInfoMessageEventArgs e)
-        {
-            var ev = (MulticastDelegate)typeof(SqlConnection).GetField("InfoMessage", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(conn)!;
-            foreach (var handler in ev?.GetInvocationList() ?? Array.Empty<Delegate>())
-            {
-                handler.Method.Invoke(handler.Target, new object[] { conn, e });
-            }
-        }
-        #endregion Microsoft.Data.SqlClient helpers
-
         [TestMethod]
         public void ProcessException__SqlException__Logs_error()
         {
@@ -56,17 +20,18 @@ namespace IFY.Phorm.SqlClient.Tests
 
             var obj = new SqlConsoleMessageCapture(sessionMock.Object, Guid.Empty, conn);
 
-            var errs = newSqlErrorCollection();
-            var err = newSqlError(1, 2, 3, "err server", "err message", "err procedure", 7, 8, new Exception("inner error"));
-            addErrorToCollection(errs, err);
+            var errs = MicrosoftDataSqlClientHelpers.NewSqlErrorCollection();
+            var err = MicrosoftDataSqlClientHelpers.NewSqlError(1, 2, 3, "err server", "err message", "err procedure", 7, 8, new Exception("inner error"));
+            MicrosoftDataSqlClientHelpers.AddErrorToCollection(errs, err);
 
-            var ex = newSqlException("message", errs);
+            var ex = MicrosoftDataSqlClientHelpers.NewSqlException("message", errs);
 
             // Act
             var res = obj.ProcessException(ex);
 
             // Assert
             Assert.IsTrue(res);
+            Assert.IsTrue(obj.HasError);
 
             var msgs = obj.GetConsoleMessages();
             Assert.AreEqual(1, msgs.Length);
@@ -87,11 +52,11 @@ namespace IFY.Phorm.SqlClient.Tests
 
             var obj = new SqlConsoleMessageCapture(sessionMock.Object, cmdGuid, conn);
 
-            var errs = newSqlErrorCollection();
-            var err = newSqlError(1, 2, 3, "err server", "err message", "err procedure", 7, 8, new Exception("inner error"));
-            addErrorToCollection(errs, err);
+            var errs = MicrosoftDataSqlClientHelpers.NewSqlErrorCollection();
+            var err = MicrosoftDataSqlClientHelpers.NewSqlError(1, 2, 3, "err server", "err message", "err procedure", 7, 8, new Exception("inner error"));
+            MicrosoftDataSqlClientHelpers.AddErrorToCollection(errs, err);
 
-            var ex = newSqlException("message", errs);
+            var ex = MicrosoftDataSqlClientHelpers.NewSqlException("message", errs);
 
             var events = new List<ConsoleMessageEventArgs>();
             sessionMock.Object.ConsoleMessage += (_, e) => events.Add(e);
@@ -101,6 +66,8 @@ namespace IFY.Phorm.SqlClient.Tests
 
             // Assert
             Assert.IsTrue(res);
+            Assert.IsTrue(obj.HasError);
+
             Assert.AreEqual(1, events.Count);
             Assert.AreEqual(cmdGuid, events[0].CommandGuid);
             Assert.AreEqual("err message", events[0].ConsoleMessage.Message);
@@ -137,18 +104,20 @@ namespace IFY.Phorm.SqlClient.Tests
 
             var obj = new SqlConsoleMessageCapture(sessionMock.Object, Guid.Empty, conn);
 
-            var errs = newSqlErrorCollection();
-            var err = newSqlError(1, 2, 3, "err server", "err message", "err procedure", 7, 8, new Exception("inner error"));
-            addErrorToCollection(errs, err);
+            var errs = MicrosoftDataSqlClientHelpers.NewSqlErrorCollection();
+            var err = MicrosoftDataSqlClientHelpers.NewSqlError(1, 2, 3, "err server", "err message", "err procedure", 7, 8, new Exception("inner error"));
+            MicrosoftDataSqlClientHelpers.AddErrorToCollection(errs, err);
 
-            var ex = newSqlException("message", errs);
+            var ex = MicrosoftDataSqlClientHelpers.NewSqlException("message", errs);
 
-            var e = newSqlInfoMessageEventArgs(ex);
+            var e = MicrosoftDataSqlClientHelpers.NewSqlInfoMessageEventArgs(ex);
 
             // Act
-            fireInfoMessageEvent(conn, e);
+            MicrosoftDataSqlClientHelpers.FireInfoMessageEvent(conn, e);
 
             // Assert
+            Assert.IsFalse(obj.HasError);
+
             var msgs = obj.GetConsoleMessages();
             Assert.AreEqual(1, msgs.Length);
             Assert.AreEqual("err message", msgs[0].Message);
@@ -168,21 +137,23 @@ namespace IFY.Phorm.SqlClient.Tests
 
             var obj = new SqlConsoleMessageCapture(sessionMock.Object, cmdGuid, conn);
             
-            var errs = newSqlErrorCollection();
-            var err = newSqlError(1, 2, 3, "err server", "err message", "err procedure", 7, 8, new Exception("inner error"));
-            addErrorToCollection(errs, err);
+            var errs = MicrosoftDataSqlClientHelpers.NewSqlErrorCollection();
+            var err = MicrosoftDataSqlClientHelpers.NewSqlError(1, 2, 3, "err server", "err message", "err procedure", 7, 8, new Exception("inner error"));
+            MicrosoftDataSqlClientHelpers.AddErrorToCollection(errs, err);
 
-            var ex = newSqlException("message", errs);
+            var ex = MicrosoftDataSqlClientHelpers.NewSqlException("message", errs);
 
             var events = new List<ConsoleMessageEventArgs>();
             sessionMock.Object.ConsoleMessage += (_, e) => events.Add(e);
 
-            var e = newSqlInfoMessageEventArgs(ex);
+            var e = MicrosoftDataSqlClientHelpers.NewSqlInfoMessageEventArgs(ex);
 
             // Act
-            fireInfoMessageEvent(conn, e);
+            MicrosoftDataSqlClientHelpers.FireInfoMessageEvent(conn, e);
 
             // Assert
+            Assert.IsFalse(obj.HasError);
+
             Assert.AreEqual(1, events.Count);
             Assert.AreEqual(cmdGuid, events[0].CommandGuid);
             Assert.AreEqual("err message", events[0].ConsoleMessage.Message);
@@ -200,23 +171,24 @@ namespace IFY.Phorm.SqlClient.Tests
 
             var obj = new SqlConsoleMessageCapture(sessionMock.Object, Guid.Empty, conn);
 
-            var errs = newSqlErrorCollection();
-            var err = newSqlError(1, 2, 3, "err server", "err message", "err procedure", 7, 8, new Exception("inner error"));
-            addErrorToCollection(errs, err);
+            var errs = MicrosoftDataSqlClientHelpers.NewSqlErrorCollection();
+            var err = MicrosoftDataSqlClientHelpers.NewSqlError(1, 2, 3, "err server", "err message", "err procedure", 7, 8, new Exception("inner error"));
+            MicrosoftDataSqlClientHelpers.AddErrorToCollection(errs, err);
 
-            var ex = newSqlException("message", errs);
+            var ex = MicrosoftDataSqlClientHelpers.NewSqlException("message", errs);
 
             var events = new List<ConsoleMessageEventArgs>();
             sessionMock.Object.ConsoleMessage += (_, e) => events.Add(e);
 
-            var e = newSqlInfoMessageEventArgs(ex);
+            var e = MicrosoftDataSqlClientHelpers.NewSqlInfoMessageEventArgs(ex);
 
             // Act
             obj.Dispose();
-            fireInfoMessageEvent(conn, e);
+            MicrosoftDataSqlClientHelpers.FireInfoMessageEvent(conn, e);
 
             // Assert
             Assert.AreEqual(0, events.Count);
+            Assert.IsFalse(obj.HasError);
         }
     }
 }
