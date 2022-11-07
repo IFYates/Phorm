@@ -2,6 +2,7 @@ using IFY.Phorm.Connectivity;
 using IFY.Phorm.Data;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.Serialization;
 using System.Text;
 
@@ -11,6 +12,7 @@ namespace IFY.Phorm.SqlClient.IntegrationTests
     public class CallTests : SqlIntegrationTestBase
     {
         [PhormContract(Name = "CallTestTable", Target = DbObjectType.Table)]
+        [ExcludeFromCodeCoverage]
         public class DataItem : IUpsert, IUpsertOnlyIntWithId
         {
             public long Id { get; set; }
@@ -33,6 +35,7 @@ namespace IFY.Phorm.SqlClient.IntegrationTests
         }
 
         [PhormContract(Name = "CallTestTable", Target = DbObjectType.Table)]
+        [ExcludeFromCodeCoverage]
         public class DataItemWithoutText
         {
             public long Id { get; set; }

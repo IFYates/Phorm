@@ -32,15 +32,6 @@ namespace IFY.Phorm
         /// </summary>
         public static bool StrictResultSize { get; set; } = true;
 
-        public static string ViewPrefix
-        {
-            get;
-#if NETSTANDARD || NETCOREAPP
-            set;
-#else
-            init;
-#endif
-        } = "vw_";
         public static string ProcedurePrefix
         {
             get;
@@ -58,7 +49,15 @@ namespace IFY.Phorm
 #else
             init;
 #endif
-        } = "";
-
+        } = string.Empty;
+        public static string ViewPrefix
+        {
+            get;
+#if NETSTANDARD || NETCOREAPP
+            set;
+#else
+            init;
+#endif
+        } = "vw_";
     }
 }

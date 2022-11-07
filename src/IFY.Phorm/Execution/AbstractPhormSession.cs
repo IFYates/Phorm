@@ -16,15 +16,6 @@ namespace IFY.Phorm
 
         protected readonly string? _connectionName;
 
-        public string ViewPrefix
-        {
-            get;
-#if NETSTANDARD || NETCOREAPP
-            set;
-#else
-            init;
-#endif
-        } = GlobalSettings.ViewPrefix;
         public string ProcedurePrefix
         {
             get;
@@ -43,6 +34,15 @@ namespace IFY.Phorm
             init;
 #endif
         } = GlobalSettings.TablePrefix;
+        public string ViewPrefix
+        {
+            get;
+#if NETSTANDARD || NETCOREAPP
+            set;
+#else
+            init;
+#endif
+        } = GlobalSettings.ViewPrefix;
 
         #region Events
 

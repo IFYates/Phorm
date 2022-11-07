@@ -3,9 +3,9 @@ using IFY.Phorm.Data;
 using IFY.Phorm.Transformation;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.Serialization;
-using System.Threading;
 
 namespace IFY.Phorm.SqlClient.IntegrationTests
 {
@@ -13,6 +13,7 @@ namespace IFY.Phorm.SqlClient.IntegrationTests
     public class GenSpecTests : SqlIntegrationTestBase
     {
         [PhormContract(Name = "DataTable")]
+        [ExcludeFromCodeCoverage]
         public class DataItem
         {
             public long Id { get; set; }
@@ -35,6 +36,7 @@ namespace IFY.Phorm.SqlClient.IntegrationTests
         }
 
         [PhormContract(Name = "DataTable")]
+        [ExcludeFromCodeCoverage]
         public class DataItemWithoutText
         {
             public long Id { get; set; }

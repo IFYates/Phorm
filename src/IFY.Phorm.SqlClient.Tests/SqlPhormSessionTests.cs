@@ -36,11 +36,28 @@ namespace IFY.Phorm.SqlClient.Tests
             Assert.AreSame(tranMock.Object, getField(res, "_transaction"));
             Assert.AreSame(connProvMock.Object, getField(res, "_connectionProvider"));
             Assert.AreEqual("name", getField<SqlPhormSession>(res, "_connectionName"));
+        }
 
-            static object? getField<T>(T inst, string fieldName)
-            {
-                return typeof(T).GetField(fieldName, BindingFlags.NonPublic | BindingFlags.Instance)?.GetValue(inst);
-            }
+        [TestMethod]
+        public void SetConnectionName__Returns_new_session_with_updated_connection_name()
+        {
+            // Arrange
+            var connProvMock = new Mock<IPhormDbConnectionProvider>();
+
+            var sess1 = new SqlPhormSession(connProvMock.Object, "name1");
+
+            // Act
+            var sess2 = (SqlPhormSession)sess1.SetConnectionName("name2");
+
+            // Assert
+            Assert.AreNotSame(sess2, sess1);
+            Assert.AreEqual("name1", getField(sess1, "_connectionName"));
+            Assert.AreEqual("name2", getField(sess2, "_connectionName"));
+        }
+
+        static object? getField<T>(T inst, string fieldName)
+        {
+            return typeof(T).GetField(fieldName, BindingFlags.NonPublic | BindingFlags.Instance)?.GetValue(inst);
         }
     }
 }

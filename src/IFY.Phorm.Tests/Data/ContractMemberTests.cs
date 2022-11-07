@@ -127,6 +127,7 @@ namespace IFY.Phorm.Data.Tests
 
         #region GetMembersFromContract
 
+        [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
         class ObjectWithMethodMember
         {
             public string Value1 { get; set; } = string.Empty;
