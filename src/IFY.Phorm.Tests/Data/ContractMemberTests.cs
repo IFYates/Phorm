@@ -127,6 +127,29 @@ namespace IFY.Phorm.Data.Tests
 
         #region GetMembersFromContract
 
+        class ObjectWithMethodMember
+        {
+            public string Value1 { get; set; } = string.Empty;
+            [ContractMember]
+            public string Value2() => string.Empty;
+            public string Value3() => string.Empty;
+        }
+
+        [TestMethod]
+        public void GetMembersFromContract__Includes_decorated_methods()
+        {
+            // Arrange
+            var obj = new ObjectWithMethodMember();
+
+            // Act
+            var res = ContractMember.GetMembersFromContract(obj, typeof(ObjectWithMethodMember), false);
+
+            // Assert
+            Assert.AreEqual(2, res.Length);
+            Assert.AreEqual("Value1", res[0].DbName);
+            Assert.AreEqual("Value2", res[1].DbName);
+        }
+
         class ObjectWithoutReturnValueProperty
         {
         }
