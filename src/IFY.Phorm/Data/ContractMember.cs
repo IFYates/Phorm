@@ -12,7 +12,6 @@ using System.Runtime.Serialization;
 
 namespace IFY.Phorm.Data
 {
-
     /// <summary>
     /// The current instance value of a contract member.
     /// </summary>
@@ -46,6 +45,8 @@ namespace IFY.Phorm.Data
             HasChanged = false;
         }
 
+        public static ContractOutMember<T> InOut<T>(T value)
+            => new ContractOutMember<T>(value);
         public static ContractOutMember<T> Out<T>()
             => new ContractOutMember<T>();
         public static ReturnValueMember RetVal()
@@ -239,6 +240,9 @@ namespace IFY.Phorm.Data
 
         public ContractOutMember()
             : base(null, default, ParameterType.Output, typeof(T))
+        { }
+        public ContractOutMember(T value)
+            : base(null, value, ParameterType.InputOutput, typeof(T))
         { }
     }
 

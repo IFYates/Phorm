@@ -21,7 +21,20 @@ namespace IFY.Phorm.Data.Tests
         public int? NullableIntProperty { get; set; }
 
         [TestMethod]
-        public void Out__Without_args()
+        public void InOut()
+        {
+            var res = ContractMember.InOut("test");
+
+            Assert.AreEqual(string.Empty, res.DbName);
+            Assert.AreEqual("test", res.Value);
+            Assert.IsFalse(res.HasChanged);
+            Assert.AreEqual(ParameterType.InputOutput, res.Direction);
+            Assert.IsNull(res.SourceMember);
+            Assert.AreEqual(typeof(string), res.ValueType);
+        }
+
+        [TestMethod]
+        public void Out()
         {
             var res = ContractMember.Out<Type>();
 
