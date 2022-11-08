@@ -20,6 +20,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IFY.Phorm.SqlClient.Integra
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{FD1F6039-0890-4FE1-96E6-DCF37933295C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IFY.Phorm.Mockable", "IFY.Phorm.Mockable\IFY.Phorm.Mockable.csproj", "{0EF9424A-95CF-420F-9123-8B7A91B3AC68}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -46,6 +48,10 @@ Global
 		{8108F071-7D34-4713-84E4-041426A1CCDA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8108F071-7D34-4713-84E4-041426A1CCDA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8108F071-7D34-4713-84E4-041426A1CCDA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0EF9424A-95CF-420F-9123-8B7A91B3AC68}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0EF9424A-95CF-420F-9123-8B7A91B3AC68}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0EF9424A-95CF-420F-9123-8B7A91B3AC68}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0EF9424A-95CF-420F-9123-8B7A91B3AC68}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

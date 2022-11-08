@@ -1,4 +1,5 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Moq;
 using System;
 using System.Collections;
 
@@ -148,5 +149,36 @@ namespace IFY.Phorm.Tests
         }
 
         #endregion FromBytes
+
+        // TEMP
+
+        [TestMethod]
+        public void test()
+        {
+            var runnerMock = new Mock<IPhormContractRunner<IContract>>(MockBehavior.Strict);
+
+            var sessMock = new Mock<IPhormSession>(MockBehavior.Strict);
+            sessMock.Setup(m => m.From<IContract>(It.IsAny<object?>()))
+                .Returns(runnerMock.Object);
+
+            runnerMock.Setup(m => m.Get<DTO[]>())
+                .Returns(new DTO[5]);
+
+            RealCode(sessMock.Object);
+        }
+
+        class DTO
+        {
+            public string Name { get; set; } = string.Empty;
+            public int Value { get; set; } = 0;
+        }
+        public interface IContract : Data.IPhormContract
+        {
+            string Name { get; }
+        }
+        public void RealCode(IPhormSession session)
+        {
+            var data = session.From<IContract>(new { Name = "A" }).Get<DTO[]>()!;
+        }
     }
 }
