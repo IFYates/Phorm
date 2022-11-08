@@ -20,7 +20,7 @@ namespace IFY.Phorm.Data
         /// <summary>
         /// Name as given in stored procedure.
         /// </summary>
-        public string DbName { get; }
+        public string DbName { get; private set; }
         /// <summary>
         /// Size of data to/from database.
         /// 0 is unspecified / unlimited.
@@ -84,18 +84,27 @@ namespace IFY.Phorm.Data
             var members = new List<ContractMemberDefinition>(props.Length);
             foreach (var prop in props)
             {
+                PropertyInfo objProp = prop;
+                if (!isContract)
+                {
+                    // Support non-contract
+                    objProp = objType?.GetProperty(prop.Name, BindingFlags.Instance | BindingFlags.Public) ?? prop;
+                }
+
                 var cmAttr = prop.GetCustomAttribute<ContractMemberAttribute>();
                 var canRead = prop.CanRead && cmAttr?.DisableInput != true;
                 var canWrite = prop.CanWrite && cmAttr?.DisableOutput != true;
+                var dir = (canRead ? ParameterType.Input : 0) | (canWrite ? ParameterType.Output : 0);
 
-                if (!isContract)
+                if (obj != null && typeof(ContractMember).IsAssignableFrom(objProp.PropertyType))
                 {
-                    var anonProp = objType?.GetProperty(prop.Name, BindingFlags.Instance | BindingFlags.Public); // Support non-contract
-                    canRead &= anonProp?.CanRead == true;
-                    canWrite &= anonProp?.CanWrite == true;
+                    // Can use ContractMember to change behaviour
+                    var cmValue = (ContractMember?)objProp.GetValue(obj);
+                    dir = cmValue?.Direction ?? dir;
                 }
 
-                if (prop.GetCustomAttribute<IgnoreDataMemberAttribute>() != null)
+                if (dir == 0
+                    || prop.GetCustomAttribute<IgnoreDataMemberAttribute>() != null)
                 {
                     continue;
                 }
@@ -110,7 +119,6 @@ namespace IFY.Phorm.Data
                 var dmAttr = prop.GetCustomAttribute<DataMemberAttribute>();
 
                 var dbName = dmAttr?.Name ?? prop.Name;
-                var dir = (canRead ? ParameterType.Input : 0) | (canWrite ? ParameterType.Output : 0);
                 var memb = new ContractMemberDefinition(dbName, dir, prop, typeof(object))
                 {
                     IsRequired = dmAttr?.IsRequired == true
@@ -166,7 +174,7 @@ namespace IFY.Phorm.Data
                 else
                 {
                     // Support non-contract
-                    value = objType?.GetProperty(SourceProperty.Name, BindingFlags.Instance | BindingFlags.Public).GetValue(obj);
+                    value = objType?.GetProperty(SourceProperty.Name, BindingFlags.Instance | BindingFlags.Public)?.GetValue(obj);
                 }
             }
 
@@ -177,26 +185,20 @@ namespace IFY.Phorm.Data
             if (value is not ContractMember memb)
 #endif
             {
+                memb = new ContractMember<object?>(DbName, value, Direction, SourceProperty);
             }
             else if (memb.Direction == ParameterType.ReturnValue)
             {
                 return memb;
             }
+            else
+            {
+                memb.DbName = DbName;
+            }
 
-            memb = ContractMember.In(DbName, value, SourceProperty); // TODO: other properties (Attributes, ...)
             memb.Attributes = Attributes;
+            // TODO: other properties?
             return memb;
-        }
-    }
-    public class ContractMemberDefinition<T> : ContractMemberDefinition
-    {
-        internal ContractMemberDefinition(string? dbName, ParameterType dir, PropertyInfo? sourceProperty, Type valueType)
-            : base(dbName, dir, sourceProperty, valueType)
-        { }
-
-        public ContractMember<T> SetValue(T value)
-        {
-            return new ContractMember<T>(DbName, value, Direction, SourceProperty);
         }
     }
 
@@ -227,14 +229,6 @@ namespace IFY.Phorm.Data
         internal static ContractMember<T> In<T>(string dbName, T value, PropertyInfo? sourceProperty = null)
         {
             return new ContractMember<T>(dbName, value, ParameterType.Input, sourceProperty);
-        }
-        internal static ContractMember<T> InOut<T>(T value)
-        {
-            return new ContractMember<T>(string.Empty, value, ParameterType.InputOutput);
-        }
-        internal static ContractMember<T> InOut<T>(string dbName, T value, PropertyInfo? sourceProperty = null)
-        {
-            return new ContractMember<T>(dbName, value, ParameterType.InputOutput, sourceProperty);
         }
         public static ContractMember<T> Out<T>()
         {

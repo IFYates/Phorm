@@ -193,7 +193,10 @@ namespace IFY.Phorm.Tests
 
             var phorm = new TestPhormSession(new TestPhormConnectionProvider((s) => conn));
 
-            var runner = new PhormContractRunner<IMemberTestContract>(phorm, null, DbObjectType.Default, new TestContract { Arg = 1 });
+            var args = new TestContract { Arg = 1 };
+            var cm = args.Arg4;
+
+            var runner = new PhormContractRunner<IMemberTestContract>(phorm, null, DbObjectType.Default, args);
 
             // Act
             var res = runner.CallAsync().Result;
@@ -204,6 +207,7 @@ namespace IFY.Phorm.Tests
             Assert.AreEqual(ParameterDirection.Output, pars[1].Direction);
             Assert.AreEqual("@Arg4", pars[3].ParameterName);
             Assert.AreEqual(ParameterDirection.Output, pars[3].Direction);
+            Assert.AreSame(cm, args.Arg4);
         }
 
         [TestMethod]

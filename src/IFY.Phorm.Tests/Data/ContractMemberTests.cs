@@ -44,19 +44,6 @@ namespace IFY.Phorm.Data.Tests
         }
 
         [TestMethod]
-        public void InOut__Without_property()
-        {
-            var res = ContractMember.InOut("name", typeof(string), null);
-
-            Assert.AreEqual("name", res.DbName);
-            Assert.AreEqual(typeof(string), res.Value);
-            Assert.IsFalse(res.HasChanged);
-            Assert.AreEqual(ParameterType.InputOutput, res.Direction);
-            Assert.IsNull(res.SourceProperty);
-            Assert.AreEqual(typeof(Type), res.ValueType);
-        }
-
-        [TestMethod]
         public void Out__Without_args()
         {
             var res = ContractMember.Out<Type>();
