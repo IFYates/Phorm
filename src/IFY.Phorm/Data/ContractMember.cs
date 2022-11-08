@@ -1,6 +1,7 @@
 ﻿using IFY.Phorm.Encryption;
 using IFY.Phorm.Execution;
 using IFY.Phorm.Transformation;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -25,7 +26,7 @@ namespace IFY.Phorm.Data
         /// Size of data to/from database.
         /// 0 is unspecified / unlimited.
         /// </summary>
-        public int Size { get; } // TODO: Not yet used. Drop if not needed.
+        public int Size { get; private set; } // TODO: Not yet used. Drop if not needed.
         /// <summary>
         /// Type of parameter from POV of datasource.
         /// </summary>
@@ -75,6 +76,8 @@ namespace IFY.Phorm.Data
             Direction = dir;
         }
 
+        private static readonly Dictionary<Type, ContractMemberDefinition[]> _memberCache = new Dictionary<Type, ContractMemberDefinition[]>();
+
         // TODO: Cache members by type?
         /// <summary>
         /// Convert properties of any object to <see cref="ContractMemberDefinition"/>s.
@@ -82,23 +85,27 @@ namespace IFY.Phorm.Data
         public static ContractMemberDefinition[] ResolveContract(object? obj, Type contractType)
         {
             var hasContract = contractType != typeof(IPhormContract);
+            var objType = obj?.GetType();
+            var isContract = false;
             if (!hasContract)
             {
                 if (obj == null)
                 {
                     return Array.Empty<ContractMemberDefinition>();
                 }
-                contractType = obj.GetType();
+                contractType = objType!;
+            }
+            else
+            {
+                isContract = obj == null || contractType.IsAssignableFrom(objType);
             }
 
-            // Map all member properties
-            var objType = obj?.GetType();
-            var isContract = hasContract && (obj == null || contractType.IsAssignableFrom(objType));
-            var props = contractType.GetProperties(BindingFlags.Instance | BindingFlags.Public);
-            var members = new List<ContractMemberDefinition>(props.Length);
-            foreach (var prop in props)
+            // Map all contract properties
+            var contractProps = contractType.GetProperties(BindingFlags.Instance | BindingFlags.Public);
+            var members = new List<ContractMemberDefinition>(contractProps.Length);
+            foreach (var prop in contractProps)
             {
-                PropertyInfo objProp = prop;
+                var objProp = prop;
                 if (!isContract)
                 {
                     // Support non-contract
@@ -110,6 +117,13 @@ namespace IFY.Phorm.Data
                 var canWrite = prop.CanWrite && cmAttr?.DisableOutput != true;
                 var dir = (canRead ? ParameterType.Input : 0) | (canWrite ? ParameterType.Output : 0);
 
+                // Skip console members
+                if (prop.PropertyType == typeof(ConsoleLogMember)
+                    || prop.GetCustomAttribute<IgnoreDataMemberAttribute>() != null)
+                {
+                    continue;
+                }
+
                 if (obj != null && typeof(ContractMember).IsAssignableFrom(objProp.PropertyType))
                 {
                     // Can use ContractMember to change behaviour
@@ -117,14 +131,12 @@ namespace IFY.Phorm.Data
                     dir = cmValue?.Direction ?? dir;
                 }
 
-                if (dir == 0
-                    || prop.GetCustomAttribute<IgnoreDataMemberAttribute>() != null)
-                {
-                    continue;
-                }
-
-                // Skip console members
-                if (prop.PropertyType == typeof(ConsoleLogMember))
+                // Ignore unusable properties
+#if !NET5_0_OR_GREATER
+                if (!dir.IsOneOf(ParameterType.Input, ParameterType.Output, ParameterType.InputOutput, ParameterType.ReturnValue))
+#else
+                if (dir is not ParameterType.Input and not ParameterType.Output and not ParameterType.InputOutput and not ParameterType.ReturnValue)
+#endif
                 {
                     continue;
                 }
@@ -178,15 +190,12 @@ namespace IFY.Phorm.Data
         {
             object? getValue(MemberInfo? mem)
             {
-                if (mem is PropertyInfo pi)
+                return mem switch
                 {
-                    return pi.GetValue(obj);
-                }
-                else if (mem is MethodInfo mi)
-                {
-                    return mi.Invoke(obj, Array.Empty<object>());
-                }
-                return null;
+                    PropertyInfo pi => pi.GetValue(obj),
+                    MethodInfo mi => mi.Invoke(obj, Array.Empty<object>()),
+                    _ => null
+                };
             }
 
             object? value = null;
@@ -229,7 +238,8 @@ namespace IFY.Phorm.Data
             }
 
             memb.Attributes = Attributes;
-            // TODO: other properties?
+            memb.IsRequired = IsRequired;
+            memb.Size = Size;
             return memb;
         }
     }
@@ -267,18 +277,12 @@ namespace IFY.Phorm.Data
             HasChanged = false;
         }
 
-        public static ContractMember<T> Out<T>()
-        {
-            return new ContractMember<T>(string.Empty, default!, ParameterType.Output);
-        }
-        public static ContractMember<int> RetVal()
-        {
-            return new ContractMember<int>("return", 0, ParameterType.ReturnValue);
-        }
+        public static ContractOutMember<T> Out<T>()
+            => new ContractOutMember<T>();
+        public static ReturnValueMember RetVal()
+            => new ReturnValueMember();
         public static ConsoleLogMember Console()
-        {
-            return new ConsoleLogMember();
-        }
+            => new ConsoleLogMember();
 
         /// <summary>
         /// Convert properties of any object to <see cref="ContractMember"/>s.
@@ -319,8 +323,8 @@ namespace IFY.Phorm.Data
                 {
                     // Allow for a return value on the object
                     var retPar = obj?.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public)
-                        .Where(p => p.PropertyType == typeof(ContractMember<int>))
-                        .Select(p => p.GetValue(obj) as ContractMember<int>)
+                        .Where(p => p.PropertyType == typeof(ReturnValueMember))
+                        .Select(p => p.GetValue(obj) as ReturnValueMember)
                         .FirstOrDefault(v => v?.Direction == ParameterType.ReturnValue);
 
                     members.Add(retPar ?? RetVal());
@@ -449,7 +453,7 @@ namespace IFY.Phorm.Data
             SetValue(val);
         }
 
-        public virtual void SetValue(object? value)
+        internal void SetValue(object? value)
         {
             if (value != null)
             {
@@ -474,51 +478,31 @@ namespace IFY.Phorm.Data
         }
     }
 
-    public class ContractMember<T> : ContractMember
+    public sealed class ContractOutMember<T> : ContractMember
     {
         public new T Value => (T)base.Value!;
 
-        internal ContractMember(string name, T value, ParameterType dir)
-            : base(name, value, dir, typeof(T))
+        public ContractOutMember()
+            : base(null, default, ParameterType.Output, typeof(T))
         { }
-        internal ContractMember(string name, T value, ParameterType dir, MethodInfo sourceMethod)
-            : base(name, value, dir, sourceMethod)
-        { }
-        internal ContractMember(string name, T value, ParameterType dir, PropertyInfo sourceProperty)
-            : base(name, value, dir, sourceProperty)
-        { }
+    }
 
-        public override void SetValue(object? value)
+    public sealed class ReturnValueMember : ContractMember
+    {
+        public new int Value => (int)base.Value!;
+
+        public ReturnValueMember()
+            : base("return", 0, ParameterType.ReturnValue, typeof(int))
         {
-            if (value != null)
-            {
-                var targetType = typeof(T) != typeof(object) ? typeof(T)
-                    : ValueType != typeof(object) ? ValueType
-                    : null;
-                if (targetType != null && !targetType.IsInstanceOfType(value))
-                {
-                    targetType = Nullable.GetUnderlyingType(targetType) ?? targetType;
-                    if (value is byte[] bytes)
-                    {
-                        value = bytes.FromBytes(targetType);
-                    }
-                    else
-                    {
-                        value = Convert.ChangeType(value, targetType);
-                    }
-                }
-            }
-            if (base.Value != value)
-            {
-                base.SetValue(value);
-            }
         }
     }
 
-    public sealed class ConsoleLogMember : ContractMember<ConsoleMessage[]>
+    public sealed class ConsoleLogMember : ContractMember
     {
+        public new ConsoleMessage[] Value => (ConsoleMessage[])base.Value!;
+
         public ConsoleLogMember()
-            : base("console", Array.Empty<ConsoleMessage>(), ParameterType.Console)
+            : base("console", Array.Empty<ConsoleMessage>(), ParameterType.Console, typeof(ConsoleMessage[]))
         {
         }
     }

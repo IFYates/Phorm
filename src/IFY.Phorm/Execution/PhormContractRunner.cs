@@ -269,8 +269,8 @@ namespace IFY.Phorm
             if (consoleEvents?.Count() > 0)
             {
                 var consoleProp = contract?.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public)
-                    .Where(p => typeof(ContractMember<ConsoleMessage[]>).IsAssignableFrom(p.PropertyType))
-                    .Select(p => p.GetValue(contract) as ContractMember<ConsoleMessage[]>)
+                    .Where(p => typeof(ConsoleLogMember).IsAssignableFrom(p.PropertyType))
+                    .Select(p => p.GetValue(contract) as ConsoleLogMember)
                     .FirstOrDefault(v => v?.Direction == ParameterType.Console);
                 consoleProp?.SetValue(consoleEvents.ToArray());
             }

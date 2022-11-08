@@ -177,7 +177,7 @@ namespace IFY.Phorm.Data.Tests
 
             // Assert
             Assert.AreEqual(1, res.Length);
-            Assert.AreEqual(ParameterType.ReturnValue, ((ContractMember<int>)res[0]).Direction);
+            Assert.AreEqual(ParameterType.ReturnValue, res[0].Direction);
         }
 
         [TestMethod]
@@ -204,8 +204,8 @@ namespace IFY.Phorm.Data.Tests
 
             // Assert
             Assert.AreEqual(1, res.Length);
-            Assert.AreEqual(ParameterType.ReturnValue, ((ContractMember<int>)res[0]).Direction);
-            Assert.AreSame(obj.ReturnValue, (ContractMember<int>)res[0]);
+            Assert.AreEqual(ParameterType.ReturnValue, res[0].Direction);
+            Assert.AreSame(obj.ReturnValue, res[0]);
         }
 
         [TestMethod]
@@ -219,8 +219,8 @@ namespace IFY.Phorm.Data.Tests
 
             // Assert
             Assert.AreEqual(1, res.Length);
-            Assert.AreEqual(ParameterType.ReturnValue, ((ContractMember<int>)res[0]).Direction);
-            Assert.AreSame(obj.ReturnValue, (ContractMember<int>)res[0]);
+            Assert.AreEqual(ParameterType.ReturnValue, res[0].Direction);
+            Assert.AreSame(obj.ReturnValue, res[0]);
         }
 
         [TestMethod]
@@ -235,8 +235,8 @@ namespace IFY.Phorm.Data.Tests
             // Assert
             Assert.Inconclusive();
             Assert.AreEqual(1, res.Length);
-            Assert.AreEqual(ParameterType.ReturnValue, ((ContractMember<int>)res[0]).Direction);
-            Assert.AreSame(obj.ReturnValue, (ContractMember<int>)res[0]);
+            Assert.AreEqual(ParameterType.ReturnValue, res[0].Direction);
+            Assert.AreSame(obj.ReturnValue, res[0]);
         }
 
         #endregion GetMembersFromContract
@@ -252,7 +252,7 @@ namespace IFY.Phorm.Data.Tests
         [DataMember(IsRequired = true)]
         public string RequiredString { get; set; } = string.Empty;
         [DataMember(IsRequired = true)]
-        public int RequiredNumber { get; set; }
+        public int RequiredNumber { get; set; } = 0;
 
         private static void getDbMocks(out Mock<IAsyncDbCommand> cmdMock, out Mock<IDbDataParameter> dbpMock)
         {
@@ -640,17 +640,16 @@ namespace IFY.Phorm.Data.Tests
         #endregion FromDatasource
 
         [TestMethod]
-        [DataRow(typeof(ContractMember<int>), "12345", 12345)]
-        [DataRow(typeof(ContractMember<int?>), "12345", 12345)]
-        [DataRow(typeof(ContractMember<double>), "12.34", 12.34)]
-        public void SetValue__Converts_value_to_type_T(Type memberType, string value, object exp)
+        [DataRow(typeof(int), "12345", 12345)]
+        [DataRow(typeof(int?), "12345", 12345)]
+        [DataRow(typeof(double), "12.34", 12.34)]
+        public void SetValue__Converts_value_to_type_T(Type valueType, string value, object exp)
         {
-            var c = memberType.GetConstructors(BindingFlags.NonPublic | BindingFlags.Instance);
-            var member = (ContractMember)c[0].Invoke(new object?[] { "", null, ParameterType.Input });
+            var memb = new ContractMember(null, default, ParameterType.Input, valueType);
 
-            member.SetValue(value);
+            memb.SetValue(value);
 
-            Assert.AreEqual(exp, member.Value);
+            Assert.AreEqual(exp, memb.Value);
         }
 
         [TestMethod]
@@ -660,12 +659,12 @@ namespace IFY.Phorm.Data.Tests
         {
             var prop = GetType().GetProperty(propertyName)!;
 
-            var member = new ContractMember<object>(propertyName, null!, ParameterType.Input, prop);
+            var memb = new ContractMember(propertyName, null, ParameterType.Input, prop);
 
-            member.SetValue(value);
-            _ = ((PropertyInfo)member.SourceMember!).GetValue(this);
+            memb.SetValue(value);
+            _ = ((PropertyInfo)memb.SourceMember!).GetValue(this);
 
-            Assert.AreEqual(exp, member.Value);
+            Assert.AreEqual(exp, memb.Value);
         }
     }
 }
