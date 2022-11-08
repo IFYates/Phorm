@@ -224,19 +224,65 @@ namespace IFY.Phorm.Data.Tests
         }
 
         [TestMethod]
-        public void GetMembersFromContract__Caches_members()
+        public void ResolveContract__Caches_members_by_type()
         {
             // Arrange
-            var obj = new ObjectWithReturnValueProperty();
+            var obj = new ObjectWithDynamicProperty();
 
             // Act
-            var res = ContractMember.GetMembersFromContract(obj, typeof(IPhormContract), false);
+            var res1 = ContractMemberDefinition.ResolveContract(obj, typeof(IPhormContract));
+            var res2 = ContractMemberDefinition.ResolveContract(obj, typeof(IPhormContract));
+            var res3 = ContractMemberDefinition.ResolveContract(obj, typeof(IPhormContract));
 
             // Assert
-            Assert.Inconclusive();
-            Assert.AreEqual(1, res.Length);
-            Assert.AreEqual(ParameterType.ReturnValue, res[0].Direction);
-            Assert.AreSame(obj.ReturnValue, res[0]);
+            Assert.AreSame(res1, res2);
+            Assert.AreSame(res1, res3);
+        }
+
+        [TestMethod]
+        public void ResolveContract__Caches_anon_members_by_type()
+        {
+            // Arrange
+            var obj1 = new { Test = 1 };
+            var obj2 = new { Test = 2 };
+            var obj3 = new { Test = 3 };
+
+            // Act
+            var res1 = ContractMemberDefinition.ResolveContract(obj1, typeof(IPhormContract));
+            var res2 = ContractMemberDefinition.ResolveContract(obj2, typeof(IPhormContract));
+            var res3 = ContractMemberDefinition.ResolveContract(obj3, typeof(IPhormContract));
+
+            // Assert
+            Assert.AreSame(res1, res2);
+            Assert.AreSame(res1, res3);
+        }
+
+        class ObjectWithDynamicProperty
+        {
+            public string Name { get; set; }
+            public int Value1 => _value1++;
+            private int _value1 = 0;
+        }
+
+        [TestMethod]
+        public void GetMembersFromContract__Resolves_members_each_time()
+        {
+            // Arrange
+            var obj = new ObjectWithDynamicProperty();
+
+            // Act
+            obj.Name = "A";
+            var res1 = ContractMember.GetMembersFromContract(obj, typeof(IPhormContract), false);
+            obj.Name = "B";
+            var res2 = ContractMember.GetMembersFromContract(obj, typeof(IPhormContract), false);
+            obj.Name = "C";
+            var res3 = ContractMember.GetMembersFromContract(obj, typeof(IPhormContract), false);
+
+            // Assert
+            Assert.AreEqual(3, obj.Value1);
+            Assert.AreEqual("A", res1.Single(m => m.DbName == nameof(ObjectWithDynamicProperty.Name)).Value);
+            Assert.AreEqual("B", res2.Single(m => m.DbName == nameof(ObjectWithDynamicProperty.Name)).Value);
+            Assert.AreEqual("C", res3.Single(m => m.DbName == nameof(ObjectWithDynamicProperty.Name)).Value);
         }
 
         #endregion GetMembersFromContract

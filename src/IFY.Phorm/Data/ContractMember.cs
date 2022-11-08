@@ -1,12 +1,13 @@
 ﻿using IFY.Phorm.Encryption;
 using IFY.Phorm.Execution;
 using IFY.Phorm.Transformation;
-using Newtonsoft.Json.Linq;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlTypes;
 using System.Linq;
+using System.Net;
 using System.Reflection;
 using System.Runtime.Serialization;
 
@@ -76,47 +77,35 @@ namespace IFY.Phorm.Data
             Direction = dir;
         }
 
-        private static readonly Dictionary<Type, ContractMemberDefinition[]> _memberCache = new Dictionary<Type, ContractMemberDefinition[]>();
+        private static readonly ConcurrentDictionary<Type, ContractMemberDefinition[]> _memberCache = new ConcurrentDictionary<Type, ContractMemberDefinition[]>();
 
-        // TODO: Cache members by type?
         /// <summary>
         /// Convert properties of any object to <see cref="ContractMemberDefinition"/>s.
         /// </summary>
         public static ContractMemberDefinition[] ResolveContract(object? obj, Type contractType)
         {
-            var hasContract = contractType != typeof(IPhormContract);
-            var objType = obj?.GetType();
-            var isContract = false;
-            if (!hasContract)
+            // If runtime contract type, must have object
+            if (contractType == typeof(IPhormContract))
             {
                 if (obj == null)
                 {
                     return Array.Empty<ContractMemberDefinition>();
                 }
-                contractType = objType!;
-            }
-            else
-            {
-                isContract = obj == null || contractType.IsAssignableFrom(objType);
+                contractType = obj.GetType();
             }
 
+            var members = _memberCache.GetOrAdd(contractType,
+                _ => doResolveContract(obj, contractType));
+            return members;
+        }
+
+        private static ContractMemberDefinition[] doResolveContract(object? obj, Type contractType)
+        {
             // Map all contract properties
             var contractProps = contractType.GetProperties(BindingFlags.Instance | BindingFlags.Public);
             var members = new List<ContractMemberDefinition>(contractProps.Length);
             foreach (var prop in contractProps)
             {
-                var objProp = prop;
-                if (!isContract)
-                {
-                    // Support non-contract
-                    objProp = objType?.GetProperty(prop.Name, BindingFlags.Instance | BindingFlags.Public) ?? prop;
-                }
-
-                var cmAttr = prop.GetCustomAttribute<ContractMemberAttribute>();
-                var canRead = prop.CanRead && cmAttr?.DisableInput != true;
-                var canWrite = prop.CanWrite && cmAttr?.DisableOutput != true;
-                var dir = (canRead ? ParameterType.Input : 0) | (canWrite ? ParameterType.Output : 0);
-
                 // Skip console members
                 if (prop.PropertyType == typeof(ConsoleLogMember)
                     || prop.GetCustomAttribute<IgnoreDataMemberAttribute>() != null)
@@ -124,11 +113,14 @@ namespace IFY.Phorm.Data
                     continue;
                 }
 
-                if (obj != null && typeof(ContractMember).IsAssignableFrom(objProp.PropertyType))
+                // Resolve member direction
+                var cmAttr = prop.GetCustomAttribute<ContractMemberAttribute>();
+                var canRead = prop.CanRead && cmAttr?.DisableInput != true;
+                var canWrite = prop.CanWrite && cmAttr?.DisableOutput != true;
+                var dir = (canRead ? ParameterType.Input : 0) | (canWrite ? ParameterType.Output : 0);
+                if (typeof(ContractOutMember<>).IsAssignableFrom(prop.PropertyType))
                 {
-                    // Can use ContractMember to change behaviour
-                    var cmValue = (ContractMember?)objProp.GetValue(obj);
-                    dir = cmValue?.Direction ?? dir;
+                    dir = ParameterType.Output;
                 }
 
                 // Ignore unusable properties
