@@ -39,7 +39,7 @@ namespace IFY.Phorm.Data.Tests
             Assert.AreEqual(typeof(string), res.Value);
             Assert.IsFalse(res.HasChanged);
             Assert.AreEqual(ParameterType.Input, res.Direction);
-            Assert.IsNull(res.SourceProperty);
+            Assert.IsNull(res.SourceMember);
             Assert.AreEqual(typeof(Type), res.ValueType);
         }
 
@@ -52,7 +52,7 @@ namespace IFY.Phorm.Data.Tests
             Assert.IsNull(res.Value);
             Assert.IsFalse(res.HasChanged);
             Assert.AreEqual(ParameterType.Output, res.Direction);
-            Assert.IsNull(res.SourceProperty);
+            Assert.IsNull(res.SourceMember);
             Assert.AreEqual(typeof(Type), res.ValueType);
         }
 
@@ -65,7 +65,7 @@ namespace IFY.Phorm.Data.Tests
             Assert.IsNull(res.Value);
             Assert.IsFalse(res.HasChanged);
             Assert.AreEqual(ParameterType.Output, res.Direction);
-            Assert.IsNull(res.SourceProperty);
+            Assert.IsNull(res.SourceMember);
             Assert.AreEqual(typeof(Type), res.ValueType);
         }
 
@@ -78,14 +78,14 @@ namespace IFY.Phorm.Data.Tests
             Assert.AreEqual(0, res.Value);
             Assert.IsFalse(res.HasChanged);
             Assert.AreEqual(ParameterType.ReturnValue, res.Direction);
-            Assert.IsNull(res.SourceProperty);
+            Assert.IsNull(res.SourceMember);
             Assert.AreEqual(typeof(int), res.ValueType);
         }
 
         [TestMethod]
         public void ResolveAttributes__Sets_context()
         {
-            var prop = GetType().GetProperty(nameof(StringProperty)) ?? throw new Exception();
+            var prop = GetType().GetProperty(nameof(StringProperty))!;
 
             var obj = new object();
 
@@ -100,7 +100,7 @@ namespace IFY.Phorm.Data.Tests
         [TestMethod]
         public void ResolveAttributes__Has_secure_attribute()
         {
-            var prop = GetType().GetProperty(nameof(SecureDataProperty)) ?? throw new Exception();
+            var prop = GetType().GetProperty(nameof(SecureDataProperty))!;
 
             var obj = new object();
 
@@ -117,25 +117,53 @@ namespace IFY.Phorm.Data.Tests
         [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
         class ObjectWithMethodMember
         {
-            public string Value1 { get; set; } = string.Empty;
+            public string Value1
+            {
+                [ContractMember]
+                get; // Must not be picked up separately
+                [ContractMember]
+                set; // Must not be picked up separately
+            } = "A";
+#pragma warning disable CA1822 // Mark members as static
             [ContractMember]
-            public string Value2() => string.Empty;
-            public string Value3() => string.Empty;
+            public string Value2() => "B";
+            public string Value3(int arg) => "C" + arg; // Ignored
+#pragma warning restore CA1822 // Mark members as static
         }
 
         [TestMethod]
         public void GetMembersFromContract__Includes_decorated_methods()
         {
-            // Arrange
-            var obj = new ObjectWithMethodMember();
-
             // Act
-            var res = ContractMember.GetMembersFromContract(obj, typeof(ObjectWithMethodMember), false);
+            var res = ContractMember.GetMembersFromContract(new ObjectWithMethodMember(), typeof(ObjectWithMethodMember), false);
 
             // Assert
             Assert.AreEqual(2, res.Length);
             Assert.AreEqual("Value1", res[0].DbName);
+            Assert.AreEqual("A", res[0].Value);
             Assert.AreEqual("Value2", res[1].DbName);
+            Assert.AreEqual("B", res[1].Value);
+        }
+
+        [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
+        class ObjectWithBadMethodMember
+        {
+            public string Value1 { get; set; } = "A";
+#pragma warning disable CA1822 // Mark members as static
+            [ContractMember]
+            public string Value2(int arg) => "B" + arg;
+#pragma warning restore CA1822 // Mark members as static
+        }
+
+        [TestMethod]
+        public void GetMembersFromContract__Method_has_parameter__Fail()
+        {
+            // Act
+            var ex = Assert.ThrowsException<InvalidDataContractException>
+                (() => ContractMember.GetMembersFromContract(null, typeof(ObjectWithBadMethodMember), false));
+
+            // Assert
+            Assert.IsTrue(ex.Message.Contains("'IFY.Phorm.Data.Tests.ContractMemberTests+ObjectWithBadMethodMember.Value2'"), "Actual: " + ex.Message);
         }
 
         class ObjectWithoutReturnValueProperty
@@ -472,7 +500,7 @@ namespace IFY.Phorm.Data.Tests
             // Arrange
             getDbMocks(out var cmdMock, out var dbpMock);
 
-            var prop = GetType().GetProperty(nameof(RequiredProperty)) ?? throw new Exception();
+            var prop = GetType().GetProperty(nameof(RequiredProperty))!;
 
             var memb = ContractMember.In<string?>(prop.Name, null, prop);
             memb.ResolveAttributes(null, out _);
@@ -494,7 +522,7 @@ namespace IFY.Phorm.Data.Tests
             // Arrange
             getDbMocks(out var cmdMock, out var dbpMock);
 
-            var prop = GetType().GetProperty(nameof(RequiredProperty)) ?? throw new Exception();
+            var prop = GetType().GetProperty(nameof(RequiredProperty))!;
 
             var memb = ContractMember.In<string?>(prop.Name, "value", prop);
             memb.ResolveAttributes(null, out _);
@@ -514,7 +542,7 @@ namespace IFY.Phorm.Data.Tests
             // Arrange
             getDbMocks(out var cmdMock, out var dbpMock);
 
-            var prop = GetType().GetProperty(nameof(RequiredProperty)) ?? throw new Exception();
+            var prop = GetType().GetProperty(nameof(RequiredProperty))!;
 
             var memb = ContractMember.In(prop.Name, 0, prop);
             memb.ResolveAttributes(null, out _);
@@ -658,7 +686,7 @@ namespace IFY.Phorm.Data.Tests
             var member = new ContractMember<object>(propertyName, null!, ParameterType.Input, prop);
 
             member.SetValue(value);
-            _ = member.SourceProperty?.GetValue(this);
+            _ = ((PropertyInfo)member.SourceMember!).GetValue(this);
 
             Assert.AreEqual(exp, member.Value);
         }

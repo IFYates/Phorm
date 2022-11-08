@@ -119,7 +119,7 @@ namespace IFY.Phorm
                 CommandGuid = Guid.NewGuid(),
                 CommandText = cmd.CommandText,
                 CommandParameters = cmd.Parameters.Cast<IDbDataParameter>()
-                    .ToDictionary(p => p.ParameterName, p => p.Value)
+                    .ToDictionary(p => p.ParameterName, p => (object?)p.Value)
             };
             _session.OnCommandExecuting(eventArgs);
 
@@ -218,7 +218,7 @@ namespace IFY.Phorm
                     CommandGuid = commandGuid,
                     EntityType = entityType,
                     MemberNames = members.Values.Where(m => (m.Direction & ParameterType.Output) > 0 && m.Direction != ParameterType.ReturnValue)
-                        .Select(m => m.SourceProperty?.Name ?? m.DbName).ToArray()
+                        .Select(m => m.SourceMember?.Name ?? m.DbName).ToArray()
                 });
             }
 
@@ -229,11 +229,11 @@ namespace IFY.Phorm
                 memb.FromDatasource(value);
                 try
                 {
-                    memb.SourceProperty?.SetValue(entity, memb.Value);
+                    ((PropertyInfo?)memb.SourceMember)?.SetValue(entity, memb.Value);
                 }
                 catch (Exception ex)
                 {
-                    throw new InvalidOperationException($"Failed to set property {memb.SourceProperty?.Name ?? memb.DbName}", ex);
+                    throw new InvalidOperationException($"Failed to set property {memb.SourceMember?.Name ?? memb.DbName}", ex);
                 }
             }
         }
@@ -256,12 +256,12 @@ namespace IFY.Phorm
                 {
                     var memb = members.Single(a => a.DbName == param.ParameterName[1..]);
                     memb.FromDatasource(param.Value); // NOTE: Always given as VARCHAR
-                    var prop = memb.SourceProperty;
+                    var prop = memb.SourceMember;
                     if (prop != null && prop.ReflectedType?.IsAssignableFrom(contract.GetType()) == false)
                     {
                         prop = contract.GetType().GetProperty(prop.Name);
                     }
-                    prop?.SetValue(contract, memb.Value);
+                    ((PropertyInfo?)prop)?.SetValue(contract, memb.Value);
                 }
             }
 
@@ -425,7 +425,7 @@ namespace IFY.Phorm
                     .ToDictionary(m => m.DbName.ToUpperInvariant());
                 if (attr != null)
                 {
-                    GenProperty = Members.Values.FirstOrDefault(m => m.SourceProperty?.Name.ToUpperInvariant() == attr.GenProperty.ToUpperInvariant());
+                    GenProperty = Members.Values.FirstOrDefault(m => m.SourceMember?.Name.ToUpperInvariant() == attr.GenProperty.ToUpperInvariant());
                     SpecValue = attr.PropertyValue;
                 }
                 else
@@ -456,11 +456,11 @@ namespace IFY.Phorm
                 foreach (var spec in specs)
                 {
                     // Check Gen property for the Spec type (cached)
-                    if (!tempProps.TryGetValue(spec.GenProperty!.SourcePropertyId!, out var propValue))
+                    if (!tempProps.TryGetValue(spec.GenProperty!.SourceMemberId!, out var propValue))
                     {
                         spec.GenProperty.FromDatasource(rdr[spec.GenProperty.DbName]);
                         propValue = spec.GenProperty.Value;
-                        tempProps[spec.GenProperty.SourcePropertyId!] = propValue;
+                        tempProps[spec.GenProperty.SourceMemberId!] = propValue;
                     }
 
                     if (spec.SpecValue.Equals(propValue))
