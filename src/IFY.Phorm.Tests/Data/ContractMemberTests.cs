@@ -224,7 +224,7 @@ namespace IFY.Phorm.Data.Tests
         }
 
         [TestMethod]
-        public void GetMembersFromContract__()
+        public void GetMembersFromContract__Caches_members()
         {
             // Arrange
             var obj = new ObjectWithReturnValueProperty();
