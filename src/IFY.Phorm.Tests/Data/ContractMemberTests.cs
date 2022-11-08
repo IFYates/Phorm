@@ -12,16 +12,10 @@ using System.Runtime.Serialization;
 
 namespace IFY.Phorm.Data.Tests
 {
+    // TODO: sort out ContractMemberDefinition correctly
     [TestClass]
     public class ContractMemberTests
     {
-        [AttributeUsage(AttributeTargets.Property)]
-        class TestAttribute : Attribute, IContractMemberAttribute
-        {
-            public object? Context { get; private set; } = null;
-        }
-
-        [Test]
         public string StringProperty { get; set; } = string.Empty;
         public int IntProperty { get; set; }
         public int? NullableIntProperty { get; set; }
@@ -50,19 +44,6 @@ namespace IFY.Phorm.Data.Tests
             Assert.AreEqual(ParameterType.ReturnValue, res.Direction);
             Assert.IsNull(res.SourceMember);
             Assert.AreEqual(typeof(int), res.ValueType);
-        }
-
-        [TestMethod]
-        public void HasSecureAttribute()
-        {
-            var prop1 = GetType().GetProperty(nameof(StringProperty))!;
-            var prop2 = GetType().GetProperty(nameof(SecureDataProperty))!;
-
-            var memb1 = new ContractMemberDefinition(prop1.Name, ParameterType.Input, prop1);
-            var memb2 = new ContractMemberDefinition(prop2.Name, ParameterType.Input, prop2);
-
-            Assert.IsFalse(memb1.HasSecureAttribute);
-            Assert.IsTrue(memb2.HasSecureAttribute);
         }
 
         #region GetMembersFromContract
@@ -594,7 +575,7 @@ namespace IFY.Phorm.Data.Tests
         [TestTransphorm]
         public string TransphormedStringProperty { get; set; } = string.Empty;
 
-        public class TestSecureAttribute : AbstractSecureValueAttribute
+        class TestSecureAttribute : AbstractSecureValueAttribute
         {
             public override byte[] Decrypt(byte[]? value, object? context)
             {
