@@ -82,16 +82,18 @@ namespace IFY.Phorm.Data
             var isContract = hasContract && (obj == null || contractType.IsAssignableFrom(objType));
             var props = contractType.GetProperties(BindingFlags.Instance | BindingFlags.Public);
             var members = new List<ContractMemberDefinition>(props.Length);
-            foreach (var property in props)
+            foreach (var prop in props)
             {
-                var prop = isContract
-                    ? property
-                    : objType?.GetProperty(property.Name, BindingFlags.Instance | BindingFlags.Public) // Support non-contract
-                    ?? property;
-
                 var cmAttr = prop.GetCustomAttribute<ContractMemberAttribute>();
                 var canRead = prop.CanRead && cmAttr?.DisableInput != true;
                 var canWrite = prop.CanWrite && cmAttr?.DisableOutput != true;
+
+                if (!isContract)
+                {
+                    var anonProp = objType?.GetProperty(prop.Name, BindingFlags.Instance | BindingFlags.Public); // Support non-contract
+                    canRead &= anonProp?.CanRead == true;
+                    canWrite &= anonProp?.CanWrite == true;
+                }
 
                 if (prop.GetCustomAttribute<IgnoreDataMemberAttribute>() != null)
                 {
@@ -104,13 +106,12 @@ namespace IFY.Phorm.Data
                     continue;
                 }
 
-                // Check for DataMemberAttribute
+                // Check for DataMemberAttribute changes
                 var dmAttr = prop.GetCustomAttribute<DataMemberAttribute>();
 
-                var memb = new ContractMemberDefinition(
-                    dmAttr?.Name ?? prop.Name,
-                    (canRead ? ParameterType.Input : 0) | (canWrite ? ParameterType.Output : 0),
-                    property, typeof(object))
+                var dbName = dmAttr?.Name ?? prop.Name;
+                var dir = (canRead ? ParameterType.Input : 0) | (canWrite ? ParameterType.Output : 0);
+                var memb = new ContractMemberDefinition(dbName, dir, prop, typeof(object))
                 {
                     IsRequired = dmAttr?.IsRequired == true
                 };
@@ -152,7 +153,7 @@ namespace IFY.Phorm.Data
             isSecure = Attributes.OfType<AbstractSecureValueAttribute>().Any();
         }
 
-        public ContractMember Fill(object obj)
+        public ContractMember Fill(object? obj)
         {
             object? value = null;
             if (obj != null && SourceProperty != null)
@@ -268,25 +269,13 @@ namespace IFY.Phorm.Data
             var members = new List<ContractMember>(props.Length);
             foreach (var def in defs)
             {
-#if !NET5_0_OR_GREATER
-                if (def.Direction.IsOneOf(ParameterType.Output, ParameterType.ReturnValue, ParameterType.Console))
-#else
-                if (def.Direction is ParameterType.Output or ParameterType.ReturnValue or ParameterType.Console)
-#endif
-                {
-                    var memb = def.Fill(null!);
-                    members.Add(memb);
-                }
-                else if (obj != null)
-                {
-                    var memb = def.Fill(obj);
-                    members.Add(memb);
+                var memb = def.Fill(obj);
+                members.Add(memb);
 
-                    // Primitives are never "missing", so only check null
-                    if (def.IsRequired && memb.Value == null)
-                    {
-                        throw new ArgumentNullException(memb.DbName, $"Parameter {memb.DbName} for contract {contractType.FullName} is required but was null");
-                    }
+                // Primitives are never "missing", so only check null
+                if (def.IsRequired && memb.Value == null)
+                {
+                    throw new ArgumentNullException(memb.DbName, $"Parameter {memb.DbName} for contract {contractType.FullName} is required but was null");
                 }
             }
 

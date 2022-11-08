@@ -107,7 +107,8 @@ namespace IFY.Phorm
             foreach (var memb in members)
             {
                 var param = memb.ToDataParameter(cmd);
-                if (param.Direction != ParameterDirection.Input || (param.Value != null && param.Value != DBNull.Value))
+                if (param.Direction != ParameterDirection.Input
+                    || (param.Value != null && param.Value != DBNull.Value))
                 {
                     cmd.Parameters.Add(param);
                 }
