@@ -51,7 +51,7 @@ namespace IFY.Phorm.Tests
             [IgnoreDataMember]
             public string Arg3 { get; set; } = string.Empty;
             [IgnoreDataMember]
-            public ContractMember Arg4 { get; set; } = ContractMember.Out<string>("InvalidRename");
+            public ContractMember Arg4 { get; set; } = new ContractMember("InvalidRename", null, ParameterType.Output, (PropertyInfo?)null, typeof(string));
         }
 
         [PhormContract(Name = "IAmRenamedContract", Namespace = "otherSchema")]

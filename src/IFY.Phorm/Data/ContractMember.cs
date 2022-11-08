@@ -50,7 +50,7 @@ namespace IFY.Phorm.Data
         /// <summary>
         /// Relevant attributes for this contract member.
         /// </summary>
-        public IContractMemberAttribute[] Attributes { get; set; } = Array.Empty<IContractMemberAttribute>();
+        public IContractMemberAttribute[] Attributes { get; private set; } = Array.Empty<IContractMemberAttribute>();
 
         internal ContractMemberDefinition(string? dbName, ParameterType dir, MethodInfo? sourceMethod, Type? valueType = null)
         {
@@ -134,8 +134,6 @@ namespace IFY.Phorm.Data
 
                 members.Add(memb);
                 memb.ResolveAttributes(obj, out _);
-
-                // TODO: omit unused?
             }
 
             // Map additional member methods
@@ -231,16 +229,16 @@ namespace IFY.Phorm.Data
     /// <summary>
     /// The current instance value of a contract member.
     /// </summary>
-    public abstract class ContractMember : ContractMemberDefinition
+    public class ContractMember : ContractMemberDefinition
     {
         /// <summary>
         /// Value being passed to or returned from stored procedure.
         /// </summary>
-        public object? Value { get; protected set; }
+        public object? Value { get; private set; }
         /// <summary>
         /// Value has changed since originally set.
         /// </summary>
-        public bool HasChanged { get; protected set; }
+        public bool HasChanged { get; private set; }
 
         internal ContractMember(string? dbName, object? value, ParameterType dir, MethodInfo? sourceMethod, Type valueType)
             : base(dbName, dir, sourceMethod, valueType)
@@ -255,17 +253,9 @@ namespace IFY.Phorm.Data
             HasChanged = false;
         }
 
-        internal static ContractMember<T> In<T>(string dbName, T value, PropertyInfo? sourceProperty = null)
-        {
-            return new ContractMember<T>(dbName, value, ParameterType.Input, sourceProperty);
-        }
         public static ContractMember<T> Out<T>()
         {
             return new ContractMember<T>(string.Empty, default!, ParameterType.Output);
-        }
-        internal static ContractMember<T> Out<T>(string dbName, PropertyInfo? sourceProperty = null)
-        {
-            return new ContractMember<T>(dbName, default!, ParameterType.Output, sourceProperty);
         }
         public static ContractMember<int> RetVal()
         {
@@ -445,7 +435,29 @@ namespace IFY.Phorm.Data
             SetValue(val);
         }
 
-        public abstract void SetValue(object? value);
+        public virtual void SetValue(object? value)
+        {
+            if (value != null)
+            {
+                var targetType = ValueType != typeof(object)
+                    ? ValueType
+                    : null;
+                if (targetType != null && !targetType.IsInstanceOfType(value))
+                {
+                    targetType = Nullable.GetUnderlyingType(targetType) ?? targetType;
+                    if (value is byte[] bytes)
+                    {
+                        value = bytes.FromBytes(targetType);
+                    }
+                    else
+                    {
+                        value = Convert.ChangeType(value, targetType);
+                    }
+                }
+            }
+            Value = value;
+            HasChanged = true;
+        }
     }
 
     public class ContractMember<T> : ContractMember
@@ -484,8 +496,7 @@ namespace IFY.Phorm.Data
             }
             if (base.Value != value)
             {
-                base.Value = value;
-                HasChanged = true;
+                base.SetValue(value);
             }
         }
     }
