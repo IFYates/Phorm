@@ -1,87 +1,89 @@
 ﻿using IFY.Phorm.Connectivity;
+using IFY.Phorm.Execution;
 using Microsoft.Data.SqlClient;
 using System;
+using System.Collections.Generic;
 using System.Data;
-using System.Linq;
 
 namespace IFY.Phorm.SqlClient
 {
-    // TODO: handle errors and log messages
-
     public class SqlPhormSession : AbstractPhormSession
     {
-        private readonly string _databaseConnectionString;
-        private readonly string? _connectionName;
+        public event EventHandler<IPhormDbConnection>? Connected;
 
-        public string ViewPrefix
-        {
-            get;
-#if NETSTANDARD || NETCOREAPP
-            set;
-#else
-            init;
-#endif
-        } = "vw_";
-        public string ProcedurePrefix
-        {
-            get;
-#if NETSTANDARD || NETCOREAPP
-            set;
-#else
-            init;
-#endif
-        } = "usp_";
-        public string TablePrefix
-        {
-            get;
-#if NETSTANDARD || NETCOREAPP
-            set;
-#else
-            init;
-#endif
-        } = "";
+        private static readonly Dictionary<string, IPhormDbConnection> _connectionPool = new Dictionary<string, IPhormDbConnection>();
+
+        internal Func<string?, IDbConnection, IPhormDbConnection> _connectionBuilder = (connectionName, conn) => new PhormDbConnection(connectionName, conn);
 
         public SqlPhormSession(string databaseConnectionString, string? connectionName = null)
+            : base(databaseConnectionString, connectionName)
         {
-            _databaseConnectionString = databaseConnectionString;
-            _connectionName = connectionName;
         }
 
+        public override IPhormSession SetConnectionName(string connectionName)
+        {
+            return new SqlPhormSession(_databaseConnectionString, connectionName);
+        }
+
+        // TODO: only new connection if needed
+        // TODO: base?
         protected override IPhormDbConnection GetConnection()
         {
-            // Ensure connection identifies as the given name
-            var connStr = new SqlConnectionStringBuilder(_databaseConnectionString);
-            connStr.ApplicationName = _connectionName ?? connStr.ApplicationName;
-
-            // TODO: if conn is a reuse, use same PhormDbConnection instance
-            var conn = new SqlConnection(connStr.ToString());
-            var phormConn = new PhormDbConnection(_connectionName, conn);
-
-            // Resolve default schema
-            if (phormConn.DefaultSchema.Length == 0)
+            // Reuse existing connections, where possible
+            if (!_connectionPool.TryGetValue(_connectionName ?? string.Empty, out var phormConn)
+                || phormConn.State != ConnectionState.Open)
             {
-                conn.Open();
-                using var cmd = conn.CreateCommand();
-                cmd.CommandText = "SELECT schema_name()";
-                phormConn.DefaultSchema = cmd.ExecuteScalar()?.ToString() ?? connStr.UserID;
-            }
+                lock (_connectionPool)
+                {
+                    if (!_connectionPool.TryGetValue(_connectionName ?? string.Empty, out phormConn)
+                        || phormConn.State != ConnectionState.Open)
+                    {
+                        // Create new connection
+                        phormConn?.Dispose();
 
+                        // Ensure application name is known user
+                        var connectionString = new SqlConnectionStringBuilder(_databaseConnectionString);
+                        connectionString.ApplicationName = _connectionName ?? connectionString.ApplicationName;
+                        var sqlConnStr = connectionString.ToString();
+
+                        // Open connection
+                        var db = new SqlConnection(sqlConnStr);
+                        phormConn = _connectionBuilder(_connectionName, db);
+
+                        // Resolve default schema
+                        if (phormConn.DefaultSchema.Length == 0)
+                        {
+                            phormConn.Open();
+                            using var cmd = ((IDbConnection)phormConn).CreateCommand();
+                            cmd.CommandText = "SELECT schema_name()";
+                            phormConn.DefaultSchema = cmd.ExecuteScalar()?.ToString() ?? connectionString.UserID;
+                        }
+                        _connectionPool[_connectionName ?? string.Empty] = phormConn;
+
+                        try
+                        {
+                            Connected?.Invoke(this, phormConn);
+                        }
+                        catch { }
+                    }
+                }
+            }
             return phormConn;
         }
 
-        protected override IAsyncDbCommand CreateCommand(IPhormDbConnection connection, string schema, string objectName, DbObjectType objectType)
-        {
-            // Complete object name
-            objectName = objectType switch
-            {
-                DbObjectType.StoredProcedure => objectName.FirstOrDefault() == '#' ? objectName : ProcedurePrefix + objectName, // Support temp sprocs
-                DbObjectType.View => ViewPrefix + objectName,
-                DbObjectType.Table => TablePrefix + objectName,
-                _ => throw new NotSupportedException($"Unsupported object type: {objectType}")
-            };
+        #region Console capture
 
-            return base.CreateCommand(connection, schema, objectName, objectType);
+        protected override AbstractConsoleMessageCapture StartConsoleCapture(Guid commandGuid, IAsyncDbCommand cmd)
+        {
+            if (cmd.Connection is SqlConnection sql)
+            {
+                return new SqlConsoleMessageCapture(this, commandGuid, sql);
+            }
+
+            return NullConsoleMessageCapture.Instance;
         }
+
+        #endregion Console capture
 
         #region Transactions
 

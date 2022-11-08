@@ -11,19 +11,18 @@ namespace IFY.Phorm.Tests
     /// <summary>
     /// Mockable test object with useful default implementation.
     /// </summary>
-    [SuppressMessage("Design", "CA1061:Do not hide base class methods")]
+    [ExcludeFromCodeCoverage]
     public partial class TestDbCommand : DbCommand, IAsyncDbCommand, IDbCommand
     {
         public int ReturnValue { get; set; } = 1;
         public DbDataReader Reader { get; set; }
 
-        public override string CommandText { get; [param: AllowNull] set; } = string.Empty;
+        public override string CommandText { get; set; } = string.Empty;
         public override int CommandTimeout { get; set; }
         public override CommandType CommandType { get; set; }
         public new virtual IDbConnection? Connection { get; set; }
 
-        public new virtual IDataParameterCollection Parameters { get; } = new TestParameterCollection();
-
+        public new virtual IDataParameterCollection Parameters { get; } = new TestDataParameterCollection();
 
         public new virtual IDbTransaction? Transaction { get; set; }
         public override UpdateRowSource UpdatedRowSource { get; set; }
@@ -33,9 +32,11 @@ namespace IFY.Phorm.Tests
         protected override DbTransaction? DbTransaction { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         public override bool DesignTimeVisible { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
+        public Action? OnExecuteReaderAsync { get; set; }
+
         public TestDbCommand()
         {
-            Reader = new TestDbReader();
+            Reader = new TestDbDataReader();
         }
         public TestDbCommand(DbDataReader reader)
         {
@@ -48,7 +49,7 @@ namespace IFY.Phorm.Tests
 
         public new virtual IDbDataParameter CreateParameter()
         {
-            return new TestDbParameter();
+            return new TestDbDataParameter();
         }
 
         public new virtual void Dispose()
@@ -81,6 +82,7 @@ namespace IFY.Phorm.Tests
 
         public new virtual Task<DbDataReader> ExecuteReaderAsync(CancellationToken cancellationToken)
         {
+            OnExecuteReaderAsync?.Invoke();
             var retvalParam = Parameters.AsParameters()
                 .FirstOrDefault(p => p.Direction == ParameterDirection.ReturnValue);
             if (retvalParam != null)

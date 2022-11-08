@@ -11,12 +11,17 @@
 		<TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);CopyProjectReferencesToPackage</TargetsForTfmSpecificBuildOutput>
 
 		<Authors>IFYates</Authors>
-		<PackageLicenseExpression>MIT</PackageLicenseExpression>
-		<Version>1.1.1-beta</Version>
+		<PackageLicenseExpression>MPL-2.0</PackageLicenseExpression>
+		<Version>1.5.0</Version>
 		<PackageProjectUrl>https://github.com/IFYates/Phorm</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/IFYates/Phorm</RepositoryUrl>
 		<RepositoryType>GitHub</RepositoryType>
 		<PackageReleaseNotes>
+			v1.5.0 - Contract structures cached by type. Out of beta
+			v1.4.1-beta - Reduced wasted connections. Replaced Shimterface with Shimr
+			v1.4.0-beta - New ContractMemberAttribute and improved connection handling
+			v1.3.0-beta - Console logs and errors
+			v1.2.0-beta - GenSpec support and event system
 			v1.1.1-beta - Supports .NET Standard 2.1
 			v1.1.0-beta - New syntax
 			v1.0.0-beta - First fully-functional release
@@ -32,7 +37,7 @@
 	</Target>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.Data.SqlClient" Version="4.1.0" />
+		<PackageReference Include="Microsoft.Data.SqlClient" Version="5.0.1" />
 		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
 	</ItemGroup>
 

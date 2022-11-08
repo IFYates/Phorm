@@ -1,5 +1,6 @@
 ﻿using IFY.Phorm.Data;
 using IFY.Phorm.Encryption;
+using IFY.Phorm.Execution;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using System;
@@ -13,19 +14,19 @@ namespace IFY.Phorm.Tests
     [TestClass]
     public class PhormContractRunnerTests
     {
-        public interface IContractDTO : IPhormContract
+        interface IContractDTO : IPhormContract
         {
         }
         [PhormContract(Namespace = "schema", Name = "contractName", Target = DbObjectType.Table)]
-        public interface IContractWithAttributeDTO : IPhormContract
+        interface IContractWithAttributeDTO : IPhormContract
         {
         }
         [DataContract(Namespace = "schema", Name = "contractName")]
-        public class DataContractDTO : IPhormContract
+        class DataContractDTO : IPhormContract
         {
         }
 
-#if NETSTANDARD || NETCOREAPP
+#if !NET5_0_OR_GREATER
         private static T getFieldValue<T>(object obj, string fieldName)
         {
             return (T)obj.GetType().GetField(fieldName, BindingFlags.NonPublic | BindingFlags.Instance)?.GetValue(obj)!;
@@ -37,24 +38,24 @@ namespace IFY.Phorm.Tests
         }
 #endif
 
-        public class TestDto
+        class TestDto
         {
             public string? Value { get; set; }
         }
 
-        public class TestContract : IPhormContract, IMemberTestContract
+        class TestContract : IPhormContract, IMemberTestContract
         {
-            public int Arg { get; set; }
+            public int Arg { get; set; } = 0;
             [IgnoreDataMember]
-            public int Arg2 { get; set; }
+            public int Arg2 { get; set; } = 0;
             [IgnoreDataMember]
             public string Arg3 { get; set; } = string.Empty;
             [IgnoreDataMember]
-            public ContractMember Arg4 { get; set; } = ContractMember.Out<string>("InvalidRename");
+            public ContractMember Arg4 { get; set; } = new ContractMember("InvalidRename", null, ParameterType.Output, typeof(string));
         }
 
         [PhormContract(Name = "IAmRenamedContract", Namespace = "otherSchema")]
-        public interface IMemberTestContract : IPhormContract
+        interface IMemberTestContract : IPhormContract
         {
             [DataMember(Name = "RenamedArg")]
             int Arg { get; }
@@ -64,7 +65,7 @@ namespace IFY.Phorm.Tests
             ContractMember Arg4 { get; }
         }
 
-        public interface ISecureTestContract : IPhormContract
+        interface ISecureTestContract : IPhormContract
         {
             [IgnoreDataMember]
             int Arg { get; }
@@ -194,7 +195,7 @@ namespace IFY.Phorm.Tests
                 DefaultSchema = "schema"
             };
 
-            var cmd = new TestDbCommand(new TestDbReader
+            var cmd = new TestDbCommand(new TestDbDataReader
             {
                 Data = new List<Dictionary<string, object>>
                 {
@@ -224,7 +225,7 @@ namespace IFY.Phorm.Tests
             // Assert
             Assert.AreEqual(3, res.Length);
             Assert.AreEqual(CommandType.StoredProcedure, cmd.CommandType);
-            Assert.AreEqual("[schema].[ContractName]", cmd.CommandText);
+            Assert.AreEqual("[schema].[usp_ContractName]", cmd.CommandText);
             Assert.AreEqual("value1", res[0].Value);
             Assert.AreEqual("value2", res[1].Value);
             Assert.AreEqual("value3", res[2].Value);
@@ -245,7 +246,7 @@ namespace IFY.Phorm.Tests
                 DefaultSchema = "schema"
             };
 
-            var cmd = new TestDbCommand(new TestDbReader
+            var cmd = new TestDbCommand(new TestDbDataReader
             {
                 Data = new List<Dictionary<string, object>>
                 {
@@ -275,7 +276,7 @@ namespace IFY.Phorm.Tests
             // Assert
             Assert.AreEqual(3, res.Length);
             Assert.AreEqual(CommandType.StoredProcedure, cmd.CommandType);
-            Assert.AreEqual("[schema].[ContractName]", cmd.CommandText);
+            Assert.AreEqual("[schema].[usp_ContractName]", cmd.CommandText);
             Assert.AreEqual("value1", res[0].Value);
             Assert.AreEqual("value2", res[1].Value);
             Assert.AreEqual("value3", res[2].Value);
@@ -288,9 +289,9 @@ namespace IFY.Phorm.Tests
         }
 
         [TestMethod]
-        [DataRow(DbObjectType.Table)]
-        [DataRow(DbObjectType.View)]
-        public void Many__NonProcedure_by_anon_object(DbObjectType objType)
+        [DataRow(DbObjectType.Table, "ContractName")]
+        [DataRow(DbObjectType.View, "vw_ContractName")]
+        public void Many__NonProcedure_by_anon_object(DbObjectType objType, string actName)
         {
             // Arrange
             var conn = new TestPhormConnection("")
@@ -298,7 +299,7 @@ namespace IFY.Phorm.Tests
                 DefaultSchema = "schema"
             };
 
-            var cmd = new TestDbCommand(new TestDbReader
+            var cmd = new TestDbCommand(new TestDbDataReader
             {
                 Data = new List<Dictionary<string, object>>
                 {
@@ -328,7 +329,7 @@ namespace IFY.Phorm.Tests
             // Assert
             Assert.AreEqual(3, res.Length);
             Assert.AreEqual(CommandType.Text, cmd.CommandType);
-            Assert.AreEqual("SELECT * FROM [schema].[ContractName] WHERE [Arg1] = @Arg1 AND [Arg2] = @Arg2", cmd.CommandText);
+            Assert.AreEqual("SELECT * FROM [schema].[" + actName + "] WHERE [Arg1] = @Arg1 AND [Arg2] = @Arg2", cmd.CommandText);
             Assert.AreEqual("value1", res[0].Value);
             Assert.AreEqual("value2", res[1].Value);
             Assert.AreEqual("value3", res[2].Value);
@@ -342,9 +343,9 @@ namespace IFY.Phorm.Tests
         }
 
         [TestMethod]
-        [DataRow(DbObjectType.Table)]
-        [DataRow(DbObjectType.View)]
-        public void ManyAsync__NonProcedure_by_anon_object(DbObjectType objType)
+        [DataRow(DbObjectType.Table, "ContractName")]
+        [DataRow(DbObjectType.View, "vw_ContractName")]
+        public void ManyAsync__NonProcedure_by_anon_object(DbObjectType objType, string actName)
         {
             // Arrange
             var conn = new TestPhormConnection("")
@@ -352,7 +353,7 @@ namespace IFY.Phorm.Tests
                 DefaultSchema = "schema"
             };
 
-            var cmd = new TestDbCommand(new TestDbReader
+            var cmd = new TestDbCommand(new TestDbDataReader
             {
                 Data = new List<Dictionary<string, object>>
                 {
@@ -382,7 +383,7 @@ namespace IFY.Phorm.Tests
             // Assert
             Assert.AreEqual(3, res.Length);
             Assert.AreEqual(CommandType.Text, cmd.CommandType);
-            Assert.AreEqual("SELECT * FROM [schema].[ContractName] WHERE [Arg1] = @Arg1 AND [Arg2] = @Arg2", cmd.CommandText);
+            Assert.AreEqual("SELECT * FROM [schema].[" + actName + "] WHERE [Arg1] = @Arg1 AND [Arg2] = @Arg2", cmd.CommandText);
             Assert.AreEqual("value1", res[0].Value);
             Assert.AreEqual("value2", res[1].Value);
             Assert.AreEqual("value3", res[2].Value);
@@ -404,7 +405,7 @@ namespace IFY.Phorm.Tests
                 DefaultSchema = "schema"
             };
 
-            var cmd = new TestDbCommand(new TestDbReader
+            var cmd = new TestDbCommand(new TestDbDataReader
             {
                 Data = new List<Dictionary<string, object>>
                 {
@@ -434,7 +435,7 @@ namespace IFY.Phorm.Tests
             // Assert
             Assert.AreEqual(3, res.Length);
             Assert.AreEqual(CommandType.StoredProcedure, cmd.CommandType);
-            Assert.AreEqual("[schema].[TestContract]", cmd.CommandText);
+            Assert.AreEqual("[schema].[usp_TestContract]", cmd.CommandText);
             Assert.AreEqual("value1", res[0].Value);
             Assert.AreEqual("value2", res[1].Value);
             Assert.AreEqual("value3", res[2].Value);
@@ -455,7 +456,7 @@ namespace IFY.Phorm.Tests
                 DefaultSchema = "schema"
             };
 
-            var cmd = new TestDbCommand(new TestDbReader
+            var cmd = new TestDbCommand(new TestDbDataReader
             {
                 Data = new List<Dictionary<string, object>>
                 {
@@ -485,7 +486,7 @@ namespace IFY.Phorm.Tests
             // Assert
             Assert.AreEqual(3, res.Length);
             Assert.AreEqual(CommandType.StoredProcedure, cmd.CommandType);
-            Assert.AreEqual("[schema].[TestContract]", cmd.CommandText);
+            Assert.AreEqual("[schema].[usp_TestContract]", cmd.CommandText);
             Assert.AreEqual("value1", res[0].Value);
             Assert.AreEqual("value2", res[1].Value);
             Assert.AreEqual("value3", res[2].Value);
@@ -498,9 +499,9 @@ namespace IFY.Phorm.Tests
         }
 
         [TestMethod]
-        [DataRow(DbObjectType.Table)]
-        [DataRow(DbObjectType.View)]
-        public void Many__NonProcedure_by_contract(DbObjectType objType)
+        [DataRow(DbObjectType.Table, "TestContract")]
+        [DataRow(DbObjectType.View, "vw_TestContract")]
+        public void Many__NonProcedure_by_contract(DbObjectType objType, string actName)
         {
             // Arrange
             var conn = new TestPhormConnection("")
@@ -508,7 +509,7 @@ namespace IFY.Phorm.Tests
                 DefaultSchema = "schema"
             };
 
-            var cmd = new TestDbCommand(new TestDbReader
+            var cmd = new TestDbCommand(new TestDbDataReader
             {
                 Data = new List<Dictionary<string, object>>
                 {
@@ -538,7 +539,7 @@ namespace IFY.Phorm.Tests
             // Assert
             Assert.AreEqual(3, res.Length);
             Assert.AreEqual(CommandType.Text, cmd.CommandType);
-            Assert.AreEqual("SELECT * FROM [schema].[TestContract] WHERE [Arg] = @Arg", cmd.CommandText);
+            Assert.AreEqual("SELECT * FROM [schema].[" + actName + "] WHERE [Arg] = @Arg", cmd.CommandText);
             Assert.AreEqual("value1", res[0].Value);
             Assert.AreEqual("value2", res[1].Value);
             Assert.AreEqual("value3", res[2].Value);
@@ -551,9 +552,9 @@ namespace IFY.Phorm.Tests
         }
 
         [TestMethod]
-        [DataRow(DbObjectType.Table)]
-        [DataRow(DbObjectType.View)]
-        public void ManyAsync__NonProcedure_by_contract(DbObjectType objType)
+        [DataRow(DbObjectType.Table, "TestContract")]
+        [DataRow(DbObjectType.View, "vw_TestContract")]
+        public void ManyAsync__NonProcedure_by_contract(DbObjectType objType, string actName)
         {
             // Arrange
             var conn = new TestPhormConnection("")
@@ -561,7 +562,7 @@ namespace IFY.Phorm.Tests
                 DefaultSchema = "schema"
             };
 
-            var cmd = new TestDbCommand(new TestDbReader
+            var cmd = new TestDbCommand(new TestDbDataReader
             {
                 Data = new List<Dictionary<string, object>>
                 {
@@ -591,7 +592,7 @@ namespace IFY.Phorm.Tests
             // Assert
             Assert.AreEqual(3, res.Length);
             Assert.AreEqual(CommandType.Text, cmd.CommandType);
-            Assert.AreEqual("SELECT * FROM [schema].[TestContract] WHERE [Arg] = @Arg", cmd.CommandText);
+            Assert.AreEqual("SELECT * FROM [schema].[" + actName + "] WHERE [Arg] = @Arg", cmd.CommandText);
             Assert.AreEqual("value1", res[0].Value);
             Assert.AreEqual("value2", res[1].Value);
             Assert.AreEqual("value3", res[2].Value);
@@ -603,7 +604,7 @@ namespace IFY.Phorm.Tests
             Assert.AreEqual(1, pars[1].Value);
         }
 
-        public class TestSecureDto
+        class TestSecureDto
         {
             public int Arg { get; set; }
             [SecureValue("class", nameof(Arg))]
@@ -633,9 +634,10 @@ namespace IFY.Phorm.Tests
                 .Returns(() => encrMock.Object);
             GlobalSettings.EncryptionProvider = provMock.Object;
 
-            var rdr = new TestDbReader();
+            var rdr = new TestDbDataReader();
             rdr.Data.Add(new Dictionary<string, object>()
             {
+                ["Arg"] = 100,
                 ["Arg3"] = encdata
             });
             var cmd = new TestDbCommand
@@ -672,7 +674,7 @@ namespace IFY.Phorm.Tests
                 DefaultSchema = "schema"
             };
 
-            var cmd = new TestDbCommand(new TestDbReader
+            var cmd = new TestDbCommand(new TestDbDataReader
             {
                 Data = new List<Dictionary<string, object>>
                 {
@@ -705,7 +707,7 @@ namespace IFY.Phorm.Tests
                 DefaultSchema = "schema"
             };
 
-            var cmd = new TestDbCommand(new TestDbReader
+            var cmd = new TestDbCommand(new TestDbDataReader
             {
                 Data = new List<Dictionary<string, object>>
                 {
@@ -726,7 +728,7 @@ namespace IFY.Phorm.Tests
 
             // Assert
             Assert.AreEqual(CommandType.StoredProcedure, cmd.CommandType);
-            Assert.AreEqual("[schema].[ContractName]", cmd.CommandText);
+            Assert.AreEqual("[schema].[usp_ContractName]", cmd.CommandText);
             Assert.AreEqual("value1", res?.Value);
 
             var pars = cmd.Parameters.AsParameters();
@@ -745,7 +747,7 @@ namespace IFY.Phorm.Tests
                 DefaultSchema = "schema"
             };
 
-            var cmd = new TestDbCommand(new TestDbReader
+            var cmd = new TestDbCommand(new TestDbDataReader
             {
                 Data = new List<Dictionary<string, object>>
                 {
@@ -766,7 +768,7 @@ namespace IFY.Phorm.Tests
 
             // Assert
             Assert.AreEqual(CommandType.StoredProcedure, cmd.CommandType);
-            Assert.AreEqual("[schema].[ContractName]", cmd.CommandText);
+            Assert.AreEqual("[schema].[usp_ContractName]", cmd.CommandText);
             Assert.AreEqual("value1", res?.Value);
 
             var pars = cmd.Parameters.AsParameters();
@@ -777,9 +779,9 @@ namespace IFY.Phorm.Tests
         }
 
         [TestMethod]
-        [DataRow(DbObjectType.Table)]
-        [DataRow(DbObjectType.View)]
-        public void One__NonProcedure_by_anon_object(DbObjectType objType)
+        [DataRow(DbObjectType.Table, "ContractName")]
+        [DataRow(DbObjectType.View, "vw_ContractName")]
+        public void One__NonProcedure_by_anon_object(DbObjectType objType, string actName)
         {
             // Arrange
             var conn = new TestPhormConnection("")
@@ -787,7 +789,7 @@ namespace IFY.Phorm.Tests
                 DefaultSchema = "schema"
             };
 
-            var cmd = new TestDbCommand(new TestDbReader
+            var cmd = new TestDbCommand(new TestDbDataReader
             {
                 Data = new List<Dictionary<string, object>>
                 {
@@ -808,7 +810,7 @@ namespace IFY.Phorm.Tests
 
             // Assert
             Assert.AreEqual(CommandType.Text, cmd.CommandType);
-            Assert.AreEqual("SELECT * FROM [schema].[ContractName] WHERE [Arg1] = @Arg1 AND [Arg2] = @Arg2", cmd.CommandText);
+            Assert.AreEqual("SELECT * FROM [schema].[" + actName + "] WHERE [Arg1] = @Arg1 AND [Arg2] = @Arg2", cmd.CommandText);
             Assert.AreEqual("value1", res?.Value);
 
             var pars = cmd.Parameters.AsParameters();
@@ -820,9 +822,9 @@ namespace IFY.Phorm.Tests
         }
 
         [TestMethod]
-        [DataRow(DbObjectType.Table)]
-        [DataRow(DbObjectType.View)]
-        public void OneAsync__NonProcedure_by_anon_object(DbObjectType objType)
+        [DataRow(DbObjectType.Table, "ContractName")]
+        [DataRow(DbObjectType.View, "vw_ContractName")]
+        public void OneAsync__NonProcedure_by_anon_object(DbObjectType objType, string actName)
         {
             // Arrange
             var conn = new TestPhormConnection("")
@@ -830,7 +832,7 @@ namespace IFY.Phorm.Tests
                 DefaultSchema = "schema"
             };
 
-            var cmd = new TestDbCommand(new TestDbReader
+            var cmd = new TestDbCommand(new TestDbDataReader
             {
                 Data = new List<Dictionary<string, object>>
                 {
@@ -851,7 +853,7 @@ namespace IFY.Phorm.Tests
 
             // Assert
             Assert.AreEqual(CommandType.Text, cmd.CommandType);
-            Assert.AreEqual("SELECT * FROM [schema].[ContractName] WHERE [Arg1] = @Arg1 AND [Arg2] = @Arg2", cmd.CommandText);
+            Assert.AreEqual("SELECT * FROM [schema].[" + actName + "] WHERE [Arg1] = @Arg1 AND [Arg2] = @Arg2", cmd.CommandText);
             Assert.AreEqual("value1", res?.Value);
 
             var pars = cmd.Parameters.AsParameters();
@@ -871,7 +873,7 @@ namespace IFY.Phorm.Tests
                 DefaultSchema = "schema"
             };
 
-            var cmd = new TestDbCommand(new TestDbReader
+            var cmd = new TestDbCommand(new TestDbDataReader
             {
                 Data = new List<Dictionary<string, object>>
                 {
@@ -892,7 +894,7 @@ namespace IFY.Phorm.Tests
 
             // Assert
             Assert.AreEqual(CommandType.StoredProcedure, cmd.CommandType);
-            Assert.AreEqual("[schema].[TestContract]", cmd.CommandText);
+            Assert.AreEqual("[schema].[usp_TestContract]", cmd.CommandText);
             Assert.AreEqual("value1", res?.Value);
 
             var pars = cmd.Parameters.AsParameters();
@@ -911,7 +913,7 @@ namespace IFY.Phorm.Tests
                 DefaultSchema = "schema"
             };
 
-            var cmd = new TestDbCommand(new TestDbReader
+            var cmd = new TestDbCommand(new TestDbDataReader
             {
                 Data = new List<Dictionary<string, object>>
                 {
@@ -932,7 +934,7 @@ namespace IFY.Phorm.Tests
 
             // Assert
             Assert.AreEqual(CommandType.StoredProcedure, cmd.CommandType);
-            Assert.AreEqual("[schema].[TestContract]", cmd.CommandText);
+            Assert.AreEqual("[schema].[usp_TestContract]", cmd.CommandText);
             Assert.AreEqual("value1", res?.Value);
 
             var pars = cmd.Parameters.AsParameters();
@@ -943,9 +945,9 @@ namespace IFY.Phorm.Tests
         }
 
         [TestMethod]
-        [DataRow(DbObjectType.Table)]
-        [DataRow(DbObjectType.View)]
-        public void One__NonProcedure_by_contract(DbObjectType objType)
+        [DataRow(DbObjectType.Table, "TestContract")]
+        [DataRow(DbObjectType.View, "vw_TestContract")]
+        public void One__NonProcedure_by_contract(DbObjectType objType, string actName)
         {
             // Arrange
             var conn = new TestPhormConnection("")
@@ -953,7 +955,7 @@ namespace IFY.Phorm.Tests
                 DefaultSchema = "schema"
             };
 
-            var cmd = new TestDbCommand(new TestDbReader
+            var cmd = new TestDbCommand(new TestDbDataReader
             {
                 Data = new List<Dictionary<string, object>>
                 {
@@ -974,7 +976,7 @@ namespace IFY.Phorm.Tests
 
             // Assert
             Assert.AreEqual(CommandType.Text, cmd.CommandType);
-            Assert.AreEqual("SELECT * FROM [schema].[TestContract] WHERE [Arg] = @Arg", cmd.CommandText);
+            Assert.AreEqual("SELECT * FROM [schema].[" + actName + "] WHERE [Arg] = @Arg", cmd.CommandText);
             Assert.AreEqual("value1", res?.Value);
 
             var pars = cmd.Parameters.AsParameters();
@@ -985,9 +987,9 @@ namespace IFY.Phorm.Tests
         }
 
         [TestMethod]
-        [DataRow(DbObjectType.Table)]
-        [DataRow(DbObjectType.View)]
-        public void OneAsync__NonProcedure_by_contract(DbObjectType objType)
+        [DataRow(DbObjectType.Table, "TestContract")]
+        [DataRow(DbObjectType.View, "vw_TestContract")]
+        public void OneAsync__NonProcedure_by_contract(DbObjectType objType, string actName)
         {
             // Arrange
             var conn = new TestPhormConnection("")
@@ -995,7 +997,7 @@ namespace IFY.Phorm.Tests
                 DefaultSchema = "schema"
             };
 
-            var cmd = new TestDbCommand(new TestDbReader
+            var cmd = new TestDbCommand(new TestDbDataReader
             {
                 Data = new List<Dictionary<string, object>>
                 {
@@ -1016,7 +1018,7 @@ namespace IFY.Phorm.Tests
 
             // Assert
             Assert.AreEqual(CommandType.Text, cmd.CommandType);
-            Assert.AreEqual("SELECT * FROM [schema].[TestContract] WHERE [Arg] = @Arg", cmd.CommandText);
+            Assert.AreEqual("SELECT * FROM [schema].[" + actName + "] WHERE [Arg] = @Arg", cmd.CommandText);
             Assert.AreEqual("value1", res?.Value);
 
             var pars = cmd.Parameters.AsParameters();
@@ -1035,23 +1037,26 @@ namespace IFY.Phorm.Tests
                 DefaultSchema = "schema"
             };
 
+            var mocks = new MockRepository(MockBehavior.Strict);
+
             var data = "secure_value".GetBytes();
             var encdata = Guid.NewGuid().ToString().GetBytes();
-            var encrMock = new Mock<IEncryptor>(MockBehavior.Strict);
+            var encrMock = mocks.Create<IEncryptor>();
             encrMock.SetupProperty(m => m.Authenticator);
             encrMock.Setup(m => m.Encrypt(data))
-                .Returns(encdata);
+                .Returns(encdata).Verifiable();
             encrMock.Setup(m => m.Decrypt(encdata))
-                .Returns(data);
+                .Returns(data).Verifiable();
 
-            var provMock = new Mock<IEncryptionProvider>(MockBehavior.Strict);
+            var provMock = mocks.Create<IEncryptionProvider>();
             provMock.Setup(m => m.GetInstance("class"))
-                .Returns(() => encrMock.Object);
+                .Returns(() => encrMock.Object).Verifiable();
             GlobalSettings.EncryptionProvider = provMock.Object;
 
-            var rdr = new TestDbReader();
+            var rdr = new TestDbDataReader();
             rdr.Data.Add(new Dictionary<string, object>()
             {
+                ["Arg"] = 100,
                 ["Arg3"] = encdata
             });
             var cmd = new TestDbCommand
@@ -1070,10 +1075,102 @@ namespace IFY.Phorm.Tests
             var res = runner.Get<TestSecureDto>()!;
 
             // Assert
+            mocks.Verify();
             Assert.AreEqual("secure_value", res.Arg3);
             CollectionAssert.AreEqual(100.GetBytes(), encrMock.Object.Authenticator);
         }
 
         #endregion One
+
+        #region Console messages
+
+        interface IConsoleLogContract : IPhormContract
+        {
+            int Arg { get; }
+            ConsoleLogMember ConsoleLogs { get; }
+        }
+
+        class ConsoleLogContract : IConsoleLogContract
+        {
+            public int Arg { get; set; }
+
+            public ConsoleLogMember ConsoleLogs { get; } = ContractMember.Console();
+        }
+
+        [TestMethod]
+        public void Get__Contract_can_receive_console_messages()
+        {
+            // Arrange
+            var conn = new TestPhormConnection("")
+            {
+                DefaultSchema = "schema"
+            };
+
+            var cmd = new TestDbCommand();
+            conn.CommandQueue.Enqueue(cmd);
+
+            var phorm = new TestPhormSession(new TestPhormConnectionProvider((s) => conn))
+            {
+                ConsoleMessageCaptureProvider = (s, g) => new TestConsoleMessageCapture(s, g)
+            };
+
+            phorm.ConsoleMessages.Add(new ConsoleMessage { Message = "Message1" });
+            phorm.ConsoleMessages.Add(new ConsoleMessage { Message = "Message2" });
+            phorm.ConsoleMessages.Add(new ConsoleMessage { Message = "Message3" });
+
+            var arg = new ConsoleLogContract { Arg = 1 };
+
+            var runner = new PhormContractRunner<IConsoleLogContract>(phorm, null, DbObjectType.Default, arg);
+
+            // Act
+            _ = runner.GetAsync<object>().Result;
+
+            // Assert
+            Assert.AreEqual(3, arg.ConsoleLogs.Value.Length);
+            Assert.AreEqual("Message1", arg.ConsoleLogs.Value[0].Message);
+            Assert.AreEqual("Message2", arg.ConsoleLogs.Value[1].Message);
+            Assert.AreEqual("Message3", arg.ConsoleLogs.Value[2].Message);
+        }
+
+        [TestMethod]
+        public void Get__Anonymous_contract_can_receive_console_messages()
+        {
+            // Arrange
+            var conn = new TestPhormConnection("")
+            {
+                DefaultSchema = "schema"
+            };
+
+            var cmd = new TestDbCommand();
+            conn.CommandQueue.Enqueue(cmd);
+
+            var phorm = new TestPhormSession(new TestPhormConnectionProvider((s) => conn))
+            {
+                ConsoleMessageCaptureProvider = (s, g) => new TestConsoleMessageCapture(s, g)
+            };
+
+            phorm.ConsoleMessages.Add(new ConsoleMessage { Message = "Message1" });
+            phorm.ConsoleMessages.Add(new ConsoleMessage { Message = "Message2" });
+            phorm.ConsoleMessages.Add(new ConsoleMessage { Message = "Message3" });
+
+            var arg = new
+            {
+                Arg = 1,
+                ConsoleLogs = ContractMember.Console()
+            };
+
+            var runner = new PhormContractRunner<IConsoleLogContract>(phorm, null, DbObjectType.Default, arg);
+
+            // Act
+            _ = runner.GetAsync<object>().Result;
+
+            // Assert
+            Assert.AreEqual(3, arg.ConsoleLogs.Value.Length);
+            Assert.AreEqual("Message1", arg.ConsoleLogs.Value[0].Message);
+            Assert.AreEqual("Message2", arg.ConsoleLogs.Value[1].Message);
+            Assert.AreEqual("Message3", arg.ConsoleLogs.Value[2].Message);
+        }
+
+        #endregion Console messages
     }
 }

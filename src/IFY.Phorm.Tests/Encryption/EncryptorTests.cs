@@ -7,18 +7,13 @@ using System.Data;
 using System.Linq;
 using System.Text;
 using IFY.Phorm.Data;
+using System.Diagnostics.CodeAnalysis;
 
 namespace IFY.Phorm.Tests.Encryption
 {
     [TestClass]
     public class EncryptorTests
     {
-        class DataObject
-        {
-            public string? Authenticator { get; set; }
-            public string? Value { get; set; }
-        }
-
         interface ISaveDataObject : IPhormContract
         {
             [SecureValue("Test")]
@@ -40,12 +35,13 @@ namespace IFY.Phorm.Tests.Encryption
         }
         class ReverseStringAttribute : AbstractTransphormAttribute
         {
-            public override object? FromDatasource(Type type, object? data)
+            [ExcludeFromCodeCoverage]
+            public override object? FromDatasource(Type type, object? data, object? context)
             {
                 throw new NotImplementedException();
             }
 
-            public override object? ToDatasource(object? data)
+            public override object? ToDatasource(object? data, object? context)
             {
                 return string.Join("", ((string?)data ?? "").ToArray().Reverse());
             }

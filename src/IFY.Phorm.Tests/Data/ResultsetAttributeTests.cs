@@ -1,5 +1,6 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 namespace IFY.Phorm.Data.Tests
@@ -7,15 +8,16 @@ namespace IFY.Phorm.Data.Tests
     [TestClass]
     public class ResultsetAttributeTests
     {
-        public class ParentObject
+        class ParentObject
         {
-            public long Id { get; set; }
+            public long Id { get; set; } = 0;
 
-            public static object InvalidSelectProperty => new RecordMatcher<ParentObject, ChildObject>((p, c) => true);
+            [ExcludeFromCodeCoverage]
+            public static object InvalidSelectProperty => throw new NotImplementedException();
             public static IRecordMatcher WrongParentType => new RecordMatcher<ChildObject, ChildObject>((p, c) => true);
             public static IRecordMatcher MatchByParentId => new RecordMatcher<ParentObject, ChildObject>((p, c) => c.ParentId == p.Id);
         }
-        public class ChildObject
+        class ChildObject
         {
             public long ParentId { get; set; }
         }

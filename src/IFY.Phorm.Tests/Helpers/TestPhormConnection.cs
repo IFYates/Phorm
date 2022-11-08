@@ -6,14 +6,15 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace IFY.Phorm.Tests
 {
+    [ExcludeFromCodeCoverage]
     public class TestPhormConnection : IPhormDbConnection
     {
-        public Queue<TestDbCommand> CommandQueue { get; } = new Queue<TestDbCommand>();
+        public Queue<IAsyncDbCommand> CommandQueue { get; } = new Queue<IAsyncDbCommand>();
 
         public virtual string? ConnectionName { get; }
 
         public virtual string DefaultSchema { get; set; } = "dbo";
-        public virtual string ConnectionString { get => throw new NotImplementedException(); [param: AllowNull] set => throw new NotImplementedException(); }
+        public virtual string ConnectionString { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
         public virtual int ConnectionTimeout => throw new NotImplementedException();
 

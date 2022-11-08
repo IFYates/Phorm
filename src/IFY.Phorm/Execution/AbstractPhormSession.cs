@@ -1,6 +1,10 @@
 ﻿using IFY.Phorm.Connectivity;
 using IFY.Phorm.Data;
+using IFY.Phorm.EventArgs;
+using IFY.Phorm.Execution;
+using System;
 using System.Data;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -8,13 +12,93 @@ namespace IFY.Phorm
 {
     public abstract partial class AbstractPhormSession : IPhormSession
     {
-        public bool StrictResultSize { get; set; } = true;
+        protected readonly string _databaseConnectionString;
+        protected readonly string? _connectionName;
 
-        public AbstractPhormSession()
+        public string ProcedurePrefix
         {
+            get;
+#if !NET5_0_OR_GREATER
+            set;
+#else
+            init;
+#endif
+        } = GlobalSettings.ProcedurePrefix;
+        public string TablePrefix
+        {
+            get;
+#if !NET5_0_OR_GREATER
+            set;
+#else
+            init;
+#endif
+        } = GlobalSettings.TablePrefix;
+        public string ViewPrefix
+        {
+            get;
+#if !NET5_0_OR_GREATER
+            set;
+#else
+            init;
+#endif
+        } = GlobalSettings.ViewPrefix;
+
+        #region Events
+
+        public event EventHandler<CommandExecutingEventArgs>? CommandExecuting;
+        internal void OnCommandExecuting(CommandExecutingEventArgs args)
+        {
+            try { CommandExecuting?.Invoke(this, args); } catch { }
+            Events.OnCommandExecuting(this, args);
+        }
+
+        public event EventHandler<CommandExecutedEventArgs>? CommandExecuted;
+        internal void OnCommandExecuted(CommandExecutedEventArgs args)
+        {
+            try { CommandExecuted?.Invoke(this, args); } catch { }
+            Events.OnCommandExecuted(this, args);
+        }
+
+        public event EventHandler<UnexpectedRecordColumnEventArgs>? UnexpectedRecordColumn;
+        internal void OnUnexpectedRecordColumn(UnexpectedRecordColumnEventArgs args)
+        {
+            try { UnexpectedRecordColumn?.Invoke(this, args); } catch { }
+            Events.OnUnexpectedRecordColumn(this, args);
+        }
+
+        public event EventHandler<UnresolvedContractMemberEventArgs>? UnresolvedContractMember;
+        internal void OnUnresolvedContractMember(UnresolvedContractMemberEventArgs args)
+        {
+            try { UnresolvedContractMember?.Invoke(this, args); } catch { }
+            Events.OnUnresolvedContractMember(this, args);
+        }
+
+        public event EventHandler<ConsoleMessageEventArgs>? ConsoleMessage;
+        internal void OnConsoleMessage(ConsoleMessageEventArgs args)
+        {
+            try { ConsoleMessage?.Invoke(this, args); } catch { }
+            Events.OnConsoleMessage(this, args);
+        }
+
+        #endregion Events
+
+        public bool ExceptionsAsConsoleMessage { get; set; } = GlobalSettings.ExceptionsAsConsoleMessage;
+
+        public bool StrictResultSize { get; set; } = GlobalSettings.StrictResultSize;
+
+        public AbstractPhormSession(string databaseConnectionString, string? connectionName)
+        {
+            _databaseConnectionString = databaseConnectionString;
+            _connectionName = connectionName;
         }
 
         #region Connection
+
+        protected abstract IPhormDbConnection GetConnection(); // TODO ???
+
+        protected virtual string? GetConnectionName() => _connectionName;
+
+        public abstract IPhormSession SetConnectionName(string connectionName);
 
         internal IAsyncDbCommand CreateCommand(string? schema, string objectName, DbObjectType objectType)
         {
@@ -23,13 +107,21 @@ namespace IFY.Phorm
             return CreateCommand(conn, schema, objectName, objectType);
         }
 
-        protected abstract IPhormDbConnection GetConnection();
-
         protected virtual IAsyncDbCommand CreateCommand(IPhormDbConnection connection, string schema, string objectName, DbObjectType objectType)
         {
+            // Complete object name
+            objectName = objectType switch
+            {
+                DbObjectType.StoredProcedure => objectName.FirstOrDefault() == '#'
+                    ? objectName : ProcedurePrefix + objectName, // Support temp sprocs
+                DbObjectType.View => ViewPrefix + objectName,
+                DbObjectType.Table => TablePrefix + objectName,
+                _ => throw new NotSupportedException($"Unsupported object type: {objectType}")
+            };
+
             var cmd = connection.CreateCommand();
 
-#if NETSTANDARD || NETCOREAPP
+#if !NET5_0_OR_GREATER
             if (objectType.IsOneOf(DbObjectType.Table, DbObjectType.View))
 #else
             if (objectType is DbObjectType.Table or DbObjectType.View)
@@ -37,7 +129,7 @@ namespace IFY.Phorm
             {
                 cmd.CommandType = CommandType.Text;
                 // TODO: Could replace '*' with desired column names, validated by cached SchemaOnly call
-                // TODO: Can do TOP 2 if want to check for first item
+                // TODO: Can do TOP 2 if we know single entity Get, to know only 1 item
                 cmd.CommandText = $"SELECT * FROM [{schema}].[{objectName}]";
                 return cmd;
             }
@@ -45,6 +137,23 @@ namespace IFY.Phorm
             cmd.CommandType = CommandType.StoredProcedure;
             cmd.CommandText = $"[{schema}].[{objectName}]";
             return cmd;
+        }
+
+        /// <summary>
+        /// If the connection implementation supports capture of console output (print statements),
+        /// this method returns a new <see cref="AbstractConsoleMessageCapture"/> that will receive the output.
+        /// </summary>
+        /// <param name="cmd">The command to capture console output for.</param>
+        /// <returns>The object that will be provide the final console output.</returns>
+        protected internal virtual AbstractConsoleMessageCapture StartConsoleCapture(Guid commandGuid, IAsyncDbCommand cmd)
+            => NullConsoleMessageCapture.Instance;
+
+        protected internal class NullConsoleMessageCapture : AbstractConsoleMessageCapture
+        {
+            public static readonly NullConsoleMessageCapture Instance = new NullConsoleMessageCapture();
+            private NullConsoleMessageCapture() : base(null!, Guid.Empty) { }
+            public override bool ProcessException(Exception ex) => false;
+            public override void Dispose() { }
         }
 
         #endregion Connection
@@ -110,7 +219,7 @@ namespace IFY.Phorm
         public TResult? Get<TResult>(object? args = null)
             where TResult : class
         {
-            var runner = new PhormContractRunner<IPhormContract>(this, typeof(TResult), null, DbObjectType.Table, args);
+            var runner = new PhormContractRunner<IPhormContract>(this, typeof(TResult), null, DbObjectType.View, args);
             return runner.Get<TResult>();
         }
 
@@ -120,7 +229,7 @@ namespace IFY.Phorm
         public Task<TResult?> GetAsync<TResult>(object? args = null, CancellationToken? cancellationToken = null)
             where TResult : class
         {
-            var runner = new PhormContractRunner<IPhormContract>(this, typeof(TResult), null, DbObjectType.Table, args);
+            var runner = new PhormContractRunner<IPhormContract>(this, typeof(TResult), null, DbObjectType.View, args);
             return runner.GetAsync<TResult>(cancellationToken);
         }
 

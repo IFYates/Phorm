@@ -19,7 +19,7 @@ namespace IFY.Phorm.Transformation
         /// </summary>
         public bool SendAsString { get; set; }
 
-        public override object? FromDatasource(Type type, object? data)
+        public override object? FromDatasource(Type type, object? data, object? context)
         {
             var enumType = Nullable.GetUnderlyingType(type) ?? type;
             if (data == null)
@@ -49,7 +49,7 @@ namespace IFY.Phorm.Transformation
             return Enum.Parse(enumType, memberMatch?.Name ?? str, true); // Will fail on bad value
         }
 
-        public override object? ToDatasource(object? data)
+        public override object? ToDatasource(object? data, object? context)
         {
             if (data == null)
             {

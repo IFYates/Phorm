@@ -2,11 +2,13 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 namespace IFY.Phorm.Tests
 {
-    internal class TestParameterCollection : IDataParameterCollection
+    [ExcludeFromCodeCoverage]
+    internal class TestDataParameterCollection : IDataParameterCollection
     {
         private readonly List<IDbDataParameter> _parameters = new List<IDbDataParameter>();
 

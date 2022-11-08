@@ -19,6 +19,10 @@ namespace IFY.Phorm
                 return Array.Empty<byte>();
             }
 
+            if (value is DateTime dt)
+            {
+                value = dt.Ticks;
+            }
             if (value is decimal dec)
             {
                 var ints = decimal.GetBits(dec);
@@ -46,8 +50,13 @@ namespace IFY.Phorm
             };
         }
 
+#if !NET5_0_OR_GREATER
         public static T FromBytes<T>(this byte[]? bytes) // Nullable
             => (T)FromBytes(bytes, typeof(T))!;
+#else
+        public static T? FromBytes<T>(this byte[]? bytes)
+            => (T?)FromBytes(bytes, typeof(T));
+#endif
         public static object? FromBytes(this byte[]? bytes, Type resultType)
         {
             if (bytes == null)
@@ -58,6 +67,10 @@ namespace IFY.Phorm
             if (resultType == typeof(byte[]))
             {
                 return bytes;
+            }
+            if (resultType == typeof(DateTime))
+            {
+                return new DateTime(BitConverter.ToInt64(bytes));
             }
             if (resultType == typeof(decimal))
             {
@@ -79,7 +92,7 @@ namespace IFY.Phorm
             }
 
             var def = Activator.CreateInstance(resultType);
-#if NETSTANDARD || NETCOREAPP
+#if !NET5_0_OR_GREATER
             switch (def)
             {
                 case byte _: return bytes.Single();
@@ -108,7 +121,7 @@ namespace IFY.Phorm
 #endif
         }
 
-#if NETSTANDARD || NETCOREAPP
+#if !NET5_0_OR_GREATER
         public static bool IsOneOf<T>(this T value, params T[] values)
         {
             return values.Contains(value);

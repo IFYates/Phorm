@@ -4,6 +4,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 namespace IFY.Phorm.Tests.Encryption
@@ -25,14 +26,20 @@ namespace IFY.Phorm.Tests.Encryption
 
         class TransformToSourceAttribute : AbstractTransphormAttribute
         {
-            public override object? FromDatasource(Type type, object? data) => throw new NotImplementedException();
-            public override object? ToDatasource(object? data) => "ToSource_" + (string?)data;
+            [ExcludeFromCodeCoverage]
+            public override object? FromDatasource(Type type, object? data, object? context)
+                => throw new NotImplementedException();
+            public override object? ToDatasource(object? data, object? context)
+                => "ToSource_" + (string?)data;
         }
 
         class TransformFromSourceAttribute : AbstractTransphormAttribute
         {
-            public override object? FromDatasource(Type type, object? data) => "FromSource_" + (string?)data;
-            public override object? ToDatasource(object? data) => throw new NotImplementedException();
+            public override object? FromDatasource(Type type, object? data, object? context)
+                => "FromSource_" + (string?)data;
+            [ExcludeFromCodeCoverage]
+            public override object? ToDatasource(object? data, object? context)
+                => throw new NotImplementedException();
         }
 
         [TestMethod]
@@ -57,7 +64,7 @@ namespace IFY.Phorm.Tests.Encryption
         public void Can_transform_value_from_datasource()
         {
             // Arrange
-            var cmd = new TestDbCommand(new TestDbReader
+            var cmd = new TestDbCommand(new TestDbDataReader
             {
                 Data = new List<Dictionary<string, object>>
                 {
