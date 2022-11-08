@@ -637,6 +637,7 @@ namespace IFY.Phorm.Tests
             var rdr = new TestDbDataReader();
             rdr.Data.Add(new Dictionary<string, object>()
             {
+                ["Arg"] = 100,
                 ["Arg3"] = encdata
             });
             var cmd = new TestDbCommand
@@ -1036,23 +1037,26 @@ namespace IFY.Phorm.Tests
                 DefaultSchema = "schema"
             };
 
+            var mocks = new MockRepository(MockBehavior.Strict);
+
             var data = "secure_value".GetBytes();
             var encdata = Guid.NewGuid().ToString().GetBytes();
-            var encrMock = new Mock<IEncryptor>(MockBehavior.Strict);
+            var encrMock = mocks.Create<IEncryptor>();
             encrMock.SetupProperty(m => m.Authenticator);
             encrMock.Setup(m => m.Encrypt(data))
-                .Returns(encdata);
+                .Returns(encdata).Verifiable();
             encrMock.Setup(m => m.Decrypt(encdata))
-                .Returns(data);
+                .Returns(data).Verifiable();
 
-            var provMock = new Mock<IEncryptionProvider>(MockBehavior.Strict);
+            var provMock = mocks.Create<IEncryptionProvider>();
             provMock.Setup(m => m.GetInstance("class"))
-                .Returns(() => encrMock.Object);
+                .Returns(() => encrMock.Object).Verifiable();
             GlobalSettings.EncryptionProvider = provMock.Object;
 
             var rdr = new TestDbDataReader();
             rdr.Data.Add(new Dictionary<string, object>()
             {
+                ["Arg"] = 100,
                 ["Arg3"] = encdata
             });
             var cmd = new TestDbCommand
@@ -1071,6 +1075,7 @@ namespace IFY.Phorm.Tests
             var res = runner.Get<TestSecureDto>()!;
 
             // Assert
+            mocks.Verify();
             Assert.AreEqual("secure_value", res.Arg3);
             CollectionAssert.AreEqual(100.GetBytes(), encrMock.Object.Authenticator);
         }
