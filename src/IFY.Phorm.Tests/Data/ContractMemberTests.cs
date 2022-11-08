@@ -31,37 +31,11 @@ namespace IFY.Phorm.Data.Tests
         public int? NullableIntProperty { get; set; }
 
         [TestMethod]
-        public void In__Without_property()
-        {
-            var res = ContractMember.In("name", typeof(string), null);
-
-            Assert.AreEqual("name", res.DbName);
-            Assert.AreEqual(typeof(string), res.Value);
-            Assert.IsFalse(res.HasChanged);
-            Assert.AreEqual(ParameterType.Input, res.Direction);
-            Assert.IsNull(res.SourceMember);
-            Assert.AreEqual(typeof(Type), res.ValueType);
-        }
-
-        [TestMethod]
         public void Out__Without_args()
         {
             var res = ContractMember.Out<Type>();
 
             Assert.AreEqual(string.Empty, res.DbName);
-            Assert.IsNull(res.Value);
-            Assert.IsFalse(res.HasChanged);
-            Assert.AreEqual(ParameterType.Output, res.Direction);
-            Assert.IsNull(res.SourceMember);
-            Assert.AreEqual(typeof(Type), res.ValueType);
-        }
-
-        [TestMethod]
-        public void Out__Without_property()
-        {
-            var res = ContractMember.Out<Type>("name", null);
-
-            Assert.AreEqual("name", res.DbName);
             Assert.IsNull(res.Value);
             Assert.IsFalse(res.HasChanged);
             Assert.AreEqual(ParameterType.Output, res.Direction);
@@ -89,7 +63,7 @@ namespace IFY.Phorm.Data.Tests
 
             var obj = new object();
 
-            var memb = ContractMember.In(prop.Name, string.Empty, prop);
+            var memb = new ContractMember(prop.Name, string.Empty, ParameterType.Input, prop);
 
             memb.ResolveAttributes(obj, out var isSecure);
 
@@ -104,7 +78,7 @@ namespace IFY.Phorm.Data.Tests
 
             var obj = new object();
 
-            var memb = ContractMember.In(prop.Name, string.Empty, prop);
+            var memb = new ContractMember(prop.Name, null, ParameterType.Input, prop);
 
             memb.ResolveAttributes(obj, out var isSecure);
 
@@ -276,7 +250,9 @@ namespace IFY.Phorm.Data.Tests
         }
 
         [DataMember(IsRequired = true)]
-        public string RequiredProperty { get; set; } = string.Empty;
+        public string RequiredString { get; set; } = string.Empty;
+        [DataMember(IsRequired = true)]
+        public int RequiredNumber { get; set; }
 
         private static void getDbMocks(out Mock<IAsyncDbCommand> cmdMock, out Mock<IDbDataParameter> dbpMock)
         {
@@ -298,7 +274,7 @@ namespace IFY.Phorm.Data.Tests
             // Arrange
             getDbMocks(out var cmdMock, out var dbpMock);
 
-            var memb = ContractMember.In("Name", "value");
+            var memb = new ContractMember("Name", "value", ParameterType.Input, typeof(string));
 
             // Act
             var dbp = memb.ToDataParameter(cmdMock.Object);
@@ -320,9 +296,9 @@ namespace IFY.Phorm.Data.Tests
             // Arrange
             getDbMocks(out var cmdMock, out var dbpMock);
 
-            var prop = GetType().GetProperty(nameof(StringProperty));
+            var prop = GetType().GetProperty(nameof(StringProperty))!;
 
-            var memb = ContractMember.In("Name", "value", prop);
+            var memb = new ContractMember("Name", "value", ParameterType.Input, prop);
 
             // Act
             var dbp = memb.ToDataParameter(cmdMock.Object);
@@ -344,7 +320,7 @@ namespace IFY.Phorm.Data.Tests
             // Arrange
             getDbMocks(out var cmdMock, out var dbpMock);
 
-            var memb = ContractMember.In<string?>("Name", null);
+            var memb = new ContractMember("Name", null, ParameterType.Input, typeof(string));
 
             // Act
             var dbp = memb.ToDataParameter(cmdMock.Object);
@@ -363,9 +339,9 @@ namespace IFY.Phorm.Data.Tests
             // Arrange
             getDbMocks(out var cmdMock, out var dbpMock);
 
-            var prop = GetType().GetProperty(nameof(TransphormedStringProperty));
+            var prop = GetType().GetProperty(nameof(TransphormedStringProperty))!;
 
-            var memb = ContractMember.In("Name", "value", prop);
+            var memb = new ContractMember("Name", "value", ParameterType.Input, prop);
             memb.ResolveAttributes(null, out _);
 
             // Act
@@ -383,7 +359,7 @@ namespace IFY.Phorm.Data.Tests
             // Arrange
             getDbMocks(out var cmdMock, out var dbpMock);
 
-            var memb = ContractMember.In("Name", TestEnum.Value1);
+            var memb = new ContractMember("Name", TestEnum.Value1, ParameterType.Input, typeof(TestEnum));
 
             // Act
             var dbp = memb.ToDataParameter(cmdMock.Object);
@@ -402,7 +378,7 @@ namespace IFY.Phorm.Data.Tests
             getDbMocks(out var cmdMock, out var dbpMock);
 
             var dt = DateTime.UtcNow;
-            var memb = ContractMember.In("Name", dt);
+            var memb = new ContractMember("Name", dt, ParameterType.Input, typeof(DateTime));
 
             // Act
             var dbp = memb.ToDataParameter(cmdMock.Object);
@@ -424,7 +400,7 @@ namespace IFY.Phorm.Data.Tests
             getDbMocks(out var cmdMock, out var dbpMock);
 
             var dt = DateTime.Parse(dtStr);
-            var memb = ContractMember.In("Name", dt);
+            var memb = new ContractMember("Name", dt, ParameterType.Input, typeof(DateTime));
 
             // Act
             var dbp = memb.ToDataParameter(cmdMock.Object);
@@ -444,7 +420,7 @@ namespace IFY.Phorm.Data.Tests
             getDbMocks(out var cmdMock, out var dbpMock);
 
             var dt = DateTime.Parse(dtStr);
-            var memb = ContractMember.In("Name", dt);
+            var memb = new ContractMember("Name", dt, ParameterType.Input, typeof(DateTime));
 
             // Act
             var dbp = memb.ToDataParameter(cmdMock.Object);
@@ -463,7 +439,7 @@ namespace IFY.Phorm.Data.Tests
             getDbMocks(out var cmdMock, out var dbpMock);
 
             var val = Guid.NewGuid();
-            var memb = ContractMember.In("Name", val);
+            var memb = new ContractMember("Name", val, ParameterType.Input, typeof(Guid));
 
             // Act
             var dbp = memb.ToDataParameter(cmdMock.Object);
@@ -500,9 +476,9 @@ namespace IFY.Phorm.Data.Tests
             // Arrange
             getDbMocks(out var cmdMock, out var dbpMock);
 
-            var prop = GetType().GetProperty(nameof(RequiredProperty))!;
+            var prop = GetType().GetProperty(nameof(RequiredString))!;
 
-            var memb = ContractMember.In<string?>(prop.Name, null, prop);
+            var memb = new ContractMember(prop.Name, null, ParameterType.Input, prop);
             memb.ResolveAttributes(null, out _);
 
             // Act
@@ -522,9 +498,9 @@ namespace IFY.Phorm.Data.Tests
             // Arrange
             getDbMocks(out var cmdMock, out var dbpMock);
 
-            var prop = GetType().GetProperty(nameof(RequiredProperty))!;
+            var prop = GetType().GetProperty(nameof(RequiredString))!;
 
-            var memb = ContractMember.In<string?>(prop.Name, "value", prop);
+            var memb = new ContractMember(prop.Name, "value", ParameterType.Input, prop);
             memb.ResolveAttributes(null, out _);
 
             // Act
@@ -537,14 +513,14 @@ namespace IFY.Phorm.Data.Tests
         }
 
         [TestMethod]
-        public void ToDataParameter__Required_parameter_default__OK()
+        public void ToDataParameter__Required_primitive_parameter_default__OK()
         {
             // Arrange
             getDbMocks(out var cmdMock, out var dbpMock);
 
-            var prop = GetType().GetProperty(nameof(RequiredProperty))!;
+            var prop = GetType().GetProperty(nameof(RequiredNumber))!;
 
-            var memb = ContractMember.In(prop.Name, 0, prop);
+            var memb = new ContractMember(prop.Name, 0, ParameterType.Input, prop);
             memb.ResolveAttributes(null, out _);
 
             // Act
@@ -553,7 +529,7 @@ namespace IFY.Phorm.Data.Tests
             // Assert
             cmdMock.Verify();
             dbpMock.Verify();
-            Assert.AreEqual(0, res.Value);
+            Assert.AreEqual(0, (int)res.Value!);
         }
 
         [TestMethod]
@@ -562,9 +538,9 @@ namespace IFY.Phorm.Data.Tests
             // Arrange
             getDbMocks(out var cmdMock, out var dbpMock);
 
-            var prop = GetType().GetProperty(nameof(SecureDataProperty));
+            var prop = GetType().GetProperty(nameof(SecureDataProperty))!;
 
-            var memb = ContractMember.In("Name", new byte[] { 0 }, prop);
+            var memb = new ContractMember("Name", new byte[] { 0 }, ParameterType.Input, prop);
             memb.ResolveAttributes(null, out _);
 
             // Act
@@ -638,9 +614,9 @@ namespace IFY.Phorm.Data.Tests
         [TestMethod]
         public void FromDatasource__Transphorms_value()
         {
-            var prop = GetType().GetProperty(nameof(TransphormedStringProperty));
+            var prop = GetType().GetProperty(nameof(TransphormedStringProperty))!;
 
-            var memb = ContractMember.Out<object>(string.Empty, prop);
+            var memb = new ContractMember("name", null, ParameterType.Output, prop);
             memb.ResolveAttributes(null, out _);
 
             memb.FromDatasource("Value");
@@ -651,14 +627,14 @@ namespace IFY.Phorm.Data.Tests
         [TestMethod]
         public void FromDatasource__Decrypts_value()
         {
-            var prop = GetType().GetProperty(nameof(SecureDataProperty));
+            var prop = GetType().GetProperty(nameof(SecureDataProperty))!;
 
-            var memb = ContractMember.Out<byte[]>(string.Empty, prop);
+            var memb = new ContractMember("name", null, ParameterType.Output, prop);
             memb.ResolveAttributes(null, out _);
 
             memb.FromDatasource(new byte[] { 0 });
 
-            CollectionAssert.AreEqual(new byte[] { 1 }, memb.Value);
+            CollectionAssert.AreEqual(new byte[] { 1 }, (byte[])memb.Value!);
         }
 
         #endregion FromDatasource
@@ -682,7 +658,8 @@ namespace IFY.Phorm.Data.Tests
         [DataRow(nameof(NullableIntProperty), "12345", 12345)]
         public void SetValue__Converts_value_to_property_type(string propertyName, string value, object exp)
         {
-            var prop = GetType().GetProperty(propertyName);
+            var prop = GetType().GetProperty(propertyName)!;
+
             var member = new ContractMember<object>(propertyName, null!, ParameterType.Input, prop);
 
             member.SetValue(value);

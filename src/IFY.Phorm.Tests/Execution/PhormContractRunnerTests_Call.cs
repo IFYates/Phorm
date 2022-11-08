@@ -6,6 +6,7 @@ using Moq;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Reflection;
 using System.Runtime.Serialization;
 
 namespace IFY.Phorm.Tests
@@ -21,7 +22,7 @@ namespace IFY.Phorm.Tests
             [IgnoreDataMember]
             public string Arg3 { get; set; } = string.Empty;
             [IgnoreDataMember]
-            public ContractMember Arg4 { get; set; } = ContractMember.Out<string>("InvalidRename");
+            public ContractMember Arg4 { get; set; } = new ContractMember("InvalidRename", null, ParameterType.Output, typeof(string));
         }
 
         public class TestContract2 : IPhormContract

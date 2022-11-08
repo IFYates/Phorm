@@ -50,22 +50,28 @@ namespace IFY.Phorm.Data
         /// <summary>
         /// Relevant attributes for this contract member.
         /// </summary>
-        public IContractMemberAttribute[] Attributes { get; set; } = Array.Empty<IContractMemberAttribute>();
+        public IContractMemberAttribute[] Attributes { get; private set; } = Array.Empty<IContractMemberAttribute>();
 
-        internal ContractMemberDefinition(string? dbName, ParameterType dir, MethodInfo? sourceMethod, Type? valueType = null)
+        internal ContractMemberDefinition(string? dbName, ParameterType dir, MethodInfo sourceMethod)
         {
             DbName = dbName ?? string.Empty;
             SourceMember = sourceMethod;
-            SourceMemberId = sourceMethod != null ? $"{sourceMethod.Name}@{sourceMethod.DeclaringType!.FullName}" : null;
-            ValueType = sourceMethod?.ReturnType ?? valueType ?? typeof(object);
+            SourceMemberId = $"{sourceMethod.Name}@{sourceMethod.DeclaringType!.FullName}";
+            ValueType = sourceMethod.ReturnType;
             Direction = dir;
         }
-        internal ContractMemberDefinition(string? dbName, ParameterType dir, PropertyInfo? sourceProperty, Type? valueType = null)
+        internal ContractMemberDefinition(string? dbName, ParameterType dir, PropertyInfo sourceProperty)
         {
             DbName = dbName ?? string.Empty;
             SourceMember = sourceProperty;
-            SourceMemberId = sourceProperty != null ? $"{sourceProperty.Name}@{sourceProperty.DeclaringType!.FullName}" : null;
-            ValueType = sourceProperty?.PropertyType ?? valueType ?? typeof(object);
+            SourceMemberId = $"{sourceProperty.Name}@{sourceProperty.DeclaringType!.FullName}";
+            ValueType = sourceProperty.PropertyType;
+            Direction = dir;
+        }
+        internal ContractMemberDefinition(string? dbName, ParameterType dir, Type valueType)
+        {
+            DbName = dbName ?? string.Empty;
+            ValueType = valueType;
             Direction = dir;
         }
 
@@ -134,8 +140,6 @@ namespace IFY.Phorm.Data
 
                 members.Add(memb);
                 memb.ResolveAttributes(obj, out _);
-
-                // TODO: omit unused?
             }
 
             // Map additional member methods
@@ -209,9 +213,11 @@ namespace IFY.Phorm.Data
 #endif
             {
                 // Can only be method or property
-                memb = SourceMember is MethodInfo mi
-                    ? new ContractMember<object?>(DbName, value, Direction, mi)
-                    : new ContractMember<object?>(DbName, value, Direction, (PropertyInfo?)SourceMember);
+                memb = SourceMember == null
+                    ? new ContractMember(DbName, value, Direction, ValueType)
+                    : SourceMember is MethodInfo mi
+                    ? new ContractMember(DbName, value, Direction, mi)
+                    : new ContractMember(DbName, value, Direction, (PropertyInfo)SourceMember);
             }
             else if (memb.Direction == ParameterType.ReturnValue)
             {
@@ -231,41 +237,39 @@ namespace IFY.Phorm.Data
     /// <summary>
     /// The current instance value of a contract member.
     /// </summary>
-    public abstract class ContractMember : ContractMemberDefinition
+    public class ContractMember : ContractMemberDefinition
     {
         /// <summary>
         /// Value being passed to or returned from stored procedure.
         /// </summary>
-        public object? Value { get; protected set; }
+        public object? Value { get; private set; }
         /// <summary>
         /// Value has changed since originally set.
         /// </summary>
-        public bool HasChanged { get; protected set; }
+        public bool HasChanged { get; private set; }
 
-        internal ContractMember(string? dbName, object? value, ParameterType dir, MethodInfo? sourceMethod, Type valueType)
-            : base(dbName, dir, sourceMethod, valueType)
+        internal ContractMember(string? dbName, object? value, ParameterType dir, MethodInfo sourceMethod)
+            : base(dbName, dir, sourceMethod)
         {
             SetValue(value);
             HasChanged = false;
         }
-        internal ContractMember(string? dbName, object? value, ParameterType dir, PropertyInfo? sourceProperty, Type valueType)
-            : base(dbName, dir, sourceProperty, valueType)
+        internal ContractMember(string? dbName, object? value, ParameterType dir, PropertyInfo sourceProperty)
+            : base(dbName, dir, sourceProperty)
+        {
+            SetValue(value);
+            HasChanged = false;
+        }
+        internal ContractMember(string? dbName, object? value, ParameterType dir, Type valueType)
+            : base(dbName, dir, valueType)
         {
             SetValue(value);
             HasChanged = false;
         }
 
-        internal static ContractMember<T> In<T>(string dbName, T value, PropertyInfo? sourceProperty = null)
-        {
-            return new ContractMember<T>(dbName, value, ParameterType.Input, sourceProperty);
-        }
         public static ContractMember<T> Out<T>()
         {
             return new ContractMember<T>(string.Empty, default!, ParameterType.Output);
-        }
-        internal static ContractMember<T> Out<T>(string dbName, PropertyInfo? sourceProperty = null)
-        {
-            return new ContractMember<T>(dbName, default!, ParameterType.Output, sourceProperty);
         }
         public static ContractMember<int> RetVal()
         {
@@ -445,7 +449,29 @@ namespace IFY.Phorm.Data
             SetValue(val);
         }
 
-        public abstract void SetValue(object? value);
+        public virtual void SetValue(object? value)
+        {
+            if (value != null)
+            {
+                var targetType = ValueType != typeof(object)
+                    ? ValueType
+                    : null;
+                if (targetType != null && !targetType.IsInstanceOfType(value))
+                {
+                    targetType = Nullable.GetUnderlyingType(targetType) ?? targetType;
+                    if (value is byte[] bytes)
+                    {
+                        value = bytes.FromBytes(targetType);
+                    }
+                    else
+                    {
+                        value = Convert.ChangeType(value, targetType);
+                    }
+                }
+            }
+            Value = value;
+            HasChanged = true;
+        }
     }
 
     public class ContractMember<T> : ContractMember
@@ -453,13 +479,13 @@ namespace IFY.Phorm.Data
         public new T Value => (T)base.Value!;
 
         internal ContractMember(string name, T value, ParameterType dir)
-            : base(name, value, dir, (PropertyInfo?)null, typeof(T))
+            : base(name, value, dir, typeof(T))
         { }
-        internal ContractMember(string name, T value, ParameterType dir, MethodInfo? sourceMethod)
-            : base(name, value, dir, sourceMethod, typeof(T))
+        internal ContractMember(string name, T value, ParameterType dir, MethodInfo sourceMethod)
+            : base(name, value, dir, sourceMethod)
         { }
-        internal ContractMember(string name, T value, ParameterType dir, PropertyInfo? sourceProperty)
-            : base(name, value, dir, sourceProperty, typeof(T))
+        internal ContractMember(string name, T value, ParameterType dir, PropertyInfo sourceProperty)
+            : base(name, value, dir, sourceProperty)
         { }
 
         public override void SetValue(object? value)
@@ -484,8 +510,7 @@ namespace IFY.Phorm.Data
             }
             if (base.Value != value)
             {
-                base.Value = value;
-                HasChanged = true;
+                base.SetValue(value);
             }
         }
     }
