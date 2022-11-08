@@ -7,7 +7,6 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlTypes;
 using System.Linq;
-using System.Net;
 using System.Reflection;
 using System.Runtime.Serialization;
 
@@ -52,8 +51,23 @@ namespace IFY.Phorm.Data
         /// <summary>
         /// Relevant attributes for this contract member.
         /// </summary>
-        public IContractMemberAttribute[] Attributes { get; private set; } = Array.Empty<IContractMemberAttribute>();
+        public IContractMemberAttribute[] Attributes { get; } = Array.Empty<IContractMemberAttribute>();
+        /// <summary>
+        /// Returns true if this property is transformed by a secure attribute.
+        /// </summary>
+        public bool HasSecureAttribute => Attributes.OfType<AbstractSecureValueAttribute>().Any();
 
+        internal ContractMemberDefinition(ContractMemberDefinition orig)
+        {
+            DbName = orig.DbName;
+            Size = orig.Size;
+            Direction = orig.Direction;
+            SourceMember = orig.SourceMember;
+            SourceMemberId = orig.SourceMemberId;
+            ValueType = orig.ValueType;
+            IsRequired = orig.IsRequired;
+            Attributes = orig.Attributes;
+        }
         internal ContractMemberDefinition(string? dbName, ParameterType dir, MethodInfo sourceMethod)
         {
             DbName = dbName ?? string.Empty;
@@ -61,6 +75,7 @@ namespace IFY.Phorm.Data
             SourceMemberId = $"{sourceMethod.Name}@{sourceMethod.DeclaringType!.FullName}";
             ValueType = sourceMethod.ReturnType;
             Direction = dir;
+            Attributes = SourceMember.GetCustomAttributes().OfType<IContractMemberAttribute>().ToArray();
         }
         internal ContractMemberDefinition(string? dbName, ParameterType dir, PropertyInfo sourceProperty)
         {
@@ -69,6 +84,7 @@ namespace IFY.Phorm.Data
             SourceMemberId = $"{sourceProperty.Name}@{sourceProperty.DeclaringType!.FullName}";
             ValueType = sourceProperty.PropertyType;
             Direction = dir;
+            Attributes = SourceMember.GetCustomAttributes().OfType<IContractMemberAttribute>().ToArray();
         }
         internal ContractMemberDefinition(string? dbName, ParameterType dir, Type valueType)
         {
@@ -82,7 +98,7 @@ namespace IFY.Phorm.Data
         /// <summary>
         /// Convert properties of any object to <see cref="ContractMemberDefinition"/>s.
         /// </summary>
-        public static ContractMemberDefinition[] ResolveContract(object? obj, Type contractType)
+        public static ContractMemberDefinition[] GetFromContract(object? obj, Type contractType)
         {
             // If runtime contract type, must have object
             if (contractType == typeof(IPhormContract))
@@ -95,11 +111,11 @@ namespace IFY.Phorm.Data
             }
 
             var members = _memberCache.GetOrAdd(contractType,
-                _ => doResolveContract(obj, contractType));
+                _ => getMemberDefs(obj, contractType));
             return members;
         }
 
-        private static ContractMemberDefinition[] doResolveContract(object? obj, Type contractType)
+        private static ContractMemberDefinition[] getMemberDefs(object? obj, Type contractType)
         {
             // Map all contract properties
             var contractProps = contractType.GetProperties(BindingFlags.Instance | BindingFlags.Public);
@@ -118,7 +134,7 @@ namespace IFY.Phorm.Data
                 var canRead = prop.CanRead && cmAttr?.DisableInput != true;
                 var canWrite = prop.CanWrite && cmAttr?.DisableOutput != true;
                 var dir = (canRead ? ParameterType.Input : 0) | (canWrite ? ParameterType.Output : 0);
-                if (typeof(ContractOutMember<>).IsAssignableFrom(prop.PropertyType))
+                if (prop.PropertyType.IsGenericType && prop.PropertyType.GetGenericTypeDefinition()  == typeof(ContractOutMember<>))
                 {
                     dir = ParameterType.Output;
                 }
@@ -143,7 +159,6 @@ namespace IFY.Phorm.Data
                 };
 
                 members.Add(memb);
-                memb.ResolveAttributes(obj, out _);
             }
 
             // Map additional member methods
@@ -162,38 +177,30 @@ namespace IFY.Phorm.Data
                 var memb = new ContractMemberDefinition(method.Name, ParameterType.Input, method);
 
                 members.Add(memb);
-                memb.ResolveAttributes(obj, out _);
             }
 
             return members.ToArray();
         }
 
-        public void ResolveAttributes(object? context, out bool isSecure)
-        {
-            if (SourceMember != null && Attributes.Length == 0)
-            {
-                Attributes = SourceMember.GetCustomAttributes().OfType<IContractMemberAttribute>().ToArray();
-            }
-            Attributes.ToList().ForEach(a => a.SetContext(context));
-            isSecure = Attributes.OfType<AbstractSecureValueAttribute>().Any();
-        }
-
-        public ContractMember Fill(object? obj)
+        /// <summary>
+        /// Create an instance of this member by resolving the value from the appropriate entity member.
+        /// </summary>
+        public ContractMember FromEntity(object? entity)
         {
             object? getValue(MemberInfo? mem)
             {
                 return mem switch
                 {
-                    PropertyInfo pi => pi.GetValue(obj),
-                    MethodInfo mi => mi.Invoke(obj, Array.Empty<object>()),
+                    PropertyInfo pi => pi.GetValue(entity),
+                    MethodInfo mi => mi.Invoke(entity, Array.Empty<object>()),
                     _ => null
                 };
             }
 
             object? value = null;
-            if (obj != null && SourceMember != null)
+            if (entity != null && SourceMember != null)
             {
-                var objType = obj.GetType();
+                var objType = entity.GetType();
                 if (SourceMember.DeclaringType == objType)
                 {
                     value = getValue(SourceMember);
@@ -214,11 +221,7 @@ namespace IFY.Phorm.Data
 #endif
             {
                 // Can only be method or property
-                memb = SourceMember == null
-                    ? new ContractMember(DbName, value, Direction, ValueType)
-                    : SourceMember is MethodInfo mi
-                    ? new ContractMember(DbName, value, Direction, mi)
-                    : new ContractMember(DbName, value, Direction, (PropertyInfo)SourceMember);
+                memb = new ContractMember(this, value);
             }
             else if (memb.Direction == ParameterType.ReturnValue)
             {
@@ -227,11 +230,44 @@ namespace IFY.Phorm.Data
             else
             {
                 memb.DbName = DbName;
+                memb.IsRequired = IsRequired;
+                memb.Size = Size;
             }
 
-            memb.Attributes = Attributes;
-            memb.IsRequired = IsRequired;
-            memb.Size = Size;
+            return memb;
+        }
+
+        /// <summary>
+        /// Create an instance of this member by using the datasource value provided.
+        /// </summary>
+        public ContractMember FromDatasource(object? value, object? entity)
+        {
+            var memb = this as ContractMember ?? new ContractMember(this, null);
+
+            if (value == DBNull.Value)
+            {
+                value = null;
+            }
+            if (memb.Attributes.Length > 0)
+            {
+                // AbstractSecureValue
+                var secvalAttr = memb.Attributes
+                    .OfType<AbstractSecureValueAttribute>().SingleOrDefault();
+                if (secvalAttr != null)
+                {
+                    value = secvalAttr.Decrypt((byte[]?)value, entity);
+                }
+
+                // Transformation
+                var transfAttr = memb.Attributes
+                    .OfType<AbstractTransphormAttribute>().SingleOrDefault();
+                if (transfAttr != null)
+                {
+                    value = transfAttr.FromDatasource(ValueType, value, entity);
+                }
+            }
+
+            memb.SetValue(value);
             return memb;
         }
     }
@@ -250,8 +286,8 @@ namespace IFY.Phorm.Data
         /// </summary>
         public bool HasChanged { get; private set; }
 
-        internal ContractMember(string? dbName, object? value, ParameterType dir, MethodInfo sourceMethod)
-            : base(dbName, dir, sourceMethod)
+        internal ContractMember(ContractMemberDefinition def, object? value)
+            : base(def)
         {
             SetValue(value);
             HasChanged = false;
@@ -285,13 +321,13 @@ namespace IFY.Phorm.Data
             var objType = obj?.GetType();
             var isContract = hasContract && (obj == null || contractType.IsAssignableFrom(objType));
 
-            var defs = ContractMemberDefinition.ResolveContract(obj, contractType);
+            var defs = ContractMemberDefinition.GetFromContract(obj, contractType);
 
             // Resolve member values
             var members = new List<ContractMember>(defs.Length);
             foreach (var def in defs)
             {
-                var memb = def.Fill(obj);
+                var memb = def.FromEntity(obj);
                 members.Add(memb);
 
                 // Primitives are never "missing", so only check null
@@ -325,7 +361,7 @@ namespace IFY.Phorm.Data
             }
         }
 
-        public IDataParameter ToDataParameter(IAsyncDbCommand cmd)
+        public IDataParameter ToDataParameter(IAsyncDbCommand cmd, object? context)
         {
             var param = cmd.CreateParameter();
             param.ParameterName = "@" + DbName;
@@ -344,7 +380,7 @@ namespace IFY.Phorm.Data
             var val = Value;
             if (transfAttr != null)
             {
-                val = transfAttr.ToDatasource(val);
+                val = transfAttr.ToDatasource(val, context);
             }
             if (val != null)
             {
@@ -396,14 +432,11 @@ namespace IFY.Phorm.Data
                 param.DbType = DbType.Guid;
             }
 
-            if (Attributes.Length > 0)
+            if (HasSecureAttribute)
             {
                 // AbstractSecureValue
-                var secvalAttr = Attributes.OfType<AbstractSecureValueAttribute>().SingleOrDefault();
-                if (secvalAttr != null)
-                {
-                    param.Value = secvalAttr.Encrypt(param.Value);
-                }
+                var secvalAttr = Attributes.OfType<AbstractSecureValueAttribute>().Single();
+                param.Value = secvalAttr.Encrypt(param.Value, context);
             }
 
             if (param.Value is byte[] bin)
@@ -419,30 +452,19 @@ namespace IFY.Phorm.Data
             return param;
         }
 
-        public void FromDatasource(object? val)
+        /// <summary>
+        /// Apply this value to an entity.
+        /// </summary>
+        public void ApplyToEntity(object entity)
         {
-            if (val == DBNull.Value)
+            try
             {
-                val = null;
+                ((PropertyInfo?)SourceMember)?.SetValue(entity, Value);
             }
-            if (Attributes.Length > 0)
+            catch (Exception ex)
             {
-                // AbstractSecureValue
-                var secvalAttr = Attributes.OfType<AbstractSecureValueAttribute>().SingleOrDefault();
-                if (secvalAttr != null)
-                {
-                    val = secvalAttr.Decrypt((byte[]?)val);
-                }
-
-                // Transformation
-                var transfAttr = Attributes.OfType<AbstractTransphormAttribute>().SingleOrDefault();
-                if (transfAttr != null)
-                {
-                    val = transfAttr.FromDatasource(ValueType, val);
-                }
+                throw new InvalidOperationException($"Failed to set property {SourceMember?.Name ?? DbName}", ex);
             }
-
-            SetValue(val);
         }
 
         internal void SetValue(object? value)

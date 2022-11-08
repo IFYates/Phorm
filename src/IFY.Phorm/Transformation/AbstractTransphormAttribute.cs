@@ -14,16 +14,16 @@ namespace IFY.Phorm.Transformation
         /// </summary>
         /// <param name="type">The property type of the target property on the contract.</param>
         /// <param name="data">The raw data from the datasource.</param>
+        /// <param name="context">The context of the transformation.</param>
         /// <returns>The data to be put in the contract property.</returns>
-        public abstract object? FromDatasource(Type type, object? data);
-
-        public virtual void SetContext(object? context) { }
+        public abstract object? FromDatasource(Type type, object? data, object? context);
 
         /// <summary>
         /// Transform contract data to the type expected by the datasource.
         /// </summary>
         /// <param name="data">The current value in the contract.</param>
+        /// <param name="context">The context of the transformation.</param>
         /// <returns>The data to be sent to the datasource.</returns>
-        public abstract object? ToDatasource(object? data);
+        public abstract object? ToDatasource(object? data, object? context);
     }
 }

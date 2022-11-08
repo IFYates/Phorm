@@ -14,15 +14,15 @@ namespace IFY.Phorm.Tests
     [TestClass]
     public class PhormContractRunnerTests
     {
-        public interface IContractDTO : IPhormContract
+        interface IContractDTO : IPhormContract
         {
         }
         [PhormContract(Namespace = "schema", Name = "contractName", Target = DbObjectType.Table)]
-        public interface IContractWithAttributeDTO : IPhormContract
+        interface IContractWithAttributeDTO : IPhormContract
         {
         }
         [DataContract(Namespace = "schema", Name = "contractName")]
-        public class DataContractDTO : IPhormContract
+        class DataContractDTO : IPhormContract
         {
         }
 
@@ -38,16 +38,16 @@ namespace IFY.Phorm.Tests
         }
 #endif
 
-        public class TestDto
+        class TestDto
         {
             public string? Value { get; set; }
         }
 
-        public class TestContract : IPhormContract, IMemberTestContract
+        class TestContract : IPhormContract, IMemberTestContract
         {
-            public int Arg { get; set; }
+            public int Arg { get; set; } = 0;
             [IgnoreDataMember]
-            public int Arg2 { get; set; }
+            public int Arg2 { get; set; } = 0;
             [IgnoreDataMember]
             public string Arg3 { get; set; } = string.Empty;
             [IgnoreDataMember]
@@ -55,7 +55,7 @@ namespace IFY.Phorm.Tests
         }
 
         [PhormContract(Name = "IAmRenamedContract", Namespace = "otherSchema")]
-        public interface IMemberTestContract : IPhormContract
+        interface IMemberTestContract : IPhormContract
         {
             [DataMember(Name = "RenamedArg")]
             int Arg { get; }
@@ -65,7 +65,7 @@ namespace IFY.Phorm.Tests
             ContractMember Arg4 { get; }
         }
 
-        public interface ISecureTestContract : IPhormContract
+        interface ISecureTestContract : IPhormContract
         {
             [IgnoreDataMember]
             int Arg { get; }
@@ -604,7 +604,7 @@ namespace IFY.Phorm.Tests
             Assert.AreEqual(1, pars[1].Value);
         }
 
-        public class TestSecureDto
+        class TestSecureDto
         {
             public int Arg { get; set; }
             [SecureValue("class", nameof(Arg))]

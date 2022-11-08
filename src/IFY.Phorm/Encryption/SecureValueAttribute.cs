@@ -11,8 +11,6 @@ namespace IFY.Phorm.Encryption
         private readonly string _dataClassification;
         private readonly string? _authenticatorPropertyName;
 
-        private object? _context;
-
         private static object? _lastInstance = null;
         private static string? _lastProperty = null;
         private static byte[] _lastValue = Array.Empty<byte>();
@@ -51,7 +49,7 @@ namespace IFY.Phorm.Encryption
             return _lastValue;
         }
 
-        public override byte[] Decrypt(byte[]? value)
+        public override byte[] Decrypt(byte[]? value, object? context)
         {
             if (value == null)
             {
@@ -66,14 +64,15 @@ namespace IFY.Phorm.Encryption
             var encryptor = GlobalSettings.EncryptionProvider.GetInstance(_dataClassification);
             if (encryptor == null)
             {
+                // TODO: Fail instead?
                 return value;
             }
 
-            encryptor.Authenticator = resolveAuthenticator(_context, _authenticatorPropertyName);
+            encryptor.Authenticator = resolveAuthenticator(context, _authenticatorPropertyName);
             return encryptor.Decrypt(value);
         }
 
-        public override byte[] Encrypt(object? value)
+        public override byte[] Encrypt(object? value, object? context)
         {
             if (value == null)
             {
@@ -93,14 +92,8 @@ namespace IFY.Phorm.Encryption
                 return bytes;
             }
 
-            encryptor.Authenticator = resolveAuthenticator(_context, _authenticatorPropertyName);
+            encryptor.Authenticator = resolveAuthenticator(context, _authenticatorPropertyName);
             return encryptor.Encrypt(bytes);
-        }
-
-        public override void SetContext(object? context)
-        {
-            _context = context;
-            // TODO: clear _last* fields here, if doesn't break caching
         }
     }
 }
