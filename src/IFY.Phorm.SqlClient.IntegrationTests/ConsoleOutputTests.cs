@@ -20,7 +20,7 @@ namespace IFY.Phorm.SqlClient.IntegrationTests
         {
             public string? Text { get; set; }
 
-            public ContractMember<ConsoleMessage[]> ConsoleEvents { get; set; } = ContractMember.Console();
+            public ConsoleLogMember ConsoleEvents { get; set; } = ContractMember.Console();
         }
 
         [TestInitialize]

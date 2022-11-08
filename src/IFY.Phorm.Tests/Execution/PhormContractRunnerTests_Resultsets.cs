@@ -33,7 +33,6 @@ namespace IFY.Phorm.Tests
         [ExcludeFromCodeCoverage]
         class TestParentBadResultsetProperty
         {
-            [ExcludeFromCodeCoverage]
             [Resultset(0, nameof(TrueSelector))]
             public TestChild[] Children { get; } = Array.Empty<TestChild>();
             public static IRecordMatcher TrueSelector { get; }
@@ -42,11 +41,10 @@ namespace IFY.Phorm.Tests
 
         class TestParentBadProperty
         {
-            [ExcludeFromCodeCoverage]
-            public string? Key { get; }
+            public string? Key { get; } = null;
         }
 
-        public interface ITestContract : IPhormContract
+        interface ITestContract : IPhormContract
         {
         }
 

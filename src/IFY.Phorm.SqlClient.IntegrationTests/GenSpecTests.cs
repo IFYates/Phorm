@@ -2,8 +2,6 @@ using IFY.Phorm.Connectivity;
 using IFY.Phorm.Data;
 using IFY.Phorm.Transformation;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.Serialization;
 
@@ -12,71 +10,24 @@ namespace IFY.Phorm.SqlClient.IntegrationTests
     [TestClass]
     public class GenSpecTests : SqlIntegrationTestBase
     {
-        [PhormContract(Name = "DataTable")]
-        [ExcludeFromCodeCoverage]
-        public class DataItem
+        enum DataType { None, Numeric, String }
+
+        abstract class BaseDataItem
         {
-            public long Id { get; set; }
-            [DataMember(Name = "Int")]
-            public int? Num { get; set; }
-            public string? Text { get; set; }
-            public byte[]? Data { get; set; }
-            public DateTime? DateTime { get; set; }
-
-            public DataItem(long id, int? num, string? text, byte[]? data, DateTime? dateTime)
-            {
-                Id = id;
-                Num = num;
-                Text = text;
-                Data = data;
-                DateTime = dateTime;
-            }
-            public DataItem() : this(default, default, default, default, default)
-            { }
-        }
-
-        [PhormContract(Name = "DataTable")]
-        [ExcludeFromCodeCoverage]
-        public class DataItemWithoutText
-        {
-            public long Id { get; set; }
-            [DataMember(Name = "Int")]
-            public int? Num { get; set; }
-            [IgnoreDataMember]
-            public string? Text { get; set; }
-            public byte[]? Data { get; set; }
-            public DateTime? DateTime { get; set; }
-
-            public DataItemWithoutText(long id, int? num, string? text, byte[]? data, DateTime? dateTime)
-            {
-                Id = id;
-                Num = num;
-                Text = text;
-                Data = data;
-                DateTime = dateTime;
-            }
-            public DataItemWithoutText() : this(default, default, default, default, default)
-            { }
-        }
-
-        public enum DataType { None, Numeric, String }
-
-        public abstract class BaseDataItem
-        {
-            public long Id { get; set; }
+            public long Id { get; set; } = 0;
             public string Key { get; set; } = string.Empty;
             [DataMember(Name = "TypeId"), EnumValue]
-            public DataType Type { get; set; }
+            public DataType Type { get; set; } = DataType.None;
         }
 
         [PhormSpecOf(nameof(Type), DataType.Numeric)]
-        public class NumericDataItem : BaseDataItem
+        class NumericDataItem : BaseDataItem
         {
-            public decimal Number { get; set; }
+            public decimal Number { get; set; } = 0m;
         }
 
         [PhormSpecOf(nameof(Type), DataType.String)]
-        public class TextDataItem : BaseDataItem
+        class TextDataItem : BaseDataItem
         {
             public string String { get; set; } = string.Empty;
         }
@@ -131,18 +82,18 @@ RETURN 1");
             Assert.AreEqual(1, strs.Length);
         }
 
-        public class BaseDataItemNonabstract
+        class BaseDataItemNonabstract
         {
-            public long Id { get; set; }
+            public long Id { get; set; } = 0;
             public string Key { get; set; } = string.Empty;
             [DataMember(Name = "TypeId"), EnumValue]
-            public DataType Type { get; set; }
+            public DataType Type { get; set; } = DataType.None;
         }
 
         [PhormSpecOf(nameof(Type), DataType.Numeric)]
-        public class NumericDataItem2 : BaseDataItemNonabstract
+        class NumericDataItem2 : BaseDataItemNonabstract
         {
-            public decimal Number { get; set; }
+            public decimal Number { get; set; } = 0m;
         }
 
         [TestMethod]

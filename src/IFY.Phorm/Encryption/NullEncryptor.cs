@@ -13,8 +13,8 @@ namespace IFY.Phorm.Encryption
 #endif
     public class NullEncryptor : IEncryptor
     {
-        public byte[] Authenticator { get; set; } = Array.Empty<byte>();
-        public byte[] InitialVector { get; } = Array.Empty<byte>();
+        public byte[] Authenticator { get => Array.Empty<byte>(); set { } }
+        public byte[] InitialVector { get => Array.Empty<byte>(); set { } }
         
         public byte[] Encrypt(byte[] data) => data;
         

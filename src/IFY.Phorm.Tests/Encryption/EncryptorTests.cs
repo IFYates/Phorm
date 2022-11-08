@@ -14,13 +14,6 @@ namespace IFY.Phorm.Tests.Encryption
     [TestClass]
     public class EncryptorTests
     {
-        [ExcludeFromCodeCoverage]
-        class DataObject
-        {
-            public string? Authenticator { get; set; }
-            public string? Value { get; set; }
-        }
-
         interface ISaveDataObject : IPhormContract
         {
             [SecureValue("Test")]
@@ -40,15 +33,15 @@ namespace IFY.Phorm.Tests.Encryption
             [SecureValue("Test")]
             string? Value { get; }
         }
-        [ExcludeFromCodeCoverage]
         class ReverseStringAttribute : AbstractTransphormAttribute
         {
-            public override object? FromDatasource(Type type, object? data)
+            [ExcludeFromCodeCoverage]
+            public override object? FromDatasource(Type type, object? data, object? context)
             {
                 throw new NotImplementedException();
             }
 
-            public override object? ToDatasource(object? data)
+            public override object? ToDatasource(object? data, object? context)
             {
                 return string.Join("", ((string?)data ?? "").ToArray().Reverse());
             }

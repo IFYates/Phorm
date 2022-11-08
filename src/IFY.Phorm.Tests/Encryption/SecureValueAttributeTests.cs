@@ -19,7 +19,7 @@ namespace IFY.Phorm.Encryption.Tests
             var attr = new SecureValueAttribute("class", null);
 
             // Act
-            var res = attr.Decrypt(null);
+            var res = attr.Decrypt(null, null);
 
             // Assert
             Assert.AreEqual(0, res.Length);
@@ -36,7 +36,7 @@ namespace IFY.Phorm.Encryption.Tests
             // Act
             Assert.ThrowsException<NullReferenceException>(() =>
             {
-                _ = attr.Decrypt(new byte[] { 1, 2, 3, 4 });
+                _ = attr.Decrypt(new byte[] { 1, 2, 3, 4 }, null);
             });
         }
 
@@ -54,7 +54,7 @@ namespace IFY.Phorm.Encryption.Tests
             var data = new byte[] { 1, 2, 3, 4 };
 
             // Act
-            var res = attr.Decrypt(data);
+            var res = attr.Decrypt(data, null);
 
             // Assert
             Assert.AreSame(data, res);
@@ -80,7 +80,7 @@ namespace IFY.Phorm.Encryption.Tests
             GlobalSettings.EncryptionProvider = provMock.Object;
 
             // Act
-            var res = attr.Decrypt(data);
+            var res = attr.Decrypt(data, null);
 
             // Assert
             Assert.AreSame(result, res);
@@ -93,7 +93,7 @@ namespace IFY.Phorm.Encryption.Tests
             // Arrange
             var attr = new SecureValueAttribute("class", nameof(ClassWithAuthenticator.AuthenticatorValue));
 
-            attr.SetContext(new ClassWithAuthenticator { AuthenticatorValue = 100 });
+            var context = new ClassWithAuthenticator { AuthenticatorValue = 100 };
 
             var data = new byte[] { 1, 2, 3, 4 };
             var result = new byte[] { 1, 2, 3, 4 };
@@ -109,7 +109,7 @@ namespace IFY.Phorm.Encryption.Tests
             GlobalSettings.EncryptionProvider = provMock.Object;
 
             // Act
-            var res = attr.Decrypt(data);
+            var res = attr.Decrypt(data, context);
 
             // Assert
             Assert.AreSame(result, res);
@@ -123,7 +123,7 @@ namespace IFY.Phorm.Encryption.Tests
             var attr = new SecureValueAttribute("class", null);
 
             // Act
-            var res = attr.Encrypt(null);
+            var res = attr.Encrypt(null, null);
 
             // Assert
             Assert.AreEqual(0, res.Length);
@@ -140,7 +140,7 @@ namespace IFY.Phorm.Encryption.Tests
             // Act
             Assert.ThrowsException<NullReferenceException>(() =>
             {
-                _ = attr.Encrypt(new byte[] { 1, 2, 3, 4 });
+                _ = attr.Encrypt(new byte[] { 1, 2, 3, 4 }, null);
             });
         }
 
@@ -158,7 +158,7 @@ namespace IFY.Phorm.Encryption.Tests
             var data = new byte[] { 1, 2, 3, 4 };
 
             // Act
-            var res = attr.Encrypt(data);
+            var res = attr.Encrypt(data, null);
 
             // Assert
             Assert.AreSame(data, res);
@@ -184,7 +184,7 @@ namespace IFY.Phorm.Encryption.Tests
             GlobalSettings.EncryptionProvider = provMock.Object;
 
             // Act
-            var res = attr.Encrypt(data);
+            var res = attr.Encrypt(data, null);
 
             // Assert
             Assert.AreSame(result, res);
@@ -197,7 +197,7 @@ namespace IFY.Phorm.Encryption.Tests
             // Arrange
             var attr = new SecureValueAttribute("class", nameof(ClassWithAuthenticator.AuthenticatorValue));
 
-            attr.SetContext(new ClassWithAuthenticator { AuthenticatorValue = 100 });
+            var context = new ClassWithAuthenticator { AuthenticatorValue = 100 };
 
             var data = new byte[] { 1, 2, 3, 4 };
             var result = new byte[] { 1, 2, 3, 4 };
@@ -213,7 +213,7 @@ namespace IFY.Phorm.Encryption.Tests
             GlobalSettings.EncryptionProvider = provMock.Object;
 
             // Act
-            var res = attr.Encrypt(data);
+            var res = attr.Encrypt(data, context);
 
             // Assert
             Assert.AreSame(result, res);

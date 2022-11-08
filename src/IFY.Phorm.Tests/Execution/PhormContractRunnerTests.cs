@@ -14,15 +14,15 @@ namespace IFY.Phorm.Tests
     [TestClass]
     public class PhormContractRunnerTests
     {
-        public interface IContractDTO : IPhormContract
+        interface IContractDTO : IPhormContract
         {
         }
         [PhormContract(Namespace = "schema", Name = "contractName", Target = DbObjectType.Table)]
-        public interface IContractWithAttributeDTO : IPhormContract
+        interface IContractWithAttributeDTO : IPhormContract
         {
         }
         [DataContract(Namespace = "schema", Name = "contractName")]
-        public class DataContractDTO : IPhormContract
+        class DataContractDTO : IPhormContract
         {
         }
 
@@ -38,24 +38,24 @@ namespace IFY.Phorm.Tests
         }
 #endif
 
-        public class TestDto
+        class TestDto
         {
             public string? Value { get; set; }
         }
 
-        public class TestContract : IPhormContract, IMemberTestContract
+        class TestContract : IPhormContract, IMemberTestContract
         {
-            public int Arg { get; set; }
+            public int Arg { get; set; } = 0;
             [IgnoreDataMember]
-            public int Arg2 { get; set; }
+            public int Arg2 { get; set; } = 0;
             [IgnoreDataMember]
             public string Arg3 { get; set; } = string.Empty;
             [IgnoreDataMember]
-            public ContractMember Arg4 { get; set; } = ContractMember.Out<string>("InvalidRename");
+            public ContractMember Arg4 { get; set; } = new ContractMember("InvalidRename", null, ParameterType.Output, typeof(string));
         }
 
         [PhormContract(Name = "IAmRenamedContract", Namespace = "otherSchema")]
-        public interface IMemberTestContract : IPhormContract
+        interface IMemberTestContract : IPhormContract
         {
             [DataMember(Name = "RenamedArg")]
             int Arg { get; }
@@ -65,7 +65,7 @@ namespace IFY.Phorm.Tests
             ContractMember Arg4 { get; }
         }
 
-        public interface ISecureTestContract : IPhormContract
+        interface ISecureTestContract : IPhormContract
         {
             [IgnoreDataMember]
             int Arg { get; }
@@ -604,7 +604,7 @@ namespace IFY.Phorm.Tests
             Assert.AreEqual(1, pars[1].Value);
         }
 
-        public class TestSecureDto
+        class TestSecureDto
         {
             public int Arg { get; set; }
             [SecureValue("class", nameof(Arg))]
@@ -637,6 +637,7 @@ namespace IFY.Phorm.Tests
             var rdr = new TestDbDataReader();
             rdr.Data.Add(new Dictionary<string, object>()
             {
+                ["Arg"] = 100,
                 ["Arg3"] = encdata
             });
             var cmd = new TestDbCommand
@@ -1036,23 +1037,26 @@ namespace IFY.Phorm.Tests
                 DefaultSchema = "schema"
             };
 
+            var mocks = new MockRepository(MockBehavior.Strict);
+
             var data = "secure_value".GetBytes();
             var encdata = Guid.NewGuid().ToString().GetBytes();
-            var encrMock = new Mock<IEncryptor>(MockBehavior.Strict);
+            var encrMock = mocks.Create<IEncryptor>();
             encrMock.SetupProperty(m => m.Authenticator);
             encrMock.Setup(m => m.Encrypt(data))
-                .Returns(encdata);
+                .Returns(encdata).Verifiable();
             encrMock.Setup(m => m.Decrypt(encdata))
-                .Returns(data);
+                .Returns(data).Verifiable();
 
-            var provMock = new Mock<IEncryptionProvider>(MockBehavior.Strict);
+            var provMock = mocks.Create<IEncryptionProvider>();
             provMock.Setup(m => m.GetInstance("class"))
-                .Returns(() => encrMock.Object);
+                .Returns(() => encrMock.Object).Verifiable();
             GlobalSettings.EncryptionProvider = provMock.Object;
 
             var rdr = new TestDbDataReader();
             rdr.Data.Add(new Dictionary<string, object>()
             {
+                ["Arg"] = 100,
                 ["Arg3"] = encdata
             });
             var cmd = new TestDbCommand
@@ -1071,6 +1075,7 @@ namespace IFY.Phorm.Tests
             var res = runner.Get<TestSecureDto>()!;
 
             // Assert
+            mocks.Verify();
             Assert.AreEqual("secure_value", res.Arg3);
             CollectionAssert.AreEqual(100.GetBytes(), encrMock.Object.Authenticator);
         }

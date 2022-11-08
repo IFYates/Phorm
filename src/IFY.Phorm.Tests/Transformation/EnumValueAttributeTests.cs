@@ -22,7 +22,7 @@ namespace IFY.Phorm.Transformation.Tests
             var attr = new EnumValueAttribute();
 
             // Act
-            var res = attr.FromDatasource(typeof(TestEnum?), null);
+            var res = attr.FromDatasource(typeof(TestEnum?), null, null);
 
             // Assert
             Assert.IsNull(res);
@@ -37,7 +37,7 @@ namespace IFY.Phorm.Transformation.Tests
             // Act
             Assert.ThrowsException<ArgumentNullException>(() =>
             {
-                attr.FromDatasource(typeof(TestEnum), null);
+                attr.FromDatasource(typeof(TestEnum), null, null);
             });
         }
 
@@ -50,7 +50,7 @@ namespace IFY.Phorm.Transformation.Tests
             object value = TestEnum.Value5;
 
             // Act
-            var res = attr.FromDatasource(typeof(TestEnum?), value);
+            var res = attr.FromDatasource(typeof(TestEnum?), value, null);
 
             // Assert
             Assert.AreSame(value, res);
@@ -67,7 +67,7 @@ namespace IFY.Phorm.Transformation.Tests
             var attr = new EnumValueAttribute();
 
             // Act
-            var res = attr.FromDatasource(typeof(TestEnum?), input);
+            var res = attr.FromDatasource(typeof(TestEnum?), input, null);
 
             // Assert
             Assert.AreEqual(exp, res);
@@ -83,10 +83,10 @@ namespace IFY.Phorm.Transformation.Tests
             var attr = new EnumValueAttribute();
 
             // Act
-            var res = (TestEnum?)attr.FromDatasource(typeof(TestEnum), input) ?? TestEnum.Value1;
+            var res = (TestEnum?)attr.FromDatasource(typeof(TestEnum), input, null);
 
             // Assert
-            Assert.AreEqual(input, (int)res);
+            Assert.AreEqual(input, (int?)res);
             Assert.AreEqual(input.ToString(), res.ToString());
         }
 
@@ -100,7 +100,7 @@ namespace IFY.Phorm.Transformation.Tests
             // Act
             Assert.ThrowsException<ArgumentException>(() =>
             {
-                attr.FromDatasource(typeof(TestEnum), input);
+                attr.FromDatasource(typeof(TestEnum), input, null);
             });
         }
 
@@ -111,7 +111,7 @@ namespace IFY.Phorm.Transformation.Tests
             var attr = new EnumValueAttribute();
 
             // Act
-            var res = attr.ToDatasource(null);
+            var res = attr.ToDatasource(null, null);
 
             // Assert
             Assert.IsNull(res);
@@ -126,7 +126,7 @@ namespace IFY.Phorm.Transformation.Tests
             // Act
             Assert.ThrowsException<InvalidCastException>(() =>
             {
-                attr.ToDatasource("str");
+                attr.ToDatasource("str", null);
             });
         }
 
@@ -143,7 +143,7 @@ namespace IFY.Phorm.Transformation.Tests
             };
 
             // Act
-            var res = attr.ToDatasource(input);
+            var res = attr.ToDatasource(input, null);
 
             // Assert
             Assert.AreEqual(exp, res);

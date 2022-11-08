@@ -2,7 +2,6 @@ using IFY.Phorm.Connectivity;
 using IFY.Phorm.Data;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
-using System.Diagnostics.CodeAnalysis;
 using System.Runtime.Serialization;
 using System.Text;
 
@@ -12,15 +11,14 @@ namespace IFY.Phorm.SqlClient.IntegrationTests
     public class CallTests : SqlIntegrationTestBase
     {
         [PhormContract(Name = "CallTestTable", Target = DbObjectType.Table)]
-        [ExcludeFromCodeCoverage]
-        public class DataItem : IUpsert, IUpsertOnlyIntWithId
+        class DataItem : IUpsert, IUpsertOnlyIntWithId
         {
-            public long Id { get; set; }
+            public long Id { get; set; } = 0;
             [DataMember(Name = "Int")]
-            public int? Num { get; set; }
-            public string? Text { get; set; }
-            public byte[]? Data { get; set; }
-            public DateTime? DateTime { get; set; }
+            public int? Num { get; set; } = null;
+            public string? Text { get; set; } = null;
+            public byte[]? Data { get; set; } = null;
+            public DateTime? DateTime { get; set; } = null;
 
             public DataItem(long id, int? num, string? text, byte[]? data, DateTime? dateTime)
             {
@@ -34,32 +32,8 @@ namespace IFY.Phorm.SqlClient.IntegrationTests
             { }
         }
 
-        [PhormContract(Name = "CallTestTable", Target = DbObjectType.Table)]
-        [ExcludeFromCodeCoverage]
-        public class DataItemWithoutText
-        {
-            public long Id { get; set; }
-            [DataMember(Name = "Int")]
-            public int? Num { get; set; }
-            [IgnoreDataMember]
-            public string? Text { get; set; }
-            public byte[]? Data { get; set; }
-            public DateTime? DateTime { get; set; }
-
-            public DataItemWithoutText(long id, int? num, string? text, byte[]? data, DateTime? dateTime)
-            {
-                Id = id;
-                Num = num;
-                Text = text;
-                Data = data;
-                DateTime = dateTime;
-            }
-            public DataItemWithoutText() : this(default, default, default, default, default)
-            { }
-        }
-
         [PhormContract(Name = "CallTest_Upsert")]
-        public interface IUpsert : IPhormContract
+        interface IUpsert : IPhormContract
         {
             [DataMember(Name = "Int")]
             int? Num { get; }
@@ -69,7 +43,7 @@ namespace IFY.Phorm.SqlClient.IntegrationTests
         }
 
         [PhormContract(Name = "CallTest_Upsert")]
-        public interface IUpsertOnlyIntWithId : IPhormContract
+        interface IUpsertOnlyIntWithId : IPhormContract
         {
             long Id { set; }
             [DataMember(Name = "Int")]
