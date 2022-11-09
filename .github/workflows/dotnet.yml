@@ -70,18 +70,18 @@ jobs:
         path: stryker-config.json
         write-mode: overwrite
         contents: |
-{
-  "stryker-config": {
-    "project": "IFY.Phorm.csproj",
-    "test-projects": ["./src/IFY.Phorm.Tests/IFY.Phorm.Tests.csproj"],
-    "project-info": {
-      "name": "github.com/IFYates/Phorm",
-      "module": "IFY.Phorm",
-      "version": "${{ github.sha }}"
-    },
-    "reporters": ["cleartext", "html", "dashboard"]
-  }
-}
+          {
+            "stryker-config": {
+              "project": "IFY.Phorm.csproj",
+              "test-projects": ["./src/IFY.Phorm.Tests/IFY.Phorm.Tests.csproj"],
+              "project-info": {
+                "name": "github.com/IFYates/Phorm",
+                "module": "IFY.Phorm",
+                "version": "${{ github.sha }}"
+              },
+              "reporters": ["cleartext", "html", "dashboard"]
+            }
+          }
     - name: Run Stryker.NET
       run: dotnet stryker --dashboard-api-key ${{ secrets.STRYKER_DASHBOARD }}"
     - name: Configure Stryker.NET for IFY.Phorm.SqlClient
@@ -90,18 +90,18 @@ jobs:
         path: stryker-config.json
         write-mode: overwrite
         contents: |
-{
-  "stryker-config": {
-    "project": "IFY.Phorm.SqlClient.csproj",
-    "test-projects": ["./src/IFY.Phorm.Tests/IFY.Phorm.SqlClient.Tests.csproj"],
-    "project-info": {
-      "name": "github.com/IFYates/Phorm",
-      "module": "IFY.Phorm.SqlClient",
-      "version": "${{ github.sha }}"
-    },
-    "reporters": ["cleartext", "html", "dashboard"]
-  }
-}
+          {
+            "stryker-config": {
+              "project": "IFY.Phorm.SqlClient.csproj",
+              "test-projects": ["./src/IFY.Phorm.Tests/IFY.Phorm.SqlClient.Tests.csproj"],
+              "project-info": {
+                "name": "github.com/IFYates/Phorm",
+                "module": "IFY.Phorm.SqlClient",
+                "version": "${{ github.sha }}"
+              },
+              "reporters": ["cleartext", "html", "dashboard"]
+            }
+          }
     - name: Run Stryker.NET
       run: dotnet stryker --dashboard-api-key ${{ secrets.STRYKER_DASHBOARD }}"
     - name: Upload mutation reports
