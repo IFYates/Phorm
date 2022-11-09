@@ -12,17 +12,17 @@ namespace IFY.Phorm.Tests
     {
         private int _unwantedInvocations = 0;
         private Action<object?, ConnectedEventArgs> _globalConnected = null!;
-        private void invokeHandler(object? sender, ConnectedEventArgs args) => _globalConnected.Invoke(sender, args);
+        private void invokeHandler(object? sender, ConnectedEventArgs args) => _globalConnected?.Invoke(sender, args);
         private Action<object?, CommandExecutingEventArgs> _globalCommandExecuting = null!;
-        private void invokeHandler(object? sender, CommandExecutingEventArgs args) => _globalCommandExecuting.Invoke(sender, args);
+        private void invokeHandler(object? sender, CommandExecutingEventArgs args) => _globalCommandExecuting?.Invoke(sender, args);
         private Action<object?, CommandExecutedEventArgs> _globalCommandExecuted = null!;
-        private void invokeHandler(object? sender, CommandExecutedEventArgs args) => _globalCommandExecuted.Invoke(sender, args);
+        private void invokeHandler(object? sender, CommandExecutedEventArgs args) => _globalCommandExecuted?.Invoke(sender, args);
         private Action<object?, UnexpectedRecordColumnEventArgs> _globalUnexpectedRecordColumn = null!;
-        private void invokeHandler(object? sender, UnexpectedRecordColumnEventArgs args) => _globalUnexpectedRecordColumn.Invoke(sender, args);
+        private void invokeHandler(object? sender, UnexpectedRecordColumnEventArgs args) => _globalUnexpectedRecordColumn?.Invoke(sender, args);
         private Action<object?, UnresolvedContractMemberEventArgs> _globalUnresolvedContractMember = null!;
-        private void invokeHandler(object? sender, UnresolvedContractMemberEventArgs args) => _globalUnresolvedContractMember.Invoke(sender, args);
+        private void invokeHandler(object? sender, UnresolvedContractMemberEventArgs args) => _globalUnresolvedContractMember?.Invoke(sender, args);
         private Action<object?, ConsoleMessageEventArgs> _globalConsoleMessage = null!;
-        private void invokeHandler(object? sender, ConsoleMessageEventArgs args) => _globalConsoleMessage.Invoke(sender, args);
+        private void invokeHandler(object? sender, ConsoleMessageEventArgs args) => _globalConsoleMessage?.Invoke(sender, args);
 
         public class TestEntity
         {
