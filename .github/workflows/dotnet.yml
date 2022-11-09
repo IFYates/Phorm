@@ -83,7 +83,7 @@ jobs:
             }
           }
     - name: Run Stryker.NET
-      run: dotnet stryker --dashboard-api-key ${{ secrets.STRYKER_DASHBOARD }}"
+      run: dotnet stryker --dashboard-api-key ${{ secrets.STRYKER_DASHBOARD }}
     - name: Configure Stryker.NET for IFY.Phorm.SqlClient
       uses: DamianReeves/write-file-action@v1.0
       with:
@@ -103,7 +103,7 @@ jobs:
             }
           }
     - name: Run Stryker.NET
-      run: dotnet stryker --dashboard-api-key ${{ secrets.STRYKER_DASHBOARD }}"
+      run: dotnet stryker --dashboard-api-key ${{ secrets.STRYKER_DASHBOARD }}
     - name: Upload mutation reports
       uses: actions/upload-artifact@v2.2.2
       with:
