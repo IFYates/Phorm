@@ -14,7 +14,7 @@ namespace IFY.Phorm
     {
         protected readonly string _databaseConnectionString;
 
-        public string ConnectionName { get; private set; }
+        public string? ConnectionName { get; private set; }
 
         public string ProcedurePrefix
         {

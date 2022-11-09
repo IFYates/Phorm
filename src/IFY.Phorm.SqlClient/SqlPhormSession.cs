@@ -12,6 +12,19 @@ namespace IFY.Phorm.SqlClient
         public event EventHandler<IPhormDbConnection>? Connected;
 
         private static readonly Dictionary<string, IPhormDbConnection> _connectionPool = new Dictionary<string, IPhormDbConnection>();
+#if DEBUG
+        internal static void ResetConnectionPool()
+        {
+            lock (_connectionPool)
+            {
+                foreach (var conn in _connectionPool.Values)
+                {
+                    conn.Dispose();
+                }
+                _connectionPool.Clear();
+            }
+        }
+#endif
 
         internal Func<string, string?, IPhormDbConnection> _connectionBuilder = (sqlConnStr, connectionName) => new PhormDbConnection(connectionName, new SqlConnection(sqlConnStr));
 
@@ -22,7 +35,10 @@ namespace IFY.Phorm.SqlClient
 
         public override IPhormSession SetConnectionName(string connectionName)
         {
-            return new SqlPhormSession(_databaseConnectionString, connectionName);
+            return new SqlPhormSession(_databaseConnectionString, connectionName)
+            {
+                _connectionBuilder = _connectionBuilder
+            };
         }
 
         // TODO: base?
