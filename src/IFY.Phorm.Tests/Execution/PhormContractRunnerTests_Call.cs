@@ -56,6 +56,12 @@ namespace IFY.Phorm.Tests
             string? Arg3 { get; set; }
         }
 
+        [TestInitialize]
+        public void Init()
+        {
+            AbstractPhormSession.ResetConnectionPool();
+        }
+
         [TestMethod]
         public void Call_by_anon_object()
         {

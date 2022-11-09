@@ -3,6 +3,7 @@ using IFY.Phorm.Data;
 using IFY.Phorm.EventArgs;
 using IFY.Phorm.Execution;
 using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Threading;
@@ -95,9 +96,75 @@ namespace IFY.Phorm
 
         #region Connection
 
-        protected internal abstract IPhormDbConnection GetConnection();
+        /// <summary>
+        /// Invoked when a new database connection is created.
+        /// </summary>
+        public event EventHandler<IPhormDbConnection>? Connected;
 
+        private static readonly Dictionary<string, IPhormDbConnection> _connectionPool = new Dictionary<string, IPhormDbConnection>();
+#if DEBUG
+        internal static void ResetConnectionPool()
+        {
+            lock (_connectionPool)
+            {
+                foreach (var conn in _connectionPool.Values)
+                {
+                    conn.Dispose();
+                }
+                _connectionPool.Clear();
+            }
+        }
+#endif
+
+        protected internal virtual IPhormDbConnection GetConnection()
+        {
+            // Reuse existing connections, where possible
+            if (!_connectionPool.TryGetValue(ConnectionName ?? string.Empty, out var phormConn)
+                || phormConn.State != ConnectionState.Open)
+            {
+                lock (_connectionPool)
+                {
+                    if (!_connectionPool.TryGetValue(ConnectionName ?? string.Empty, out phormConn)
+                        || phormConn.State != ConnectionState.Open)
+                    {
+                        // Create new connection
+                        phormConn?.Dispose();
+
+                        // Create connection
+                        phormConn = CreateConnection();
+
+                        // Resolve default schema
+                        if (phormConn.DefaultSchema.Length == 0)
+                        {
+                            using var cmd = ((IDbConnection)phormConn).CreateCommand();
+                            cmd.CommandText = "SELECT schema_name()";
+                            var dbSchema = cmd.ExecuteScalar()?.ToString();
+                            if (dbSchema?.Length > 0)
+                            {
+                                phormConn.DefaultSchema = dbSchema;
+                            }
+                        }
+                        _connectionPool[ConnectionName ?? string.Empty] = phormConn;
+
+                        try
+                        {
+                            Connected?.Invoke(this, phormConn);
+                        }
+                        catch { }
+                    }
+                }
+            }
+            return phormConn;
+        }
+
+        protected abstract IPhormDbConnection CreateConnection();
+
+        /// <summary>
+        /// Request a session with a different connection name.
+        /// </summary>
         public abstract IPhormSession SetConnectionName(string connectionName);
+
+        #endregion Connection
 
         internal IAsyncDbCommand CreateCommand(string? schema, string objectName, DbObjectType objectType)
         {
@@ -138,6 +205,8 @@ namespace IFY.Phorm
             return cmd;
         }
 
+        #region Console capture
+
         /// <summary>
         /// If the connection implementation supports capture of console output (print statements),
         /// this method returns a new <see cref="AbstractConsoleMessageCapture"/> that will receive the output.
@@ -155,7 +224,7 @@ namespace IFY.Phorm
             public override void Dispose() { }
         }
 
-        #endregion Connection
+        #endregion Console capture
 
         #region Call
 

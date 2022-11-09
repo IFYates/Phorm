@@ -74,6 +74,12 @@ namespace IFY.Phorm.Tests
             string? Arg3 { get; set; }
         }
 
+        [TestInitialize]
+        public void Init()
+        {
+            AbstractPhormSession.ResetConnectionPool();
+        }
+
         #region Constructor
 
         [TestMethod]

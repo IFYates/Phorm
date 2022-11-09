@@ -47,6 +47,12 @@ namespace IFY.Phorm.Tests.Encryption
             }
         }
 
+        [TestInitialize]
+        public void Init()
+        {
+            AbstractPhormSession.ResetConnectionPool();
+        }
+
         [TestMethod]
         public void Can_encrypt_string_value_out_to_database()
         {

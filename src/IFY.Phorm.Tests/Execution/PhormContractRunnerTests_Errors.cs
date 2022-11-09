@@ -16,6 +16,12 @@ namespace IFY.Phorm.Tests
             }
         }
 
+        [TestInitialize]
+        public void Init()
+        {
+            AbstractPhormSession.ResetConnectionPool();
+        }
+
         [TestMethod]
         public void Call__Error_not_processed_by_console__Thrown()
         {

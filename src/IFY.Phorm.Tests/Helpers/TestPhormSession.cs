@@ -45,7 +45,7 @@ namespace IFY.Phorm.Tests
             return cmd;
         }
 
-        protected internal override IPhormDbConnection GetConnection() => TestConnection;
+        protected override IPhormDbConnection CreateConnection() => TestConnection;
 
         [ExcludeFromCodeCoverage]
         public override IPhormSession SetConnectionName(string connectionName)

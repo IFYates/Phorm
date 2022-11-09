@@ -13,6 +13,12 @@ namespace IFY.Phorm.SqlClient.Tests
     {
         private const string CONN_STR = "Data Source=local";
 
+        [TestInitialize]
+        public void Init()
+        {
+            AbstractPhormSession.ResetConnectionPool();
+        }
+
         [TestMethod]
         public void SupportsTransactions__True()
         {
@@ -43,8 +49,7 @@ namespace IFY.Phorm.SqlClient.Tests
 
             var connMock = mocks.Create<IPhormDbConnection>();
             connMock.Setup(m => m.Dispose());
-            connMock.SetupGet(m => m.DefaultSchema)
-                .Returns("dbo");
+            connMock.SetupProperty(m => m.DefaultSchema).Object.DefaultSchema = "dbo";
             connMock.Setup(m => m.Open());
             connMock.Setup(m => m.BeginTransaction())
                 .Returns(tranMock.Object).Verifiable();
@@ -75,11 +80,9 @@ namespace IFY.Phorm.SqlClient.Tests
         public void GetConnection()
         {
             // Arrange
-            SqlPhormSession.ResetConnectionPool();
-
             var connMock = new Mock<IPhormDbConnection>();
             connMock.Setup(m => m.Dispose());
-            connMock.SetupGet(m => m.DefaultSchema).Returns("dbo");
+            connMock.SetupProperty(m => m.DefaultSchema).Object.DefaultSchema = "dbo";
 
             var sess = new SqlPhormSession(CONN_STR, null!)
             {
@@ -97,12 +100,9 @@ namespace IFY.Phorm.SqlClient.Tests
         public void GetConnection__First_connection__Gets_new_instance()
         {
             // Arrange
-            SqlPhormSession.ResetConnectionPool();
-
             var connMock = new Mock<IPhormDbConnection>(MockBehavior.Strict);
             connMock.Setup(m => m.Dispose());
-            connMock.SetupGet(m => m.DefaultSchema)
-                .Returns("dbo");
+            connMock.SetupProperty(m => m.DefaultSchema).Object.DefaultSchema = "dbo";
 
             var connName = Guid.NewGuid().ToString();
 
@@ -131,14 +131,11 @@ namespace IFY.Phorm.SqlClient.Tests
         public void GetConnection__Repeat_connection__Gets_same_open_instance()
         {
             // Arrange
-            SqlPhormSession.ResetConnectionPool();
-
             static Mock<IPhormDbConnection> getConnMock()
             {
                 var connMock = new Mock<IPhormDbConnection>(MockBehavior.Strict);
                 connMock.Setup(m => m.Dispose());
-                connMock.SetupGet(m => m.DefaultSchema)
-                    .Returns("dbo");
+                connMock.SetupProperty(m => m.DefaultSchema).Object.DefaultSchema = "dbo";
                 connMock.SetupGet(m => m.State)
                     .Returns(ConnectionState.Open);
                 return connMock;
@@ -161,16 +158,13 @@ namespace IFY.Phorm.SqlClient.Tests
         public void GetConnection__Multiple_connection_names__Different_instances()
         {
             // Arrange
-            SqlPhormSession.ResetConnectionPool();
-
             var sess1 = new SqlPhormSession(CONN_STR)
             {
                 _connectionBuilder = (_, connectionName) =>
                 {
                     var connMock = new Mock<IPhormDbConnection>(MockBehavior.Strict);
                     connMock.Setup(m => m.Dispose());
-                    connMock.SetupGet(m => m.DefaultSchema)
-                        .Returns("dbo");
+                    connMock.SetupProperty(m => m.DefaultSchema).Object.DefaultSchema = "dbo";
                     connMock.SetupGet(m => m.ConnectionName)
                         .Returns(connectionName);
                     return connMock.Object;
@@ -193,14 +187,11 @@ namespace IFY.Phorm.SqlClient.Tests
         public void GetConnection__Request_closed_connection__Open_new_instance()
         {
             // Arrange
-            SqlPhormSession.ResetConnectionPool();
-
             static Mock<IPhormDbConnection> getConnMock()
             {
                 var connMock = new Mock<IPhormDbConnection>(MockBehavior.Strict);
                 connMock.Setup(m => m.Dispose());
-                connMock.SetupGet(m => m.DefaultSchema)
-                    .Returns("dbo");
+                connMock.SetupProperty(m => m.DefaultSchema).Object.DefaultSchema = "dbo";
                 connMock.SetupGet(m => m.State)
                     .Returns(ConnectionState.Closed);
                 return connMock;
@@ -223,8 +214,6 @@ namespace IFY.Phorm.SqlClient.Tests
         public void GetConnection__Schema_not_known__Connection_schema_used()
         {
             // Arrange
-            SqlPhormSession.ResetConnectionPool();
-
             var connMock = new Mock<IPhormDbConnection>(MockBehavior.Strict);
             connMock.Setup(m => m.Dispose());
             connMock.SetupProperty(m => m.DefaultSchema);
@@ -258,8 +247,6 @@ namespace IFY.Phorm.SqlClient.Tests
         public void GetConnection__Schema_not_known_Connection_schema_missing__Connection_UserID_used()
         {
             // Arrange
-            SqlPhormSession.ResetConnectionPool();
-
             var connMock = new Mock<IPhormDbConnection>(MockBehavior.Strict);
             connMock.Setup(m => m.Dispose());
             connMock.SetupProperty(m => m.DefaultSchema);
@@ -295,12 +282,9 @@ namespace IFY.Phorm.SqlClient.Tests
         public void GetConnection__Fires_Connected_event_on_new_connection()
         {
             // Arrange
-            SqlPhormSession.ResetConnectionPool();
-
             var connMock = new Mock<IPhormDbConnection>();
             connMock.Setup(m => m.Dispose());
-            connMock.SetupGet(m => m.DefaultSchema)
-                .Returns("dbo");
+            connMock.SetupProperty(m => m.DefaultSchema).Object.DefaultSchema = "dbo";
             connMock.SetupGet(m => m.State)
                 .Returns(ConnectionState.Open);
 
@@ -332,11 +316,9 @@ namespace IFY.Phorm.SqlClient.Tests
         public void GetConnection__Connected_event_fails__Ignored()
         {
             // Arrange
-            SqlPhormSession.ResetConnectionPool();
-
             var connMock = new Mock<IPhormDbConnection>();
             connMock.Setup(m => m.Dispose());
-            connMock.SetupGet(m => m.DefaultSchema).Returns("dbo");
+            connMock.SetupProperty(m => m.DefaultSchema).Object.DefaultSchema = "dbo";
 
             var sess = new SqlPhormSession(CONN_STR, null!)
             {

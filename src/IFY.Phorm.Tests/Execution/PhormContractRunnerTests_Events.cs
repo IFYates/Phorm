@@ -32,6 +32,8 @@ namespace IFY.Phorm.Tests
         [TestInitialize]
         public void Init()
         {
+            AbstractPhormSession.ResetConnectionPool();
+
             Events.CommandExecuting += invokeHandler;
             Events.CommandExecuted += invokeHandler;
             Events.UnexpectedRecordColumn += invokeHandler;

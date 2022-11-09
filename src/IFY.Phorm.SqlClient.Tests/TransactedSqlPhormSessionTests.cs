@@ -8,6 +8,12 @@ namespace IFY.Phorm.SqlClient.Tests
     [TestClass]
     public class TransactedSqlPhormSessionTests
     {
+        [TestInitialize]
+        public void Init()
+        {
+            AbstractPhormSession.ResetConnectionPool();
+        }
+
         [TestMethod]
         public void IsInTransaction__True()
         {

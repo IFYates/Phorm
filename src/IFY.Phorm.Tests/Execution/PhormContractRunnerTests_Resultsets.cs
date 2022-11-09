@@ -54,6 +54,12 @@ namespace IFY.Phorm.Tests
             public TestBadEntity(string value) { value.ToString(); }
         }
 
+        [TestInitialize]
+        public void Init()
+        {
+            AbstractPhormSession.ResetConnectionPool();
+        }
+
         [TestMethod]
         public void Get__Entity_missing_default_constructor__Fail()
         {

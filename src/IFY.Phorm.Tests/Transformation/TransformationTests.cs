@@ -42,6 +42,12 @@ namespace IFY.Phorm.Tests.Encryption
                 => throw new NotImplementedException();
         }
 
+        [TestInitialize]
+        public void Init()
+        {
+            AbstractPhormSession.ResetConnectionPool();
+        }
+
         [TestMethod]
         public void Can_transform_value_to_datasource()
         {

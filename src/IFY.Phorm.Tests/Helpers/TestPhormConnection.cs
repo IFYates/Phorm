@@ -59,7 +59,7 @@ namespace IFY.Phorm.Tests
 
         public virtual void Dispose()
         {
-            throw new NotImplementedException();
+            // NOOP
         }
 
         public virtual void Open()

@@ -76,6 +76,12 @@ namespace IFY.Phorm.Data.Tests
             return new PhormContractRunner<IPhormContract>(phorm, "ContractName", DbObjectType.StoredProcedure, null);
         }
 
+        [TestInitialize]
+        public void Init()
+        {
+            AbstractPhormSession.ResetConnectionPool();
+        }
+
         [TestMethod]
         public void GetAsync__GenSpec__Shapes_records_by_selector()
         {
