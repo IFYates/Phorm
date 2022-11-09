@@ -1,9 +1,9 @@
 # Pho/rm - The **P**rocedure-**h**eavy **o**bject-**r**elational **m**apping framework
 
 [![Build & Test](https://github.com/IFYates/Phorm/actions/workflows/dotnet.yml/badge.svg)](https://github.com/IFYates/Phorm/actions/workflows/dotnet.yml)
-[![Coverage Status](https://coveralls.io/repos/github/IFYates/Phorm/badge.svg?branch=main)](https://coveralls.io/github/IFYates/Phorm?branch=main)
+[![Codacy Coverage](https://app.codacy.com/project/badge/Coverage/9862eeae674c422f84ea6dbe46ecc51e)](https://www.codacy.com/gh/IFYates/Phorm/dashboard?utm_source=github.com&utm_medium=referral&utm_content=IFYates/Phorm&utm_campaign=Badge_Coverage)
 [![Mutation testing badge](https://img.shields.io/endpoint?style=flat&url=https%3A%2F%2Fbadge-api.stryker-mutator.io%2Fgithub.com%2FIFYates%2FPhorm%2Fmain)](https://dashboard.stryker-mutator.io/reports/github.com/IFYates/Phorm/main)
-[![Codacy Badge](https://app.codacy.com/project/badge/Grade/9862eeae674c422f84ea6dbe46ecc51e)](https://www.codacy.com/gh/IFYates/Phorm/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=IFYates/Phorm&amp;utm_campaign=Badge_Grade)
+[![Codacy Quality](https://app.codacy.com/project/badge/Grade/9862eeae674c422f84ea6dbe46ecc51e)](https://www.codacy.com/gh/IFYates/Phorm/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=IFYates/Phorm&amp;utm_campaign=Badge_Grade)
 
 A full O/RM, focused on strong separation between the data structures and the business entity representation.
 
