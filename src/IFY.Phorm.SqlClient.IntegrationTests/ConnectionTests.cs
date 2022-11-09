@@ -110,26 +110,27 @@ RETURN 1");
             Assert.AreNotEqual(res1.SPID, res3.SPID); // Must not match (different connection)
         }
 
-        [TestMethod, Ignore] // Too unstable to test
-        public void Connection_is_not_reused_after_expiry()
-        {
-            // Arrange
-            var phorm1 = getPhormSession("TestContext1");
-            setContextTestContract(phorm1);
+        // TODO: Too unstable to test; find a better way
+        //[TestMethod]
+        //public void Connection_is_not_reused_after_expiry()
+        //{
+        //    // Arrange
+        //    var phorm1 = getPhormSession("TestContext1");
+        //    setContextTestContract(phorm1);
 
-            // Act
-            var res1 = phorm1.From("ContextTest").Get<ContextTest>()!;
-            phorm1.GetConnection().Dispose();
+        //    // Act
+        //    var res1 = phorm1.From("ContextTest").Get<ContextTest>()!;
+        //    phorm1.GetConnection().Dispose();
 
-            SqlConnection.ClearAllPools();
-            var phorm2 = getPhormSession("TestContext1");
-            var res2 = phorm2.From("ContextTest").Get<ContextTest>()!;
+        //    AbstractPhormSession.ResetConnectionPool();
+        //    var phorm2 = getPhormSession("TestContext1");
+        //    var res2 = phorm2.From("ContextTest").Get<ContextTest>()!;
 
-            // Assert
-            Assert.AreEqual("TestContext1", res1.Context);
-            Assert.AreEqual("TestContext1", res2.Context);
-            Assert.AreNotEqual(res1.SPID, res2.SPID); // Should not match (reset pool)
-        }
+        //    // Assert
+        //    Assert.AreEqual("TestContext1", res1.Context);
+        //    Assert.AreEqual("TestContext1", res2.Context);
+        //    Assert.AreNotEqual(res1.SPID, res2.SPID); // Should not match (reset pool)
+        //}
 
         [TestMethod]
         public void Number_of_connections_does_not_increase_significantly()
