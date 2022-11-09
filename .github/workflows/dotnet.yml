@@ -45,6 +45,8 @@ jobs:
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         path-to-lcov: coverage.info
+        flag-name: IFY.Phorm
+        parallel: true
 
     - name: Coverlet coverage test - IFY.Phorm.SqlClient
       run: dotnet coverlet ./src/IFY.Phorm.SqlClient.Tests/bin/$BUILD_CONFIG/net6.0/IFY.Phorm.SqlClient.Tests.dll --target "dotnet" --targetargs "test ./src/IFY.Phorm.SqlClient.Tests/IFY.Phorm.SqlClient.Tests.csproj --configuration $BUILD_CONFIG --no-build" --include-test-assembly --format lcov
@@ -53,6 +55,9 @@ jobs:
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         path-to-lcov: coverage.info
+        flag-name: IFY.Phorm.SqlClient
+        parallel: true
+        parallel-finished: true
 
     - name: Publish package
       uses: actions/upload-artifact@v2
@@ -60,9 +65,9 @@ jobs:
         path: ./**/IFY.Phorm.*.*nupkg
 
     - name: Run Stryker.NET for IFY.Phorm
-      run: dotnet stryker -p "IFY.Phorm.csproj" -tp "./src/IFY.Phorm.Tests/IFY.Phorm.Tests.csproj" --reporters "['cleartext','html','dashboard']" --dashboard-api-key ${{ secrets.STRYKER_DASHBOARD }} --dashboard-project github.com/IFYates/IFY.Phorm --dashboard-version $GITHUB_REF
+      run: dotnet stryker -p "IFY.Phorm.csproj" -tp "./src/IFY.Phorm.Tests/IFY.Phorm.Tests.csproj" --reporter cleartext --reporter html --reporter dashboard --dashboard-api-key ${{ secrets.STRYKER_DASHBOARD }} --dashboard-project github.com/IFYates/Phorm --dashboard-version $GITHUB_REF
     - name: Run Stryker.NET for IFY.Phorm.SqlClient
-      run: dotnet stryker -p "IFY.Phorm.SqlClient.csproj" -tp "./src/IFY.Phorm.SqlClient.Tests/IFY.Phorm.SqlClient.Tests.csproj" --reporters "['cleartext','html','dashboard']" --dashboard-api-key ${{ secrets.STRYKER_DASHBOARD }} --dashboard-project github.com/IFYates/IFY.Phorm.SqlClient --dashboard-version $GITHUB_REF
+      run: dotnet stryker -p "IFY.Phorm.SqlClient.csproj" -tp "./src/IFY.Phorm.SqlClient.Tests/IFY.Phorm.SqlClient.Tests.csproj" --reporter cleartext --reporter html --reporter dashboard --dashboard-api-key ${{ secrets.STRYKER_DASHBOARD }} --dashboard-project github.com/IFYates/Phorm --dashboard-version $GITHUB_REF
     - name: Upload mutation reports
       uses: actions/upload-artifact@v2.2.2
       with:
