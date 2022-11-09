@@ -10,8 +10,8 @@ namespace IFY.Phorm.Data
         public int Order { get; }
         public string SelectorPropertyName { get; }
 
-        private Type? _lastSelectorType = null;
-        private IRecordMatcher? _lastMatcher = null;
+        private Type? _lastSelectorType;
+        private IRecordMatcher? _lastMatcher;
 
         public ResultsetAttribute(int order, string selectorPropertyName)
         {

@@ -96,24 +96,24 @@ namespace IFY.Phorm.Data
         /// <summary>
         /// Convert properties of any object to <see cref="ContractMemberDefinition"/>s.
         /// </summary>
-        public static ContractMemberDefinition[] GetFromContract(object? obj, Type contractType)
+        public static ContractMemberDefinition[] GetFromContract(Type contractType, Type? argType)
         {
             // If runtime contract type, must have object
             if (contractType == typeof(IPhormContract))
             {
-                if (obj == null)
+                if (argType == null)
                 {
                     return Array.Empty<ContractMemberDefinition>();
                 }
-                contractType = obj.GetType();
+                contractType = argType;
             }
 
             var members = _memberCache.GetOrAdd(contractType,
-                _ => getMemberDefs(obj, contractType));
+                _ => getMemberDefs(contractType));
             return members;
         }
 
-        private static ContractMemberDefinition[] getMemberDefs(object? obj, Type contractType)
+        private static ContractMemberDefinition[] getMemberDefs(Type contractType)
         {
             // Map all contract properties
             var contractProps = contractType.GetProperties(BindingFlags.Instance | BindingFlags.Public);

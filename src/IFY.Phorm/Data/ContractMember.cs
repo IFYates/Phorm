@@ -59,11 +59,7 @@ namespace IFY.Phorm.Data
         /// </summary>
         public static ContractMember[] GetMembersFromContract(object? obj, Type contractType, bool withReturnValue)
         {
-            var hasContract = contractType != typeof(IPhormContract);
-            var objType = obj?.GetType();
-            var isContract = hasContract && (obj == null || contractType.IsAssignableFrom(objType));
-
-            var defs = ContractMemberDefinition.GetFromContract(obj, contractType);
+            var defs = ContractMemberDefinition.GetFromContract(contractType, obj?.GetType());
 
             // Resolve member values
             var members = new List<ContractMember>(defs.Length);

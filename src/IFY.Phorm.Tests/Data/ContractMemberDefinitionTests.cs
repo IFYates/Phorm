@@ -53,7 +53,7 @@ namespace IFY.Phorm.Data.Tests
         public void GetFromContract__Has_ContractOutMember_property__Output_direction()
         {
             // Act
-            var mems = ContractMemberDefinition.GetFromContract(null, typeof(ITestContractOutMember));
+            var mems = ContractMemberDefinition.GetFromContract(typeof(ITestContractOutMember), null);
 
             // Assert
             Assert.AreEqual(ParameterType.Output, mems.Single().Direction);
@@ -68,7 +68,7 @@ namespace IFY.Phorm.Data.Tests
         public void FromEntity__Contract_member_missing_from_anonymous_arg__Null()
         {
             // Arrange
-            var mems = ContractMemberDefinition.GetFromContract(null, typeof(ITestContract));
+            var mems = ContractMemberDefinition.GetFromContract(typeof(ITestContract), null);
 
             // Act
             var res = mems.Single().FromEntity(new { });

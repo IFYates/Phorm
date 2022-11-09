@@ -6,7 +6,7 @@ namespace IFY.Phorm.SqlClient
     // TODO: this file isn't SQL-specific, but making it generic in current structure increases amount of code
     public class TransactedSqlPhormSession : SqlPhormSession, ITransactedPhormSession
     {
-        private bool _isDisposed = false;
+        private bool _isDisposed;
 
         private readonly IPhormDbConnection _connection;
         private readonly IDbTransaction _transaction;

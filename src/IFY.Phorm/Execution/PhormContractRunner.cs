@@ -139,7 +139,7 @@ namespace IFY.Phorm
             // Get data
             var recordType = rsProp.PropertyType.IsArray ? rsProp.PropertyType.GetElementType()! : rsProp.PropertyType;
             var records = new List<object>();
-            var recordMembers = ContractMemberDefinition.GetFromContract(null, recordType)
+            var recordMembers = ContractMemberDefinition.GetFromContract(recordType, null)
                 .ToDictionary(m => m.DbName.ToUpperInvariant());
             while (safeRead(rdr, console))
             {
@@ -352,7 +352,7 @@ namespace IFY.Phorm
             }
             else
             {
-                var resultMembers = ContractMemberDefinition.GetFromContract(null, entityType)
+                var resultMembers = ContractMemberDefinition.GetFromContract(entityType, null)
                     .ToDictionary(m => m.DbName.ToUpperInvariant());
 
                 // Parse recordset
@@ -414,7 +414,7 @@ namespace IFY.Phorm
             {
                 Type = type;
                 var attr = type.GetCustomAttribute<PhormSpecOfAttribute>(false);
-                Members = ContractMemberDefinition.GetFromContract(null, type)
+                Members = ContractMemberDefinition.GetFromContract(type, null)
                     .ToDictionary(m => m.DbName.ToUpperInvariant());
                 if (attr != null)
                 {
@@ -470,7 +470,7 @@ namespace IFY.Phorm
                 {
                     if (!genspec.GenType.IsAbstract)
                     {
-                        baseMembers ??= ContractMemberDefinition.GetFromContract(null, genspec.GenType)
+                        baseMembers ??= ContractMemberDefinition.GetFromContract(genspec.GenType, null)
                             .ToDictionary(m => m.DbName.ToUpperInvariant());
                         var result = getEntity(genspec.GenType, rdr, baseMembers, commandGuid);
                         results.Add(result);

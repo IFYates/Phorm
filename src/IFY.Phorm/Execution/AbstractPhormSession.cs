@@ -50,7 +50,7 @@ namespace IFY.Phorm
         public event EventHandler<ConnectedEventArgs> Connected = null!;
         internal void OnConnected(ConnectedEventArgs args)
         {
-            try { Connected?.Invoke(this, args); } catch { }
+            try { Connected?.Invoke(this, args); } catch { /* Consume handler errors */ }
             Events.OnConnected(this, args);
         }
 
