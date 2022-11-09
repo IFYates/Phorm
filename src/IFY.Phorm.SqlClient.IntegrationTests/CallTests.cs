@@ -50,10 +50,10 @@ namespace IFY.Phorm.SqlClient.IntegrationTests
             int? Num { get; }
         }
 
-        private void setupCallTestSchema(IPhormDbConnectionProvider connProv)
+        private void setupCallTestSchema(AbstractPhormSession phorm)
         {
-            SqlTestHelpers.ApplySql(connProv, @"DROP TABLE IF EXISTS [dbo].[CallTestTable]");
-            SqlTestHelpers.ApplySql(connProv, @"CREATE TABLE [dbo].[CallTestTable] (
+            SqlTestHelpers.ApplySql(phorm, @"DROP TABLE IF EXISTS [dbo].[CallTestTable]");
+            SqlTestHelpers.ApplySql(phorm, @"CREATE TABLE [dbo].[CallTestTable] (
 	[Id] BIGINT NOT NULL IDENTITY(1,1) PRIMARY KEY,
 	[Int] INT NULL,
 	[Text] VARCHAR(256) NULL,
@@ -62,7 +62,7 @@ namespace IFY.Phorm.SqlClient.IntegrationTests
 	[IsInView] BIT NOT NULL DEFAULT (1)
 )");
 
-            SqlTestHelpers.ApplySql(connProv, @"CREATE OR ALTER PROC [dbo].[usp_CallTest_Upsert]
+            SqlTestHelpers.ApplySql(phorm, @"CREATE OR ALTER PROC [dbo].[usp_CallTest_Upsert]
 	@Id BIGINT = NULL OUTPUT,
 	@Int INT = NULL,
 	@Text VARCHAR(256) = NULL,
@@ -92,8 +92,8 @@ RETURN @@ROWCOUNT");
         public void Call__By_anon_Insert_various_types()
         {
             // Arrange
-            var phorm = getPhormSession(out var connProv);
-            setupCallTestSchema(connProv);
+            var phorm = getPhormSession();
+            setupCallTestSchema(phorm);
 
             var randNum = DateTime.UtcNow.Millisecond;
             var randStr = Guid.NewGuid().ToString();
@@ -116,8 +116,8 @@ RETURN @@ROWCOUNT");
         public void Call__By_contract_and_anon_arg_Insert_various_types()
         {
             // Arrange
-            var phorm = getPhormSession(out var connProv);
-            setupCallTestSchema(connProv);
+            var phorm = getPhormSession();
+            setupCallTestSchema(phorm);
 
             var randNum = DateTime.UtcNow.Millisecond;
             var randStr = Guid.NewGuid().ToString();
@@ -140,8 +140,8 @@ RETURN @@ROWCOUNT");
         public void Call__By_contract_arg_Insert_various_types()
         {
             // Arrange
-            var phorm = getPhormSession(out var connProv);
-            setupCallTestSchema(connProv);
+            var phorm = getPhormSession();
+            setupCallTestSchema(phorm);
 
             var arg = new DataItem(0,
                 DateTime.UtcNow.Millisecond,
@@ -166,8 +166,8 @@ RETURN @@ROWCOUNT");
         public void Call__Get_by_anon_output()
         {
             // Arrange
-            var phorm = getPhormSession(out var connProv);
-            setupCallTestSchema(connProv);
+            var phorm = getPhormSession();
+            setupCallTestSchema(phorm);
 
             var arg = new
             {
@@ -187,8 +187,8 @@ RETURN @@ROWCOUNT");
         public void Call__Get_by_contract_output()
         {
             // Arrange
-            var phorm = getPhormSession(out var connProv);
-            setupCallTestSchema(connProv);
+            var phorm = getPhormSession();
+            setupCallTestSchema(phorm);
 
             var arg = new DataItem();
 

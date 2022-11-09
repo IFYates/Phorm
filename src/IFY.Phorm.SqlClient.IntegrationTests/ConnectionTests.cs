@@ -17,7 +17,7 @@ namespace IFY.Phorm.SqlClient.IntegrationTests
             public string? SPID { get; set; }
         }
 
-        private static void setContextTestContract(IPhormDbConnectionProvider connProv)
+        private static void setContextTestContract(AbstractPhormSession connProv)
         {
             SqlTestHelpers.ApplySql(connProv, @"CREATE OR ALTER PROC [dbo].[usp_ContextTest]
 AS
@@ -30,8 +30,8 @@ RETURN 1");
         public void Connection_naming_is_accessible_in_database()
         {
             // Arrange
-            var phorm = getPhormSession(out var connProv, "TestContext");
-            setContextTestContract(connProv);
+            var phorm = getPhormSession("TestContext");
+            setContextTestContract(phorm);
 
             // Act
             var res = phorm.From("ContextTest").Get<ContextTest>()!;
@@ -44,8 +44,8 @@ RETURN 1");
         public void Multiple_connections_can_be_named_differently()
         {
             // Arrange
-            var phorm1 = getPhormSession(out var connProv, "TestContext1");
-            setContextTestContract(connProv);
+            var phorm1 = getPhormSession("TestContext1");
+            setContextTestContract(phorm1);
 
             var phorm2 = getPhormSession("TestContext2");
 
@@ -90,8 +90,8 @@ RETURN 1");
         public void Connection_is_reused_if_possible()
         {
             // Arrange
-            var phorm1 = getPhormSession(out var connProv, "TestContext1");
-            setContextTestContract(connProv);
+            var phorm1 = getPhormSession("TestContext1");
+            setContextTestContract(phorm1);
 
             // Act
             var res1 = phorm1.From("ContextTest").Get<ContextTest>()!;
@@ -100,7 +100,8 @@ RETURN 1");
             var phorm3 = getPhormSession("TestContext2");
             var res3 = phorm3.From("ContextTest").Get<ContextTest>()!;
 
-            connProv.GetConnection("TestContext1").Close();
+            ((AbstractPhormSession)phorm1.SetConnectionName("TestContext1"))
+                .GetConnection().Close();
             SqlConnection.ClearAllPools();
             var phorm4 = getPhormSession("TestContext1");
             var res4 = phorm4.From("ContextTest").Get<ContextTest>()!;
@@ -119,9 +120,9 @@ RETURN 1");
         public void Number_of_connections_does_not_increase_significantly()
         {
             // Arrange
-            var phorm = getPhormSession(out var connProv, "TestContext");
+            var phorm = getPhormSession("TestContext");
 
-            SqlTestHelpers.ApplySql(connProv, @"CREATE OR ALTER PROC [dbo].[usp_GetConnectionCount]
+            SqlTestHelpers.ApplySql(phorm, @"CREATE OR ALTER PROC [dbo].[usp_GetConnectionCount]
 AS
 	SET NOCOUNT ON
     DECLARE @Count INT = (SELECT COUNT(1) FROM sys.sysprocesses WHERE DB_NAME([dbid]) = DB_NAME())

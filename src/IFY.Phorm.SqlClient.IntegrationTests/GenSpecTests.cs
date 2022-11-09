@@ -32,9 +32,9 @@ namespace IFY.Phorm.SqlClient.IntegrationTests
             public string String { get; set; } = string.Empty;
         }
 
-        private static void setupGenSpecContract(IPhormDbConnectionProvider connProv)
+        private static void setupGenSpecContract(AbstractPhormSession phorm)
         {
-            SqlTestHelpers.ApplySql(connProv, @"CREATE OR ALTER PROC [dbo].[usp_GetAllDataItems]
+            SqlTestHelpers.ApplySql(phorm, @"CREATE OR ALTER PROC [dbo].[usp_GetAllDataItems]
 AS
 	SELECT 1 [Id], 'Aaa' [Key], 1 [TypeId], 12.34 [Number], CONVERT(VARCHAR(50), NULL) [String]
 	UNION ALL
@@ -46,8 +46,8 @@ RETURN 1");
         public void GenSpec__Can_retrieve_and_handle_many_types()
         {
             // Arrange
-            var phorm = getPhormSession(out var connProv);
-            setupGenSpecContract(connProv);
+            var phorm = getPhormSession();
+            setupGenSpecContract(phorm);
 
             // Act
             var res = phorm.From("GetAllDataItems")
@@ -67,8 +67,8 @@ RETURN 1");
         public void GenSpec__Unknown_type_Abstract_base__Returns_only_shaped_items()
         {
             // Arrange
-            var phorm = getPhormSession(out var connProv);
-            setupGenSpecContract(connProv);
+            var phorm = getPhormSession();
+            setupGenSpecContract(phorm);
 
             // Act
             var res = phorm.From("GetAllDataItems")
@@ -100,8 +100,8 @@ RETURN 1");
         public void GenSpec__Unknown_type_Nonabstract_base__Returns_item_as_base()
         {
             // Arrange
-            var phorm = getPhormSession(out var connProv);
-            setupGenSpecContract(connProv);
+            var phorm = getPhormSession();
+            setupGenSpecContract(phorm);
 
             // Act
             var res = phorm.From("GetAllDataItems")

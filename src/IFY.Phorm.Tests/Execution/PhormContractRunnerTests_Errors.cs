@@ -29,7 +29,7 @@ namespace IFY.Phorm.Tests
             var conn = new TestPhormConnection("");
             conn.CommandQueue.Enqueue(cmd);
 
-            var phorm = new TestPhormSession(new TestPhormConnectionProvider(_ => conn))
+            var phorm = new TestPhormSession(conn)
             {
                 ExceptionsAsConsoleMessage = true
             };
@@ -57,7 +57,7 @@ namespace IFY.Phorm.Tests
             var conn = new TestPhormConnection("");
             conn.CommandQueue.Enqueue(cmd);
 
-            var phorm = new TestPhormSession(new TestPhormConnectionProvider(_ => conn))
+            var phorm = new TestPhormSession(conn)
             {
                 ConsoleMessageCaptureProvider = (s, g) => new TestConsoleMessageCapture(s, g)
                 {
@@ -86,7 +86,7 @@ namespace IFY.Phorm.Tests
             var conn = new TestPhormConnection("");
             conn.CommandQueue.Enqueue(cmd);
 
-            var phorm = new TestPhormSession(new TestPhormConnectionProvider(_ => conn))
+            var phorm = new TestPhormSession(conn)
             {
                 ExceptionsAsConsoleMessage = true
             };
@@ -114,7 +114,7 @@ namespace IFY.Phorm.Tests
             var conn = new TestPhormConnection("");
             conn.CommandQueue.Enqueue(cmd);
 
-            var phorm = new TestPhormSession(new TestPhormConnectionProvider(_ => conn))
+            var phorm = new TestPhormSession(conn)
             {
                 ConsoleMessageCaptureProvider = (s, g) => new TestConsoleMessageCapture(s, g)
                 {

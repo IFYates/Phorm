@@ -15,7 +15,7 @@ namespace IFY.Phorm.SqlClient.Tests
         public void SupportsTransactions__True()
         {
             // Arrange
-            var obj = new SqlPhormSession((IPhormDbConnectionProvider)null!);
+            var obj = new SqlPhormSession(null!);
 
             // Assert
             Assert.IsTrue(obj.SupportsTransactions);
@@ -25,7 +25,7 @@ namespace IFY.Phorm.SqlClient.Tests
         public void IsInTransaction__False()
         {
             // Arrange
-            var obj = new SqlPhormSession((IPhormDbConnectionProvider)null!);
+            var obj = new SqlPhormSession(null!);
 
             // Assert
             Assert.IsFalse(obj.IsInTransaction);
@@ -44,11 +44,9 @@ namespace IFY.Phorm.SqlClient.Tests
             connMock.Setup(m => m.BeginTransaction())
                 .Returns(tranMock.Object).Verifiable();
 
-            var connProvMock = mocks.Create<IPhormDbConnectionProvider>();
-            connProvMock.Setup(m => m.GetConnection("name"))
-                .Returns(connMock.Object).Verifiable();
+            var dbConnStr = "connection_string";
 
-            var sess = new SqlPhormSession(connProvMock.Object, "name");
+            var sess = new SqlPhormSession(dbConnStr, "name");
 
             // Act
             var res = (TransactedSqlPhormSession)sess.BeginTransaction();
@@ -56,7 +54,7 @@ namespace IFY.Phorm.SqlClient.Tests
             // Assert
             mocks.Verify();
             Assert.AreSame(tranMock.Object, getField(res, "_transaction"));
-            Assert.AreSame(connProvMock.Object, getField(res, "_connectionProvider"));
+            Assert.AreEqual(dbConnStr, getField(res, "_databaseConnectionString"));
             Assert.AreEqual("name", getField<SqlPhormSession>(res, "_connectionName"));
         }
 
@@ -64,9 +62,7 @@ namespace IFY.Phorm.SqlClient.Tests
         public void SetConnectionName__Returns_new_session_with_updated_connection_name()
         {
             // Arrange
-            var connProvMock = new Mock<IPhormDbConnectionProvider>();
-
-            var sess1 = new SqlPhormSession(connProvMock.Object, "name1");
+            var sess1 = new SqlPhormSession(null!, "name1");
 
             // Act
             var sess2 = (SqlPhormSession)sess1.SetConnectionName("name2");
@@ -92,7 +88,7 @@ namespace IFY.Phorm.SqlClient.Tests
             cmdMock.SetupGet(m => m.Connection)
                 .Returns(conn);
 
-            var obj = new SqlPhormSession((IPhormDbConnectionProvider)null!);
+            var obj = new SqlPhormSession(null!);
 
             // Act
             var res = obj.StartConsoleCapture(Guid.Empty, cmdMock.Object);
@@ -112,7 +108,7 @@ namespace IFY.Phorm.SqlClient.Tests
             cmdMock.SetupGet(m => m.Connection)
                 .Returns(conn);
 
-            var obj = new SqlPhormSession((IPhormDbConnectionProvider)null!);
+            var obj = new SqlPhormSession(null!);
 
             // Act
             var res = (SqlConsoleMessageCapture)obj.StartConsoleCapture(Guid.Empty, cmdMock.Object);

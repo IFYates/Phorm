@@ -36,16 +36,16 @@ namespace IFY.Phorm.SqlClient.IntegrationTests
             public byte[] Decrypt(byte[] data) => data;
         }
 
-        private void setupEncryptionSchema(IPhormDbConnectionProvider connProv)
+        private void setupEncryptionSchema(AbstractPhormSession phorm)
         {
-            SqlTestHelpers.ApplySql(connProv, @"DROP TABLE IF EXISTS [dbo].[EncryptionTable]");
-            SqlTestHelpers.ApplySql(connProv, @"CREATE TABLE [dbo].[EncryptionTable] (
+            SqlTestHelpers.ApplySql(phorm, @"DROP TABLE IF EXISTS [dbo].[EncryptionTable]");
+            SqlTestHelpers.ApplySql(phorm, @"CREATE TABLE [dbo].[EncryptionTable] (
 	[Id] BIGINT NOT NULL IDENTITY(1,1) PRIMARY KEY,
 	[Int] INT NULL,
 	[Data] VARBINARY(MAX) NULL
 )");
 
-            SqlTestHelpers.ApplySql(connProv, @"CREATE OR ALTER PROC [dbo].[usp_Encryption_Upsert]
+            SqlTestHelpers.ApplySql(phorm, @"CREATE OR ALTER PROC [dbo].[usp_Encryption_Upsert]
 	@Id BIGINT = NULL OUTPUT,
 	@Int INT = NULL,
 	@Data VARBINARY(MAX) = NULL
@@ -69,8 +69,8 @@ RETURN @@ROWCOUNT");
         public void String_encryption_full()
         {
             // Arrange
-            var phorm = getPhormSession(out var connProv);
-            setupEncryptionSchema(connProv);
+            var phorm = getPhormSession();
+            setupEncryptionSchema(phorm);
 
             var randInt = DateTime.UtcNow.Millisecond;
             var randStr = Guid.NewGuid().ToString();

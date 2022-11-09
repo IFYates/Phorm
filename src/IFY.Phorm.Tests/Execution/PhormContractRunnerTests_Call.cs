@@ -68,7 +68,7 @@ namespace IFY.Phorm.Tests
             var cmd = new TestDbCommand();
             conn.CommandQueue.Enqueue(cmd);
 
-            var phorm = new TestPhormSession(new TestPhormConnectionProvider((s) => conn));
+            var phorm = new TestPhormSession(conn);
 
             var runner = new PhormContractRunner<IPhormContract>(phorm, "CallTest", DbObjectType.StoredProcedure, new { Arg = 1 });
 
@@ -99,7 +99,7 @@ namespace IFY.Phorm.Tests
             var cmd = new TestDbCommand();
             conn.CommandQueue.Enqueue(cmd);
 
-            var phorm = new TestPhormSession(new TestPhormConnectionProvider((s) => conn));
+            var phorm = new TestPhormSession(conn);
 
             var runner = new PhormContractRunner<TestContract>(phorm, null, DbObjectType.StoredProcedure, new TestContract { Arg = 1 });
 
@@ -130,7 +130,7 @@ namespace IFY.Phorm.Tests
             var cmd = new TestDbCommand();
             conn.CommandQueue.Enqueue(cmd);
 
-            var phorm = new TestPhormSession(new TestPhormConnectionProvider((s) => conn));
+            var phorm = new TestPhormSession(conn);
 
             var runner = new PhormContractRunner<IMemberTestContract>(phorm, null, DbObjectType.Default, new TestContract { Arg = 1 });
 
@@ -159,7 +159,7 @@ namespace IFY.Phorm.Tests
             var cmd = new TestDbCommand();
             conn.CommandQueue.Enqueue(cmd);
 
-            var phorm = new TestPhormSession(new TestPhormConnectionProvider((s) => conn));
+            var phorm = new TestPhormSession(conn);
 
             var runner = new PhormContractRunner<TestContract2>(phorm, null, DbObjectType.Default, new TestContract2());
 
@@ -192,7 +192,7 @@ namespace IFY.Phorm.Tests
             var cmd = new TestDbCommand();
             conn.CommandQueue.Enqueue(cmd);
 
-            var phorm = new TestPhormSession(new TestPhormConnectionProvider((s) => conn));
+            var phorm = new TestPhormSession(conn);
 
             var args = new TestContract { Arg = 1 };
             var cm = args.Arg4;
@@ -223,7 +223,7 @@ namespace IFY.Phorm.Tests
             var cmd = new TestDbCommand();
             conn.CommandQueue.Enqueue(cmd);
 
-            var phorm = new TestPhormSession(new TestPhormConnectionProvider((s) => conn));
+            var phorm = new TestPhormSession(conn);
 
             var runner = new PhormContractRunner<IMemberTestContract>(phorm, null, DbObjectType.Default, new TestContract { Arg3 = null! });
 
@@ -243,7 +243,7 @@ namespace IFY.Phorm.Tests
             var cmd = new TestDbCommand();
             conn.CommandQueue.Enqueue(cmd);
 
-            var phorm = new TestPhormSession(new TestPhormConnectionProvider((s) => conn));
+            var phorm = new TestPhormSession(conn);
 
             var data = "secure_value".GetBytes();
             var encdata = Guid.NewGuid().ToString().GetBytes();
@@ -293,7 +293,7 @@ namespace IFY.Phorm.Tests
             });
             conn.CommandQueue.Enqueue(cmd);
 
-            var phorm = new TestPhormSession(new TestPhormConnectionProvider((s) => conn));
+            var phorm = new TestPhormSession(conn);
 
             var runner = new PhormContractRunner<IPhormContract>(phorm, "CallTest", DbObjectType.StoredProcedure, new { Arg = 1 });
 
@@ -334,7 +334,7 @@ namespace IFY.Phorm.Tests
             var cmd = new TestDbCommand();
             conn.CommandQueue.Enqueue(cmd);
 
-            var phorm = new TestPhormSession(new TestPhormConnectionProvider((s) => conn))
+            var phorm = new TestPhormSession(conn)
             {
                 ConsoleMessageCaptureProvider = (s, g) => new TestConsoleMessageCapture(s, g)
             };
@@ -371,7 +371,7 @@ namespace IFY.Phorm.Tests
             var cmd = new TestDbCommand();
             conn.CommandQueue.Enqueue(cmd);
 
-            var phorm = new TestPhormSession(new TestPhormConnectionProvider((s) => conn))
+            var phorm = new TestPhormSession(conn)
             {
                 ConsoleMessageCaptureProvider = (s, g) => new TestConsoleMessageCapture(s, g)
             };

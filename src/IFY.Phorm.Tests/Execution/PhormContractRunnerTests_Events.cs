@@ -202,7 +202,7 @@ namespace IFY.Phorm.Tests
             };
             conn.CommandQueue.Enqueue(cmd);
 
-            var phorm = new TestPhormSession(new TestPhormConnectionProvider((s) => conn));
+            var phorm = new TestPhormSession(conn);
 
             (object? sender, CommandExecutingEventArgs args)? instanceEvent = null;
             phorm.CommandExecuting += (object? sender, CommandExecutingEventArgs args) =>
@@ -254,7 +254,7 @@ namespace IFY.Phorm.Tests
             };
             conn.CommandQueue.Enqueue(cmd);
 
-            var phorm = new TestPhormSession(new TestPhormConnectionProvider((s) => conn));
+            var phorm = new TestPhormSession(conn);
 
             (object? sender, CommandExecutedEventArgs args)? instanceEvent = null;
             phorm.CommandExecuted += (object? sender, CommandExecutedEventArgs args) =>
@@ -316,7 +316,7 @@ namespace IFY.Phorm.Tests
             };
             conn.CommandQueue.Enqueue(cmd);
 
-            var phorm = new TestPhormSession(new TestPhormConnectionProvider((s) => conn));
+            var phorm = new TestPhormSession(conn);
 
             (object? sender, CommandExecutingEventArgs args)? instanceEvent = null;
             phorm.CommandExecuting += (object? sender, CommandExecutingEventArgs args) =>
@@ -378,7 +378,7 @@ namespace IFY.Phorm.Tests
             };
             conn.CommandQueue.Enqueue(cmd);
 
-            var phorm = new TestPhormSession(new TestPhormConnectionProvider((s) => conn));
+            var phorm = new TestPhormSession(conn);
 
             (object? sender, CommandExecutedEventArgs args)? instanceEvent = null;
             phorm.CommandExecuted += (object? sender, CommandExecutedEventArgs args) =>
@@ -449,7 +449,7 @@ namespace IFY.Phorm.Tests
             };
             conn.CommandQueue.Enqueue(cmd);
 
-            var phorm = new TestPhormSession(new TestPhormConnectionProvider((s) => conn));
+            var phorm = new TestPhormSession(conn);
 
             (object? sender, UnexpectedRecordColumnEventArgs args)? instanceEvent = null;
             phorm.UnexpectedRecordColumn += (object? sender, UnexpectedRecordColumnEventArgs args) =>
@@ -513,7 +513,7 @@ namespace IFY.Phorm.Tests
             };
             conn.CommandQueue.Enqueue(cmd);
 
-            var phorm = new TestPhormSession(new TestPhormConnectionProvider((s) => conn));
+            var phorm = new TestPhormSession(conn);
 
             (object? sender, UnresolvedContractMemberEventArgs args)? instanceEvent = null;
             phorm.UnresolvedContractMember += (object? sender, UnresolvedContractMemberEventArgs args) =>
@@ -572,7 +572,7 @@ namespace IFY.Phorm.Tests
             var cmd = new TestDbCommand();
             conn.CommandQueue.Enqueue(cmd);
 
-            var phorm = new TestPhormSession(new TestPhormConnectionProvider((s) => conn))
+            var phorm = new TestPhormSession(conn)
             {
                 ConsoleMessageCaptureProvider = (s, g) => new TestConsoleMessageCapture(s, g)
             };
@@ -619,7 +619,7 @@ namespace IFY.Phorm.Tests
             var cmd = new TestDbCommand();
             conn.CommandQueue.Enqueue(cmd);
 
-            var phorm = new TestPhormSession(new TestPhormConnectionProvider((s) => conn))
+            var phorm = new TestPhormSession(conn)
             {
                 ConsoleMessageCaptureProvider = (s, g) => new TestConsoleMessageCapture(s, g)
             };
