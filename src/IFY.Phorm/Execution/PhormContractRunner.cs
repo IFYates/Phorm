@@ -254,7 +254,7 @@ namespace IFY.Phorm
             }
 
             // Support console capture
-            if (consoleEvents?.Count() > 0)
+            if (consoleEvents?.Any() == true)
             {
                 var consoleProp = contract?.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public)
                     .Where(p => typeof(ConsoleLogMember).IsAssignableFrom(p.PropertyType))

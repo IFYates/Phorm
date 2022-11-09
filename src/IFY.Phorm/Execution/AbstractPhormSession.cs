@@ -104,7 +104,6 @@ namespace IFY.Phorm
         #region Connection
 
         private static readonly Dictionary<string, IPhormDbConnection> _connectionPool = new Dictionary<string, IPhormDbConnection>();
-#if DEBUG
         internal static void ResetConnectionPool()
         {
             lock (_connectionPool)
@@ -116,7 +115,6 @@ namespace IFY.Phorm
                 _connectionPool.Clear();
             }
         }
-#endif
 
         protected internal virtual IPhormDbConnection GetConnection()
         {
