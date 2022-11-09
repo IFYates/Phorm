@@ -2,9 +2,9 @@ name: Build & Test
 
 on:
   push:
-    branches: [ master ]
+    branches: [ main ]
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
 
 jobs:
   build:
@@ -36,7 +36,7 @@ jobs:
       uses: iamtheyammer/branch-env-vars@v1.1.2
       with:
         BUILD_CONFIG: |
-          master:Release
+          main:Release
           !default:Debug
 
     - name: Build
