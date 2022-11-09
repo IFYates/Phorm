@@ -1,4 +1,5 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using IFY.Phorm.Connectivity;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using System.Data;
 
@@ -14,7 +15,9 @@ namespace IFY.Phorm.SqlClient.Tests
             var transMock = new Mock<IDbTransaction>(MockBehavior.Strict);
             transMock.Setup(m => m.Commit()).Verifiable();
 
-            var runner = new TransactedSqlPhormSession(null!, transMock.Object);
+            var connMock = new Mock<IPhormDbConnection>();
+
+            var runner = new TransactedSqlPhormSession(connMock.Object, transMock.Object);
 
             // Act
             runner.Commit();
@@ -31,7 +34,9 @@ namespace IFY.Phorm.SqlClient.Tests
             var transMock = new Mock<IDbTransaction>(MockBehavior.Strict);
             transMock.Setup(m => m.Rollback()).Verifiable();
 
-            var runner = new TransactedSqlPhormSession(null!, transMock.Object);
+            var connMock = new Mock<IPhormDbConnection>();
+
+            var runner = new TransactedSqlPhormSession(connMock.Object, transMock.Object);
 
             // Act
             runner.Rollback();
@@ -44,15 +49,14 @@ namespace IFY.Phorm.SqlClient.Tests
         public void Dispose()
         {
             // Arrange
-            var connMock = new Mock<IDbConnection>(MockBehavior.Strict);
-            connMock.Setup(m => m.Dispose()).Verifiable();
-
             var transMock = new Mock<IDbTransaction>(MockBehavior.Strict);
-            transMock.SetupGet(m => m.Connection)
-                .Returns(connMock.Object);
             transMock.Setup(m => m.Dispose()).Verifiable();
 
-            var runner = new TransactedSqlPhormSession(null!, transMock.Object);
+            var connMock = new Mock<IPhormDbConnection>(MockBehavior.Strict);
+            connMock.SetupAllProperties();
+            connMock.Setup(m => m.Dispose()).Verifiable();
+
+            var runner = new TransactedSqlPhormSession(connMock.Object, transMock.Object);
 
             // Act
             runner.Dispose();

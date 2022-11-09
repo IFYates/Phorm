@@ -39,7 +39,7 @@ namespace IFY.Phorm.SqlClient
         {
             if (!_isDisposed)
             {
-                _transaction.Connection?.Dispose();
+                _connection.Dispose();
                 _transaction.Dispose();
                 _isDisposed = true;
             }

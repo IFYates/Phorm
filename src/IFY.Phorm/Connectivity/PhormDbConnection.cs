@@ -34,15 +34,16 @@ namespace IFY.Phorm.Connectivity
         public void Close() => _db.Close();
 
         public IAsyncDbCommand CreateCommand()
+            => ((IDbConnection)this).CreateCommand().Shim<IAsyncDbCommand>()!;
+        IDbCommand IDbConnection.CreateCommand()
         {
             if (_db.State != ConnectionState.Open)
             {
                 _db.Open();
             }
 
-            return _db.CreateCommand().Shim<IAsyncDbCommand>()!;
+            return _db.CreateCommand();
         }
-        IDbCommand IDbConnection.CreateCommand() => _db.CreateCommand();
 
         public void Dispose() => _db.Dispose();
     }

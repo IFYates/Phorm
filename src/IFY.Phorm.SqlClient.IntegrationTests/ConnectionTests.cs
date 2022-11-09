@@ -95,25 +95,40 @@ RETURN 1");
 
             // Act
             var res1 = phorm1.From("ContextTest").Get<ContextTest>()!;
+
             var phorm2 = getPhormSession("TestContext1");
             var res2 = phorm2.From("ContextTest").Get<ContextTest>()!;
+
             var phorm3 = getPhormSession("TestContext2");
             var res3 = phorm3.From("ContextTest").Get<ContextTest>()!;
-
-            ((AbstractPhormSession)phorm1.SetConnectionName("TestContext1"))
-                .GetConnection().Close();
-            SqlConnection.ClearAllPools();
-            var phorm4 = getPhormSession("TestContext1");
-            var res4 = phorm4.From("ContextTest").Get<ContextTest>()!;
 
             // Assert
             Assert.AreEqual("TestContext1", res1.Context);
             Assert.AreEqual("TestContext1", res2.Context);
             Assert.AreEqual("TestContext2", res3.Context);
-            Assert.AreEqual("TestContext1", res4.Context);
-            Assert.AreEqual(res1.SPID, res2.SPID);
-            Assert.AreNotEqual(res1.SPID, res3.SPID);
-            Assert.AreNotEqual(res1.SPID, res4.SPID);
+            Assert.AreEqual(res1.SPID, res2.SPID); // Should match (connection reuse)
+            Assert.AreNotEqual(res1.SPID, res3.SPID); // Must not match (different connection)
+        }
+
+        [TestMethod, Ignore] // Too unstable to test
+        public void Connection_is_not_reused_after_expiry()
+        {
+            // Arrange
+            var phorm1 = getPhormSession("TestContext1");
+            setContextTestContract(phorm1);
+
+            // Act
+            var res1 = phorm1.From("ContextTest").Get<ContextTest>()!;
+            phorm1.GetConnection().Dispose();
+
+            SqlConnection.ClearAllPools();
+            var phorm2 = getPhormSession("TestContext1");
+            var res2 = phorm2.From("ContextTest").Get<ContextTest>()!;
+
+            // Assert
+            Assert.AreEqual("TestContext1", res1.Context);
+            Assert.AreEqual("TestContext1", res2.Context);
+            Assert.AreNotEqual(res1.SPID, res2.SPID); // Should not match (reset pool)
         }
 
         [TestMethod]

@@ -13,7 +13,7 @@ namespace IFY.Phorm.SqlClient
 
         private static readonly Dictionary<string, IPhormDbConnection> _connectionPool = new Dictionary<string, IPhormDbConnection>();
 
-        internal Func<string?, IDbConnection, IPhormDbConnection> _connectionBuilder = (connectionName, conn) => new PhormDbConnection(connectionName, conn);
+        internal Func<string, string?, IPhormDbConnection> _connectionBuilder = (sqlConnStr, connectionName) => new PhormDbConnection(connectionName, new SqlConnection(sqlConnStr));
 
         public SqlPhormSession(string databaseConnectionString, string? connectionName = null)
             : base(databaseConnectionString, connectionName)
@@ -46,14 +46,12 @@ namespace IFY.Phorm.SqlClient
                         connectionString.ApplicationName = _connectionName ?? connectionString.ApplicationName;
                         var sqlConnStr = connectionString.ToString();
 
-                        // Open connection
-                        var db = new SqlConnection(sqlConnStr);
-                        phormConn = _connectionBuilder(_connectionName, db);
+                        // Create connection
+                        phormConn = _connectionBuilder(sqlConnStr, _connectionName);
 
                         // Resolve default schema
                         if (phormConn.DefaultSchema.Length == 0)
                         {
-                            phormConn.Open();
                             using var cmd = ((IDbConnection)phormConn).CreateCommand();
                             cmd.CommandText = "SELECT schema_name()";
                             phormConn.DefaultSchema = cmd.ExecuteScalar()?.ToString() ?? connectionString.UserID;
