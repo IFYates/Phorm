@@ -36,7 +36,7 @@ jobs:
           !default:Debug
 
     - name: Build
-      run: dotnet build --configuration $BUILD_CONFIG --no-restore
+      run: dotnet build src --configuration $BUILD_CONFIG --no-restore
     - name: Coverlet coverage test - IFY.Phorm
       run: dotnet coverlet ./src/IFY.Phorm.Tests/bin/$BUILD_CONFIG/net6.0/IFY.Phorm.dll --target "dotnet" --targetargs "test ./src/IFY.Phorm.Tests/IFY.Phorm.Tests.csproj --configuration $BUILD_CONFIG --no-build" --format lcov -o coverage_Phorm.info
     - name: Coverlet coverage test - IFY.Phorm.SqlClient
