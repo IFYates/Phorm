@@ -10,7 +10,7 @@ namespace IFY.Phorm.Tests
     [ExcludeFromCodeCoverage]
     internal partial class TestPhormSession : AbstractPhormSession
     {
-        public TestPhormConnectionProvider? TestConnectionProvider => _connectionProvider as TestPhormConnectionProvider;
+        public TestPhormConnection TestConnection { get; }
 
         public IReadOnlyList<IAsyncDbCommand> Commands => _commands.AsReadOnly();
         private readonly List<IAsyncDbCommand> _commands = new List<IAsyncDbCommand>();
@@ -22,13 +22,15 @@ namespace IFY.Phorm.Tests
 
         public override bool IsInTransaction => false;
 
-        public TestPhormSession()
-            : this(new TestPhormConnectionProvider())
+        public TestPhormSession(string? connectionName = null)
+            : base(null!, connectionName)
         {
+            TestConnection = new TestPhormConnection(connectionName);
         }
-        public TestPhormSession(IPhormDbConnectionProvider connectionProvider)
-            : base(connectionProvider, null)
+        public TestPhormSession(TestPhormConnection connection, string? connectionName = null)
+            : base(null!, connectionName)
         {
+            TestConnection = connection;
         }
 
         public override ITransactedPhormSession BeginTransaction()
@@ -43,7 +45,7 @@ namespace IFY.Phorm.Tests
             return cmd;
         }
 
-        protected override string? GetConnectionName() => null;
+        protected override IPhormDbConnection CreateConnection() => TestConnection;
 
         [ExcludeFromCodeCoverage]
         public override IPhormSession SetConnectionName(string connectionName)

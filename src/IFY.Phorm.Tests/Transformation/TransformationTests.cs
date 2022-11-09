@@ -42,6 +42,12 @@ namespace IFY.Phorm.Tests.Encryption
                 => throw new NotImplementedException();
         }
 
+        [TestInitialize]
+        public void Init()
+        {
+            AbstractPhormSession.ResetConnectionPool();
+        }
+
         [TestMethod]
         public void Can_transform_value_to_datasource()
         {
@@ -76,7 +82,7 @@ namespace IFY.Phorm.Tests.Encryption
             });
 
             var runner = new TestPhormSession();
-            runner.TestConnectionProvider?.TestConnection?.CommandQueue.Enqueue(cmd);
+            runner.TestConnection?.CommandQueue.Enqueue(cmd);
 
             // Act
             var res = runner.From("Get").Get<DataObject>();

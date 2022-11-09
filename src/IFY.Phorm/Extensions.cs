@@ -51,8 +51,8 @@ namespace IFY.Phorm
         }
 
 #if !NET5_0_OR_GREATER
-        public static T FromBytes<T>(this byte[]? bytes)
-            => (T)FromBytes(bytes, typeof(T));
+        public static T FromBytes<T>(this byte[]? bytes) // Nullable
+            => (T)FromBytes(bytes, typeof(T))!;
 #else
         public static T? FromBytes<T>(this byte[]? bytes)
             => (T?)FromBytes(bytes, typeof(T));

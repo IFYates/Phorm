@@ -7,15 +7,21 @@ namespace IFY.Phorm.SqlClient
     public class TransactedSqlPhormSession : SqlPhormSession, ITransactedPhormSession
     {
         private bool _isDisposed = false;
+
+        private readonly IPhormDbConnection _connection;
         private readonly IDbTransaction _transaction;
 
-        public TransactedSqlPhormSession(IPhormDbConnectionProvider dbProvider, string? contextUser, IDbTransaction transaction)
-            : base(dbProvider, contextUser)
+        internal TransactedSqlPhormSession(IPhormDbConnection connection, IDbTransaction transaction)
+            : base(connection.ConnectionString, connection.ConnectionName)
         {
+            _connection = connection;
             _transaction = transaction;
         }
 
         public override bool IsInTransaction => true;
+
+        protected override IPhormDbConnection GetConnection()
+            => _connection;
 
         public void Commit()
         {
@@ -31,7 +37,7 @@ namespace IFY.Phorm.SqlClient
         {
             if (!_isDisposed)
             {
-                _transaction.Connection?.Dispose();
+                _connection.Dispose();
                 _transaction.Dispose();
                 _isDisposed = true;
             }
