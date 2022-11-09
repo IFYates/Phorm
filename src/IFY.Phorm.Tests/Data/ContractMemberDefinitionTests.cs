@@ -1,12 +1,14 @@
 ﻿using IFY.Phorm.Encryption;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace IFY.Phorm.Data.Tests
 {
     [TestClass]
     public class ContractMemberDefinitionTests
     {
+        [ExcludeFromCodeCoverage]
         class TestSecureAttribute : AbstractSecureValueAttribute
         {
             public override byte[] Decrypt(byte[]? value, object? context)
