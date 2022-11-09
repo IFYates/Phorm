@@ -42,11 +42,6 @@ jobs:
       with:
         path: ./src/**/IFY.Phorm.*.*nupkg
 
-  test:
-    needs: build
-    runs-on: ubuntu-latest
-
-    steps:
     - name: Coverlet coverage test - IFY.Phorm
       run: dotnet coverlet ./src/IFY.Phorm.Tests/bin/$BUILD_CONFIG/net6.0/IFY.Phorm.Tests.dll --target "dotnet" --targetargs "test ./src/IFY.Phorm.Tests/IFY.Phorm.Tests.csproj --configuration $BUILD_CONFIG --no-build" --include-test-assembly --format lcov -o ify_phorm.lcov
     - name: Publish coverage results to Coveralls
@@ -73,11 +68,6 @@ jobs:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         parallel-finished: true
 
-  mutate:
-    needs: build
-    runs-on: ubuntu-latest
-
-    steps:
     - name: Configure Stryker.NET for IFY.Phorm
       uses: DamianReeves/write-file-action@v1.0
       with:
