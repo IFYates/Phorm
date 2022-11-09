@@ -11,7 +11,7 @@ namespace IFY.Phorm.SqlClient
         private readonly IPhormDbConnection _connection;
         private readonly IDbTransaction _transaction;
 
-        public TransactedSqlPhormSession(IPhormDbConnection connection, IDbTransaction transaction)
+        internal TransactedSqlPhormSession(IPhormDbConnection connection, IDbTransaction transaction)
             : base(connection.ConnectionString, connection.ConnectionName)
         {
             _connection = connection;
@@ -21,9 +21,7 @@ namespace IFY.Phorm.SqlClient
         public override bool IsInTransaction => true;
 
         protected override IPhormDbConnection GetConnection()
-        {
-            return _connection;
-        }
+            => _connection;
 
         public void Commit()
         {

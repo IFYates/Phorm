@@ -25,17 +25,16 @@ namespace IFY.Phorm.SqlClient
             return new SqlPhormSession(_databaseConnectionString, connectionName);
         }
 
-        // TODO: only new connection if needed
         // TODO: base?
         protected override IPhormDbConnection GetConnection()
         {
             // Reuse existing connections, where possible
-            if (!_connectionPool.TryGetValue(_connectionName ?? string.Empty, out var phormConn)
+            if (!_connectionPool.TryGetValue(ConnectionName ?? string.Empty, out var phormConn)
                 || phormConn.State != ConnectionState.Open)
             {
                 lock (_connectionPool)
                 {
-                    if (!_connectionPool.TryGetValue(_connectionName ?? string.Empty, out phormConn)
+                    if (!_connectionPool.TryGetValue(ConnectionName ?? string.Empty, out phormConn)
                         || phormConn.State != ConnectionState.Open)
                     {
                         // Create new connection
@@ -43,11 +42,11 @@ namespace IFY.Phorm.SqlClient
 
                         // Ensure application name is known user
                         var connectionString = new SqlConnectionStringBuilder(_databaseConnectionString);
-                        connectionString.ApplicationName = _connectionName ?? connectionString.ApplicationName;
+                        connectionString.ApplicationName = ConnectionName ?? connectionString.ApplicationName;
                         var sqlConnStr = connectionString.ToString();
 
                         // Create connection
-                        phormConn = _connectionBuilder(sqlConnStr, _connectionName);
+                        phormConn = _connectionBuilder(sqlConnStr, ConnectionName);
 
                         // Resolve default schema
                         if (phormConn.DefaultSchema.Length == 0)
@@ -56,7 +55,7 @@ namespace IFY.Phorm.SqlClient
                             cmd.CommandText = "SELECT schema_name()";
                             phormConn.DefaultSchema = cmd.ExecuteScalar()?.ToString() ?? connectionString.UserID;
                         }
-                        _connectionPool[_connectionName ?? string.Empty] = phormConn;
+                        _connectionPool[ConnectionName ?? string.Empty] = phormConn;
 
                         try
                         {

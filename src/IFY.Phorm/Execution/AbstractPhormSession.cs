@@ -13,7 +13,8 @@ namespace IFY.Phorm
     public abstract partial class AbstractPhormSession : IPhormSession
     {
         protected readonly string _databaseConnectionString;
-        protected readonly string? _connectionName;
+
+        public string ConnectionName { get; private set; }
 
         public string ProcedurePrefix
         {
@@ -89,14 +90,12 @@ namespace IFY.Phorm
         public AbstractPhormSession(string databaseConnectionString, string? connectionName)
         {
             _databaseConnectionString = databaseConnectionString;
-            _connectionName = connectionName;
+            ConnectionName = connectionName;
         }
 
         #region Connection
 
         protected internal abstract IPhormDbConnection GetConnection(); // TODO ???
-
-        protected virtual string? GetConnectionName() => _connectionName;
 
         public abstract IPhormSession SetConnectionName(string connectionName);
 

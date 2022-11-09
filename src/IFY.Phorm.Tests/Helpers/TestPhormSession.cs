@@ -22,13 +22,13 @@ namespace IFY.Phorm.Tests
 
         public override bool IsInTransaction => false;
 
-        public TestPhormSession()
-            : base(null!, null)
+        public TestPhormSession(string? connectionName = null)
+            : base(null!, connectionName)
         {
-            TestConnection = new TestPhormConnection(null);
+            TestConnection = new TestPhormConnection(connectionName);
         }
-        public TestPhormSession(TestPhormConnection connection)
-            : base(null!, null)
+        public TestPhormSession(TestPhormConnection connection, string? connectionName = null)
+            : base(null!, connectionName)
         {
             TestConnection = connection;
         }
@@ -46,8 +46,6 @@ namespace IFY.Phorm.Tests
         }
 
         protected internal override IPhormDbConnection GetConnection() => TestConnection;
-
-        protected override string? GetConnectionName() => null;
 
         [ExcludeFromCodeCoverage]
         public override IPhormSession SetConnectionName(string connectionName)

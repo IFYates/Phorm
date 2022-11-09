@@ -11,6 +11,8 @@ namespace IFY.Phorm.SqlClient.Tests
     [TestClass]
     public class SqlPhormSessionTests
     {
+        private const string DB_CONN = "Data Source=local";
+
         [TestMethod]
         public void SupportsTransactions__True()
         {
@@ -46,10 +48,9 @@ namespace IFY.Phorm.SqlClient.Tests
             connMock.Setup(m => m.BeginTransaction())
                 .Returns(tranMock.Object).Verifiable();
 
-            var dbConnStr = "Data Source=local";
-            var connName = "name";
+            var connName = Guid.NewGuid().ToString();
 
-            var sess = new SqlPhormSession(dbConnStr, connName)
+            var sess = new SqlPhormSession(DB_CONN, connName)
             {
                 _connectionBuilder = (cs, cn) =>
                 {
@@ -65,8 +66,78 @@ namespace IFY.Phorm.SqlClient.Tests
             // Assert
             mocks.Verify();
             Assert.AreSame(tranMock.Object, getField(res, "_transaction"));
-            Assert.AreEqual(dbConnStr + ";Application Name=" + connName, getField(res, "_databaseConnectionString"));
-            Assert.AreEqual(connName, getField<SqlPhormSession>(res, "_connectionName"));
+            Assert.AreEqual(DB_CONN + ";Application Name=" + connName, res.GetConnection().ConnectionString);
+            Assert.AreEqual(connName, res.ConnectionName);
+        }
+
+        [TestMethod]
+        public void GetConnection()
+        {
+            // Arrange
+            var connMock = new Mock<IPhormDbConnection>();
+            connMock.SetupGet(m => m.DefaultSchema).Returns("dbo");
+
+            var sess = new SqlPhormSession(DB_CONN, null!)
+            {
+                _connectionBuilder = (cs, cn) => connMock.Object
+            };
+
+            // Act
+            var res = sess.GetConnection();
+
+            // Assert
+            Assert.AreSame(connMock.Object, res);
+        }
+
+        [TestMethod]
+        public void GetConnection__Fires_Connected_event()
+        {
+            // Arrange
+            var connMock = new Mock<IPhormDbConnection>();
+            connMock.SetupGet(m => m.DefaultSchema).Returns("dbo");
+
+            var sess = new SqlPhormSession(DB_CONN, null!)
+            {
+                _connectionBuilder = (cs, cn) => connMock.Object
+            };
+
+            object? eventSender = null, eventArgs = null;
+            sess.Connected += (s, e) =>
+            {
+                eventSender = s;
+                eventArgs = e;
+            };
+
+            // Act
+            _ = sess.GetConnection();
+
+            // Assert
+            Assert.AreSame(sess, eventSender);
+            Assert.AreSame(connMock.Object, eventArgs);
+        }
+
+        [TestMethod]
+        public void GetConnection__Connected_event_ignores_handler_exception()
+        {
+            // Arrange
+            var connMock = new Mock<IPhormDbConnection>();
+            connMock.SetupGet(m => m.DefaultSchema).Returns("dbo");
+
+            var sess = new SqlPhormSession(DB_CONN, null!)
+            {
+                _connectionBuilder = (cs, cn) => connMock.Object
+            };
+
+            sess.Connected += (s, e) =>
+            {
+                throw new NotImplementedException();
+            };
+
+            // Act
+            var res = sess.GetConnection();
+
+            // Assert
+            Assert.AreSame(connMock.Object, res);
         }
 
         [TestMethod]
@@ -80,8 +151,8 @@ namespace IFY.Phorm.SqlClient.Tests
 
             // Assert
             Assert.AreNotSame(sess2, sess1);
-            Assert.AreEqual("name1", getField(sess1, "_connectionName"));
-            Assert.AreEqual("name2", getField(sess2, "_connectionName"));
+            Assert.AreEqual("name1", sess1.ConnectionName);
+            Assert.AreEqual("name2", sess2.ConnectionName);
         }
 
         static object? getField<T>(T inst, string fieldName)

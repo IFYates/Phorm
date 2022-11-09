@@ -47,6 +47,18 @@ namespace IFY.Phorm.Tests
         }
 
         [TestMethod]
+        public void ConnectionName__Returns_connection_name()
+        {
+            // Arrange
+            var connName = Guid.NewGuid().ToString();
+
+            var phorm = new TestPhormSession(connName);
+
+            // Assert
+            Assert.AreEqual(connName, phorm.ConnectionName);
+        }
+
+        [TestMethod]
         public void From__No_typearg()
         {
             // Arrange

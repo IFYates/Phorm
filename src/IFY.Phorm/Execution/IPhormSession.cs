@@ -38,6 +38,11 @@ namespace IFY.Phorm
         #endregion Events
 
         /// <summary>
+        /// The connection name this session uses for database scoping.
+        /// </summary>
+        string ConnectionName { get; }
+
+        /// <summary>
         /// If true, will consume execution errors and treat like a console message.
         /// Defaults to value in <see cref="GlobalSettings.ExceptionsAsConsoleMessage"/>.
         /// </summary>
