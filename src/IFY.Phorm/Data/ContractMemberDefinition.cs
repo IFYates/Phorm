@@ -127,36 +127,11 @@ namespace IFY.Phorm.Data
                     continue;
                 }
 
-                // Resolve member direction
-                var cmAttr = prop.GetCustomAttribute<ContractMemberAttribute>();
-                var canRead = prop.CanRead && cmAttr?.DisableInput != true;
-                var canWrite = prop.CanWrite && cmAttr?.DisableOutput != true;
-                var dir = (canRead ? ParameterType.Input : 0) | (canWrite ? ParameterType.Output : 0);
-                if (prop.PropertyType.IsGenericType && prop.PropertyType.GetGenericTypeDefinition()  == typeof(ContractOutMember<>))
+                var memb = fromPropertyInfo(prop);
+                if (memb != null)
                 {
-                    dir = ParameterType.Output;
+                    members.Add(memb);
                 }
-
-                // Ignore unusable properties
-#if !NET5_0_OR_GREATER
-                if (!dir.IsOneOf(ParameterType.Input, ParameterType.Output, ParameterType.InputOutput, ParameterType.ReturnValue))
-#else
-                if (dir is not ParameterType.Input and not ParameterType.Output and not ParameterType.InputOutput and not ParameterType.ReturnValue)
-#endif
-                {
-                    continue;
-                }
-
-                // Check for DataMemberAttribute changes
-                var dmAttr = prop.GetCustomAttribute<DataMemberAttribute>();
-
-                var dbName = dmAttr?.Name ?? prop.Name;
-                var memb = new ContractMemberDefinition(dbName, dir, prop)
-                {
-                    IsRequired = dmAttr?.IsRequired == true
-                };
-
-                members.Add(memb);
             }
 
             // Map additional member methods
@@ -178,6 +153,38 @@ namespace IFY.Phorm.Data
             }
 
             return members.ToArray();
+        }
+
+        private static ContractMemberDefinition? fromPropertyInfo(PropertyInfo prop)
+        {
+            // Resolve member direction
+            var cmAttr = prop.GetCustomAttribute<ContractMemberAttribute>();
+            var canRead = prop.CanRead && cmAttr?.DisableInput != true;
+            var canWrite = prop.CanWrite && cmAttr?.DisableOutput != true;
+            var dir = (canRead ? ParameterType.Input : 0) | (canWrite ? ParameterType.Output : 0);
+            if (prop.PropertyType.IsGenericType && prop.PropertyType.GetGenericTypeDefinition() == typeof(ContractOutMember<>))
+            {
+                dir = ParameterType.Output;
+            }
+
+            // Ignore unusable properties
+#if !NET5_0_OR_GREATER
+            if (!dir.IsOneOf(ParameterType.Input, ParameterType.Output, ParameterType.InputOutput, ParameterType.ReturnValue))
+#else
+                if (dir is not ParameterType.Input and not ParameterType.Output and not ParameterType.InputOutput and not ParameterType.ReturnValue)
+#endif
+            {
+                return null;
+            }
+
+            // Check for DataMemberAttribute changes
+            var dmAttr = prop.GetCustomAttribute<DataMemberAttribute>();
+
+            var dbName = dmAttr?.Name ?? prop.Name;
+            return new ContractMemberDefinition(dbName, dir, prop)
+            {
+                IsRequired = dmAttr?.IsRequired == true
+            };
         }
 
         /// <summary>

@@ -232,25 +232,7 @@ namespace IFY.Phorm
             var returnValue = 0;
             foreach (IDataParameter param in cmd.Parameters)
             {
-                if (param.Direction == ParameterDirection.ReturnValue)
-                {
-                    returnValue = (int?)param.Value ?? 0;
-                    foreach (var memb in members.Where(a => a.Direction == ParameterType.ReturnValue))
-                    {
-                        memb.SetValue(returnValue);
-                    }
-                }
-                else if (contract != null && (param.Direction & ParameterDirection.Output) > 0)
-                {
-                    var memb = members.Single(a => a.DbName == param.ParameterName[1..])
-                        .FromDatasource(param.Value, contract); // NOTE: Always given as VARCHAR
-                    var prop = memb.SourceMember;
-                    if (prop != null && prop.ReflectedType?.IsAssignableFrom(contract.GetType()) == false)
-                    {
-                        prop = contract.GetType().GetProperty(prop.Name);
-                    }
-                    ((PropertyInfo?)prop)?.SetValue(contract, memb.Value);
-                }
+                updateOutputParameter(param, contract, members, ref returnValue);
             }
 
             // Support console capture
@@ -272,6 +254,28 @@ namespace IFY.Phorm
                 ReturnValue = returnValue
             });
             return returnValue;
+        }
+        private static void updateOutputParameter(IDataParameter param, object? contract, ContractMember[] members, ref int returnValue)
+        {
+            if (param.Direction == ParameterDirection.ReturnValue)
+            {
+                returnValue = (int?)param.Value ?? 0;
+                foreach (var memb in members.Where(a => a.Direction == ParameterType.ReturnValue))
+                {
+                    memb.SetValue(returnValue);
+                }
+            }
+            else if (contract != null && (param.Direction & ParameterDirection.Output) > 0)
+            {
+                var memb = members.Single(a => a.DbName == param.ParameterName[1..])
+                    .FromDatasource(param.Value, contract); // NOTE: Always given as VARCHAR
+                var prop = memb.SourceMember;
+                if (prop != null && prop.ReflectedType?.IsAssignableFrom(contract.GetType()) == false)
+                {
+                    prop = contract.GetType().GetProperty(prop.Name);
+                }
+                ((PropertyInfo?)prop)?.SetValue(contract, memb.Value);
+            }
         }
 
         private bool safeRead(IDataReader rdr, AbstractConsoleMessageCapture console)

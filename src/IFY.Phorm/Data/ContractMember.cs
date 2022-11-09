@@ -113,6 +113,48 @@ namespace IFY.Phorm.Data
                 param.Size = Size > 0 ? Size : 256;
             }
 
+            transformParameter(param, context);
+
+            // Apply value
+            if (param.Value == null)
+            {
+                // NOTE: Ignoring for Output as breaks fixed-char args - do not know full impact
+                if (ValueType == typeof(string) && Direction != ParameterType.Output)
+                {
+                    // Fixes execution issue
+                    param.Size = Size > 0 ? Size : 256;
+                }
+            }
+
+            param.Value ??= DBNull.Value; // Must send non-null
+
+            if (param.Value is Guid)
+            {
+                param.DbType = DbType.Guid;
+            }
+
+            if (HasSecureAttribute)
+            {
+                // AbstractSecureValue
+                var secvalAttr = Attributes.OfType<AbstractSecureValueAttribute>().Single();
+                param.Value = secvalAttr.Encrypt(param.Value, context);
+            }
+
+            if (param.Value is byte[] bin)
+            {
+                param.DbType = DbType.Binary;
+                param.Size = bin.Length;
+            }
+            else if (ValueType == typeof(byte[]))
+            {
+                param.DbType = DbType.Binary;
+            }
+
+            return param;
+        }
+
+        private void transformParameter(IDbDataParameter param, object? context)
+        {
             // Transformation
             var transfAttr = Attributes.OfType<AbstractTransphormAttribute>().SingleOrDefault();
             var val = Value;
@@ -141,53 +183,18 @@ namespace IFY.Phorm.Data
                     }
                 }
             }
+            param.Value = val;
 
             // Check for DataMemberAttribute
             var dmAttr = SourceMember?.GetCustomAttribute<DataMemberAttribute>();
             if (dmAttr != null)
             {
                 // Primitives are never "missing", so only check null
-                if (dmAttr.IsRequired && val == null)
+                if (dmAttr.IsRequired && param.Value == null)
                 {
                     throw new ArgumentNullException(DbName, $"Parameter {DbName} for contract {SourceMember?.ReflectedType?.FullName} is required but was null");
                 }
             }
-
-            // Apply value
-            param.Value = val ?? DBNull.Value; // Must send non-null
-            if (val == null)
-            {
-                // NOTE: Ignoring for Output as breaks fixed-char args - do not know full impact
-                if (ValueType == typeof(string) && Direction != ParameterType.Output)
-                {
-                    // Fixes execution issue
-                    param.Size = Size > 0 ? Size : 256;
-                }
-            }
-
-            if (param.Value is Guid)
-            {
-                param.DbType = DbType.Guid;
-            }
-
-            if (HasSecureAttribute)
-            {
-                // AbstractSecureValue
-                var secvalAttr = Attributes.OfType<AbstractSecureValueAttribute>().Single();
-                param.Value = secvalAttr.Encrypt(param.Value, context);
-            }
-
-            if (param.Value is byte[] bin)
-            {
-                param.DbType = DbType.Binary;
-                param.Size = bin.Length;
-            }
-            else if (ValueType == typeof(byte[]))
-            {
-                param.DbType = DbType.Binary;
-            }
-
-            return param;
         }
 
         /// <summary>
