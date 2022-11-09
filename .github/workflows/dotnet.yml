@@ -43,7 +43,7 @@ jobs:
         path: ./src/**/IFY.Phorm.*.*nupkg
 
     - name: Coverlet coverage test - IFY.Phorm
-      run: dotnet coverlet ./src/IFY.Phorm.Tests/bin/$BUILD_CONFIG/net6.0/IFY.Phorm.Tests.dll --target "dotnet" --targetargs "test ./src/IFY.Phorm.Tests/IFY.Phorm.Tests.csproj --configuration $BUILD_CONFIG --no-build" --include-test-assembly --format lcov -o ify_phorm.lcov
+      run: dotnet coverlet ./src/IFY.Phorm.Tests/bin/$BUILD_CONFIG/net6.0/IFY.Phorm.Tests.dll --target "dotnet" --targetargs "test ./src/IFY.Phorm.Tests/IFY.Phorm.Tests.csproj --configuration $BUILD_CONFIG --no-build" --include-test-assembly --exclude-by-file "**/.nuget/**" --format lcov -o ify_phorm.lcov
     - name: Publish coverage results to Coveralls
       uses: coverallsapp/github-action@v1.1.2
       with:
@@ -53,7 +53,7 @@ jobs:
         parallel: true
 
     - name: Coverlet coverage test - IFY.Phorm.SqlClient
-      run: dotnet coverlet ./src/IFY.Phorm.SqlClient.Tests/bin/$BUILD_CONFIG/net6.0/IFY.Phorm.SqlClient.Tests.dll --target "dotnet" --targetargs "test ./src/IFY.Phorm.SqlClient.Tests/IFY.Phorm.SqlClient.Tests.csproj --configuration $BUILD_CONFIG --no-build" --include-test-assembly --format lcov --exclude "[IFY.Phorm]*" -o ify_phorm_sqlclient.lcov
+      run: dotnet coverlet ./src/IFY.Phorm.SqlClient.Tests/bin/$BUILD_CONFIG/net6.0/IFY.Phorm.SqlClient.Tests.dll --target "dotnet" --targetargs "test ./src/IFY.Phorm.SqlClient.Tests/IFY.Phorm.SqlClient.Tests.csproj --configuration $BUILD_CONFIG --no-build" --include-test-assembly --exclude "[IFY.Phorm]*" --format lcov -o ify_phorm_sqlclient.lcov
     - name: Publish coverage results to Coveralls
       uses: coverallsapp/github-action@v1.1.2
       with:

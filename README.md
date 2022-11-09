@@ -23,7 +23,7 @@ Pho/rm supports:
 
 Packages|||
 -|-|-
-IFY.Phorm.SQLClient|[![NuGet Version](https://img.shields.io/nuget/v/IFY.Phorm.SQLClient)](https://www.nuget.org/packages/IFY.Phorm.SQLClient/)|[![NuGet Downloads](https://img.shields.io/nuget/dt/IFY.Phorm.SQLClient)](https://www.nuget.org/packages/IFY.Phorm.SQLClient/)
+IFY.Phorm.SqlClient|[![NuGet Version](https://img.shields.io/nuget/v/IFY.Phorm.SqlClient)](https://www.nuget.org/packages/IFY.Phorm.SqlClient/)|[![NuGet Downloads](https://img.shields.io/nuget/dt/IFY.Phorm.SqlClient)](https://www.nuget.org/packages/IFY.Phorm.SqlClient/)
 
 ## Driving principals
 The are many, brilliant O/RM frameworks available using different paradigms for database interaction.  
