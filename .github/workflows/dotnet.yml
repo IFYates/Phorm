@@ -49,7 +49,7 @@ jobs:
         parallel: true
 
     - name: Coverlet coverage test - IFY.Phorm.SqlClient
-      run: dotnet coverlet ./src/IFY.Phorm.SqlClient.Tests/bin/$BUILD_CONFIG/net6.0/IFY.Phorm.SqlClient.Tests.dll --target "dotnet" --targetargs "test ./src/IFY.Phorm.SqlClient.Tests/IFY.Phorm.SqlClient.Tests.csproj --configuration $BUILD_CONFIG --no-build" --include-test-assembly --format lcov
+      run: dotnet coverlet ./src/IFY.Phorm.SqlClient.Tests/bin/$BUILD_CONFIG/net6.0/IFY.Phorm.SqlClient.Tests.dll --target "dotnet" --targetargs "test ./src/IFY.Phorm.SqlClient.Tests/IFY.Phorm.SqlClient.Tests.csproj --configuration $BUILD_CONFIG --no-build" --include-test-assembly --format lcov --exclude "[IFY.Phorm]*"
     - name: Publish coverage results to Coveralls
       uses: coverallsapp/github-action@v1.1.2
       with:
@@ -93,7 +93,7 @@ jobs:
           {
             "stryker-config": {
               "project": "IFY.Phorm.SqlClient.csproj",
-              "test-projects": ["./src/IFY.Phorm.Tests/IFY.Phorm.SqlClient.Tests.csproj"],
+              "test-projects": ["./src/IFY.Phorm.SqlClient/IFY.Phorm.SqlClient.Tests.csproj"],
               "project-info": {
                 "name": "github.com/IFYates/Phorm",
                 "module": "IFY.Phorm.SqlClient",
