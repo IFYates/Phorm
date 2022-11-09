@@ -1,4 +1,5 @@
-﻿using IFY.Phorm.Data;
+﻿using IFY.Phorm.Connectivity;
+using IFY.Phorm.Data;
 using IFY.Phorm.EventArgs;
 using System;
 using System.Threading;
@@ -11,29 +12,34 @@ namespace IFY.Phorm
         #region Events
 
         /// <summary>
+        /// The event invoked when a new database connection is created.
+        /// </summary>
+        event EventHandler<ConnectedEventArgs> Connected;
+
+        /// <summary>
         /// The event invoked when a command is about to be executed.
         /// </summary>
-        event EventHandler<CommandExecutingEventArgs>? CommandExecuting;
+        event EventHandler<CommandExecutingEventArgs> CommandExecuting;
 
         /// <summary>
         /// The event invoked when a command has finished executing.
         /// </summary>
-        event EventHandler<CommandExecutedEventArgs>? CommandExecuted;
+        event EventHandler<CommandExecutedEventArgs> CommandExecuted;
 
         /// <summary>
         /// A result record contained a column not specified in the target entity type.
         /// </summary>
-        event EventHandler<UnexpectedRecordColumnEventArgs>? UnexpectedRecordColumn;
+        event EventHandler<UnexpectedRecordColumnEventArgs> UnexpectedRecordColumn;
 
         /// <summary>
         /// A result record did not contain a column specified in the target entity type.
         /// </summary>
-        event EventHandler<UnresolvedContractMemberEventArgs>? UnresolvedContractMember;
+        event EventHandler<UnresolvedContractMemberEventArgs> UnresolvedContractMember;
 
         /// <summary>
         /// A log message was received during execution.
         /// </summary>
-        event EventHandler<ConsoleMessageEventArgs>? ConsoleMessage;
+        event EventHandler<ConsoleMessageEventArgs> ConsoleMessage;
 
         #endregion Events
 

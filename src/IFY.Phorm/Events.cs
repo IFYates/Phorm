@@ -8,12 +8,26 @@ namespace IFY.Phorm
     /// </summary>
     public class Events
     {
+        #region Connected
+
+        /// <summary>
+        /// The event invoked when a new database connection is created.
+        /// </summary>
+        public static event EventHandler<ConnectedEventArgs> Connected = null!;
+
+        internal static void OnConnected(object sender, ConnectedEventArgs args)
+        {
+            try { Connected?.Invoke(sender, args); } catch { }
+        }
+
+        #endregion Connected
+
         #region CommandExecuting
 
         /// <summary>
         /// The event invoked when a command is about to be executed.
         /// </summary>
-        public static event EventHandler<CommandExecutingEventArgs>? CommandExecuting;
+        public static event EventHandler<CommandExecutingEventArgs> CommandExecuting = null!;
 
         internal static void OnCommandExecuting(object sender, CommandExecutingEventArgs args)
         {
@@ -27,7 +41,7 @@ namespace IFY.Phorm
         /// <summary>
         /// The event invoked when a command has finished executing.
         /// </summary>
-        public static event EventHandler<CommandExecutedEventArgs>? CommandExecuted;
+        public static event EventHandler<CommandExecutedEventArgs> CommandExecuted = null!;
 
         internal static void OnCommandExecuted(object sender, CommandExecutedEventArgs args)
         {
@@ -41,7 +55,7 @@ namespace IFY.Phorm
         /// <summary>
         /// A result record contained a column not specified in the target entity type.
         /// </summary>
-        public static event EventHandler<UnexpectedRecordColumnEventArgs>? UnexpectedRecordColumn;
+        public static event EventHandler<UnexpectedRecordColumnEventArgs> UnexpectedRecordColumn = null!;
 
         internal static void OnUnexpectedRecordColumn(object sender, UnexpectedRecordColumnEventArgs args)
         {
@@ -55,7 +69,7 @@ namespace IFY.Phorm
         /// <summary>
         /// A result record did not contain a column specified in the target entity type.
         /// </summary>
-        public static event EventHandler<UnresolvedContractMemberEventArgs>? UnresolvedContractMember;
+        public static event EventHandler<UnresolvedContractMemberEventArgs> UnresolvedContractMember = null!;
 
         internal static void OnUnresolvedContractMember(object sender, UnresolvedContractMemberEventArgs args)
         {
@@ -69,7 +83,7 @@ namespace IFY.Phorm
         /// <summary>
         /// A log message was received during execution.
         /// </summary>
-        public static event EventHandler<ConsoleMessageEventArgs>? ConsoleMessage;
+        public static event EventHandler<ConsoleMessageEventArgs> ConsoleMessage = null!;
 
         internal static void OnConsoleMessage(object sender, ConsoleMessageEventArgs args)
         {

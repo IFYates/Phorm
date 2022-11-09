@@ -299,7 +299,7 @@ namespace IFY.Phorm.SqlClient.Tests
             {
                 ++fired;
                 eventSender = s;
-                eventArgs = e;
+                eventArgs = e.Connection;
             };
 
             // Act
@@ -310,31 +310,6 @@ namespace IFY.Phorm.SqlClient.Tests
             Assert.AreEqual(1, fired);
             Assert.AreSame(sess, eventSender);
             Assert.AreSame(connMock.Object, eventArgs);
-        }
-
-        [TestMethod]
-        public void GetConnection__Connected_event_fails__Ignored()
-        {
-            // Arrange
-            var connMock = new Mock<IPhormDbConnection>();
-            connMock.Setup(m => m.Dispose());
-            connMock.SetupProperty(m => m.DefaultSchema).Object.DefaultSchema = "dbo";
-
-            var sess = new SqlPhormSession(CONN_STR, null!)
-            {
-                _connectionBuilder = (cs, cn) => connMock.Object
-            };
-
-            sess.Connected += (s, e) =>
-            {
-                throw new InvalidOperationException();
-            };
-
-            // Act
-            var res = sess.GetConnection();
-
-            // Assert
-            Assert.AreSame(connMock.Object, res);
         }
 
         [TestMethod]

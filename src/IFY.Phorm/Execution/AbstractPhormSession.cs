@@ -47,35 +47,42 @@ namespace IFY.Phorm
 
         #region Events
 
-        public event EventHandler<CommandExecutingEventArgs>? CommandExecuting;
+        public event EventHandler<ConnectedEventArgs> Connected = null!;
+        internal void OnConnected(ConnectedEventArgs args)
+        {
+            try { Connected?.Invoke(this, args); } catch { }
+            Events.OnConnected(this, args);
+        }
+
+        public event EventHandler<CommandExecutingEventArgs> CommandExecuting = null!;
         internal void OnCommandExecuting(CommandExecutingEventArgs args)
         {
             try { CommandExecuting?.Invoke(this, args); } catch { }
             Events.OnCommandExecuting(this, args);
         }
 
-        public event EventHandler<CommandExecutedEventArgs>? CommandExecuted;
+        public event EventHandler<CommandExecutedEventArgs> CommandExecuted = null!;
         internal void OnCommandExecuted(CommandExecutedEventArgs args)
         {
             try { CommandExecuted?.Invoke(this, args); } catch { }
             Events.OnCommandExecuted(this, args);
         }
 
-        public event EventHandler<UnexpectedRecordColumnEventArgs>? UnexpectedRecordColumn;
+        public event EventHandler<UnexpectedRecordColumnEventArgs> UnexpectedRecordColumn = null!;
         internal void OnUnexpectedRecordColumn(UnexpectedRecordColumnEventArgs args)
         {
             try { UnexpectedRecordColumn?.Invoke(this, args); } catch { }
             Events.OnUnexpectedRecordColumn(this, args);
         }
 
-        public event EventHandler<UnresolvedContractMemberEventArgs>? UnresolvedContractMember;
+        public event EventHandler<UnresolvedContractMemberEventArgs> UnresolvedContractMember = null!;
         internal void OnUnresolvedContractMember(UnresolvedContractMemberEventArgs args)
         {
             try { UnresolvedContractMember?.Invoke(this, args); } catch { }
             Events.OnUnresolvedContractMember(this, args);
         }
 
-        public event EventHandler<ConsoleMessageEventArgs>? ConsoleMessage;
+        public event EventHandler<ConsoleMessageEventArgs> ConsoleMessage = null!;
         internal void OnConsoleMessage(ConsoleMessageEventArgs args)
         {
             try { ConsoleMessage?.Invoke(this, args); } catch { }
@@ -95,11 +102,6 @@ namespace IFY.Phorm
         }
 
         #region Connection
-
-        /// <summary>
-        /// Invoked when a new database connection is created.
-        /// </summary>
-        public event EventHandler<IPhormDbConnection>? Connected;
 
         private static readonly Dictionary<string, IPhormDbConnection> _connectionPool = new Dictionary<string, IPhormDbConnection>();
 #if DEBUG
@@ -146,11 +148,7 @@ namespace IFY.Phorm
                         }
                         _connectionPool[ConnectionName ?? string.Empty] = phormConn;
 
-                        try
-                        {
-                            Connected?.Invoke(this, phormConn);
-                        }
-                        catch { }
+                        OnConnected(new ConnectedEventArgs { Connection = phormConn });
                     }
                 }
             }
