@@ -6,6 +6,7 @@ using Moq;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Reflection;
 using System.Runtime.Serialization;
 
 namespace IFY.Phorm.Tests
@@ -21,7 +22,7 @@ namespace IFY.Phorm.Tests
             [IgnoreDataMember]
             public string Arg3 { get; set; } = string.Empty;
             [IgnoreDataMember]
-            public ContractMember Arg4 { get; set; } = ContractMember.Out<string>("InvalidRename");
+            public ContractMember Arg4 { get; set; } = new ContractMember("InvalidRename", null, ParameterType.Output, typeof(string));
         }
 
         public class TestContract2 : IPhormContract
@@ -55,6 +56,12 @@ namespace IFY.Phorm.Tests
             string? Arg3 { get; set; }
         }
 
+        [TestInitialize]
+        public void Init()
+        {
+            AbstractPhormSession.ResetConnectionPool();
+        }
+
         [TestMethod]
         public void Call_by_anon_object()
         {
@@ -67,7 +74,7 @@ namespace IFY.Phorm.Tests
             var cmd = new TestDbCommand();
             conn.CommandQueue.Enqueue(cmd);
 
-            var phorm = new TestPhormSession(new TestPhormConnectionProvider((s) => conn));
+            var phorm = new TestPhormSession(conn);
 
             var runner = new PhormContractRunner<IPhormContract>(phorm, "CallTest", DbObjectType.StoredProcedure, new { Arg = 1 });
 
@@ -77,7 +84,7 @@ namespace IFY.Phorm.Tests
             // Assert
             Assert.AreEqual(1, res);
             Assert.AreEqual(CommandType.StoredProcedure, cmd.CommandType);
-            Assert.AreEqual("[schema].[CallTest]", cmd.CommandText);
+            Assert.AreEqual("[schema].[usp_CallTest]", cmd.CommandText);
 
             var pars = cmd.Parameters.AsParameters();
             Assert.AreEqual(2, pars.Length);
@@ -98,7 +105,7 @@ namespace IFY.Phorm.Tests
             var cmd = new TestDbCommand();
             conn.CommandQueue.Enqueue(cmd);
 
-            var phorm = new TestPhormSession(new TestPhormConnectionProvider((s) => conn));
+            var phorm = new TestPhormSession(conn);
 
             var runner = new PhormContractRunner<TestContract>(phorm, null, DbObjectType.StoredProcedure, new TestContract { Arg = 1 });
 
@@ -108,7 +115,7 @@ namespace IFY.Phorm.Tests
             // Assert
             Assert.AreEqual(1, res);
             Assert.AreEqual(CommandType.StoredProcedure, cmd.CommandType);
-            Assert.AreEqual("[schema].[TestContract]", cmd.CommandText);
+            Assert.AreEqual("[schema].[usp_TestContract]", cmd.CommandText);
 
             var pars = cmd.Parameters.AsParameters();
             Assert.AreEqual(2, pars.Length);
@@ -129,7 +136,7 @@ namespace IFY.Phorm.Tests
             var cmd = new TestDbCommand();
             conn.CommandQueue.Enqueue(cmd);
 
-            var phorm = new TestPhormSession(new TestPhormConnectionProvider((s) => conn));
+            var phorm = new TestPhormSession(conn);
 
             var runner = new PhormContractRunner<IMemberTestContract>(phorm, null, DbObjectType.Default, new TestContract { Arg = 1 });
 
@@ -139,7 +146,7 @@ namespace IFY.Phorm.Tests
             // Assert
             Assert.AreEqual(1, res);
             Assert.AreEqual(CommandType.StoredProcedure, cmd.CommandType);
-            Assert.AreEqual("[otherSchema].[IAmRenamedContract]", cmd.CommandText);
+            Assert.AreEqual("[otherSchema].[usp_IAmRenamedContract]", cmd.CommandText);
 
             var pars = cmd.Parameters.AsParameters();
             Assert.AreEqual("@RenamedArg", pars[0].ParameterName);
@@ -158,7 +165,7 @@ namespace IFY.Phorm.Tests
             var cmd = new TestDbCommand();
             conn.CommandQueue.Enqueue(cmd);
 
-            var phorm = new TestPhormSession(new TestPhormConnectionProvider((s) => conn));
+            var phorm = new TestPhormSession(conn);
 
             var runner = new PhormContractRunner<TestContract2>(phorm, null, DbObjectType.Default, new TestContract2());
 
@@ -191,9 +198,12 @@ namespace IFY.Phorm.Tests
             var cmd = new TestDbCommand();
             conn.CommandQueue.Enqueue(cmd);
 
-            var phorm = new TestPhormSession(new TestPhormConnectionProvider((s) => conn));
+            var phorm = new TestPhormSession(conn);
 
-            var runner = new PhormContractRunner<IMemberTestContract>(phorm, null, DbObjectType.Default, new TestContract { Arg = 1 });
+            var args = new TestContract { Arg = 1 };
+            var cm = args.Arg4;
+
+            var runner = new PhormContractRunner<IMemberTestContract>(phorm, null, DbObjectType.Default, args);
 
             // Act
             var res = runner.CallAsync().Result;
@@ -204,6 +214,7 @@ namespace IFY.Phorm.Tests
             Assert.AreEqual(ParameterDirection.Output, pars[1].Direction);
             Assert.AreEqual("@Arg4", pars[3].ParameterName);
             Assert.AreEqual(ParameterDirection.Output, pars[3].Direction);
+            Assert.AreSame(cm, args.Arg4);
         }
 
         [TestMethod]
@@ -218,7 +229,7 @@ namespace IFY.Phorm.Tests
             var cmd = new TestDbCommand();
             conn.CommandQueue.Enqueue(cmd);
 
-            var phorm = new TestPhormSession(new TestPhormConnectionProvider((s) => conn));
+            var phorm = new TestPhormSession(conn);
 
             var runner = new PhormContractRunner<IMemberTestContract>(phorm, null, DbObjectType.Default, new TestContract { Arg3 = null! });
 
@@ -238,7 +249,7 @@ namespace IFY.Phorm.Tests
             var cmd = new TestDbCommand();
             conn.CommandQueue.Enqueue(cmd);
 
-            var phorm = new TestPhormSession(new TestPhormConnectionProvider((s) => conn));
+            var phorm = new TestPhormSession(conn);
 
             var data = "secure_value".GetBytes();
             var encdata = Guid.NewGuid().ToString().GetBytes();
@@ -288,7 +299,7 @@ namespace IFY.Phorm.Tests
             });
             conn.CommandQueue.Enqueue(cmd);
 
-            var phorm = new TestPhormSession(new TestPhormConnectionProvider((s) => conn));
+            var phorm = new TestPhormSession(conn);
 
             var runner = new PhormContractRunner<IPhormContract>(phorm, "CallTest", DbObjectType.StoredProcedure, new { Arg = 1 });
 
@@ -329,7 +340,7 @@ namespace IFY.Phorm.Tests
             var cmd = new TestDbCommand();
             conn.CommandQueue.Enqueue(cmd);
 
-            var phorm = new TestPhormSession(new TestPhormConnectionProvider((s) => conn))
+            var phorm = new TestPhormSession(conn)
             {
                 ConsoleMessageCaptureProvider = (s, g) => new TestConsoleMessageCapture(s, g)
             };
@@ -366,7 +377,7 @@ namespace IFY.Phorm.Tests
             var cmd = new TestDbCommand();
             conn.CommandQueue.Enqueue(cmd);
 
-            var phorm = new TestPhormSession(new TestPhormConnectionProvider((s) => conn))
+            var phorm = new TestPhormSession(conn)
             {
                 ConsoleMessageCaptureProvider = (s, g) => new TestConsoleMessageCapture(s, g)
             };

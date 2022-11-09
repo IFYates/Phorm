@@ -33,7 +33,6 @@ namespace IFY.Phorm.Tests
         [ExcludeFromCodeCoverage]
         class TestParentBadResultsetProperty
         {
-            [ExcludeFromCodeCoverage]
             [Resultset(0, nameof(TrueSelector))]
             public TestChild[] Children { get; } = Array.Empty<TestChild>();
             public static IRecordMatcher TrueSelector { get; }
@@ -42,11 +41,10 @@ namespace IFY.Phorm.Tests
 
         class TestParentBadProperty
         {
-            [ExcludeFromCodeCoverage]
-            public string? Key { get; }
+            public string? Key { get; } = null;
         }
 
-        public interface ITestContract : IPhormContract
+        interface ITestContract : IPhormContract
         {
         }
 
@@ -54,6 +52,12 @@ namespace IFY.Phorm.Tests
         {
             [ExcludeFromCodeCoverage]
             public TestBadEntity(string value) { value.ToString(); }
+        }
+
+        [TestInitialize]
+        public void Init()
+        {
+            AbstractPhormSession.ResetConnectionPool();
         }
 
         [TestMethod]
@@ -114,7 +118,7 @@ namespace IFY.Phorm.Tests
             });
             conn.CommandQueue.Enqueue(cmd);
 
-            var phorm = new TestPhormSession(new TestPhormConnectionProvider((s) => conn));
+            var phorm = new TestPhormSession(conn);
 
             var runner = new PhormContractRunner<ITestContract>(phorm, "ContractName", DbObjectType.StoredProcedure, null);
 
@@ -166,7 +170,7 @@ namespace IFY.Phorm.Tests
             });
             conn.CommandQueue.Enqueue(cmd);
 
-            var phorm = new TestPhormSession(new TestPhormConnectionProvider((s) => conn));
+            var phorm = new TestPhormSession(conn);
 
             var runner = new PhormContractRunner<ITestContract>(phorm, "ContractName", DbObjectType.StoredProcedure, null);
 
@@ -211,7 +215,7 @@ namespace IFY.Phorm.Tests
             });
             conn.CommandQueue.Enqueue(cmd);
 
-            var phorm = new TestPhormSession(new TestPhormConnectionProvider((s) => conn));
+            var phorm = new TestPhormSession(conn);
 
             var runner = new PhormContractRunner<ITestContract>(phorm, "ContractName", DbObjectType.StoredProcedure, null);
 
@@ -262,7 +266,7 @@ namespace IFY.Phorm.Tests
             });
             conn.CommandQueue.Enqueue(cmd);
 
-            var phorm = new TestPhormSession(new TestPhormConnectionProvider((s) => conn));
+            var phorm = new TestPhormSession(conn);
 
             var runner = new PhormContractRunner<ITestContract>(phorm, "ContractName", DbObjectType.StoredProcedure, null);
 
@@ -313,7 +317,7 @@ namespace IFY.Phorm.Tests
             });
             conn.CommandQueue.Enqueue(cmd);
 
-            var phorm = new TestPhormSession(new TestPhormConnectionProvider((s) => conn));
+            var phorm = new TestPhormSession(conn);
 
             var runner = new PhormContractRunner<ITestContract>(phorm, "ContractName", DbObjectType.StoredProcedure, null);
 
@@ -359,7 +363,7 @@ namespace IFY.Phorm.Tests
             });
             conn.CommandQueue.Enqueue(cmd);
 
-            var phorm = new TestPhormSession(new TestPhormConnectionProvider((s) => conn));
+            var phorm = new TestPhormSession(conn);
 
             var runner = new PhormContractRunner<ITestContract>(phorm, "ContractName", DbObjectType.StoredProcedure, null);
 

@@ -24,18 +24,28 @@ namespace IFY.Phorm.Tests.Encryption
             string? Value { get; }
         }
 
-        [ExcludeFromCodeCoverage]
         class TransformToSourceAttribute : AbstractTransphormAttribute
         {
-            public override object? FromDatasource(Type type, object? data) => throw new NotImplementedException();
-            public override object? ToDatasource(object? data) => "ToSource_" + (string?)data;
+            [ExcludeFromCodeCoverage]
+            public override object? FromDatasource(Type type, object? data, object? context)
+                => throw new NotImplementedException();
+            public override object? ToDatasource(object? data, object? context)
+                => "ToSource_" + (string?)data;
         }
 
-        [ExcludeFromCodeCoverage]
         class TransformFromSourceAttribute : AbstractTransphormAttribute
         {
-            public override object? FromDatasource(Type type, object? data) => "FromSource_" + (string?)data;
-            public override object? ToDatasource(object? data) => throw new NotImplementedException();
+            public override object? FromDatasource(Type type, object? data, object? context)
+                => "FromSource_" + (string?)data;
+            [ExcludeFromCodeCoverage]
+            public override object? ToDatasource(object? data, object? context)
+                => throw new NotImplementedException();
+        }
+
+        [TestInitialize]
+        public void Init()
+        {
+            AbstractPhormSession.ResetConnectionPool();
         }
 
         [TestMethod]
@@ -72,7 +82,7 @@ namespace IFY.Phorm.Tests.Encryption
             });
 
             var runner = new TestPhormSession();
-            runner.TestConnectionProvider?.TestConnection?.CommandQueue.Enqueue(cmd);
+            runner.TestConnection?.CommandQueue.Enqueue(cmd);
 
             // Act
             var res = runner.From("Get").Get<DataObject>();

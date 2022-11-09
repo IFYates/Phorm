@@ -14,7 +14,7 @@ namespace IFY.Phorm.Tests
         public List<Dictionary<string, object>> Data
         {
             get;
-#if NETSTANDARD || NETCOREAPP
+#if !NET5_0_OR_GREATER
             set;
 #else
             init;
@@ -23,7 +23,7 @@ namespace IFY.Phorm.Tests
         public List<Dictionary<string, object>[]> Results
         {
             get;
-#if NETSTANDARD || NETCOREAPP
+#if !NET5_0_OR_GREATER
             set;
 #else
             init;

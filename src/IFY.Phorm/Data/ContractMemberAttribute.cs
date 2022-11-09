@@ -2,7 +2,7 @@
 
 namespace IFY.Phorm.Data
 {
-    [AttributeUsage(AttributeTargets.Property)]
+    [AttributeUsage(AttributeTargets.Property | AttributeTargets.Method)]
     public class ContractMemberAttribute : Attribute
     {
         /// <summary>

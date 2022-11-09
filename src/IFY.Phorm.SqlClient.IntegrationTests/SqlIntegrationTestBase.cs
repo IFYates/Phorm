@@ -35,12 +35,9 @@ namespace IFY.Phorm.SqlClient.IntegrationTests
             Events.ConsoleMessage -= invokeHandler;
         }
 
-        protected static IPhormSession getPhormSession(string? connectionName = null) => getPhormSession(out _, connectionName);
-        protected static IPhormSession getPhormSession(out SqlConnectionProvider connProv, string? connectionName = null)
+        protected static AbstractPhormSession getPhormSession(string? connectionName = null)
         {
-            connProv = new SqlConnectionProvider(@"Server=(localdb)\ProjectModels;Database=PhormTests;MultipleActiveResultSets=True");
-
-            var phorm = new SqlPhormSession(connProv, connectionName);
+            var phorm = new SqlPhormSession(@"Server=(localdb)\ProjectModels;Database=PhormTests;MultipleActiveResultSets=True", connectionName);
             return phorm;
         }
     }

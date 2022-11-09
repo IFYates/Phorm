@@ -13,7 +13,7 @@ namespace IFY.Phorm.Transformation.Tests
             var attr = new JsonValueAttribute();
 
             // Act
-            var res = attr.FromDatasource(typeof(int), null);
+            var res = attr.FromDatasource(typeof(int), null, null);
 
             // Assert
             Assert.IsNull(res);
@@ -26,7 +26,7 @@ namespace IFY.Phorm.Transformation.Tests
             var attr = new JsonValueAttribute();
 
             // Act
-            var res = attr.FromDatasource(typeof(int), "1234");
+            var res = attr.FromDatasource(typeof(int), "1234", null);
 
             // Assert
             Assert.AreEqual(1234, res);
@@ -41,7 +41,7 @@ namespace IFY.Phorm.Transformation.Tests
             // Act
             Assert.ThrowsException<JsonReaderException>(() =>
             {
-                attr.FromDatasource(typeof(int), "invalid");
+                attr.FromDatasource(typeof(int), "invalid", null);
             });
         }
 
@@ -52,7 +52,7 @@ namespace IFY.Phorm.Transformation.Tests
             var attr = new JsonValueAttribute();
 
             // Act
-            var res = attr.ToDatasource(null);
+            var res = attr.ToDatasource(null, null);
 
             // Assert
             Assert.IsNull(res);
@@ -65,7 +65,7 @@ namespace IFY.Phorm.Transformation.Tests
             var attr = new JsonValueAttribute();
 
             // Act
-            var res = attr.ToDatasource("value");
+            var res = attr.ToDatasource("value", null);
 
             // Assert
             Assert.AreEqual("\"value\"", res);

@@ -80,7 +80,7 @@ namespace IFY.Phorm
             var cmd = _session.CreateCommand(_schema, _objectName, _objectType);
 
             // Build WHERE clause from members
-#if NETSTANDARD || NETCOREAPP
+#if !NET5_0_OR_GREATER
             if (_objectType.IsOneOf(DbObjectType.Table, DbObjectType.View))
 #else
             if (_objectType is DbObjectType.Table or DbObjectType.View)
@@ -106,8 +106,9 @@ namespace IFY.Phorm
             // Convert to database parameters
             foreach (var memb in members)
             {
-                var param = memb.ToDataParameter(cmd);
-                if (param.Direction != ParameterDirection.Input || (param.Value != null && param.Value != DBNull.Value))
+                var param = memb.ToDataParameter(cmd, _runArgs);
+                if (param.Direction != ParameterDirection.Input
+                    || (param.Value != null && param.Value != DBNull.Value))
                 {
                     cmd.Parameters.Add(param);
                 }
@@ -117,7 +118,8 @@ namespace IFY.Phorm
             {
                 CommandGuid = Guid.NewGuid(),
                 CommandText = cmd.CommandText,
-                CommandParameters = cmd.Parameters.Cast<IDbDataParameter>().ToDictionary(p => p.ParameterName, p => p.Value)
+                CommandParameters = cmd.Parameters.Cast<IDbDataParameter>()
+                    .ToDictionary(p => p.ParameterName, p => (object?)p.Value)
             };
             _session.OnCommandExecuting(eventArgs);
 
@@ -137,7 +139,7 @@ namespace IFY.Phorm
             // Get data
             var recordType = rsProp.PropertyType.IsArray ? rsProp.PropertyType.GetElementType()! : rsProp.PropertyType;
             var records = new List<object>();
-            var recordMembers = ContractMember.GetMembersFromContract(null, recordType, false)
+            var recordMembers = ContractMemberDefinition.GetFromContract(null, recordType)
                 .ToDictionary(m => m.DbName.ToUpperInvariant());
             while (safeRead(rdr, console))
             {
@@ -167,27 +169,27 @@ namespace IFY.Phorm
             }
         }
 
-        private object getEntity(Type entityType, IDataReader rdr, IDictionary<string, ContractMember> members, Guid commandGuid)
+        private object getEntity(Type entityType, IDataReader rdr, IDictionary<string, ContractMemberDefinition> members, Guid commandGuid)
         {
             members = members.ToDictionary(k => k.Key, v => v.Value); // Copy
             var entity = Activator.CreateInstance(entityType)!;
 
             // Resolve member values
-            var secureMembers = new Dictionary<ContractMember, object>();
+            var secureMembers = new Dictionary<ContractMemberDefinition, object>();
             for (var i = 0; i < rdr.FieldCount; ++i)
             {
                 var fieldName = rdr.GetName(i);
                 if (members.Remove(fieldName.ToUpperInvariant(), out var memb))
                 {
-                    memb.ResolveAttributes(entity, out var isSecure);
-                    if (isSecure)
+                    if (memb.HasSecureAttribute)
                     {
                         // Defer secure members until after non-secure, to allow for authenticator properties
                         secureMembers[memb] = rdr.GetValue(i);
                     }
                     else
                     {
-                        setEntityValue(entity, memb, rdr.GetValue(i));
+                        memb.FromDatasource(rdr.GetValue(i), entity)
+                            .ApplyToEntity(entity);
                     }
                 }
                 else
@@ -205,7 +207,8 @@ namespace IFY.Phorm
             // Apply secure values
             foreach (var kvp in secureMembers)
             {
-                setEntityValue(entity, kvp.Key, kvp.Value);
+                kvp.Key.FromDatasource(kvp.Value, entity)
+                    .ApplyToEntity(entity);
             }
 
             // Warnings for missing expected columns
@@ -216,24 +219,11 @@ namespace IFY.Phorm
                     CommandGuid = commandGuid,
                     EntityType = entityType,
                     MemberNames = members.Values.Where(m => (m.Direction & ParameterType.Output) > 0 && m.Direction != ParameterType.ReturnValue)
-                        .Select(m => m.SourceProperty?.Name ?? m.DbName).ToArray()
+                        .Select(m => m.SourceMember?.Name ?? m.DbName).ToArray()
                 });
             }
 
             return entity;
-
-            static void setEntityValue(object entity, ContractMember memb, object value)
-            {
-                memb.FromDatasource(value);
-                try
-                {
-                    memb.SourceProperty?.SetValue(entity, memb.Value);
-                }
-                catch (Exception ex)
-                {
-                    throw new InvalidOperationException($"Failed to set property {memb.SourceProperty?.Name ?? memb.DbName}", ex);
-                }
-            }
         }
 
         private int parseCommandResult(IAsyncDbCommand cmd, object? contract, ContractMember[] members, IEnumerable<ConsoleMessage> consoleEvents, CommandExecutingEventArgs eventArgs, int? resultCount)
@@ -252,24 +242,23 @@ namespace IFY.Phorm
                 }
                 else if (contract != null && (param.Direction & ParameterDirection.Output) > 0)
                 {
-                    var memb = members.Single(a => a.DbName == param.ParameterName[1..]);
-                    memb.FromDatasource(param.Value); // NOTE: Always given as VARCHAR
-                    var prop = memb.SourceProperty;
+                    var memb = members.Single(a => a.DbName == param.ParameterName[1..])
+                        .FromDatasource(param.Value, contract); // NOTE: Always given as VARCHAR
+                    var prop = memb.SourceMember;
                     if (prop != null && prop.ReflectedType?.IsAssignableFrom(contract.GetType()) == false)
                     {
                         prop = contract.GetType().GetProperty(prop.Name);
                     }
-                    prop?.SetValue(contract, memb.Value);
+                    ((PropertyInfo?)prop)?.SetValue(contract, memb.Value);
                 }
             }
 
-            // TODO: only if needed
             // Support console capture
-            if (consoleEvents?.Count() > 0)
+            if (consoleEvents?.Any() == true)
             {
                 var consoleProp = contract?.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public)
-                    .Where(p => typeof(ContractMember<ConsoleMessage[]>).IsAssignableFrom(p.PropertyType))
-                    .Select(p => p.GetValue(contract) as ContractMember<ConsoleMessage[]>)
+                    .Where(p => typeof(ConsoleLogMember).IsAssignableFrom(p.PropertyType))
+                    .Select(p => p.GetValue(contract) as ConsoleLogMember)
                     .FirstOrDefault(v => v?.Direction == ParameterType.Console);
                 consoleProp?.SetValue(consoleEvents.ToArray());
             }
@@ -287,7 +276,7 @@ namespace IFY.Phorm
 
         private bool safeRead(IDataReader rdr, AbstractConsoleMessageCapture console)
         {
-            if (_session.ErrorsAsConsoleMessage)
+            if (_session.ExceptionsAsConsoleMessage)
             {
                 try
                 {
@@ -358,7 +347,7 @@ namespace IFY.Phorm
             }
             else
             {
-                var resultMembers = ContractMember.GetMembersFromContract(null, entityType, false)
+                var resultMembers = ContractMemberDefinition.GetFromContract(null, entityType)
                     .ToDictionary(m => m.DbName.ToUpperInvariant());
 
                 // Parse recordset
@@ -412,19 +401,19 @@ namespace IFY.Phorm
         private class SpecDef
         {
             public Type Type { get; }
-            public ContractMember? GenProperty { get; }
+            public ContractMemberDefinition? GenProperty { get; }
             public object SpecValue { get; }
-            public IDictionary<string, ContractMember> Members { get; }
+            public IDictionary<string, ContractMemberDefinition> Members { get; }
 
             public SpecDef(Type type)
             {
                 Type = type;
                 var attr = type.GetCustomAttribute<PhormSpecOfAttribute>(false);
-                Members = ContractMember.GetMembersFromContract(null, type, false)
+                Members = ContractMemberDefinition.GetFromContract(null, type)
                     .ToDictionary(m => m.DbName.ToUpperInvariant());
                 if (attr != null)
                 {
-                    GenProperty = Members.Values.FirstOrDefault(m => m.SourceProperty?.Name.ToUpperInvariant() == attr.GenProperty.ToUpperInvariant());
+                    GenProperty = Members.Values.FirstOrDefault(m => m.SourceMember?.Name.ToUpperInvariant() == attr.GenProperty.ToUpperInvariant());
                     SpecValue = attr.PropertyValue;
                 }
                 else
@@ -437,7 +426,7 @@ namespace IFY.Phorm
         private GenSpecBase parseGenSpec<TResult>(IList<object> results, IDataReader rdr, Guid commandGuid, AbstractConsoleMessageCapture console)
         {
             var genspec = (GenSpecBase)Activator.CreateInstance(typeof(TResult))!;
-            IDictionary<string, ContractMember>? baseMembers = null;
+            IDictionary<string, ContractMemberDefinition>? baseMembers = null;
 
             // Prepare models
             var specs = genspec.SpecTypes.Select(t => new SpecDef(t)).ToArray();
@@ -455,11 +444,11 @@ namespace IFY.Phorm
                 foreach (var spec in specs)
                 {
                     // Check Gen property for the Spec type (cached)
-                    if (!tempProps.TryGetValue(spec.GenProperty!.SourcePropertyId!, out var propValue))
+                    if (!tempProps.TryGetValue(spec.GenProperty!.SourceMemberId!, out var propValue))
                     {
-                        spec.GenProperty.FromDatasource(rdr[spec.GenProperty.DbName]);
-                        propValue = spec.GenProperty.Value;
-                        tempProps[spec.GenProperty.SourcePropertyId!] = propValue;
+                        var gen = spec.GenProperty.FromDatasource(rdr[spec.GenProperty.DbName], null);
+                        propValue = gen.Value;
+                        tempProps[gen.SourceMemberId!] = propValue;
                     }
 
                     if (spec.SpecValue.Equals(propValue))
@@ -476,14 +465,14 @@ namespace IFY.Phorm
                 {
                     if (!genspec.GenType.IsAbstract)
                     {
-                        baseMembers ??= ContractMember.GetMembersFromContract(null, genspec.GenType, false)
+                        baseMembers ??= ContractMemberDefinition.GetFromContract(null, genspec.GenType)
                             .ToDictionary(m => m.DbName.ToUpperInvariant());
                         var result = getEntity(genspec.GenType, rdr, baseMembers, commandGuid);
                         results.Add(result);
                     }
                     else
                     {
-                        // TODO: warnings for dropped records
+                        // TODO: Warning events for dropped records
                     }
                 }
             }

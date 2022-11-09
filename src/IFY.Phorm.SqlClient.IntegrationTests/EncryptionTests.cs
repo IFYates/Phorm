@@ -2,8 +2,8 @@
 using IFY.Phorm.Data;
 using IFY.Phorm.Encryption;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Moq;
 using System;
-using System.Diagnostics.CodeAnalysis;
 using System.Runtime.Serialization;
 
 namespace IFY.Phorm.SqlClient.IntegrationTests
@@ -11,8 +11,8 @@ namespace IFY.Phorm.SqlClient.IntegrationTests
     [TestClass]
     public class EncryptionTests : SqlIntegrationTestBase
     {
-        [PhormContract(Name = "EncryptionTable")]
-        public class DataItem : IUpsert
+        [PhormContract(Name = "EncryptionTable", Target = DbObjectType.Table)]
+        class DataItem : IUpsert
         {
             public long Id { get; set; }
             [DataMember(Name = "Int")] public int Num { get; set; }
@@ -20,37 +20,32 @@ namespace IFY.Phorm.SqlClient.IntegrationTests
         }
 
         [PhormContract(Name = "Encryption_Upsert")]
-        public interface IUpsert : IPhormContract
+        interface IUpsert : IPhormContract
         {
             [DataMember(Name = "Int")] int Num { get; }
             [SecureValue("test", nameof(Num))] string Data { get; }
         }
 
-        [ExcludeFromCodeCoverage]
-        private class TestEncryptionProvider : IEncryptionProvider
+        class TestEncryptor : IEncryptor
         {
-            public IEncryptor Encryptor { get; } = new NullEncryptor();
+            public byte[] Authenticator { get; set; } = Array.Empty<byte>();
+            public byte[] InitialVector { get; } = Array.Empty<byte>();
 
-            public IEncryptor GetInstance(string dataClassification)
-            {
-                return dataClassification switch
-                {
-                    "test" => Encryptor,
-                    _ => throw new NotImplementedException(),
-                };
-            }
+            public byte[] Encrypt(byte[] data) => data;
+
+            public byte[] Decrypt(byte[] data) => data;
         }
 
-        private void setupEncryptionSchema(IPhormDbConnectionProvider connProv)
+        private void setupEncryptionSchema(AbstractPhormSession phorm)
         {
-            SqlTestHelpers.ApplySql(connProv, @"DROP TABLE IF EXISTS [dbo].[EncryptionTable]");
-            SqlTestHelpers.ApplySql(connProv, @"CREATE TABLE [dbo].[EncryptionTable] (
+            SqlTestHelpers.ApplySql(phorm, @"DROP TABLE IF EXISTS [dbo].[EncryptionTable]");
+            SqlTestHelpers.ApplySql(phorm, @"CREATE TABLE [dbo].[EncryptionTable] (
 	[Id] BIGINT NOT NULL IDENTITY(1,1) PRIMARY KEY,
 	[Int] INT NULL,
 	[Data] VARBINARY(MAX) NULL
 )");
 
-            SqlTestHelpers.ApplySql(connProv, @"CREATE OR ALTER PROC [dbo].[usp_Encryption_Upsert]
+            SqlTestHelpers.ApplySql(phorm, @"CREATE OR ALTER PROC [dbo].[usp_Encryption_Upsert]
 	@Id BIGINT = NULL OUTPUT,
 	@Int INT = NULL,
 	@Data VARBINARY(MAX) = NULL
@@ -74,14 +69,18 @@ RETURN @@ROWCOUNT");
         public void String_encryption_full()
         {
             // Arrange
-            var phorm = getPhormSession(out var connProv);
-            setupEncryptionSchema(connProv);
+            var phorm = getPhormSession();
+            setupEncryptionSchema(phorm);
 
             var randInt = DateTime.UtcNow.Millisecond;
             var randStr = Guid.NewGuid().ToString();
 
-            var provider = new TestEncryptionProvider();
-            GlobalSettings.EncryptionProvider = provider;
+            var encryptor = new TestEncryptor();
+
+            var provider = new Mock<IEncryptionProvider>(MockBehavior.Strict);
+            provider.Setup(m => m.GetInstance("test"))
+                .Returns(encryptor);
+            GlobalSettings.EncryptionProvider = provider.Object;
 
             // Act
             var res = phorm.CallAsync<IUpsert>(new { Num = randInt, Data = randStr }).Result;
@@ -90,7 +89,7 @@ RETURN @@ROWCOUNT");
             // Assert
             Assert.AreEqual(1, res);
             Assert.AreEqual(randStr, obj.Data);
-            CollectionAssert.AreEqual(randInt.GetBytes(), provider.Encryptor.Authenticator);
+            CollectionAssert.AreEqual(randInt.GetBytes(), encryptor.Authenticator);
         }
     }
 }

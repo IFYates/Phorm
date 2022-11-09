@@ -123,7 +123,7 @@ namespace IFY.Phorm.Connectivity.Tests
         }
 
         [TestMethod]
-        public void CreateCommand__Wraps_command_as_IAsyncDbCommand()
+        public void CreateCommand__Connection_open__Wraps_command_as_IAsyncDbCommand()
         {
             // Arrange
             var cmdText = Guid.NewGuid().ToString();
@@ -133,6 +133,8 @@ namespace IFY.Phorm.Connectivity.Tests
             };
 
             var dbMock = new Mock<IDbConnection>(MockBehavior.Strict);
+            dbMock.SetupGet(m => m.State)
+                .Returns(ConnectionState.Open);
             dbMock.Setup(m => m.CreateCommand())
                 .Returns(cmd).Verifiable();
 
@@ -147,12 +149,42 @@ namespace IFY.Phorm.Connectivity.Tests
         }
 
         [TestMethod]
-        public void CreateCommand__IDbConnection()
+        public void CreateCommand__Connection_closed__Opens_connection_and_wraps_command_as_IAsyncDbCommand()
+        {
+            // Arrange
+            var cmdText = Guid.NewGuid().ToString();
+            var cmd = new TestDbCommand
+            {
+                CommandText = cmdText
+            };
+
+            var dbMock = new Mock<IDbConnection>(MockBehavior.Strict);
+            dbMock.SetupGet(m => m.State)
+                .Returns(ConnectionState.Closed);
+            dbMock.Setup(m => m.Open())
+                .Verifiable();
+            dbMock.Setup(m => m.CreateCommand())
+                .Returns(cmd).Verifiable();
+
+            var db = new PhormDbConnection("", dbMock.Object);
+
+            // Act
+            var res = db.CreateCommand();
+
+            // Assert
+            Assert.AreEqual(cmdText, res.CommandText);
+            dbMock.Verify();
+        }
+
+        [TestMethod]
+        public void CreateCommand__IDbConnection__Connection_open__Wraps_command_as_IAsyncDbCommand()
         {
             // Arrange
             var cmdMock = new Mock<IDbCommand>(MockBehavior.Strict);
 
             var dbMock = new Mock<IDbConnection>(MockBehavior.Strict);
+            dbMock.SetupGet(m => m.State)
+                .Returns(ConnectionState.Open);
             dbMock.Setup(m => m.CreateCommand())
                 .Returns(cmdMock.Object).Verifiable();
 
@@ -163,6 +195,31 @@ namespace IFY.Phorm.Connectivity.Tests
 
             // Assert
             Assert.AreSame(cmdMock.Object, res);
+            dbMock.Verify();
+        }
+
+        [TestMethod]
+        public void CreateCommand__IDbConnection__Connection_closed__Opens_connection_and_wraps_command_as_IAsyncDbCommand()
+        {
+            // Arrange
+            var cmdMock = new Mock<IDbCommand>(MockBehavior.Strict);
+
+            var dbMock = new Mock<IDbConnection>(MockBehavior.Strict);
+            dbMock.SetupGet(m => m.State)
+                .Returns(ConnectionState.Closed);
+            dbMock.Setup(m => m.Open())
+                .Verifiable();
+            dbMock.Setup(m => m.CreateCommand())
+                .Returns(cmdMock.Object).Verifiable();
+
+            var db = new PhormDbConnection("", dbMock.Object);
+
+            // Act
+            var res = ((IDbConnection)db).CreateCommand();
+
+            // Assert
+            Assert.AreSame(cmdMock.Object, res);
+            dbMock.Verify();
         }
 
         [TestMethod]

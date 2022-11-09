@@ -11,16 +11,18 @@ namespace IFY.Phorm.Tests
     public class PhormContractRunnerTests_Events
     {
         private int _unwantedInvocations = 0;
-        private Action<object?, CommandExecutingEventArgs>? _globalCommandExecuting = null;
-        private void invokeHandler(object? sender, CommandExecutingEventArgs args) => _globalCommandExecuting?.Invoke(sender, args);
-        private Action<object?, CommandExecutedEventArgs>? _globalCommandExecuted = null;
-        private void invokeHandler(object? sender, CommandExecutedEventArgs args) => _globalCommandExecuted?.Invoke(sender, args);
-        private Action<object?, UnexpectedRecordColumnEventArgs>? _globalUnexpectedRecordColumn = null;
-        private void invokeHandler(object? sender, UnexpectedRecordColumnEventArgs args) => _globalUnexpectedRecordColumn?.Invoke(sender, args);
-        private Action<object?, UnresolvedContractMemberEventArgs>? _globalUnresolvedContractMember = null;
-        private void invokeHandler(object? sender, UnresolvedContractMemberEventArgs args) => _globalUnresolvedContractMember?.Invoke(sender, args);
-        private Action<object?, ConsoleMessageEventArgs>? _globalConsoleMessage = null;
-        private void invokeHandler(object? sender, ConsoleMessageEventArgs args) => _globalConsoleMessage?.Invoke(sender, args);
+        private Action<object?, ConnectedEventArgs> _globalConnected = null!;
+        private void invokeHandler(object? sender, ConnectedEventArgs args) => _globalConnected.Invoke(sender, args);
+        private Action<object?, CommandExecutingEventArgs> _globalCommandExecuting = null!;
+        private void invokeHandler(object? sender, CommandExecutingEventArgs args) => _globalCommandExecuting.Invoke(sender, args);
+        private Action<object?, CommandExecutedEventArgs> _globalCommandExecuted = null!;
+        private void invokeHandler(object? sender, CommandExecutedEventArgs args) => _globalCommandExecuted.Invoke(sender, args);
+        private Action<object?, UnexpectedRecordColumnEventArgs> _globalUnexpectedRecordColumn = null!;
+        private void invokeHandler(object? sender, UnexpectedRecordColumnEventArgs args) => _globalUnexpectedRecordColumn.Invoke(sender, args);
+        private Action<object?, UnresolvedContractMemberEventArgs> _globalUnresolvedContractMember = null!;
+        private void invokeHandler(object? sender, UnresolvedContractMemberEventArgs args) => _globalUnresolvedContractMember.Invoke(sender, args);
+        private Action<object?, ConsoleMessageEventArgs> _globalConsoleMessage = null!;
+        private void invokeHandler(object? sender, ConsoleMessageEventArgs args) => _globalConsoleMessage.Invoke(sender, args);
 
         public class TestEntity
         {
@@ -32,6 +34,9 @@ namespace IFY.Phorm.Tests
         [TestInitialize]
         public void Init()
         {
+            AbstractPhormSession.ResetConnectionPool();
+
+            Events.Connected += invokeHandler;
             Events.CommandExecuting += invokeHandler;
             Events.CommandExecuted += invokeHandler;
             Events.UnexpectedRecordColumn += invokeHandler;
@@ -41,6 +46,7 @@ namespace IFY.Phorm.Tests
         [TestCleanup]
         public void Clean()
         {
+            Events.Connected -= invokeHandler;
             Events.CommandExecuting -= invokeHandler;
             Events.CommandExecuted -= invokeHandler;
             Events.UnexpectedRecordColumn -= invokeHandler;
@@ -53,6 +59,39 @@ namespace IFY.Phorm.Tests
         {
             ++_unwantedInvocations;
             Assert.Fail();
+        }
+
+        [TestMethod]
+        [DataRow(false, DisplayName = "Instance")]
+        [DataRow(true, DisplayName = "Global")]
+        public void OnConnected__Ignores_exceptions(bool isGlobal)
+        {
+            // Arrange
+            var phorm = new TestPhormSession();
+
+            var wasCalled = false;
+            if (isGlobal)
+            {
+                _globalConnected = (_, __) =>
+                {
+                    wasCalled = true;
+                    throw new Exception();
+                };
+            }
+            else
+            {
+                phorm.Connected += (_, __) =>
+                {
+                    wasCalled = true;
+                    throw new Exception();
+                };
+            }
+
+            // Act
+            phorm.OnConnected(new ConnectedEventArgs());
+
+            // Assert
+            Assert.IsTrue(wasCalled);
         }
 
         [TestMethod]
@@ -202,7 +241,7 @@ namespace IFY.Phorm.Tests
             };
             conn.CommandQueue.Enqueue(cmd);
 
-            var phorm = new TestPhormSession(new TestPhormConnectionProvider((s) => conn));
+            var phorm = new TestPhormSession(conn);
 
             (object? sender, CommandExecutingEventArgs args)? instanceEvent = null;
             phorm.CommandExecuting += (object? sender, CommandExecutingEventArgs args) =>
@@ -231,7 +270,7 @@ namespace IFY.Phorm.Tests
             // Assert
             Assert.AreEqual(0, _unwantedInvocations);
             Assert.AreSame(phorm, instanceEvent!.Value.sender);
-            Assert.AreEqual("[schema].[CallTest]", instanceEvent.Value.args.CommandText);
+            Assert.AreEqual("[schema].[usp_CallTest]", instanceEvent.Value.args.CommandText);
             Assert.AreEqual(3, instanceEvent.Value.args.CommandParameters.Count); // + return
             Assert.AreEqual(1, (int)instanceEvent.Value.args.CommandParameters["@Arg1"]!);
             Assert.AreEqual("2", (string)instanceEvent.Value.args.CommandParameters["@Arg2"]!);
@@ -254,7 +293,7 @@ namespace IFY.Phorm.Tests
             };
             conn.CommandQueue.Enqueue(cmd);
 
-            var phorm = new TestPhormSession(new TestPhormConnectionProvider((s) => conn));
+            var phorm = new TestPhormSession(conn);
 
             (object? sender, CommandExecutedEventArgs args)? instanceEvent = null;
             phorm.CommandExecuted += (object? sender, CommandExecutedEventArgs args) =>
@@ -291,7 +330,7 @@ namespace IFY.Phorm.Tests
             // Assert
             Assert.AreSame(phorm, instanceEvent!.Value.sender);
             Assert.AreEqual(commandGuid, instanceEvent.Value.args.CommandGuid);
-            Assert.AreEqual("[schema].[CallTest]", instanceEvent.Value.args.CommandText);
+            Assert.AreEqual("[schema].[usp_CallTest]", instanceEvent.Value.args.CommandText);
             Assert.AreEqual(3, instanceEvent.Value.args.CommandParameters.Count); // + return
             Assert.AreEqual(1, (int)instanceEvent.Value.args.CommandParameters["@Arg1"]!);
             Assert.AreEqual("2", (string)instanceEvent.Value.args.CommandParameters["@Arg2"]!);
@@ -316,7 +355,7 @@ namespace IFY.Phorm.Tests
             };
             conn.CommandQueue.Enqueue(cmd);
 
-            var phorm = new TestPhormSession(new TestPhormConnectionProvider((s) => conn));
+            var phorm = new TestPhormSession(conn);
 
             (object? sender, CommandExecutingEventArgs args)? instanceEvent = null;
             phorm.CommandExecuting += (object? sender, CommandExecutingEventArgs args) =>
@@ -345,7 +384,7 @@ namespace IFY.Phorm.Tests
             // Assert
             Assert.AreEqual(0, _unwantedInvocations);
             Assert.AreSame(phorm, instanceEvent!.Value.sender);
-            Assert.AreEqual("[schema].[CallTest]", instanceEvent.Value.args.CommandText);
+            Assert.AreEqual("[schema].[usp_CallTest]", instanceEvent.Value.args.CommandText);
             Assert.AreEqual(3, instanceEvent.Value.args.CommandParameters.Count); // + return
             Assert.AreEqual(1, (int)instanceEvent.Value.args.CommandParameters["@Arg1"]!);
             Assert.AreEqual("2", (string)instanceEvent.Value.args.CommandParameters["@Arg2"]!);
@@ -378,7 +417,7 @@ namespace IFY.Phorm.Tests
             };
             conn.CommandQueue.Enqueue(cmd);
 
-            var phorm = new TestPhormSession(new TestPhormConnectionProvider((s) => conn));
+            var phorm = new TestPhormSession(conn);
 
             (object? sender, CommandExecutedEventArgs args)? instanceEvent = null;
             phorm.CommandExecuted += (object? sender, CommandExecutedEventArgs args) =>
@@ -415,7 +454,7 @@ namespace IFY.Phorm.Tests
             // Assert
             Assert.AreSame(phorm, instanceEvent!.Value.sender);
             Assert.AreEqual(commandGuid, instanceEvent.Value.args.CommandGuid);
-            Assert.AreEqual("[schema].[CallTest]", instanceEvent.Value.args.CommandText);
+            Assert.AreEqual("[schema].[usp_CallTest]", instanceEvent.Value.args.CommandText);
             Assert.AreEqual(3, instanceEvent.Value.args.CommandParameters.Count); // + return
             Assert.AreEqual(1, (int)instanceEvent.Value.args.CommandParameters["@Arg1"]!);
             Assert.AreEqual("2", (string)instanceEvent.Value.args.CommandParameters["@Arg2"]!);
@@ -449,7 +488,7 @@ namespace IFY.Phorm.Tests
             };
             conn.CommandQueue.Enqueue(cmd);
 
-            var phorm = new TestPhormSession(new TestPhormConnectionProvider((s) => conn));
+            var phorm = new TestPhormSession(conn);
 
             (object? sender, UnexpectedRecordColumnEventArgs args)? instanceEvent = null;
             phorm.UnexpectedRecordColumn += (object? sender, UnexpectedRecordColumnEventArgs args) =>
@@ -513,7 +552,7 @@ namespace IFY.Phorm.Tests
             };
             conn.CommandQueue.Enqueue(cmd);
 
-            var phorm = new TestPhormSession(new TestPhormConnectionProvider((s) => conn));
+            var phorm = new TestPhormSession(conn);
 
             (object? sender, UnresolvedContractMemberEventArgs args)? instanceEvent = null;
             phorm.UnresolvedContractMember += (object? sender, UnresolvedContractMemberEventArgs args) =>
@@ -572,7 +611,7 @@ namespace IFY.Phorm.Tests
             var cmd = new TestDbCommand();
             conn.CommandQueue.Enqueue(cmd);
 
-            var phorm = new TestPhormSession(new TestPhormConnectionProvider((s) => conn))
+            var phorm = new TestPhormSession(conn)
             {
                 ConsoleMessageCaptureProvider = (s, g) => new TestConsoleMessageCapture(s, g)
             };
@@ -619,7 +658,7 @@ namespace IFY.Phorm.Tests
             var cmd = new TestDbCommand();
             conn.CommandQueue.Enqueue(cmd);
 
-            var phorm = new TestPhormSession(new TestPhormConnectionProvider((s) => conn))
+            var phorm = new TestPhormSession(conn)
             {
                 ConsoleMessageCaptureProvider = (s, g) => new TestConsoleMessageCapture(s, g)
             };

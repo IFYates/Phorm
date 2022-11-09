@@ -50,8 +50,13 @@ namespace IFY.Phorm
             };
         }
 
-        public static T FromBytes<T>(this byte[]? bytes)
-            => (T)FromBytes(bytes, typeof(T));
+#if !NET5_0_OR_GREATER
+        public static T FromBytes<T>(this byte[]? bytes) // Nullable
+            => (T)FromBytes(bytes, typeof(T))!;
+#else
+        public static T? FromBytes<T>(this byte[]? bytes)
+            => (T?)FromBytes(bytes, typeof(T));
+#endif
         public static object? FromBytes(this byte[]? bytes, Type resultType)
         {
             if (bytes == null)
@@ -87,7 +92,7 @@ namespace IFY.Phorm
             }
 
             var def = Activator.CreateInstance(resultType);
-#if NETSTANDARD || NETCOREAPP
+#if !NET5_0_OR_GREATER
             switch (def)
             {
                 case byte _: return bytes.Single();
@@ -116,7 +121,7 @@ namespace IFY.Phorm
 #endif
         }
 
-#if NETSTANDARD || NETCOREAPP
+#if !NET5_0_OR_GREATER
         public static bool IsOneOf<T>(this T value, params T[] values)
         {
             return values.Contains(value);

@@ -2,86 +2,39 @@ using IFY.Phorm.Connectivity;
 using IFY.Phorm.Data;
 using IFY.Phorm.Transformation;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
 using System.Linq;
 using System.Runtime.Serialization;
-using System.Threading;
 
 namespace IFY.Phorm.SqlClient.IntegrationTests
 {
     [TestClass]
     public class GenSpecTests : SqlIntegrationTestBase
     {
-        [PhormContract(Name = "DataTable")]
-        public class DataItem
+        enum DataType { None, Numeric, String }
+
+        abstract class BaseDataItem
         {
-            public long Id { get; set; }
-            [DataMember(Name = "Int")]
-            public int? Num { get; set; }
-            public string? Text { get; set; }
-            public byte[]? Data { get; set; }
-            public DateTime? DateTime { get; set; }
-
-            public DataItem(long id, int? num, string? text, byte[]? data, DateTime? dateTime)
-            {
-                Id = id;
-                Num = num;
-                Text = text;
-                Data = data;
-                DateTime = dateTime;
-            }
-            public DataItem() : this(default, default, default, default, default)
-            { }
-        }
-
-        [PhormContract(Name = "DataTable")]
-        public class DataItemWithoutText
-        {
-            public long Id { get; set; }
-            [DataMember(Name = "Int")]
-            public int? Num { get; set; }
-            [IgnoreDataMember]
-            public string? Text { get; set; }
-            public byte[]? Data { get; set; }
-            public DateTime? DateTime { get; set; }
-
-            public DataItemWithoutText(long id, int? num, string? text, byte[]? data, DateTime? dateTime)
-            {
-                Id = id;
-                Num = num;
-                Text = text;
-                Data = data;
-                DateTime = dateTime;
-            }
-            public DataItemWithoutText() : this(default, default, default, default, default)
-            { }
-        }
-
-        public enum DataType { None, Numeric, String }
-
-        public abstract class BaseDataItem
-        {
-            public long Id { get; set; }
+            public long Id { get; set; } = 0;
             public string Key { get; set; } = string.Empty;
             [DataMember(Name = "TypeId"), EnumValue]
-            public DataType Type { get; set; }
+            public DataType Type { get; set; } = DataType.None;
         }
 
         [PhormSpecOf(nameof(Type), DataType.Numeric)]
-        public class NumericDataItem : BaseDataItem
+        class NumericDataItem : BaseDataItem
         {
-            public decimal Number { get; set; }
+            public decimal Number { get; set; } = 0m;
         }
 
         [PhormSpecOf(nameof(Type), DataType.String)]
-        public class TextDataItem : BaseDataItem
+        class TextDataItem : BaseDataItem
         {
             public string String { get; set; } = string.Empty;
         }
 
-        private static void setupGenSpecContract(IPhormDbConnectionProvider connProv)
+        private static void setupGenSpecContract(AbstractPhormSession phorm)
         {
-            SqlTestHelpers.ApplySql(connProv, @"CREATE OR ALTER PROC [dbo].[usp_GetAllDataItems]
+            SqlTestHelpers.ApplySql(phorm, @"CREATE OR ALTER PROC [dbo].[usp_GetAllDataItems]
 AS
 	SELECT 1 [Id], 'Aaa' [Key], 1 [TypeId], 12.34 [Number], CONVERT(VARCHAR(50), NULL) [String]
 	UNION ALL
@@ -93,8 +46,8 @@ RETURN 1");
         public void GenSpec__Can_retrieve_and_handle_many_types()
         {
             // Arrange
-            var phorm = getPhormSession(out var connProv);
-            setupGenSpecContract(connProv);
+            var phorm = getPhormSession();
+            setupGenSpecContract(phorm);
 
             // Act
             var res = phorm.From("GetAllDataItems")
@@ -114,8 +67,8 @@ RETURN 1");
         public void GenSpec__Unknown_type_Abstract_base__Returns_only_shaped_items()
         {
             // Arrange
-            var phorm = getPhormSession(out var connProv);
-            setupGenSpecContract(connProv);
+            var phorm = getPhormSession();
+            setupGenSpecContract(phorm);
 
             // Act
             var res = phorm.From("GetAllDataItems")
@@ -129,26 +82,26 @@ RETURN 1");
             Assert.AreEqual(1, strs.Length);
         }
 
-        public class BaseDataItemNonabstract
+        class BaseDataItemNonabstract
         {
-            public long Id { get; set; }
+            public long Id { get; set; } = 0;
             public string Key { get; set; } = string.Empty;
             [DataMember(Name = "TypeId"), EnumValue]
-            public DataType Type { get; set; }
+            public DataType Type { get; set; } = DataType.None;
         }
 
         [PhormSpecOf(nameof(Type), DataType.Numeric)]
-        public class NumericDataItem2 : BaseDataItemNonabstract
+        class NumericDataItem2 : BaseDataItemNonabstract
         {
-            public decimal Number { get; set; }
+            public decimal Number { get; set; } = 0m;
         }
 
         [TestMethod]
         public void GenSpec__Unknown_type_Nonabstract_base__Returns_item_as_base()
         {
             // Arrange
-            var phorm = getPhormSession(out var connProv);
-            setupGenSpecContract(connProv);
+            var phorm = getPhormSession();
+            setupGenSpecContract(phorm);
 
             // Act
             var res = phorm.From("GetAllDataItems")

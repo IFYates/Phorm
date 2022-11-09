@@ -1,6 +1,5 @@
 ﻿using IFY.Shimr.Extensions;
 using System.Data;
-using System.Diagnostics.CodeAnalysis;
 
 namespace IFY.Phorm.Connectivity
 {
@@ -15,7 +14,7 @@ namespace IFY.Phorm.Connectivity
         public string? ConnectionName { get; }
         public string DefaultSchema { get; set; } = string.Empty;
 
-        public string ConnectionString { get => _db.ConnectionString; [param: AllowNull] set => _db.ConnectionString = value; }
+        public string ConnectionString { get => _db.ConnectionString; set => _db.ConnectionString = value; }
         public int ConnectionTimeout => _db.ConnectionTimeout;
         public string Database => _db.Database;
         public ConnectionState State => _db.State;
@@ -34,8 +33,17 @@ namespace IFY.Phorm.Connectivity
         public void Open() => _db.Open();
         public void Close() => _db.Close();
 
-        public IAsyncDbCommand CreateCommand() => _db.CreateCommand().Shim<IAsyncDbCommand>()!;
-        IDbCommand IDbConnection.CreateCommand() => _db.CreateCommand();
+        public IAsyncDbCommand CreateCommand()
+            => ((IDbConnection)this).CreateCommand().Shim<IAsyncDbCommand>()!;
+        IDbCommand IDbConnection.CreateCommand()
+        {
+            if (_db.State != ConnectionState.Open)
+            {
+                _db.Open();
+            }
+
+            return _db.CreateCommand();
+        }
 
         public void Dispose() => _db.Dispose();
     }

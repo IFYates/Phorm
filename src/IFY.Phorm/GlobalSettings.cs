@@ -18,7 +18,7 @@ namespace IFY.Phorm
         /// If true, will consume execution errors and treat like a console message.
         /// Defaults to false.
         /// </summary>
-        public static bool ErrorsAsConsoleMessage { get; set; }
+        public static bool ExceptionsAsConsoleMessage { get; set; }
 
         /// <summary>
         /// The global <see cref="JsonSerializerSettings"/> to use when dealing with JSON.
@@ -32,33 +32,20 @@ namespace IFY.Phorm
         /// </summary>
         public static bool StrictResultSize { get; set; } = true;
 
-        public static string ViewPrefix
-        {
-            get;
-#if NETSTANDARD || NETCOREAPP
-            set;
-#else
-            init;
-#endif
-        } = "vw_";
         public static string ProcedurePrefix
         {
             get;
-#if NETSTANDARD || NETCOREAPP
             set;
-#else
-            init;
-#endif
         } = "usp_";
         public static string TablePrefix
         {
             get;
-#if NETSTANDARD || NETCOREAPP
             set;
-#else
-            init;
-#endif
-        } = "";
-
+        } = string.Empty;
+        public static string ViewPrefix
+        {
+            get;
+            set;
+        } = "vw_";
     }
 }

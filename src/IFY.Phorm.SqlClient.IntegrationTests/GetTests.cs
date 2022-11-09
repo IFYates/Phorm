@@ -10,7 +10,7 @@ namespace IFY.Phorm.SqlClient.IntegrationTests
     [TestClass]
     public class GetTests : SqlIntegrationTestBase
     {
-        [PhormContract(Name = "GetTestTable")]
+        [PhormContract(Name = "GetTestTable", Target = DbObjectType.Table)]
         public class DataItem : IUpsert, IUpsertOnlyIntWithId, IUpsertWithId
         {
             public long Id { get; set; }
@@ -32,7 +32,7 @@ namespace IFY.Phorm.SqlClient.IntegrationTests
             { }
         }
 
-        [PhormContract(Name = "GetTestTable")]
+        [PhormContract(Name = "GetTestTable", Target = DbObjectType.Table)]
         public class DataItemWithoutText
         {
             public long Id { get; set; }
@@ -94,10 +94,10 @@ namespace IFY.Phorm.SqlClient.IntegrationTests
             long? Id { get; }
         }
 
-        private void setupGetTestSchema(IPhormDbConnectionProvider connProv)
+        private void setupGetTestSchema(AbstractPhormSession phorm)
         {
-            SqlTestHelpers.ApplySql(connProv, @"DROP TABLE IF EXISTS [dbo].[GetTestTable]");
-            SqlTestHelpers.ApplySql(connProv, @"CREATE TABLE [dbo].[GetTestTable] (
+            SqlTestHelpers.ApplySql(phorm, @"DROP TABLE IF EXISTS [dbo].[GetTestTable]");
+            SqlTestHelpers.ApplySql(phorm, @"CREATE TABLE [dbo].[GetTestTable] (
 	[Id] BIGINT NOT NULL IDENTITY(1,1) PRIMARY KEY,
 	[Int] INT NULL,
 	[Text] VARCHAR(256) NULL,
@@ -106,15 +106,15 @@ namespace IFY.Phorm.SqlClient.IntegrationTests
 	[IsInView] BIT NOT NULL DEFAULT (1)
 )");
             
-            SqlTestHelpers.ApplySql(connProv, @"CREATE OR ALTER VIEW [dbo].[vw_Data] AS SELECT * FROM [dbo].[GetTestTable] WHERE [IsInView] = 1");
+            SqlTestHelpers.ApplySql(phorm, @"CREATE OR ALTER VIEW [dbo].[vw_Data] AS SELECT * FROM [dbo].[GetTestTable] WHERE [IsInView] = 1");
 
-            SqlTestHelpers.ApplySql(connProv, @"CREATE OR ALTER PROC [dbo].[usp_GetAll]
+            SqlTestHelpers.ApplySql(phorm, @"CREATE OR ALTER PROC [dbo].[usp_GetAll]
 AS
 	SET NOCOUNT ON
 	SELECT * FROM [dbo].[GetTestTable]
 RETURN 1");
 
-            SqlTestHelpers.ApplySql(connProv, @"CREATE OR ALTER PROC [dbo].[usp_GetTest_Upsert]
+            SqlTestHelpers.ApplySql(phorm, @"CREATE OR ALTER PROC [dbo].[usp_GetTest_Upsert]
 	@Id BIGINT = NULL OUTPUT,
 	@Int INT = NULL,
 	@Text VARCHAR(256) = NULL,
@@ -145,8 +145,8 @@ RETURN @@ROWCOUNT");
         [TestMethod]
         public void Many__Can_access_returnvalue_of_sproc()
         {
-            var phorm = getPhormSession(out var connProv);
-            setupGetTestSchema(connProv);
+            var phorm = getPhormSession();
+            setupGetTestSchema(phorm);
 
             phorm.Call("GetTest_Upsert");
             phorm.Call("GetTest_Upsert");
@@ -165,8 +165,8 @@ RETURN @@ROWCOUNT");
         public void Many__Filtered_from_view()
         {
             // Arrange
-            var phorm = getPhormSession(out var connProv);
-            setupGetTestSchema(connProv);
+            var phorm = getPhormSession();
+            setupGetTestSchema(phorm);
 
             var obj1 = new DataItem();
             var res1 = phorm.Call<IUpsertWithId>(obj1);
@@ -189,8 +189,8 @@ RETURN @@ROWCOUNT");
         public void Many__Filtered_by_view()
         {
             // Arrange
-            var phorm = getPhormSession(out var connProv);
-            setupGetTestSchema(connProv);
+            var phorm = getPhormSession();
+            setupGetTestSchema(phorm);
 
             phorm.Call("GetTest_Upsert", new { Int = 0, IsInView = false });
             phorm.Call("GetTest_Upsert", new { Int = 0, IsInView = false });
@@ -210,8 +210,8 @@ RETURN @@ROWCOUNT");
         [TestMethod]
         public void Many__All_from_table()
         {
-            var phorm = getPhormSession(out var connProv);
-            setupGetTestSchema(connProv);
+            var phorm = getPhormSession();
+            setupGetTestSchema(phorm);
 
             _ = phorm.Call("GetTest_Upsert");
             _ = phorm.Call("GetTest_Upsert");
@@ -225,8 +225,8 @@ RETURN @@ROWCOUNT");
         [TestMethod]
         public void Many__Filtered_from_table()
         {
-            var phorm = getPhormSession(out var connProv);
-            setupGetTestSchema(connProv);
+            var phorm = getPhormSession();
+            setupGetTestSchema(phorm);
 
             var res = phorm.Call("GetTest_Upsert");
 
@@ -244,8 +244,8 @@ RETURN @@ROWCOUNT");
         [TestMethod]
         public void One__Can_ignore_property()
         {
-            var phorm = getPhormSession(out var connProv);
-            setupGetTestSchema(connProv);
+            var phorm = getPhormSession();
+            setupGetTestSchema(phorm);
 
             var res = phorm.Call("GetTest_Upsert");
 

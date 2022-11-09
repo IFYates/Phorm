@@ -16,6 +16,12 @@ namespace IFY.Phorm.Tests
             }
         }
 
+        [TestInitialize]
+        public void Init()
+        {
+            AbstractPhormSession.ResetConnectionPool();
+        }
+
         [TestMethod]
         public void Call__Error_not_processed_by_console__Thrown()
         {
@@ -29,9 +35,9 @@ namespace IFY.Phorm.Tests
             var conn = new TestPhormConnection("");
             conn.CommandQueue.Enqueue(cmd);
 
-            var phorm = new TestPhormSession(new TestPhormConnectionProvider(_ => conn))
+            var phorm = new TestPhormSession(conn)
             {
-                ErrorsAsConsoleMessage = true
+                ExceptionsAsConsoleMessage = true
             };
 
             // Act
@@ -57,13 +63,13 @@ namespace IFY.Phorm.Tests
             var conn = new TestPhormConnection("");
             conn.CommandQueue.Enqueue(cmd);
 
-            var phorm = new TestPhormSession(new TestPhormConnectionProvider(_ => conn))
+            var phorm = new TestPhormSession(conn)
             {
                 ConsoleMessageCaptureProvider = (s, g) => new TestConsoleMessageCapture(s, g)
                 {
                     ProcessExceptionLogic = (e) => e == readException
                 },
-                ErrorsAsConsoleMessage = true
+                ExceptionsAsConsoleMessage = true
             };
 
             // Act
@@ -86,9 +92,9 @@ namespace IFY.Phorm.Tests
             var conn = new TestPhormConnection("");
             conn.CommandQueue.Enqueue(cmd);
 
-            var phorm = new TestPhormSession(new TestPhormConnectionProvider(_ => conn))
+            var phorm = new TestPhormSession(conn)
             {
-                ErrorsAsConsoleMessage = true
+                ExceptionsAsConsoleMessage = true
             };
 
             // Act
@@ -114,13 +120,13 @@ namespace IFY.Phorm.Tests
             var conn = new TestPhormConnection("");
             conn.CommandQueue.Enqueue(cmd);
 
-            var phorm = new TestPhormSession(new TestPhormConnectionProvider(_ => conn))
+            var phorm = new TestPhormSession(conn)
             {
                 ConsoleMessageCaptureProvider = (s, g) => new TestConsoleMessageCapture(s, g)
                 {
                     ProcessExceptionLogic = (e) => e == readException
                 },
-                ErrorsAsConsoleMessage = true
+                ExceptionsAsConsoleMessage = true
             };
 
             // Act
