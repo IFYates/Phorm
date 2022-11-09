@@ -40,7 +40,7 @@ namespace IFY.Phorm
         /// <summary>
         /// The connection name this session uses for database scoping.
         /// </summary>
-        string ConnectionName { get; }
+        string? ConnectionName { get; }
 
         /// <summary>
         /// If true, will consume execution errors and treat like a console message.

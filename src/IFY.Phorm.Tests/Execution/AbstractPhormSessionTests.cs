@@ -12,12 +12,16 @@ namespace IFY.Phorm.Tests
         public interface ITestContract : IPhormContract
         {
         }
+        [PhormContract(Name = "#Temp")]
+        public interface ITempContract : IPhormContract
+        {
+        }
 
-        public class TestEntityView : ITestContract
+        class TestEntityView : ITestContract
         {
         }
         [PhormContract(Target = DbObjectType.Table)]
-        public class TestEntityTable : ITestContract
+        class TestEntityTable : ITestContract
         {
         }
 
@@ -203,6 +207,33 @@ namespace IFY.Phorm.Tests
             // Assert
             Assert.AreEqual(1, res);
             Assert.AreEqual("[dbo].[PROC TestContract]", phorm.Commands[0].CommandText);
+            Assert.AreEqual(CommandType.StoredProcedure, phorm.Commands[0].CommandType);
+        }
+
+        [TestMethod]
+        [DataRow(false)]
+        [DataRow(true)]
+        public void Call__Temp_procedure__No_prefix(bool byAsync)
+        {
+            // Arange
+            var phorm = new TestPhormSession();
+
+            var objMock = new Mock<ITempContract>();
+
+            // Act
+            int res;
+            if (byAsync)
+            {
+                res = phorm.CallAsync(objMock.Object).Result;
+            }
+            else
+            {
+                res = phorm.Call(objMock.Object);
+            }
+
+            // Assert
+            Assert.AreEqual(1, res);
+            Assert.AreEqual("[dbo].[#Temp]", phorm.Commands[0].CommandText);
             Assert.AreEqual(CommandType.StoredProcedure, phorm.Commands[0].CommandType);
         }
 

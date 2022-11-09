@@ -95,7 +95,7 @@ namespace IFY.Phorm
 
         #region Connection
 
-        protected internal abstract IPhormDbConnection GetConnection(); // TODO ???
+        protected internal abstract IPhormDbConnection GetConnection();
 
         public abstract IPhormSession SetConnectionName(string connectionName);
 
