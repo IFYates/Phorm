@@ -18,7 +18,7 @@ namespace IFY.Phorm.Execution
         /// </summary>
         public bool HasError { get; protected set; }
 
-        public AbstractConsoleMessageCapture(AbstractPhormSession session, Guid commandGuid)
+        protected AbstractConsoleMessageCapture(AbstractPhormSession session, Guid commandGuid)
         {
             _session = session;
             _commandGuid = commandGuid;

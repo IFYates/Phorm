@@ -17,6 +17,8 @@ namespace IFY.Phorm.Tests
         public int ReturnValue { get; set; } = 1;
         public DbDataReader Reader { get; set; }
 
+        public CancellationToken ExecutionCancellationToken { get; private set; } = CancellationToken.None;
+
         public override string CommandText { get; set; } = string.Empty;
         public override int CommandTimeout { get; set; }
         public override CommandType CommandType { get; set; }
@@ -82,6 +84,8 @@ namespace IFY.Phorm.Tests
 
         public new virtual Task<DbDataReader> ExecuteReaderAsync(CancellationToken cancellationToken)
         {
+            ExecutionCancellationToken = cancellationToken;
+
             OnExecuteReaderAsync?.Invoke();
             var retvalParam = Parameters.AsParameters()
                 .FirstOrDefault(p => p.Direction == ParameterDirection.ReturnValue);

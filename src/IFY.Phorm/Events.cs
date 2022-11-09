@@ -6,7 +6,7 @@ namespace IFY.Phorm
     /// <summary>
     /// Global event handlers.
     /// </summary>
-    public class Events
+    public static class Events
     {
         #region Connected
 
@@ -17,7 +17,7 @@ namespace IFY.Phorm
 
         internal static void OnConnected(object sender, ConnectedEventArgs args)
         {
-            try { Connected?.Invoke(sender, args); } catch { }
+            try { Connected?.Invoke(sender, args); } catch { /* Consume handler errors */ }
         }
 
         #endregion Connected
@@ -31,7 +31,7 @@ namespace IFY.Phorm
 
         internal static void OnCommandExecuting(object sender, CommandExecutingEventArgs args)
         {
-            try { CommandExecuting?.Invoke(sender, args); } catch { }
+            try { CommandExecuting?.Invoke(sender, args); } catch { /* Consume handler errors */ }
         }
 
         #endregion CommandExecuting
@@ -45,7 +45,7 @@ namespace IFY.Phorm
 
         internal static void OnCommandExecuted(object sender, CommandExecutedEventArgs args)
         {
-            try { CommandExecuted?.Invoke(sender, args); } catch { }
+            try { CommandExecuted?.Invoke(sender, args); } catch { /* Consume handler errors */ }
         }
 
         #endregion CommandExecuted
@@ -59,7 +59,7 @@ namespace IFY.Phorm
 
         internal static void OnUnexpectedRecordColumn(object sender, UnexpectedRecordColumnEventArgs args)
         {
-            try { UnexpectedRecordColumn?.Invoke(sender, args); } catch { }
+            try { UnexpectedRecordColumn?.Invoke(sender, args); } catch { /* Consume handler errors */ }
         }
 
         #endregion UnexpectedRecordColumn
@@ -73,7 +73,7 @@ namespace IFY.Phorm
 
         internal static void OnUnresolvedContractMember(object sender, UnresolvedContractMemberEventArgs args)
         {
-            try { UnresolvedContractMember?.Invoke(sender, args); } catch { }
+            try { UnresolvedContractMember?.Invoke(sender, args); } catch { /* Consume handler errors */ }
         }
 
         #endregion UnresolvedContractMember
@@ -87,7 +87,7 @@ namespace IFY.Phorm
 
         internal static void OnConsoleMessage(object sender, ConsoleMessageEventArgs args)
         {
-            try { ConsoleMessage?.Invoke(sender, args); } catch { }
+            try { ConsoleMessage?.Invoke(sender, args); } catch { /* Consume handler errors */ }
         }
 
         #endregion ConsoleMessage

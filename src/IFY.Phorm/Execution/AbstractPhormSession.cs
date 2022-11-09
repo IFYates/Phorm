@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace IFY.Phorm
 {
-    public abstract partial class AbstractPhormSession : IPhormSession
+    public abstract class AbstractPhormSession : IPhormSession
     {
         protected readonly string _databaseConnectionString;
 
@@ -57,35 +57,35 @@ namespace IFY.Phorm
         public event EventHandler<CommandExecutingEventArgs> CommandExecuting = null!;
         internal void OnCommandExecuting(CommandExecutingEventArgs args)
         {
-            try { CommandExecuting?.Invoke(this, args); } catch { }
+            try { CommandExecuting?.Invoke(this, args); } catch { /* Consume handler errors */ }
             Events.OnCommandExecuting(this, args);
         }
 
         public event EventHandler<CommandExecutedEventArgs> CommandExecuted = null!;
         internal void OnCommandExecuted(CommandExecutedEventArgs args)
         {
-            try { CommandExecuted?.Invoke(this, args); } catch { }
+            try { CommandExecuted?.Invoke(this, args); } catch { /* Consume handler errors */ }
             Events.OnCommandExecuted(this, args);
         }
 
         public event EventHandler<UnexpectedRecordColumnEventArgs> UnexpectedRecordColumn = null!;
         internal void OnUnexpectedRecordColumn(UnexpectedRecordColumnEventArgs args)
         {
-            try { UnexpectedRecordColumn?.Invoke(this, args); } catch { }
+            try { UnexpectedRecordColumn?.Invoke(this, args); } catch { /* Consume handler errors */ }
             Events.OnUnexpectedRecordColumn(this, args);
         }
 
         public event EventHandler<UnresolvedContractMemberEventArgs> UnresolvedContractMember = null!;
         internal void OnUnresolvedContractMember(UnresolvedContractMemberEventArgs args)
         {
-            try { UnresolvedContractMember?.Invoke(this, args); } catch { }
+            try { UnresolvedContractMember?.Invoke(this, args); } catch { /* Consume handler errors */ }
             Events.OnUnresolvedContractMember(this, args);
         }
 
         public event EventHandler<ConsoleMessageEventArgs> ConsoleMessage = null!;
         internal void OnConsoleMessage(ConsoleMessageEventArgs args)
         {
-            try { ConsoleMessage?.Invoke(this, args); } catch { }
+            try { ConsoleMessage?.Invoke(this, args); } catch { /* Consume handler errors */ }
             Events.OnConsoleMessage(this, args);
         }
 
@@ -95,7 +95,7 @@ namespace IFY.Phorm
 
         public bool StrictResultSize { get; set; } = GlobalSettings.StrictResultSize;
 
-        public AbstractPhormSession(string databaseConnectionString, string? connectionName)
+        protected AbstractPhormSession(string databaseConnectionString, string? connectionName)
         {
             _databaseConnectionString = databaseConnectionString;
             ConnectionName = connectionName;
@@ -217,25 +217,45 @@ namespace IFY.Phorm
             public static readonly NullConsoleMessageCapture Instance = new NullConsoleMessageCapture();
             private NullConsoleMessageCapture() : base(null!, Guid.Empty) { }
             public override bool ProcessException(Exception ex) => false;
-            public override void Dispose() { }
+            public override void Dispose() { /* Nothing to release */ }
         }
 
         #endregion Console capture
 
         #region Call
 
-        public int Call(string contractName, object? args = null)
+        public int Call(string contractName)
+            => CallAsync(contractName, null).GetAwaiter().GetResult();
+        public int Call(string contractName, object? args)
             => CallAsync(contractName, args).GetAwaiter().GetResult();
-        public Task<int> CallAsync(string contractName, object? args = null, CancellationToken? cancellationToken = null)
+        public Task<int> CallAsync(string contractName)
+            => CallAsync(contractName, null, CancellationToken.None);
+        public Task<int> CallAsync(string contractName, object? args)
+            => CallAsync(contractName, args, CancellationToken.None);
+        public Task<int> CallAsync(string contractName, CancellationToken cancellationToken)
+            => CallAsync(contractName, null, cancellationToken);
+        public Task<int> CallAsync(string contractName, object? args, CancellationToken cancellationToken)
         {
             var runner = new PhormContractRunner<IPhormContract>(this, contractName, DbObjectType.StoredProcedure, args);
             return runner.CallAsync(cancellationToken);
         }
 
-        public int Call<TActionContract>(object? args = null)
+        public int Call<TActionContract>()
+            where TActionContract : IPhormContract
+            => CallAsync<TActionContract>(null).GetAwaiter().GetResult();
+        public int Call<TActionContract>(object? args)
             where TActionContract : IPhormContract
             => CallAsync<TActionContract>(args).GetAwaiter().GetResult();
-        public Task<int> CallAsync<TActionContract>(object? args = null, CancellationToken? cancellationToken = null)
+        public Task<int> CallAsync<TActionContract>()
+            where TActionContract : IPhormContract
+            => CallAsync<TActionContract>(null, CancellationToken.None);
+        public Task<int> CallAsync<TActionContract>(object? args)
+            where TActionContract : IPhormContract
+            => CallAsync<TActionContract>(args, CancellationToken.None);
+        public Task<int> CallAsync<TActionContract>(CancellationToken cancellationToken)
+            where TActionContract : IPhormContract
+            => CallAsync<TActionContract>(null, cancellationToken);
+        public Task<int> CallAsync<TActionContract>(object? args, CancellationToken cancellationToken)
             where TActionContract : IPhormContract
         {
             var runner = new PhormContractRunner<TActionContract>(this, null, DbObjectType.StoredProcedure, args);
@@ -244,8 +264,11 @@ namespace IFY.Phorm
 
         public int Call<TActionContract>(TActionContract contract)
             where TActionContract : IPhormContract
-            => CallAsync(contract, null).GetAwaiter().GetResult();
-        public Task<int> CallAsync<TActionContract>(TActionContract contract, CancellationToken? cancellationToken = null)
+            => CallAsync(contract, CancellationToken.None).GetAwaiter().GetResult();
+        public Task<int> CallAsync<TActionContract>(TActionContract contract)
+            where TActionContract : IPhormContract
+            => CallAsync(contract, CancellationToken.None);
+        public Task<int> CallAsync<TActionContract>(TActionContract contract, CancellationToken cancellationToken)
             where TActionContract : IPhormContract
         {
             var runner = new PhormContractRunner<TActionContract>(this, null, DbObjectType.StoredProcedure, contract);
@@ -256,12 +279,17 @@ namespace IFY.Phorm
 
         #region From
 
-        public IPhormContractRunner From(string contractName, object? args = null)
+        public IPhormContractRunner From(string contractName)
+            => From(contractName, null);
+        public IPhormContractRunner From(string contractName, object? args)
         {
             return new PhormContractRunner<IPhormContract>(this, contractName, DbObjectType.StoredProcedure, args);
         }
 
-        public IPhormContractRunner<TActionContract> From<TActionContract>(object? args = null)
+        public IPhormContractRunner<TActionContract> From<TActionContract>()
+            where TActionContract : IPhormContract
+            => From<TActionContract>(null);
+        public IPhormContractRunner<TActionContract> From<TActionContract>(object? args)
             where TActionContract : IPhormContract
         {
             return new PhormContractRunner<TActionContract>(this, null, DbObjectType.StoredProcedure, args);
@@ -277,20 +305,35 @@ namespace IFY.Phorm
 
         #region Get
 
+        public TResult? Get<TResult>()
+            where TResult : class
+            => Get<TResult>((object?)null);
         public TResult? Get<TResult>(TResult args)
             where TResult : class
             => Get<TResult>((object?)args);
-        public TResult? Get<TResult>(object? args = null)
+        public TResult? Get<TResult>(object? args)
             where TResult : class
         {
             var runner = new PhormContractRunner<IPhormContract>(this, typeof(TResult), null, DbObjectType.View, args);
             return runner.Get<TResult>();
         }
 
-        public Task<TResult?> GetAsync<TResult>(TResult args, CancellationToken? cancellationToken = null)
+        public Task<TResult?> GetAsync<TResult>()
+            where TResult : class
+            => GetAsync<TResult>((object?)null, CancellationToken.None);
+        public Task<TResult?> GetAsync<TResult>(CancellationToken cancellationToken)
+            where TResult : class
+            => GetAsync<TResult>((object?)null, cancellationToken);
+        public Task<TResult?> GetAsync<TResult>(TResult args)
+            where TResult : class
+            => GetAsync<TResult>((object?)args, CancellationToken.None);
+        public Task<TResult?> GetAsync<TResult>(TResult args, CancellationToken cancellationToken)
             where TResult : class
             => GetAsync<TResult>((object?)args, cancellationToken);
-        public Task<TResult?> GetAsync<TResult>(object? args = null, CancellationToken? cancellationToken = null)
+        public Task<TResult?> GetAsync<TResult>(object? args)
+            where TResult : class
+            => GetAsync<TResult>(args, CancellationToken.None);
+        public Task<TResult?> GetAsync<TResult>(object? args, CancellationToken cancellationToken)
             where TResult : class
         {
             var runner = new PhormContractRunner<IPhormContract>(this, typeof(TResult), null, DbObjectType.View, args);

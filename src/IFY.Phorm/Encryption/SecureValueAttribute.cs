@@ -11,16 +11,24 @@ namespace IFY.Phorm.Encryption
         private readonly string _dataClassification;
         private readonly string? _authenticatorPropertyName;
 
-        private static object? _lastInstance = null;
-        private static string? _lastProperty = null;
+        private static object? _lastInstance;
+        private static string? _lastProperty;
         private static byte[] _lastValue = Array.Empty<byte>();
 
         /// <summary>
         /// This contract property represents a value that is stored encrypted.
         /// </summary>
         /// <param name="dataClassification">The classification for this value type, which can be used to control the encryption used.</param>
+        public SecureValueAttribute(string dataClassification)
+        {
+            _dataClassification = dataClassification;
+        }
+        /// <summary>
+        /// This contract property represents a value that is stored encrypted.
+        /// </summary>
+        /// <param name="dataClassification">The classification for this value type, which can be used to control the encryption used.</param>
         /// <param name="authenticatorPropertyName">The name of the property holding the authenticator value.</param>
-        public SecureValueAttribute(string dataClassification, string? authenticatorPropertyName = null)
+        public SecureValueAttribute(string dataClassification, string? authenticatorPropertyName)
         {
             _dataClassification = dataClassification;
             _authenticatorPropertyName = authenticatorPropertyName;
@@ -58,7 +66,7 @@ namespace IFY.Phorm.Encryption
 
             if (GlobalSettings.EncryptionProvider == null)
             {
-                throw new NullReferenceException($"The {nameof(GlobalSettings.EncryptionProvider)} has not not been registered.");
+                throw new InvalidOperationException($"The {nameof(GlobalSettings.EncryptionProvider)} has not not been registered.");
             }
 
             var encryptor = GlobalSettings.EncryptionProvider.GetInstance(_dataClassification);
@@ -82,7 +90,7 @@ namespace IFY.Phorm.Encryption
 
             if (GlobalSettings.EncryptionProvider == null)
             {
-                throw new NullReferenceException($"The {nameof(GlobalSettings.EncryptionProvider)} has not not been registered.");
+                throw new InvalidOperationException($"The {nameof(GlobalSettings.EncryptionProvider)} has not not been registered.");
             }
 
             var encryptor = GlobalSettings.EncryptionProvider.GetInstance(_dataClassification);

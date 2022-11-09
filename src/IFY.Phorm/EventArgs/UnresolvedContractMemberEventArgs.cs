@@ -2,7 +2,7 @@
 
 namespace IFY.Phorm.EventArgs
 {
-    public class UnresolvedContractMemberEventArgs : System.EventArgs
+    public sealed class UnresolvedContractMemberEventArgs : System.EventArgs
     {
         /// <summary>
         /// The unique GUID for the command instance that raised this event.

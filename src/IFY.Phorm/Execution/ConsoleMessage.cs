@@ -9,7 +9,7 @@
         /// <summary>
         /// Whether this message is for an error that interrupted execution.
         /// </summary>
-        public bool IsError { get; set; } = false;
+        public bool IsError { get; set; }
         /// <summary>
         /// The level of the log message.
         /// This is implementation specific.

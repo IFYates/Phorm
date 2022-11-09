@@ -10,10 +10,12 @@ namespace IFY.Phorm.SqlClient
     {
         internal Func<string, string?, IPhormDbConnection> _connectionBuilder = (sqlConnStr, connectionName) => new PhormDbConnection(connectionName, new SqlConnection(sqlConnStr));
 
-        public SqlPhormSession(string databaseConnectionString, string? connectionName = null)
+        public SqlPhormSession(string databaseConnectionString)
+            : base(databaseConnectionString, null)
+        { }
+        public SqlPhormSession(string databaseConnectionString, string? connectionName)
             : base(databaseConnectionString, connectionName)
-        {
-        }
+        { }
 
         public override IPhormSession SetConnectionName(string connectionName)
         {

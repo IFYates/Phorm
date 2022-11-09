@@ -84,7 +84,7 @@ namespace IFY.Phorm.SqlClient.Tests
             connMock.Setup(m => m.Dispose());
             connMock.SetupProperty(m => m.DefaultSchema).Object.DefaultSchema = "dbo";
 
-            var sess = new SqlPhormSession(CONN_STR, null!)
+            var sess = new SqlPhormSession(CONN_STR)
             {
                 _connectionBuilder = (cs, cn) => connMock.Object
             };
@@ -288,7 +288,7 @@ namespace IFY.Phorm.SqlClient.Tests
             connMock.SetupGet(m => m.State)
                 .Returns(ConnectionState.Open);
 
-            var sess = new SqlPhormSession(CONN_STR, null!)
+            var sess = new SqlPhormSession(CONN_STR)
             {
                 _connectionBuilder = (cs, cn) => connMock.Object
             };

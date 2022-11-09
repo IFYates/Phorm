@@ -3,7 +3,7 @@ using System;
 
 namespace IFY.Phorm.EventArgs
 {
-    public class ConsoleMessageEventArgs : System.EventArgs
+    public sealed class ConsoleMessageEventArgs : System.EventArgs
     {
         /// <summary>
         /// The unique GUID for the command instance that raised this event.

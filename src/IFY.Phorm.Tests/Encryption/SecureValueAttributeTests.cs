@@ -34,7 +34,7 @@ namespace IFY.Phorm.Encryption.Tests
             GlobalSettings.EncryptionProvider = null;
 
             // Act
-            Assert.ThrowsException<NullReferenceException>(() =>
+            Assert.ThrowsException<InvalidOperationException>(() =>
             {
                 _ = attr.Decrypt(new byte[] { 1, 2, 3, 4 }, null);
             });
@@ -138,7 +138,7 @@ namespace IFY.Phorm.Encryption.Tests
             GlobalSettings.EncryptionProvider = null;
 
             // Act
-            Assert.ThrowsException<NullReferenceException>(() =>
+            Assert.ThrowsException<InvalidOperationException>(() =>
             {
                 _ = attr.Encrypt(new byte[] { 1, 2, 3, 4 }, null);
             });

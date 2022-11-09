@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace IFY.Phorm.EventArgs
 {
-    public class CommandExecutingEventArgs : System.EventArgs
+    public sealed class CommandExecutingEventArgs : System.EventArgs
     {
         /// <summary>
         /// The unique GUID for this command instance.

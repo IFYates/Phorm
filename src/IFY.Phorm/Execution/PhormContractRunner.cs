@@ -297,14 +297,16 @@ namespace IFY.Phorm
 
         #endregion Execution
 
-        public async Task<int> CallAsync(CancellationToken? cancellationToken = null)
+        public Task<int> CallAsync()
+            => CallAsync(CancellationToken.None);
+        public async Task<int> CallAsync(CancellationToken cancellationToken)
         {
             // Prepare execution
             using var cmd = startCommand(out var pars, out var eventArgs);
             using var console = _session.StartConsoleCapture(eventArgs.CommandGuid, cmd);
 
             // Execution
-            using var rdr = await cmd.ExecuteReaderAsync(cancellationToken ?? CancellationToken.None);
+            using var rdr = await cmd.ExecuteReaderAsync(cancellationToken);
 
             if (safeRead(rdr, console) && _session.StrictResultSize)
             {
@@ -316,8 +318,11 @@ namespace IFY.Phorm
 
         public TResult? Get<TResult>()
             where TResult : class
-            => GetAsync<TResult>(null).GetAwaiter().GetResult();
-        public async Task<TResult?> GetAsync<TResult>(CancellationToken? cancellationToken = null)
+            => GetAsync<TResult>(CancellationToken.None).GetAwaiter().GetResult();
+        public Task<TResult?> GetAsync<TResult>()
+            where TResult : class
+            => GetAsync<TResult>(CancellationToken.None);
+        public async Task<TResult?> GetAsync<TResult>(CancellationToken cancellationToken)
             where TResult : class
         {
             // Check whether this is One or Many
@@ -337,7 +342,7 @@ namespace IFY.Phorm
             using var console = _session.StartConsoleCapture(eventArgs.CommandGuid, cmd);
 
             // Execution
-            using var rdr = await cmd.ExecuteReaderAsync(cancellationToken ?? CancellationToken.None);
+            using var rdr = await cmd.ExecuteReaderAsync(cancellationToken);
             var results = new List<object>();
             GenSpecBase? genspec = null;
             if (typeof(GenSpecBase).IsAssignableFrom(typeof(TResult)))

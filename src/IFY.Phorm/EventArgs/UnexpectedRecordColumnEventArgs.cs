@@ -2,7 +2,7 @@
 
 namespace IFY.Phorm.EventArgs
 {
-    public class UnexpectedRecordColumnEventArgs : System.EventArgs
+    public sealed class UnexpectedRecordColumnEventArgs : System.EventArgs
     {
         /// <summary>
         /// The unique GUID for the command instance that raised this event.

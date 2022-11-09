@@ -1,5 +1,4 @@
-﻿using IFY.Phorm.Connectivity;
-using IFY.Phorm.Data;
+﻿using IFY.Phorm.Data;
 using IFY.Phorm.EventArgs;
 using System;
 using System.Threading;
@@ -69,20 +68,37 @@ namespace IFY.Phorm
 
         #region Call/get from action contract
 
-        int Call(string contractName, object? args = null);
-        int Call<TActionContract>(object? args = null)
+        int Call(string contractName);
+        int Call(string contractName, object? args);
+        int Call<TActionContract>()
+            where TActionContract : IPhormContract;
+        int Call<TActionContract>(object? args)
             where TActionContract : IPhormContract;
         int Call<TActionContract>(TActionContract contract) // Same as "object? args = null", but allows better Intellisense
             where TActionContract : IPhormContract;
 
-        Task<int> CallAsync(string contractName, object? args = null, CancellationToken? cancellationToken = null);
-        Task<int> CallAsync<TActionContract>(object? args = null, CancellationToken? cancellationToken = null)
+        Task<int> CallAsync(string contractName);
+        Task<int> CallAsync(string contractName, object? args);
+        Task<int> CallAsync(string contractName, CancellationToken cancellationToken);
+        Task<int> CallAsync(string contractName, object? args, CancellationToken cancellationToken);
+        Task<int> CallAsync<TActionContract>()
             where TActionContract : IPhormContract;
-        Task<int> CallAsync<TActionContract>(TActionContract contract, CancellationToken? cancellationToken = null) // Same as "object? args = null", but allows better Intellisense
+        Task<int> CallAsync<TActionContract>(object? args)
+            where TActionContract : IPhormContract;
+        Task<int> CallAsync<TActionContract>(CancellationToken cancellationToken)
+            where TActionContract : IPhormContract;
+        Task<int> CallAsync<TActionContract>(object? args, CancellationToken cancellationToken)
+            where TActionContract : IPhormContract;
+        Task<int> CallAsync<TActionContract>(TActionContract contract) // Same as "object? args = null", but allows better Intellisense
+            where TActionContract : IPhormContract;
+        Task<int> CallAsync<TActionContract>(TActionContract contract, CancellationToken cancellationToken) // Same as "object? args = null", but allows better Intellisense
             where TActionContract : IPhormContract;
 
-        IPhormContractRunner From(string contractName, object? args = null);
-        IPhormContractRunner<TActionContract> From<TActionContract>(object? args = null)
+        IPhormContractRunner From(string contractName);
+        IPhormContractRunner From(string contractName, object? args);
+        IPhormContractRunner<TActionContract> From<TActionContract>()
+            where TActionContract : IPhormContract;
+        IPhormContractRunner<TActionContract> From<TActionContract>(object? args)
             where TActionContract : IPhormContract;
         IPhormContractRunner<TActionContract> From<TActionContract>(TActionContract contract) // Same as "object? args = null", but allows better Intellisense
             where TActionContract : IPhormContract;
@@ -91,14 +107,24 @@ namespace IFY.Phorm
 
         #region Get from Table/View
 
-        TResult? Get<TResult>(object? args = null)
+        TResult? Get<TResult>()
+            where TResult : class;
+        TResult? Get<TResult>(object? args)
             where TResult : class;
         TResult? Get<TResult>(TResult args) // Same as "object? args = null", but allows better Intellisense
             where TResult : class;
 
-        Task<TResult?> GetAsync<TResult>(object? args = null, CancellationToken? cancellationToken = null)
+        Task<TResult?> GetAsync<TResult>()
             where TResult : class;
-        Task<TResult?> GetAsync<TResult>(TResult args, CancellationToken? cancellationToken = null) // Same as "object? args = null", but allows better Intellisense
+        Task<TResult?> GetAsync<TResult>(object? args)
+            where TResult : class;
+        Task<TResult?> GetAsync<TResult>(CancellationToken cancellationToken)
+            where TResult : class;
+        Task<TResult?> GetAsync<TResult>(object? args, CancellationToken cancellationToken)
+            where TResult : class;
+        Task<TResult?> GetAsync<TResult>(TResult args) // Same as "object? args = null", but allows better Intellisense
+            where TResult : class;
+        Task<TResult?> GetAsync<TResult>(TResult args, CancellationToken cancellationToken) // Same as "object? args = null", but allows better Intellisense
             where TResult : class;
 
         #endregion Get from Table/View

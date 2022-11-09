@@ -2,7 +2,7 @@
 
 namespace IFY.Phorm.EventArgs
 {
-    public class ConnectedEventArgs : System.EventArgs
+    public sealed class ConnectedEventArgs : System.EventArgs
     {
         /// <summary>
         /// The connection that has been created.

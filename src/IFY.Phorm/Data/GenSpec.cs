@@ -9,7 +9,7 @@ namespace IFY.Phorm.Data
         internal Type GenType { get; }
         internal Type[] SpecTypes { get; }
 
-        internal GenSpecBase()
+        private protected GenSpecBase()
         {
             var typeArgs = GetType().GenericTypeArguments;
             GenType = typeArgs[0];

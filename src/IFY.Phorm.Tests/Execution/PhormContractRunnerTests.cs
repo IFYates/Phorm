@@ -83,6 +83,16 @@ namespace IFY.Phorm.Tests
         #region Constructor
 
         [TestMethod]
+        public void PhormContractRunner__ContractType()
+        {
+            // Act
+            var runner = new PhormContractRunner<IPhormContract>(null!, "objectName", DbObjectType.Table, null);
+
+            // Assert
+            Assert.AreEqual(typeof(IPhormContract), ((IPhormContractRunner<IPhormContract>)runner).ContractType);
+        }
+
+        [TestMethod]
         public void PhormContractRunner__Anonymous_Gets_contract_info()
         {
             // Act

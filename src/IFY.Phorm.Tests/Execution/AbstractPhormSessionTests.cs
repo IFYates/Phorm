@@ -3,6 +3,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using System;
 using System.Data;
+using System.Threading;
 
 namespace IFY.Phorm.Tests
 {
@@ -38,7 +39,7 @@ namespace IFY.Phorm.Tests
             GlobalSettings.ProcedurePrefix = "PROC ";
             GlobalSettings.TablePrefix = "TABLE ";
             GlobalSettings.ViewPrefix = "VIEW ";
-            
+
             var phorm2 = new TestPhormSession();
 
             GlobalSettings.ProcedurePrefix = "usp_";
@@ -246,6 +247,110 @@ namespace IFY.Phorm.Tests
         [TestMethod]
         [DataRow(false)]
         [DataRow(true)]
+        public void Call__By_typearg(bool byAsync)
+        {
+            // Arange
+            var phorm = new TestPhormSession();
+
+            // Act
+            int res;
+            if (byAsync)
+            {
+                res = phorm.CallAsync<ITestContract>().Result;
+            }
+            else
+            {
+                res = phorm.Call<ITestContract>();
+            }
+
+            // Assert
+            Assert.AreEqual(1, res);
+            Assert.AreEqual("[dbo].[usp_TestContract]", phorm.Commands[0].CommandText);
+            Assert.AreEqual(CommandType.StoredProcedure, phorm.Commands[0].CommandType);
+        }
+
+        [TestMethod]
+        public void CallAsync__By_typearg__With_CT()
+        {
+            // Arange
+            var phorm = new TestPhormSession();
+
+            var token = new CancellationToken(true);
+
+            // Act
+            var res = phorm.CallAsync<ITestContract>(token).Result;
+
+            // Assert
+            Assert.AreEqual(1, res);
+            Assert.AreEqual("[dbo].[usp_TestContract]", phorm.Commands[0].CommandText);
+            Assert.AreEqual(CommandType.StoredProcedure, phorm.Commands[0].CommandType);
+            Assert.AreEqual(token, ((TestDbCommand)phorm.Commands[0]).ExecutionCancellationToken);
+        }
+
+        [TestMethod]
+        public void CallAsync__By_name__With_CT()
+        {
+            // Arange
+            var phorm = new TestPhormSession();
+
+            var token = new CancellationToken(true);
+
+            // Act
+            var res = phorm.CallAsync("TestContract", token).Result;
+
+            // Assert
+            Assert.AreEqual(1, res);
+            Assert.AreEqual("[dbo].[usp_TestContract]", phorm.Commands[0].CommandText);
+            Assert.AreEqual(CommandType.StoredProcedure, phorm.Commands[0].CommandType);
+            Assert.AreEqual(token, ((TestDbCommand)phorm.Commands[0]).ExecutionCancellationToken);
+        }
+
+        [TestMethod]
+        [DataRow(false)]
+        [DataRow(true)]
+        public void Get__By_typearg(bool byAsync)
+        {
+            // Arrange
+            var phorm = new TestPhormSession();
+
+            // Act
+            ITestContract? result;
+            if (byAsync)
+            {
+                result = phorm.GetAsync<TestEntityView>().Result;
+            }
+            else
+            {
+                result = phorm.Get<TestEntityView>();
+            }
+
+            // Assert
+            Assert.IsNull(result);
+            Assert.AreEqual("SELECT * FROM [dbo].[vw_TestEntityView]", phorm.Commands[0].CommandText);
+            Assert.AreEqual(CommandType.Text, phorm.Commands[0].CommandType);
+        }
+
+        [TestMethod]
+        public void GetAsync__By_typearg_with_CT()
+        {
+            // Arrange
+            var phorm = new TestPhormSession();
+
+            var token = new CancellationToken(true);
+
+            // Act
+            var result = phorm.GetAsync<TestEntityView>(token).Result;
+
+            // Assert
+            Assert.IsNull(result);
+            Assert.AreEqual("SELECT * FROM [dbo].[vw_TestEntityView]", phorm.Commands[0].CommandText);
+            Assert.AreEqual(CommandType.Text, phorm.Commands[0].CommandType);
+            Assert.AreEqual(token, ((TestDbCommand)phorm.Commands[0]).ExecutionCancellationToken);
+        }
+
+        [TestMethod]
+        [DataRow(false)]
+        [DataRow(true)]
         public void Get__By_typed_arg(bool byAsync)
         {
             // Arrange
@@ -262,6 +367,55 @@ namespace IFY.Phorm.Tests
             else
             {
                 result = phorm.Get(arg);
+            }
+
+            // Assert
+            Assert.IsNull(result);
+            Assert.AreEqual("SELECT * FROM [dbo].[vw_TestEntityView]", phorm.Commands[0].CommandText);
+            Assert.AreEqual(CommandType.Text, phorm.Commands[0].CommandType);
+        }
+
+        [TestMethod]
+        [DataRow(false)]
+        [DataRow(true)]
+        public void Get__By_typed_arg_with_CT(bool byAsync)
+        {
+            // Arrange
+            var phorm = new TestPhormSession();
+
+            var token = new CancellationToken(true);
+
+            var arg = new TestEntityView();
+
+            // Act
+            var result = phorm.GetAsync(arg, token).Result;
+
+            // Assert
+            Assert.IsNull(result);
+            Assert.AreEqual("SELECT * FROM [dbo].[vw_TestEntityView]", phorm.Commands[0].CommandText);
+            Assert.AreEqual(CommandType.Text, phorm.Commands[0].CommandType);
+            Assert.AreEqual(token, ((TestDbCommand)phorm.Commands[0]).ExecutionCancellationToken);
+        }
+
+        [TestMethod]
+        [DataRow(false)]
+        [DataRow(true)]
+        public void Get__By_typearg_with_anon_args(bool byAsync)
+        {
+            // Arrange
+            var phorm = new TestPhormSession();
+
+            var arg = new { };
+
+            // Act
+            ITestContract? result;
+            if (byAsync)
+            {
+                result = phorm.GetAsync<TestEntityView>(arg).Result;
+            }
+            else
+            {
+                result = phorm.Get<TestEntityView>(arg);
             }
 
             // Assert
