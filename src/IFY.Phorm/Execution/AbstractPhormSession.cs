@@ -135,9 +135,7 @@ namespace IFY.Phorm.Execution
                         // Resolve default schema
                         if (phormConn.DefaultSchema.Length == 0)
                         {
-                            using var cmd = ((IDbConnection)phormConn).CreateCommand();
-                            cmd.CommandText = "SELECT schema_name()";
-                            var dbSchema = cmd.ExecuteScalar()?.ToString();
+                            var dbSchema = GetDefaultSchema(phormConn);
                             if (dbSchema?.Length > 0)
                             {
                                 phormConn.DefaultSchema = dbSchema;
@@ -153,6 +151,12 @@ namespace IFY.Phorm.Execution
         }
 
         protected abstract IPhormDbConnection CreateConnection();
+
+        /// <summary>
+        /// Implementations to provide logic for resolving the default schema of the connection.
+        /// </summary>
+        /// <returns>The default schema name, if known.</returns>
+        protected abstract string? GetDefaultSchema(IPhormDbConnection phormConn);
 
         /// <summary>
         /// Request a session with a different connection name.
