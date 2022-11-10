@@ -8,7 +8,8 @@
 		<PublishRepositoryUrl>true</PublishRepositoryUrl>
 		<IncludeSymbols>true</IncludeSymbols>
 		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
-		<TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);CopyProjectReferencesToPackage</TargetsForTfmSpecificBuildOutput>
+        <EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
+        <TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);CopyProjectReferencesToPackage</TargetsForTfmSpecificBuildOutput>
 
 		<Authors>IFYates</Authors>
 		<PackageLicenseExpression>MPL-2.0</PackageLicenseExpression>
@@ -16,21 +17,28 @@
 		<PackageProjectUrl>https://github.com/IFYates/Phorm</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/IFYates/Phorm</RepositoryUrl>
 		<RepositoryType>GitHub</RepositoryType>
-		<PackageReleaseNotes>
-			v1.5.0 - Contract structures cached by type. Out of beta
-			v1.4.1-beta - Reduced wasted connections. Replaced Shimterface with Shimr
-			v1.4.0-beta - New ContractMemberAttribute and improved connection handling
-			v1.3.0-beta - Console logs and errors
-			v1.2.0-beta - GenSpec support and event system
-			v1.1.1-beta - Supports .NET Standard 2.1
-			v1.1.0-beta - New syntax
-			v1.0.0-beta - First fully-functional release
-		</PackageReleaseNotes>
+		<PackageReleaseNotes>v1.5.0.1 - Minor internal changes
+v1.5.0 - Contract structures cached by type. Out of beta
+v1.4.1-beta - Reduced wasted connections. Replaced Shimterface with Shimr
+v1.4.0-beta - New ContractMemberAttribute and improved connection handling
+v1.3.0-beta - Console logs and errors
+v1.2.0-beta - GenSpec support and event system
+v1.1.1-beta - Supports .NET Standard 2.1
+v1.1.0-beta - New syntax
+v1.0.0-beta - First fully-functional release</PackageReleaseNotes>
 		<Copyright>(c) IFYates</Copyright>
 		<Description>SqlClient implementation of the Procedure-heavy object-relational mapping framework.</Description>
-	</PropertyGroup>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+    </PropertyGroup>
 
-	<Target DependsOnTargets="ResolveReferences" Name="CopyProjectReferencesToPackage">
+    <ItemGroup>
+        <None Include="..\..\README.md">
+            <Pack>True</Pack>
+            <PackagePath>\</PackagePath>
+        </None>
+    </ItemGroup>
+
+    <Target DependsOnTargets="ResolveReferences" Name="CopyProjectReferencesToPackage">
 		<ItemGroup>
 			<BuildOutputInPackage Include="@(ReferenceCopyLocalPaths-&gt;WithMetadataValue('ReferenceSourceTarget', 'ProjectReference'))" />
 		</ItemGroup>
@@ -42,7 +50,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\IFY.Phorm\IFY.Phorm.csproj">
+		<ProjectReference Include="..\IFY.Phorm\IFY.Phorm.Core.csproj">
 			<ReferenceOutputAssembly>true</ReferenceOutputAssembly>
 			<IncludeAssets>{ProjectName}.dll;{ProjectName}.pdb</IncludeAssets>
 		</ProjectReference>

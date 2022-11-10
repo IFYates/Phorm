@@ -18,7 +18,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\IFY.Phorm\IFY.Phorm.csproj" />
+		<ProjectReference Include="..\IFY.Phorm\IFY.Phorm.Core.csproj" />
 	</ItemGroup>
 
 </Project>
