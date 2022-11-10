@@ -23,6 +23,7 @@ Pho/rm supports:
 
 Packages|||
 -|-|-
+IFY.Phorm.Core|[![NuGet Version](https://img.shields.io/nuget/v/IFY.Phorm.Core)](https://www.nuget.org/packages/IFY.Phorm.Core/)|[![NuGet Downloads](https://img.shields.io/nuget/dt/IFY.Phorm.Core)](https://www.nuget.org/packages/IFY.Phorm.Core/)
 IFY.Phorm.SqlClient|[![NuGet Version](https://img.shields.io/nuget/v/IFY.Phorm.SqlClient)](https://www.nuget.org/packages/IFY.Phorm.SqlClient/)|[![NuGet Downloads](https://img.shields.io/nuget/dt/IFY.Phorm.SqlClient)](https://www.nuget.org/packages/IFY.Phorm.SqlClient/)
 
 ## Driving principals
