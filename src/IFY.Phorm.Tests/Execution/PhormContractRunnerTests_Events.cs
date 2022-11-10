@@ -1,11 +1,11 @@
 ﻿using IFY.Phorm.Data;
 using IFY.Phorm.EventArgs;
-using IFY.Phorm.Execution;
+using IFY.Phorm.Tests;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
 
-namespace IFY.Phorm.Tests
+namespace IFY.Phorm.Execution.Tests
 {
     [TestClass]
     public class PhormContractRunnerTests_Events

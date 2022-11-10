@@ -1,7 +1,6 @@
 ﻿using IFY.Phorm.Connectivity;
 using IFY.Phorm.Data;
 using IFY.Phorm.EventArgs;
-using IFY.Phorm.Execution;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -9,7 +8,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace IFY.Phorm
+namespace IFY.Phorm.Execution
 {
     public abstract class AbstractPhormSession : IPhormSession
     {

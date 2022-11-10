@@ -1,11 +1,12 @@
 ﻿using IFY.Phorm.Data;
+using IFY.Phorm.Tests;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using System;
 using System.Data;
 using System.Threading;
 
-namespace IFY.Phorm.Tests
+namespace IFY.Phorm.Execution.Tests
 {
     [TestClass]
     public class AbstractPhormSessionTests

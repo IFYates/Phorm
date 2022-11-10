@@ -1,6 +1,6 @@
-﻿using IFY.Phorm.Connectivity;
-using IFY.Phorm.Data;
+﻿using IFY.Phorm.Data;
 using IFY.Phorm.Encryption;
+using IFY.Phorm.Execution;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using System;

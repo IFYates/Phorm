@@ -1,11 +1,12 @@
 ﻿using IFY.Phorm.Data;
+using IFY.Phorm.Tests;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.Serialization;
 
-namespace IFY.Phorm.Tests
+namespace IFY.Phorm.Execution.Tests
 {
     [TestClass]
     public class PhormContractRunnerTests_Resultsets
@@ -75,7 +76,7 @@ namespace IFY.Phorm.Tests
             });
 
             // Assert
-            Assert.AreEqual("Attempt to get type IFY.Phorm.Tests.PhormContractRunnerTests_Resultsets+TestBadEntity without empty constructor.", ex.Message);
+            Assert.AreEqual("Attempt to get type IFY.Phorm.Execution.Tests.PhormContractRunnerTests_Resultsets+TestBadEntity without empty constructor.", ex.Message);
         }
 
         [TestMethod]
@@ -93,7 +94,7 @@ namespace IFY.Phorm.Tests
             }).InnerException!;
 
             // Assert
-            Assert.AreEqual("Attempt to get type IFY.Phorm.Tests.PhormContractRunnerTests_Resultsets+TestBadEntity without empty constructor.", ex.Message);
+            Assert.AreEqual("Attempt to get type IFY.Phorm.Execution.Tests.PhormContractRunnerTests_Resultsets+TestBadEntity without empty constructor.", ex.Message);
         }
 
         [TestMethod]

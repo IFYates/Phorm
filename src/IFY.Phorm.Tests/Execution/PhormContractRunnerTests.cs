@@ -1,6 +1,6 @@
 ﻿using IFY.Phorm.Data;
 using IFY.Phorm.Encryption;
-using IFY.Phorm.Execution;
+using IFY.Phorm.Tests;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using System;
@@ -9,7 +9,7 @@ using System.Data;
 using System.Reflection;
 using System.Runtime.Serialization;
 
-namespace IFY.Phorm.Tests
+namespace IFY.Phorm.Execution.Tests
 {
     [TestClass]
     public class PhormContractRunnerTests
