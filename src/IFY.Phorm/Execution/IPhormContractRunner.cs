@@ -3,7 +3,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace IFY.Phorm
+namespace IFY.Phorm.Execution
 {
     public interface IPhormContractRunner
     {

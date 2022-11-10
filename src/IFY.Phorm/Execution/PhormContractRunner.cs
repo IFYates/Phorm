@@ -1,6 +1,5 @@
 ﻿using IFY.Phorm.Data;
 using IFY.Phorm.EventArgs;
-using IFY.Phorm.Execution;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -11,7 +10,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace IFY.Phorm
+namespace IFY.Phorm.Execution
 {
     internal sealed class PhormContractRunner<TActionContract> : IPhormContractRunner<TActionContract>
         where TActionContract : IPhormContract
@@ -108,7 +107,7 @@ namespace IFY.Phorm
             {
                 var param = memb.ToDataParameter(cmd, _runArgs);
                 if (param.Direction != ParameterDirection.Input
-                    || (param.Value != null && param.Value != DBNull.Value))
+                    || param.Value != null && param.Value != DBNull.Value)
                 {
                     cmd.Parameters.Add(param);
                 }
@@ -119,7 +118,7 @@ namespace IFY.Phorm
                 CommandGuid = Guid.NewGuid(),
                 CommandText = cmd.CommandText,
                 CommandParameters = cmd.Parameters.Cast<IDbDataParameter>()
-                    .ToDictionary(p => p.ParameterName, p => (object?)p.Value)
+                    .ToDictionary(p => p.ParameterName, p => p.Value)
             };
             _session.OnCommandExecuting(eventArgs);
 

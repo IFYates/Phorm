@@ -1,5 +1,6 @@
 ﻿using IFY.Phorm.Data;
 using IFY.Phorm.EventArgs;
+using IFY.Phorm.Execution;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -54,7 +55,7 @@ namespace IFY.Phorm
         bool ExceptionsAsConsoleMessage { get; set; }
 
         /// <summary>
-        /// Whether to throw a <see cref="System.InvalidOperationException"/> if an invocation result includes more records than expected.
+        /// Whether to throw a <see cref="InvalidOperationException"/> if an invocation result includes more records than expected.
         /// Defaults to value in <see cref="GlobalSettings.StrictResultSize"/>.
         /// </summary>
         bool StrictResultSize { get; set; }

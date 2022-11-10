@@ -47,6 +47,8 @@ namespace IFY.Phorm.Tests
 
         protected override IPhormDbConnection CreateConnection() => TestConnection;
 
+        protected override string? GetDefaultSchema(IPhormDbConnection phormConn) => null;
+
         [ExcludeFromCodeCoverage]
         public override IPhormSession SetConnectionName(string connectionName)
         {

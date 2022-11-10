@@ -41,6 +41,13 @@ namespace IFY.Phorm.SqlClient
             return conn;
         }
 
+        protected override string? GetDefaultSchema(IPhormDbConnection phormConn)
+        {
+            using var cmd = ((IDbConnection)phormConn).CreateCommand();
+            cmd.CommandText = "SELECT schema_name()";
+            return cmd.ExecuteScalar()?.ToString();
+        }
+
         #region Console capture
 
         protected override AbstractConsoleMessageCapture StartConsoleCapture(Guid commandGuid, IAsyncDbCommand cmd)

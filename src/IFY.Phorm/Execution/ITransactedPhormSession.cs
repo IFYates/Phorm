@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace IFY.Phorm
+namespace IFY.Phorm.Execution
 {
     /// <summary>
     /// A <see cref="IPhormSession"/> that is in a transaction.

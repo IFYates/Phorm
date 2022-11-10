@@ -1,5 +1,4 @@
-using IFY.Phorm.Connectivity;
-using Microsoft.Data.SqlClient;
+using IFY.Phorm.Execution;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
 using System.Linq;
