@@ -63,7 +63,7 @@ jobs:
         contents: |
           {
             "stryker-config": {
-              "project": "IFY.Phorm.csproj",
+              "project": "IFY.Phorm.Core.csproj",
               "test-projects": ["./src/IFY.Phorm.Tests/IFY.Phorm.Tests.csproj"],
               "project-info": {
                 "name": "github.com/IFYates/Phorm",
