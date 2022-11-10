@@ -5,10 +5,11 @@
 		<Nullable>enable</Nullable>
 
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<PublishRepositoryUrl>true</PublishRepositoryUrl>
 		<IncludeSymbols>true</IncludeSymbols>
 		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
-        <EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
+        <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
         <TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);CopyProjectReferencesToPackage</TargetsForTfmSpecificBuildOutput>
 
 		<Authors>IFYates</Authors>
@@ -29,7 +30,12 @@ v1.0.0-beta - First fully-functional release</PackageReleaseNotes>
 		<Copyright>(c) IFYates</Copyright>
 		<Description>SqlClient implementation of the Procedure-heavy object-relational mapping framework.</Description>
         <PackageReadmeFile>README.md</PackageReadmeFile>
+		<DocumentationFile>IFY.Phorm.SqlClient.xml</DocumentationFile>
     </PropertyGroup>
+
+	<ItemGroup>
+	  <None Remove="IFY.Phorm.SqlClient.xml" />
+	</ItemGroup>
 
     <ItemGroup>
         <None Include="..\..\README.md">

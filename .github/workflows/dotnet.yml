@@ -39,6 +39,7 @@ jobs:
         BUILD_CONFIG: |
           main:Release
           !default:Debug
+
     # Build
     - name: Build
       run: dotnet build src --configuration $BUILD_CONFIG --no-restore

@@ -1,0 +1,659 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>IFY.Phorm</name>
+    </assembly>
+    <members>
+        <member name="T:System.Data.IAsyncDbCommand">
+            <summary>
+            Exposes the asynchronous parts of <see cref="T:System.Data.Common.DbCommand"/>
+            </summary>
+        </member>
+        <member name="P:IFY.Phorm.Connectivity.IPhormDbConnection.ConnectionName">
+            <summary>
+            The context name of this connection
+            </summary>
+        </member>
+        <member name="P:IFY.Phorm.Connectivity.IPhormDbConnection.DefaultSchema">
+            <summary>
+            The default schema of this connection
+            </summary>
+        </member>
+        <member name="M:IFY.Phorm.Connectivity.IPhormDbConnection.CreateCommand">
+            <summary>
+            Creates and returns a <see cref="T:System.Data.IAsyncDbCommand"/> object associated with the current connection.
+            </summary>
+        </member>
+        <member name="T:IFY.Phorm.Connectivity.PhormDbConnection">
+            <summary>
+            Wraps <see cref="T:System.Data.IDbConnection"/> with additional Pho/rm values.
+            </summary>
+        </member>
+        <member name="T:IFY.Phorm.Data.ContractMember">
+            <summary>
+            The current instance value of a contract member.
+            </summary>
+        </member>
+        <member name="P:IFY.Phorm.Data.ContractMember.Value">
+            <summary>
+            Value being passed to or returned from stored procedure.
+            </summary>
+        </member>
+        <member name="P:IFY.Phorm.Data.ContractMember.HasChanged">
+            <summary>
+            Value has changed since originally set.
+            </summary>
+        </member>
+        <member name="M:IFY.Phorm.Data.ContractMember.GetMembersFromContract(System.Object,System.Type,System.Boolean)">
+            <summary>
+            Convert properties of any object to <see cref="T:IFY.Phorm.Data.ContractMember"/>s.
+            </summary>
+        </member>
+        <member name="M:IFY.Phorm.Data.ContractMember.ApplyToEntity(System.Object)">
+            <summary>
+            Apply this value to an entity.
+            </summary>
+        </member>
+        <member name="P:IFY.Phorm.Data.ContractMemberAttribute.DisableInput">
+            <summary>
+            Set to true to ensure that this member is never used as input to the data source.
+            </summary>
+        </member>
+        <member name="P:IFY.Phorm.Data.ContractMemberAttribute.DisableOutput">
+            <summary>
+            Set to true to ensure that this member never expects to receive output from the data source.
+            </summary>
+        </member>
+        <member name="T:IFY.Phorm.Data.ContractMemberDefinition">
+            <summary>
+            A property on a contract, with type helping.
+            Supports in (to database) and out (from database) as well as the special-case return-value
+            </summary>
+        </member>
+        <member name="P:IFY.Phorm.Data.ContractMemberDefinition.DbName">
+            <summary>
+            Name as given in stored procedure.
+            </summary>
+        </member>
+        <member name="P:IFY.Phorm.Data.ContractMemberDefinition.Size">
+            <summary>
+            Size of data to/from database.
+            0 is unspecified / unlimited.
+            </summary>
+        </member>
+        <member name="P:IFY.Phorm.Data.ContractMemberDefinition.Direction">
+            <summary>
+            Type of parameter from POV of datasource.
+            </summary>
+        </member>
+        <member name="P:IFY.Phorm.Data.ContractMemberDefinition.SourceMember">
+            <summary>
+            Member of underlying DTO/Contract that provides the value.
+            </summary>
+        </member>
+        <member name="P:IFY.Phorm.Data.ContractMemberDefinition.SourceMemberId">
+            <summary>
+            Identifier for the contract member.
+            </summary>
+        </member>
+        <member name="P:IFY.Phorm.Data.ContractMemberDefinition.ValueType">
+            <summary>
+            The true type of the value, even if null.
+            Can be different to property value.
+            </summary>
+        </member>
+        <member name="P:IFY.Phorm.Data.ContractMemberDefinition.IsRequired">
+            <summary>
+            Whether this member is marked as required on the contract.
+            </summary>
+        </member>
+        <member name="P:IFY.Phorm.Data.ContractMemberDefinition.Attributes">
+            <summary>
+            Relevant attributes for this contract member.
+            </summary>
+        </member>
+        <member name="P:IFY.Phorm.Data.ContractMemberDefinition.HasSecureAttribute">
+            <summary>
+            Returns true if this property is transformed by a secure attribute.
+            </summary>
+        </member>
+        <member name="M:IFY.Phorm.Data.ContractMemberDefinition.GetFromContract(System.Type,System.Type)">
+            <summary>
+            Convert properties of any object to <see cref="T:IFY.Phorm.Data.ContractMemberDefinition"/>s.
+            </summary>
+        </member>
+        <member name="M:IFY.Phorm.Data.ContractMemberDefinition.FromEntity(System.Object)">
+            <summary>
+            Create an instance of this member by resolving the value from the appropriate entity member.
+            </summary>
+        </member>
+        <member name="M:IFY.Phorm.Data.ContractMemberDefinition.FromDatasource(System.Object,System.Object)">
+            <summary>
+            Create an instance of this member by using the datasource value provided.
+            </summary>
+        </member>
+        <member name="T:IFY.Phorm.Data.GenSpec`2">
+            <summary>
+            Fetch a resultset containing "Specialised" instances with a common "Generalised" base type.
+            </summary>
+            <typeparam name="TBase">The "Generalised" base type that the other types share.</typeparam>
+            <typeparam name="T1">A "Specialised" type.</typeparam>
+        </member>
+        <member name="M:IFY.Phorm.Data.GenSpec`2.All">
+            <summary>
+            Get all records from the resultset, as the "Generalised" base type.
+            </summary>
+        </member>
+        <member name="M:IFY.Phorm.Data.GenSpec`2.OfType``1">
+            <summary>
+            Get all records that are of the specified "Specialised" type.
+            </summary>
+        </member>
+        <member name="T:IFY.Phorm.Data.GenSpec`3">
+            <summary>
+            Fetch a resultset containing "Specialised" instances with a common "Generalised" base type.
+            </summary>
+            <typeparam name="TBase">The "Generalised" base type that the other types share.</typeparam>
+            <typeparam name="T1">A "Specialised" type.</typeparam>
+            <typeparam name="T2">A "Specialised" type.</typeparam>
+        </member>
+        <member name="T:IFY.Phorm.Data.GenSpec`4">
+            <summary>
+            Fetch a resultset containing "Specialised" instances with a common "Generalised" base type.
+            </summary>
+            <typeparam name="TBase">The "Generalised" base type that the other types share.</typeparam>
+            <typeparam name="T1">A "Specialised" type.</typeparam>
+            <typeparam name="T2">A "Specialised" type.</typeparam>
+            <typeparam name="T3">A "Specialised" type.</typeparam>
+        </member>
+        <member name="T:IFY.Phorm.Data.GenSpec`5">
+            <summary>
+            Fetch a resultset containing "Specialised" instances with a common "Generalised" base type.
+            </summary>
+            <typeparam name="TBase">The "Generalised" base type that the other types share.</typeparam>
+            <typeparam name="T1">A "Specialised" type.</typeparam>
+            <typeparam name="T2">A "Specialised" type.</typeparam>
+            <typeparam name="T3">A "Specialised" type.</typeparam>
+            <typeparam name="T4">A "Specialised" type.</typeparam>
+        </member>
+        <member name="T:IFY.Phorm.Data.GenSpec`6">
+            <summary>
+            Fetch a resultset containing "Specialised" instances with a common "Generalised" base type.
+            </summary>
+            <typeparam name="TBase">The "Generalised" base type that the other types share.</typeparam>
+            <typeparam name="T1">A "Specialised" type.</typeparam>
+            <typeparam name="T2">A "Specialised" type.</typeparam>
+            <typeparam name="T3">A "Specialised" type.</typeparam>
+            <typeparam name="T4">A "Specialised" type.</typeparam>
+            <typeparam name="T5">A "Specialised" type.</typeparam>
+        </member>
+        <member name="T:IFY.Phorm.Data.IContractMemberAttribute">
+            <summary>
+            An attribute on a contract member
+            </summary>
+        </member>
+        <member name="T:IFY.Phorm.Data.IPhormContract">
+            <summary>
+            Tags this class/interface as being usable as a Pho/rm action contract.
+            </summary>
+        </member>
+        <member name="F:IFY.Phorm.Data.ParameterType.Console">
+            <summary>
+            Concatenated output of any printed data
+            </summary>
+        </member>
+        <member name="T:IFY.Phorm.Data.PhormSpecOfAttribute">
+            <summary>
+            Mark this "Specialised" type with the details on how to differentiate it within the "Generalised" data.
+            </summary>
+        </member>
+        <member name="P:IFY.Phorm.Data.PhormSpecOfAttribute.GenProperty">
+            <summary>
+            The name of the property on the "Generalised" type definition to use when matching to a "Specialised" type.
+            </summary>
+        </member>
+        <member name="P:IFY.Phorm.Data.PhormSpecOfAttribute.PropertyValue">
+            <summary>
+            The value of the "Generalised" type property to match with this "Specialised" type.
+            </summary>
+        </member>
+        <member name="T:IFY.Phorm.Encryption.AbstractSecureValueAttribute">
+            <summary>
+            Attribute for marking a contract property as secure.
+            </summary>
+        </member>
+        <member name="M:IFY.Phorm.Encryption.AbstractSecureValueAttribute.Decrypt(System.Byte[],System.Object)">
+            <summary>
+            Decrypt the bytes using this implementation.
+            </summary>
+            <param name="data">The data to be decrypted.</param>
+            <param name="context">The context of the encryption call.</param>
+            <returns>The decrypted value.</returns>
+        </member>
+        <member name="M:IFY.Phorm.Encryption.AbstractSecureValueAttribute.Encrypt(System.Object,System.Object)">
+            <summary>
+            Encrypt the value using this implementation.
+            </summary>
+            <param name="value">The value to be encrypted.</param>
+            <param name="context">The context of the encryption call.</param>
+            <returns>The encrypted data.</returns>
+        </member>
+        <member name="T:IFY.Phorm.Encryption.IEncryptionProvider">
+            <summary>
+            Provides factory method for getting the required encryption handler.
+            </summary>
+        </member>
+        <member name="T:IFY.Phorm.Encryption.IEncryptor">
+            <summary>
+            The implementation of an encryption and decryption handler.
+            </summary>
+        </member>
+        <member name="P:IFY.Phorm.Encryption.IEncryptor.Authenticator">
+            <summary>
+            The additional authenticator value to use, if supported by the implementation.
+            </summary>
+        </member>
+        <member name="P:IFY.Phorm.Encryption.IEncryptor.InitialVector">
+            <summary>
+            The initial data vector to use, if supported by the implementation.
+            </summary>
+        </member>
+        <member name="M:IFY.Phorm.Encryption.IEncryptor.Decrypt(System.Byte[])">
+            <summary>
+            Decrypt the bytes using this implementation.
+            </summary>
+            <param name="data">The data to be decrypted.</param>
+            <param name="instance">The contract instance that this action is related to.</param>
+            <returns>The decrypted value as bytes.</returns>
+        </member>
+        <member name="M:IFY.Phorm.Encryption.IEncryptor.Encrypt(System.Byte[])">
+            <summary>
+            Encrypt the value bytes using this implementation.
+            </summary>
+            <param name="value">The value (as bytes) to be encrypted.</param>
+            <param name="instance">The contract instance that this action is related to.</param>
+            <returns>The encrypted data.</returns>
+        </member>
+        <member name="T:IFY.Phorm.Encryption.NullEncryptor">
+            <summary>
+            An implementation of an encryption and decryption handler that makes no changes.
+            </summary>
+        </member>
+        <member name="T:IFY.Phorm.Encryption.SecureValueAttribute">
+            <summary>
+            Basic implementation of <see cref="T:IFY.Phorm.Encryption.IEncryptor"/>-based encryption of secure values.
+            </summary>
+        </member>
+        <member name="M:IFY.Phorm.Encryption.SecureValueAttribute.#ctor(System.String)">
+            <summary>
+            This contract property represents a value that is stored encrypted.
+            </summary>
+            <param name="dataClassification">The classification for this value type, which can be used to control the encryption used.</param>
+        </member>
+        <member name="M:IFY.Phorm.Encryption.SecureValueAttribute.#ctor(System.String,System.String)">
+            <summary>
+            This contract property represents a value that is stored encrypted.
+            </summary>
+            <param name="dataClassification">The classification for this value type, which can be used to control the encryption used.</param>
+            <param name="authenticatorPropertyName">The name of the property holding the authenticator value.</param>
+        </member>
+        <member name="P:IFY.Phorm.EventArgs.CommandExecutedEventArgs.CommandGuid">
+            <summary>
+            The unique GUID for this command instance.
+            </summary>
+        </member>
+        <member name="P:IFY.Phorm.EventArgs.CommandExecutedEventArgs.CommandText">
+            <summary>
+            The text of the command that was executed.
+            </summary>
+        </member>
+        <member name="P:IFY.Phorm.EventArgs.CommandExecutedEventArgs.CommandParameters">
+            <summary>
+            The parameters of the command that was executed.
+            </summary>
+        </member>
+        <member name="P:IFY.Phorm.EventArgs.CommandExecutedEventArgs.ResultCount">
+            <summary>
+            The number of entity results parsed from execution.
+            </summary>
+        </member>
+        <member name="P:IFY.Phorm.EventArgs.CommandExecutedEventArgs.ReturnValue">
+            <summary>
+            The return value of the execution.
+            </summary>
+        </member>
+        <member name="P:IFY.Phorm.EventArgs.CommandExecutingEventArgs.CommandGuid">
+            <summary>
+            The unique GUID for this command instance.
+            </summary>
+        </member>
+        <member name="P:IFY.Phorm.EventArgs.CommandExecutingEventArgs.CommandText">
+            <summary>
+            The text of the command being executed.
+            </summary>
+        </member>
+        <member name="P:IFY.Phorm.EventArgs.CommandExecutingEventArgs.CommandParameters">
+            <summary>
+            The parameters of the command being executed.
+            </summary>
+        </member>
+        <member name="P:IFY.Phorm.EventArgs.ConnectedEventArgs.Connection">
+            <summary>
+            The connection that has been created.
+            </summary>
+        </member>
+        <member name="P:IFY.Phorm.EventArgs.ConsoleMessageEventArgs.CommandGuid">
+            <summary>
+            The unique GUID for the command instance that raised this event.
+            </summary>
+        </member>
+        <member name="P:IFY.Phorm.EventArgs.ConsoleMessageEventArgs.ConsoleMessage">
+            <summary>
+            The console message that was raised.
+            </summary>
+        </member>
+        <member name="P:IFY.Phorm.EventArgs.UnexpectedRecordColumnEventArgs.CommandGuid">
+            <summary>
+            The unique GUID for the command instance that raised this event.
+            </summary>
+        </member>
+        <member name="P:IFY.Phorm.EventArgs.UnexpectedRecordColumnEventArgs.EntityType">
+            <summary>
+            The type of entity being constructed.
+            </summary>
+        </member>
+        <member name="P:IFY.Phorm.EventArgs.UnexpectedRecordColumnEventArgs.ColumnName">
+            <summary>
+            The name of the record column that cannot be mapped to the entity.
+            </summary>
+        </member>
+        <member name="P:IFY.Phorm.EventArgs.UnresolvedContractMemberEventArgs.CommandGuid">
+            <summary>
+            The unique GUID for the command instance that raised this event.
+            </summary>
+        </member>
+        <member name="P:IFY.Phorm.EventArgs.UnresolvedContractMemberEventArgs.EntityType">
+            <summary>
+            The type of entity being constructed.
+            </summary>
+        </member>
+        <member name="P:IFY.Phorm.EventArgs.UnresolvedContractMemberEventArgs.MemberNames">
+            <summary>
+            The list of member names that were not matched to the records in the resultset.
+            </summary>
+        </member>
+        <member name="T:IFY.Phorm.Events">
+            <summary>
+            Global event handlers.
+            </summary>
+        </member>
+        <member name="E:IFY.Phorm.Events.Connected">
+            <summary>
+            The event invoked when a new database connection is created.
+            </summary>
+        </member>
+        <member name="E:IFY.Phorm.Events.CommandExecuting">
+            <summary>
+            The event invoked when a command is about to be executed.
+            </summary>
+        </member>
+        <member name="E:IFY.Phorm.Events.CommandExecuted">
+            <summary>
+            The event invoked when a command has finished executing.
+            </summary>
+        </member>
+        <member name="E:IFY.Phorm.Events.UnexpectedRecordColumn">
+            <summary>
+            A result record contained a column not specified in the target entity type.
+            </summary>
+        </member>
+        <member name="E:IFY.Phorm.Events.UnresolvedContractMember">
+            <summary>
+            A result record did not contain a column specified in the target entity type.
+            </summary>
+        </member>
+        <member name="E:IFY.Phorm.Events.ConsoleMessage">
+            <summary>
+            A log message was received during execution.
+            </summary>
+        </member>
+        <member name="T:IFY.Phorm.Execution.AbstractConsoleMessageCapture">
+            <summary>
+            Provides base logic for an object that captures console message events.
+            </summary>
+        </member>
+        <member name="P:IFY.Phorm.Execution.AbstractConsoleMessageCapture.HasError">
+            <summary>
+            Becomes true if this instance has captured at least one error.
+            </summary>
+        </member>
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.GetDefaultSchema(IFY.Phorm.Connectivity.IPhormDbConnection)">
+            <summary>
+            Implementations to provide logic for resolving the default schema of the connection.
+            </summary>
+            <returns>The default schema name, if known.</returns>
+        </member>
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.SetConnectionName(System.String)">
+            <summary>
+            Request a session with a different connection name.
+            </summary>
+        </member>
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.StartConsoleCapture(System.Guid,System.Data.IAsyncDbCommand)">
+            <summary>
+            If the connection implementation supports capture of console output (print statements),
+            this method returns a new <see cref="T:IFY.Phorm.Execution.AbstractConsoleMessageCapture"/> that will receive the output.
+            </summary>
+            <param name="cmd">The command to capture console output for.</param>
+            <returns>The object that will be provide the final console output.</returns>
+        </member>
+        <member name="P:IFY.Phorm.Execution.ConsoleMessage.IsError">
+            <summary>
+            Whether this message is for an error that interrupted execution.
+            </summary>
+        </member>
+        <member name="P:IFY.Phorm.Execution.ConsoleMessage.Level">
+            <summary>
+            The level of the log message.
+            This is implementation specific.
+            </summary>
+        </member>
+        <member name="P:IFY.Phorm.Execution.ConsoleMessage.Source">
+            <summary>
+            If supported, the file/procedure that raised the event, and any location info.
+            </summary>
+        </member>
+        <member name="P:IFY.Phorm.Execution.ConsoleMessage.Message">
+            <summary>
+            The content of the log message.
+            </summary>
+        </member>
+        <member name="M:IFY.Phorm.Execution.IPhormContractRunner.Get``1">
+            <summary>
+            Get one or more entity instances.
+            </summary>
+            <typeparam name="TResult">The type of entity to map result data to.</typeparam>
+            <returns>When <typeparamref name="TResult"/> is the entity type, will return the single result instance or null. When <typeparamref name="TResult"/> is an array of the entity type, will return an array of all types from the result (never null).</returns>
+        </member>
+        <member name="M:IFY.Phorm.Execution.IPhormContractRunner.GetAsync``1">
+            <summary>
+            Get one or more entity instances.
+            </summary>
+            <typeparam name="TResult">The type of entity to map result data to.</typeparam>
+            <returns>When <typeparamref name="TResult"/> is the entity type, will return the single result instance or null. When <typeparamref name="TResult"/> is an array of the entity type, will return an array of all types from the result (never null).</returns>
+        </member>
+        <member name="M:IFY.Phorm.Execution.IPhormContractRunner.GetAsync``1(System.Threading.CancellationToken)">
+            <summary>
+            Get one or more entity instances.
+            </summary>
+            <typeparam name="TResult">The type of entity to map result data to.</typeparam>
+            <param name="cancellationToken">A token to cancel the asynchronous operation.</param>
+            <returns>When <typeparamref name="TResult"/> is the entity type, will return the single result instance or null. When <typeparamref name="TResult"/> is an array of the entity type, will return an array of all types from the result (never null).</returns>
+        </member>
+        <member name="T:IFY.Phorm.Execution.ITransactedPhormSession">
+            <summary>
+            A <see cref="T:IFY.Phorm.IPhormSession"/> that is in a transaction.
+            Disposing this runner before invoking <see cref="M:IFY.Phorm.Execution.ITransactedPhormSession.Commit"/> is the same as calling <see cref="M:IFY.Phorm.Execution.ITransactedPhormSession.Rollback"/>.
+            </summary>
+        </member>
+        <member name="M:IFY.Phorm.Execution.ITransactedPhormSession.Commit">
+            <summary>
+            Commit the transaction, making this runner unusable for further calls.
+            </summary>
+        </member>
+        <member name="M:IFY.Phorm.Execution.ITransactedPhormSession.Rollback">
+            <summary>
+            Rollback the transaction, making this runner unusable for further calls.
+            </summary>
+        </member>
+        <member name="P:IFY.Phorm.GlobalSettings.EncryptionProvider">
+            <summary>
+            The registered instance of the <see cref="T:IFY.Phorm.Encryption.IEncryptionProvider"/> to use for secure value handling.
+            </summary>
+        </member>
+        <member name="P:IFY.Phorm.GlobalSettings.ExceptionsAsConsoleMessage">
+            <summary>
+            If true, will consume execution errors and treat like a console message.
+            Defaults to false.
+            </summary>
+        </member>
+        <member name="P:IFY.Phorm.GlobalSettings.NewtonsoftJsonSerializerSettings">
+            <summary>
+            The global <see cref="T:Newtonsoft.Json.JsonSerializerSettings"/> to use when dealing with JSON.
+            If null, uses library defaults.
+            </summary>
+        </member>
+        <member name="P:IFY.Phorm.GlobalSettings.StrictResultSize">
+            <summary>
+            Whether to throw a <see cref="T:System.InvalidOperationException"/> if an invocation result includes more records than expected.
+            Defaults to true.
+            </summary>
+        </member>
+        <member name="E:IFY.Phorm.IPhormSession.Connected">
+            <summary>
+            The event invoked when a new database connection is created.
+            </summary>
+        </member>
+        <member name="E:IFY.Phorm.IPhormSession.CommandExecuting">
+            <summary>
+            The event invoked when a command is about to be executed.
+            </summary>
+        </member>
+        <member name="E:IFY.Phorm.IPhormSession.CommandExecuted">
+            <summary>
+            The event invoked when a command has finished executing.
+            </summary>
+        </member>
+        <member name="E:IFY.Phorm.IPhormSession.UnexpectedRecordColumn">
+            <summary>
+            A result record contained a column not specified in the target entity type.
+            </summary>
+        </member>
+        <member name="E:IFY.Phorm.IPhormSession.UnresolvedContractMember">
+            <summary>
+            A result record did not contain a column specified in the target entity type.
+            </summary>
+        </member>
+        <member name="E:IFY.Phorm.IPhormSession.ConsoleMessage">
+            <summary>
+            A log message was received during execution.
+            </summary>
+        </member>
+        <member name="P:IFY.Phorm.IPhormSession.ConnectionName">
+            <summary>
+            The connection name this session uses for database scoping.
+            </summary>
+        </member>
+        <member name="P:IFY.Phorm.IPhormSession.ExceptionsAsConsoleMessage">
+            <summary>
+            If true, will consume execution errors and treat like a console message.
+            Defaults to value in <see cref="P:IFY.Phorm.GlobalSettings.ExceptionsAsConsoleMessage"/>.
+            </summary>
+        </member>
+        <member name="P:IFY.Phorm.IPhormSession.StrictResultSize">
+            <summary>
+            Whether to throw a <see cref="T:System.InvalidOperationException"/> if an invocation result includes more records than expected.
+            Defaults to value in <see cref="P:IFY.Phorm.GlobalSettings.StrictResultSize"/>.
+            </summary>
+        </member>
+        <member name="M:IFY.Phorm.IPhormSession.SetConnectionName(System.String)">
+            <summary>
+            Get a new instance of this session scoped with a different connection name.
+            </summary>
+            <param name="connectionName">The connection name to use when scoping the new session instance.</param>
+            <returns>A new instance of this session with a different connection name.</returns>
+        </member>
+        <member name="P:IFY.Phorm.IPhormSession.SupportsTransactions">
+            <summary>
+            True if this runner implementation supports transactions.
+            </summary>
+        </member>
+        <member name="P:IFY.Phorm.IPhormSession.IsInTransaction">
+            <summary>
+            True if this runner is currently in a transaction.
+            </summary>
+        </member>
+        <member name="M:IFY.Phorm.IPhormSession.BeginTransaction">
+            <summary>
+            Begin a new transaction, with associated runner.
+            </summary>
+            <returns>The runner of the transaction.</returns>
+        </member>
+        <member name="P:IFY.Phorm.PhormContractAttribute.Target">
+            <summary>
+            The type of database object the contract targets.
+            Note that only <see cref="F:IFY.Phorm.DbObjectType.StoredProcedure"/> supports receiving data via Call.
+            </summary>
+        </member>
+        <member name="P:IFY.Phorm.PhormContractAttribute.Name">
+            <summary>
+            The contract name to use, if not the same as the decorated class / interface.
+            </summary>
+        </member>
+        <member name="P:IFY.Phorm.PhormContractAttribute.Namespace">
+            <summary>
+            The database schema to use for this contract, if not the default schema of the connection.
+            </summary>
+        </member>
+        <member name="T:IFY.Phorm.Transformation.AbstractTransphormAttribute">
+            <summary>
+            Base structure for an attribute that can transform data between a contract property type and a databasource.
+            </summary>
+        </member>
+        <member name="M:IFY.Phorm.Transformation.AbstractTransphormAttribute.FromDatasource(System.Type,System.Object,System.Object)">
+            <summary>
+            Transform source data to the required contract property type.
+            </summary>
+            <param name="type">The property type of the target property on the contract.</param>
+            <param name="data">The raw data from the datasource.</param>
+            <param name="context">The context of the transformation.</param>
+            <returns>The data to be put in the contract property.</returns>
+        </member>
+        <member name="M:IFY.Phorm.Transformation.AbstractTransphormAttribute.ToDatasource(System.Object,System.Object)">
+            <summary>
+            Transform contract data to the type expected by the datasource.
+            </summary>
+            <param name="data">The current value in the contract.</param>
+            <param name="context">The context of the transformation.</param>
+            <returns>The data to be sent to the datasource.</returns>
+        </member>
+        <member name="T:IFY.Phorm.Transformation.EnumValueAttribute">
+            <summary>
+            Transform the contract property enum value to/from the same integer or string representation.
+            Both the integer and string representations are always supported for receiving, but sending must specify.
+            </summary>
+        </member>
+        <member name="P:IFY.Phorm.Transformation.EnumValueAttribute.SendAsString">
+            <summary>
+            Whether to send the string representation of this enum, or the integer.
+            Defaults to false.
+            
+            Note: will honour <see cref="T:System.Runtime.Serialization.EnumMemberAttribute"/> decoration on the enum values, if exist.
+            </summary>
+        </member>
+        <member name="T:IFY.Phorm.Transformation.JsonValueAttribute">
+            <summary>
+            Transform the contract property object to JSON, or the datasource value from JSON.
+            </summary>
+        </member>
+    </members>
+</doc>

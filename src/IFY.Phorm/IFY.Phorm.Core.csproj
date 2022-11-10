@@ -7,10 +7,11 @@
         <AssemblyName>IFY.Phorm</AssemblyName>
 
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<PublishRepositoryUrl>true</PublishRepositoryUrl>
 		<IncludeSymbols>true</IncludeSymbols>
 		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
-        <EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
+        <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
 
         <PackageId>IFY.Phorm.Core</PackageId>
         <Authors>IFYates</Authors>
@@ -32,7 +33,12 @@ v1.0.0-beta - First fully-functional release</PackageReleaseNotes>
 		<Description>The core "Procedure-heavy object-relational mapping" framework.
 Intended to be implemented by a provider-specific package.</Description>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<DocumentationFile>IFY.Phorm.xml</DocumentationFile>
 	</PropertyGroup>
+
+    <ItemGroup>
+      <None Remove="IFY.Phorm.xml" />
+    </ItemGroup>
 
     <ItemGroup>
       <None Include="..\..\README.md">
