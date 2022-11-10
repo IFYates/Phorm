@@ -35,6 +35,24 @@ Our goal is to have a strongly-typed data surface and allow for a mutable physic
 
 With this approach, the data management team can provide access contracts to meet the business logic requirements, which the implementing team can rely on without concern over the underlying structures and query efficiency.
 
+```mermaid
+flowchart RL
+subgraph Database
+    D[(Data)]
+    V((vw))
+    SP((sp))
+end
+subgraph Application
+    O[DTO]
+    I[/Interface/]
+end
+
+D -->|Get| O;
+D --> V -->|Get| O;
+SP -->|From.Get| O;
+O -.->|Call/From| I --> SP --> D;
+```
+
 ## Common example
 For typical entity CRUD support, a Pho/rm solution would require a minimum of:
 1. Existing tables in the data source
