@@ -11,6 +11,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    # Setup
     - uses: actions/checkout@v2
 
     - name: Setup .NET Core 3.1
@@ -33,89 +34,69 @@ jobs:
         BUILD_CONFIG: |
           main:Release
           !default:Debug
-
+    # Build
     - name: Build
       run: dotnet build src --configuration $BUILD_CONFIG --no-restore
 
     - name: Publish package
-      uses: actions/upload-artifact@v2
+      uses: nanoufo/action-upload-artifacts-and-release-assets@v1.4
       with:
         path: ./src/**/IFY.Phorm.*.*nupkg
 
-    - name: Coverlet coverage test - IFY.Phorm
-      run: dotnet coverlet ./src/IFY.Phorm.Tests/bin/$BUILD_CONFIG/net6.0/IFY.Phorm.Tests.dll --target "dotnet" --targetargs "test ./src/IFY.Phorm.Tests/IFY.Phorm.Tests.csproj --configuration $BUILD_CONFIG --no-build" --include-test-assembly --exclude-by-file "**/.nuget/**" --format lcov -o ify_phorm.lcov
-#    - name: Publish coverage results to Coveralls
-#      uses: coverallsapp/github-action@v1.1.2
-#      with:
-#        github-token: ${{ secrets.GITHUB_TOKEN }}
-#        path-to-lcov: ify_phorm.lcov
-#        flag-name: IFY.Phorm
-#        parallel: true
+    # # Test & coverage
+    # - name: Test and coverage - IFY.Phorm
+    #   run: dotnet coverlet ./src/IFY.Phorm.Tests/bin/$BUILD_CONFIG/net6.0/IFY.Phorm.Tests.dll --target "dotnet" --targetargs "test ./src/IFY.Phorm.Tests/IFY.Phorm.Tests.csproj --configuration $BUILD_CONFIG --no-build" --include-test-assembly --exclude-by-file "**/.nuget/**" --format lcov -o ify_phorm.lcov
+    # - name: Test and coverage - IFY.Phorm.SqlClient
+    #   run: dotnet coverlet ./src/IFY.Phorm.SqlClient.Tests/bin/$BUILD_CONFIG/net6.0/IFY.Phorm.SqlClient.Tests.dll --target "dotnet" --targetargs "test ./src/IFY.Phorm.SqlClient.Tests/IFY.Phorm.SqlClient.Tests.csproj --configuration $BUILD_CONFIG --no-build" --include-test-assembly --exclude "[IFY.Phorm]*" --format lcov -o ify_phorm_sqlclient.lcov       
+    # - name: Report coverage to Codacy
+    #   uses: codacy/codacy-coverage-reporter-action@v1.3.0
+    #   with:
+    #     project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+    #     coverage-reports: ify_phorm.lcov,ify_phorm_sqlclient.lcov
 
-    - name: Coverlet coverage test - IFY.Phorm.SqlClient
-      run: dotnet coverlet ./src/IFY.Phorm.SqlClient.Tests/bin/$BUILD_CONFIG/net6.0/IFY.Phorm.SqlClient.Tests.dll --target "dotnet" --targetargs "test ./src/IFY.Phorm.SqlClient.Tests/IFY.Phorm.SqlClient.Tests.csproj --configuration $BUILD_CONFIG --no-build" --include-test-assembly --exclude "[IFY.Phorm]*" --format lcov -o ify_phorm_sqlclient.lcov
-#    - name: Publish coverage results to Coveralls
-#      uses: coverallsapp/github-action@v1.1.2
-#      with:
-#        github-token: ${{ secrets.GITHUB_TOKEN }}
-#        path-to-lcov: ify_phorm_sqlclient.lcov
-#        flag-name: IFY.Phorm.SqlClient
-#        parallel: true
-
-#    - name: Complete coverage results
-#      uses: coverallsapp/github-action@v1.1.2
-#      with:
-#        github-token: ${{ secrets.GITHUB_TOKEN }}
-#        parallel-finished: true
-        
-    - name: Report coverage to Codacy
-      uses: codacy/codacy-coverage-reporter-action@v1.3.0
-      with:
-        project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
-        coverage-reports: ify_phorm.lcov,ify_phorm_sqlclient.lcov
-
-    - name: Configure Stryker.NET for IFY.Phorm
-      uses: DamianReeves/write-file-action@v1.0
-      with:
-        path: stryker-config.json
-        write-mode: overwrite
-        contents: |
-          {
-            "stryker-config": {
-              "project": "IFY.Phorm.csproj",
-              "test-projects": ["./src/IFY.Phorm.Tests/IFY.Phorm.Tests.csproj"],
-              "project-info": {
-                "name": "github.com/IFYates/Phorm",
-                "module": "IFY.Phorm",
-                "version": "${{ github.base_ref }}"
-              },
-              "reporters": ["cleartext", "html", "dashboard"]
-            }
-          }
-    - name: Run Stryker.NET
-      run: dotnet stryker --dashboard-api-key ${{ secrets.STRYKER_DASHBOARD }}
-    - name: Configure Stryker.NET for IFY.Phorm.SqlClient
-      uses: DamianReeves/write-file-action@v1.0
-      with:
-        path: stryker-config.json
-        write-mode: overwrite
-        contents: |
-          {
-            "stryker-config": {
-              "project": "IFY.Phorm.SqlClient.csproj",
-              "test-projects": ["./src/IFY.Phorm.SqlClient.Tests/IFY.Phorm.SqlClient.Tests.csproj"],
-              "project-info": {
-                "name": "github.com/IFYates/Phorm",
-                "module": "IFY.Phorm.SqlClient",
-                "version": "${{ github.base_ref }}"
-              },
-              "reporters": ["cleartext", "html", "dashboard"]
-            }
-          }
-    - name: Run Stryker.NET
-      run: dotnet stryker --dashboard-api-key ${{ secrets.STRYKER_DASHBOARD }}
-    - name: Upload mutation reports
-      uses: actions/upload-artifact@v2.2.2
-      with:
-        name: mutation-report.html
-        path: ./**/mutation-report.html
+    # # Mutation test
+    # - name: Configure Stryker.NET for IFY.Phorm
+    #   uses: DamianReeves/write-file-action@v1.0
+    #   with:
+    #     path: stryker-config.json
+    #     write-mode: overwrite
+    #     contents: |
+    #       {
+    #         "stryker-config": {
+    #           "project": "IFY.Phorm.csproj",
+    #           "test-projects": ["./src/IFY.Phorm.Tests/IFY.Phorm.Tests.csproj"],
+    #           "project-info": {
+    #             "name": "github.com/IFYates/Phorm",
+    #             "module": "IFY.Phorm",
+    #             "version": "${{ github.base_ref }}"
+    #           },
+    #           "reporters": ["cleartext", "html", "dashboard"]
+    #         }
+    #       }
+    # - name: Run Stryker.NET
+    #   run: dotnet stryker --dashboard-api-key ${{ secrets.STRYKER_DASHBOARD }}
+    # - name: Configure Stryker.NET for IFY.Phorm.SqlClient
+    #   uses: DamianReeves/write-file-action@v1.0
+    #   with:
+    #     path: stryker-config.json
+    #     write-mode: overwrite
+    #     contents: |
+    #       {
+    #         "stryker-config": {
+    #           "project": "IFY.Phorm.SqlClient.csproj",
+    #           "test-projects": ["./src/IFY.Phorm.SqlClient.Tests/IFY.Phorm.SqlClient.Tests.csproj"],
+    #           "project-info": {
+    #             "name": "github.com/IFYates/Phorm",
+    #             "module": "IFY.Phorm.SqlClient",
+    #             "version": "${{ github.base_ref }}"
+    #           },
+    #           "reporters": ["cleartext", "html", "dashboard"]
+    #         }
+    #       }
+    # - name: Run Stryker.NET
+    #   run: dotnet stryker --dashboard-api-key ${{ secrets.STRYKER_DASHBOARD }}
+    # - name: Upload mutation reports
+    #   uses: actions/upload-artifact@v2.2.2
+    #   with:
+    #     name: mutation-report.html
+    #     path: ./**/mutation-report.html
