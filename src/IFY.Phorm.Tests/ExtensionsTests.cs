@@ -6,6 +6,29 @@ namespace IFY.Phorm.Tests;
 [TestClass]
 public class ExtensionsTests
 {
+    [TestMethod]
+    public void ChangeType__Subtype__No_change()
+    {
+        // Arrange
+        var str = "value";
+
+        // Act
+        var res = str.ChangeType(typeof(object));
+
+        // Assert
+        Assert.AreSame(str, (string)res);
+    }
+
+    [TestMethod]
+    public void ChangeType__Null()
+    {
+        // Act
+        var res = ((object?)null).ChangeType(typeof(object));
+
+        // Assert
+        Assert.IsNull(res);
+    }
+
     #region GetBytes
 
     [TestMethod]
@@ -19,6 +42,12 @@ public class ExtensionsTests
     }
 
     [TestMethod]
+#if NET6_0_OR_GREATER
+    [DataRow(new byte[] { 110, 1, 0, 0 }, "0001-01-01", typeof(DateOnly))]
+    [DataRow(new byte[] { 83, 49, 11, 0 }, "2004-02-29", typeof(DateOnly))]
+    [DataRow(new byte[] { 133, 50, 11, 0 }, "2004-12-31", typeof(DateOnly))]
+    [DataRow(new byte[] { 222, 216, 55, 0 }, "9999-12-31", typeof(DateOnly))]
+#endif
     [DataRow(new byte[] { 7, 23, 69, 137, 156, 205, 217, 8 }, "2022-01-02 03:04:05.1234567", typeof(DateTime))]
     [DataRow(new byte[] { 210, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0 }, 12.34, typeof(decimal))]
     [DataRow(new byte[] { 1, 2, 3, 4 }, new byte[] { 1, 2, 3, 4 }, typeof(byte[]))]
@@ -35,7 +64,7 @@ public class ExtensionsTests
         // Arrange
         if (data.GetType() != type)
         {
-            data = Convert.ChangeType(data, type);
+            data = data.ChangeType(type);
         }
 
         // Act
@@ -88,6 +117,12 @@ public class ExtensionsTests
     }
 
     [TestMethod]
+#if NET6_0_OR_GREATER
+    [DataRow(new byte[] { 110, 1, 0, 0 }, "0001-01-01", typeof(DateOnly))]
+    [DataRow(new byte[] { 83, 49, 11, 0 }, "2004-02-29", typeof(DateOnly))]
+    [DataRow(new byte[] { 133, 50, 11, 0 }, "2004-12-31", typeof(DateOnly))]
+    [DataRow(new byte[] { 222, 216, 55, 0 }, "9999-12-31", typeof(DateOnly))]
+#endif
     [DataRow(new byte[] { 7, 23, 69, 137, 156, 205, 217, 8 }, "2022-01-02 03:04:05.1234567", typeof(DateTime))]
     [DataRow(new byte[] { 210, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0 }, 12.34, typeof(decimal))]
     [DataRow(new byte[] { 1, 2, 3, 4 }, new byte[] { 1, 2, 3, 4 }, typeof(byte[]))]
@@ -104,7 +139,7 @@ public class ExtensionsTests
         // Act
         if (exp.GetType() != type)
         {
-            exp = Convert.ChangeType(exp, type);
+            exp = exp.ChangeType(type);
         }
 
         var res = Extensions.FromBytes(data, type);

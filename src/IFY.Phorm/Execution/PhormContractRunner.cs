@@ -270,23 +270,19 @@ internal sealed class PhormContractRunner<TActionContract> : IPhormContractRunne
 
     private bool safeRead(IDataReader rdr, AbstractConsoleMessageCapture console)
     {
-        if (_session.ExceptionsAsConsoleMessage)
+        try
         {
-            try
-            {
-                return rdr.Read();
-            }
-            catch (Exception ex)
-            {
-                if (!console.ProcessException(ex))
-                {
-                    throw;
-                }
-                return false;
-            }
+            return rdr.Read();
         }
-
-        return rdr.Read();
+        catch (Exception ex)
+        {
+            if (!_session.ExceptionsAsConsoleMessage
+                || !console.ProcessException(ex))
+            {
+                throw;
+            }
+            return false;
+        }
     }
 
     #endregion Execution

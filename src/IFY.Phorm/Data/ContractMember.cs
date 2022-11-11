@@ -41,14 +41,10 @@ public class ContractMember : ContractMemberDefinition
         HasChanged = false;
     }
 
-    public static ContractOutMember<T> InOut<T>(T value)
-        => new ContractOutMember<T>(value);
-    public static ContractOutMember<T> Out<T>()
-        => new ContractOutMember<T>();
-    public static ReturnValueMember RetVal()
-        => new ReturnValueMember();
-    public static ConsoleLogMember Console()
-        => new ConsoleLogMember();
+    public static ContractOutMember<T> InOut<T>(T value) => new(value);
+    public static ContractOutMember<T> Out<T>() => new();
+    public static ReturnValueMember RetVal() => new();
+    public static ConsoleLogMember Console() => new();
 
     /// <summary>
     /// Convert properties of any object to <see cref="ContractMember"/>s.
@@ -95,7 +91,8 @@ public class ContractMember : ContractMemberDefinition
         }
     }
 
-    public IDataParameter ToDataParameter(IAsyncDbCommand cmd, object? context)
+    // TODO: Extensible
+    internal IDataParameter ToDataParameter(IAsyncDbCommand cmd, object? context)
     {
         var param = cmd.CreateParameter();
         param.ParameterName = "@" + DbName;
@@ -164,16 +161,35 @@ public class ContractMember : ContractMemberDefinition
             else if (val is DateTime dt)
             {
                 param.DbType = DbType.DateTime2;
-                // DateTime must be shifted in to SQL date range
-                if (dt <= SqlDateTime.MinValue.Value)
+
+                // Must be shifted in to SQL date range
+                if (dt < SqlDateTime.MinValue.Value)
                 {
                     val = SqlDateTime.MinValue.Value;
                 }
-                else if (dt >= SqlDateTime.MaxValue.Value)
+                else if (dt > SqlDateTime.MaxValue.Value)
                 {
                     val = SqlDateTime.MaxValue.Value;
                 }
             }
+#if NET6_0_OR_GREATER
+            else if (val is DateOnly date)
+            {
+                param.DbType = DbType.Date;
+
+                // Must be shifted in to SQL date range
+                dt = date.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
+                if (dt < SqlDateTime.MinValue.Value)
+                {
+                    val = DateOnly.FromDateTime(SqlDateTime.MinValue.Value);
+                }
+                // Currently impossible, given that DateOnly.MaxValue < SqlDateTime.MaxValue
+                //else if (dt > SqlDateTime.MaxValue.Value)
+                //{
+                //    val = DateOnly.FromDateTime(SqlDateTime.MaxValue.Value);
+                //}
+            }
+#endif
         }
         param.Value = val;
 
@@ -220,7 +236,7 @@ public class ContractMember : ContractMemberDefinition
                 }
                 else
                 {
-                    value = Convert.ChangeType(value, targetType);
+                    value = value.ChangeType(targetType);
                 }
             }
         }
@@ -233,10 +249,10 @@ public sealed class ContractOutMember<T> : ContractMember
 {
     public new T Value => (T)base.Value!;
 
-    public ContractOutMember()
+    internal ContractOutMember()
         : base(null, default, ParameterType.Output, typeof(T))
     { }
-    public ContractOutMember(T value)
+    internal ContractOutMember(T value)
         : base(null, value, ParameterType.InputOutput, typeof(T))
     { }
 }
@@ -245,7 +261,7 @@ public sealed class ReturnValueMember : ContractMember
 {
     public new int Value => (int)base.Value!;
 
-    public ReturnValueMember()
+    internal ReturnValueMember()
         : base("return", 0, ParameterType.ReturnValue, typeof(int))
     {
     }
@@ -255,7 +271,7 @@ public sealed class ConsoleLogMember : ContractMember
 {
     public new ConsoleMessage[] Value => (ConsoleMessage[])base.Value!;
 
-    public ConsoleLogMember()
+    internal ConsoleLogMember()
         : base("console", Array.Empty<ConsoleMessage>(), ParameterType.Console, typeof(ConsoleMessage[]))
     {
     }

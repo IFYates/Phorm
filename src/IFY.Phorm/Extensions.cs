@@ -1,4 +1,5 @@
 ﻿using System.Data;
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
 
 namespace IFY.Phorm;
@@ -10,6 +11,28 @@ internal static class Extensions
         return coll.Cast<IDataParameter>().ToArray();
     }
 
+    [return: NotNullIfNotNull("value")]
+    public static object? ChangeType(this object? value, Type conversionType)
+    {
+        if (value != null)
+        {
+            if (conversionType.IsInstanceOfType(value))
+            {
+                return value;
+            }
+
+#if NET6_0_OR_GREATER
+            if (conversionType == typeof(DateOnly))
+            {
+                var dt = (DateTime)Convert.ChangeType(value, typeof(DateTime));
+                return DateOnly.FromDateTime(dt);
+            }
+#endif
+        }
+
+        return Convert.ChangeType(value, conversionType);
+    }
+
     public static byte[] GetBytes(this object? value)
     {
         if (value == null)
@@ -17,11 +40,17 @@ internal static class Extensions
             return Array.Empty<byte>();
         }
 
-        if (value is DateTime dt)
+#if NET6_0_OR_GREATER
+        if (value is DateOnly date)
+        {
+            value = (date.Year * 366) + (date.DayOfYear - 1);
+        }
+#endif
+        else if (value is DateTime dt)
         {
             value = dt.Ticks;
         }
-        if (value is decimal dec)
+        else if (value is decimal dec)
         {
             var ints = decimal.GetBits(dec);
             var bytes = new byte[16];
@@ -61,6 +90,14 @@ internal static class Extensions
         {
             return bytes;
         }
+#if NET6_0_OR_GREATER
+        if (resultType == typeof(DateOnly))
+        {
+            var dateVal = BitConverter.ToInt32(bytes);
+            return new DateOnly(dateVal / 366, 1, 1)
+                .AddDays(dateVal % 366);
+        }
+#endif
         if (resultType == typeof(DateTime))
         {
             return new DateTime(BitConverter.ToInt64(bytes));
