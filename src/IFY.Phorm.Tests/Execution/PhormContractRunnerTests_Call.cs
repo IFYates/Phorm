@@ -1,6 +1,7 @@
 ﻿using IFY.Phorm.Data;
 using IFY.Phorm.Encryption;
 using IFY.Phorm.Tests;
+using IFY.Phorm.Transformation;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using System.Data;
@@ -20,6 +21,12 @@ public class PhormContractRunnerTests_Call
         public string Arg3 { get; set; } = string.Empty;
         [IgnoreDataMember]
         public ContractMember Arg4 { get; set; } = new ContractMember("InvalidRename", null, ParameterType.Output, typeof(string));
+    }
+
+    public class TestContractWithTransphormer : IPhormContract
+    {
+        [TestTransphorm]
+        public int Arg { get; set; }
     }
 
     public class TestContract2 : IPhormContract
@@ -51,6 +58,18 @@ public class PhormContractRunnerTests_Call
         [DataMember(Name = "SecureArg")]
         [SecureValue("class", nameof(Arg))]
         string? Arg3 { get; set; }
+    }
+
+    public class TestTransphormAttribute : AbstractTransphormAttribute
+    {
+        public static object? FromDatasourceReturnValue = null;
+        public static object? ToDatasourceReturnValue = null;
+
+        [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
+        public override object? FromDatasource(Type type, object? data, object? context)
+            => FromDatasourceReturnValue;
+        public override object? ToDatasource(object? data, object? context)
+            => ToDatasourceReturnValue;
     }
 
     [TestInitialize]
@@ -119,6 +138,43 @@ public class PhormContractRunnerTests_Call
         Assert.AreEqual("@Arg", pars[0].ParameterName);
         Assert.AreEqual(ParameterDirection.InputOutput, pars[0].Direction);
         Assert.AreEqual(ParameterDirection.ReturnValue, pars[1].Direction);
+    }
+
+    [TestMethod]
+    [DynamicData(nameof(IgnoreDataMemberAttributeProvider), DynamicDataSourceType.Method)]
+    public void Call__Transphormer_removes_parameter(object value)
+    {
+        // Arrange
+        var conn = new TestPhormConnection("")
+        {
+            DefaultSchema = "schema"
+        };
+
+        var cmd = new TestDbCommand();
+        conn.CommandQueue.Enqueue(cmd);
+
+        var phorm = new TestPhormSession(conn);
+
+        TestTransphormAttribute.ToDatasourceReturnValue = value;
+
+        var runner = new PhormContractRunner<TestContractWithTransphormer>(phorm, null, DbObjectType.StoredProcedure, new TestContractWithTransphormer { Arg = 1 });
+
+        // Act
+        var res = runner.CallAsync().Result;
+
+        // Assert
+        Assert.AreEqual(1, res);
+        Assert.AreEqual(CommandType.StoredProcedure, cmd.CommandType);
+        Assert.AreEqual("[schema].[usp_TestContractWithTransphormer]", cmd.CommandText);
+
+        var pars = cmd.Parameters.AsParameters();
+        Assert.AreEqual(1, pars.Length);
+        Assert.AreEqual(ParameterDirection.ReturnValue, pars[0].Direction);
+    }
+    private static IEnumerable<object[]> IgnoreDataMemberAttributeProvider()
+    {
+        yield return new object[] { typeof(IgnoreDataMemberAttribute) };
+        yield return new object[] { new IgnoreDataMemberAttribute() };
     }
 
     [TestMethod]
@@ -206,6 +262,8 @@ public class PhormContractRunnerTests_Call
         var res = runner.CallAsync().Result;
 
         // Assert
+        Assert.AreEqual(1, res);
+
         var pars = cmd.Parameters.AsParameters();
         Assert.AreEqual("@Arg2", pars[1].ParameterName);
         Assert.AreEqual(ParameterDirection.Output, pars[1].Direction);

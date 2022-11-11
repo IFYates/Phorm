@@ -355,6 +355,8 @@ public class ContractMemberTests
 
         var prop = GetType().GetProperty(nameof(TransphormedStringProperty))!;
 
+        TestTransphormAttribute.ToDatasourceReturnValue = "ToDatasource_value";
+
         var memb = new ContractMember("Name", "value", ParameterType.Input, prop);
 
         // Act
@@ -364,6 +366,28 @@ public class ContractMemberTests
         cmdMock.Verify();
         dbpMock.Verify();
         Assert.AreEqual("ToDatasource_value", dbp!.Value);
+    }
+
+    [TestMethod]
+    [DynamicData(nameof(IgnoreDataMemberAttributeProvider), DynamicDataSourceType.Method)]
+    public void ToDataParameter__Transphormer_ignores_property(object value)
+    {
+        // Arrange
+        getDbMocks(out var cmdMock, out _);
+
+        var prop = GetType().GetProperty(nameof(TransphormedStringProperty))!;
+
+        TestTransphormAttribute.ToDatasourceReturnValue = value;
+
+        var origValue = Guid.NewGuid().ToString();
+
+        var memb = new ContractMember("name", origValue, ParameterType.Input, prop);
+
+        // Act
+        var res = memb.ToDataParameter(cmdMock.Object, null);
+
+        // Assert
+        Assert.IsNull(res);
     }
 
     [TestMethod]
@@ -582,7 +606,10 @@ public class ContractMemberTests
 
         var prop = GetType().GetProperty(nameof(RequiredString))!;
 
-        var memb = new ContractMember(prop.Name, "value", ParameterType.Input, prop);
+        var memb = new ContractMember(prop.Name, "value", ParameterType.Input, prop)
+        {
+            IsRequired = true
+        };
 
         // Act
         var res = memb.ToDataParameter(cmdMock.Object, null);
@@ -601,7 +628,10 @@ public class ContractMemberTests
 
         var prop = GetType().GetProperty(nameof(RequiredNumber))!;
 
-        var memb = new ContractMember(prop.Name, 0, ParameterType.Input, prop);
+        var memb = new ContractMember(prop.Name, 0, ParameterType.Input, prop)
+        {
+            IsRequired = true
+        };
 
         // Act
         var res = memb.ToDataParameter(cmdMock.Object, null);
@@ -635,19 +665,17 @@ public class ContractMemberTests
 
     #endregion ToDataParameter
 
-    #region FromDatasource
+    #region TryFromDatasource
 
     public class TestTransphormAttribute : AbstractTransphormAttribute
     {
-        public override object? FromDatasource(Type type, object? data, object? context)
-        {
-            return "FromDatasource_" + data;
-        }
+        public static object? FromDatasourceReturnValue = null;
+        public static object? ToDatasourceReturnValue = null;
 
+        public override object? FromDatasource(Type type, object? data, object? context)
+            => FromDatasourceReturnValue;
         public override object? ToDatasource(object? data, object? context)
-        {
-            return "ToDatasource_" + data;
-        }
+            => ToDatasourceReturnValue;
     }
 
     [TestTransphorm]
@@ -670,21 +698,7 @@ public class ContractMemberTests
     public byte[] SecureDataProperty { get; set; } = Array.Empty<byte>();
 
     [TestMethod]
-    public void FromDatasource__Resolve_to_self()
-    {
-        // Arrange
-        var memb = ContractMember.Out<string>();
-
-        // Act
-        var res = memb.TryFromDatasource(DBNull.Value, null, out var result);
-
-        // Assert
-        Assert.IsTrue(res);
-        Assert.AreSame(result, memb);
-    }
-
-    [TestMethod]
-    public void FromDatasource__DBNull_is_null()
+    public void TryFromDatasource__DBNull_is_null()
     {
         // Arrange
         var memb = ContractMember.Out<string>();
@@ -699,7 +713,7 @@ public class ContractMemberTests
     [TestMethod]
     [DataRow("2022-01-02", false)]
     [DataRow("2022-01-02", true)]
-    public void FromDatasource__Supports_DateOnly(string dtStr, bool asDateTime)
+    public void TryFromDatasource__Supports_DateOnly(string dtStr, bool asDateTime)
     {
         // Arrange
         var memb = ContractMember.Out<DateOnly>();
@@ -718,7 +732,7 @@ public class ContractMemberTests
 #endif
 
     [TestMethod]
-    public void FromDatasource__Type_changed_to_T()
+    public void TryFromDatasource__Type_changed_to_T()
     {
         // Arrange
         var memb = ContractMember.Out<int>();
@@ -732,22 +746,53 @@ public class ContractMemberTests
     }
 
     [TestMethod]
-    public void FromDatasource__Transphorms_value()
+    public void TryFromDatasource__Transphorms_value()
     {
         // Arrange
         var prop = GetType().GetProperty(nameof(TransphormedStringProperty))!;
 
+        TestTransphormAttribute.FromDatasourceReturnValue = "FromDatasource_Value";
+
         var memb = new ContractMember("name", null, ParameterType.Output, prop);
 
         // Act
-        memb.TryFromDatasource("Value", null, out _);
+        var res = memb.TryFromDatasource("Value", null, out var result);
 
         // Assert
+        Assert.IsTrue(res);
+        Assert.AreSame(memb, result);
         Assert.AreEqual("FromDatasource_Value", memb.Value);
     }
 
     [TestMethod]
-    public void FromDatasource__Decrypts_value()
+    [DynamicData(nameof(IgnoreDataMemberAttributeProvider), DynamicDataSourceType.Method)]
+    public void TryFromDatasource__Transphormer_ignores_property(object value)
+    {
+        // Arrange
+        var prop = GetType().GetProperty(nameof(TransphormedStringProperty))!;
+
+        TestTransphormAttribute.FromDatasourceReturnValue = value;
+
+        var origValue = Guid.NewGuid().ToString();
+
+        var memb = new ContractMember("name", origValue, ParameterType.Output, prop);
+
+        // Act
+        var res = memb.TryFromDatasource("Value", null, out var result);
+
+        // Assert
+        Assert.IsFalse(res);
+        Assert.IsNull(result);
+        Assert.AreEqual(origValue, memb.Value); // Unchanged
+    }
+    private static IEnumerable<object[]> IgnoreDataMemberAttributeProvider()
+    {
+        yield return new object[] { typeof(IgnoreDataMemberAttribute) };
+        yield return new object[] { new IgnoreDataMemberAttribute() };
+    }
+
+    [TestMethod]
+    public void TryFromDatasource__Decrypts_value()
     {
         // Arrange
         var prop = GetType().GetProperty(nameof(SecureDataProperty))!;
@@ -761,7 +806,7 @@ public class ContractMemberTests
         CollectionAssert.AreEqual(new byte[] { 1 }, (byte[])memb.Value!);
     }
 
-    #endregion FromDatasource
+    #endregion TryFromDatasource
 
     [TestMethod]
     [DataRow(typeof(int), "12345", 12345)]
