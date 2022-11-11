@@ -16,7 +16,7 @@ internal static class Extensions
     {
         if (value != null)
         {
-            if (value.GetType().IsAssignableFrom(conversionType))
+            if (conversionType.IsInstanceOfType(value))
             {
                 return value;
             }

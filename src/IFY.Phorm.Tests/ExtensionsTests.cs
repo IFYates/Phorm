@@ -6,6 +6,29 @@ namespace IFY.Phorm.Tests;
 [TestClass]
 public class ExtensionsTests
 {
+    [TestMethod]
+    public void ChangeType__Subtype__No_change()
+    {
+        // Arrange
+        var str = "value";
+
+        // Act
+        var res = str.ChangeType(typeof(object));
+
+        // Assert
+        Assert.AreSame(str, (string)res);
+    }
+
+    [TestMethod]
+    public void ChangeType__Null()
+    {
+        // Act
+        var res = ((object?)null).ChangeType(typeof(object));
+
+        // Assert
+        Assert.IsNull(res);
+    }
+
     #region GetBytes
 
     [TestMethod]
