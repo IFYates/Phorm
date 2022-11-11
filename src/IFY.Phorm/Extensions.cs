@@ -40,11 +40,17 @@ internal static class Extensions
             return Array.Empty<byte>();
         }
 
-        if (value is DateTime dt)
+#if NET6_0_OR_GREATER
+        if (value is DateOnly date)
+        {
+            value = (date.Year * 366) + (date.DayOfYear - 1);
+        }
+#endif
+        else if (value is DateTime dt)
         {
             value = dt.Ticks;
         }
-        if (value is decimal dec)
+        else if (value is decimal dec)
         {
             var ints = decimal.GetBits(dec);
             var bytes = new byte[16];
@@ -84,6 +90,14 @@ internal static class Extensions
         {
             return bytes;
         }
+#if NET6_0_OR_GREATER
+        if (resultType == typeof(DateOnly))
+        {
+            var dateVal = BitConverter.ToInt32(bytes);
+            return new DateOnly(dateVal / 366, 1, 1)
+                .AddDays(dateVal % 366);
+        }
+#endif
         if (resultType == typeof(DateTime))
         {
             return new DateTime(BitConverter.ToInt64(bytes));
