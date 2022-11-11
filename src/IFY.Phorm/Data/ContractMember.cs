@@ -200,7 +200,7 @@ public class ContractMember : ContractMemberDefinition
             // Primitives are never "missing", so only check null
             if (dmAttr.IsRequired && param.Value == null)
             {
-                throw new ArgumentNullException(DbName, $"Parameter {DbName} for contract {SourceMember?.ReflectedType?.FullName} is required but was null");
+                throw new ArgumentNullException(DbName, $"Parameter {DbName} for contract {SourceMember?.DeclaringType?.FullName} is required but was null");
             }
         }
     }
@@ -210,13 +210,21 @@ public class ContractMember : ContractMemberDefinition
     /// </summary>
     public void ApplyToEntity(object entity)
     {
+        var prop = SourceMember as PropertyInfo;
         try
         {
-            ((PropertyInfo?)SourceMember)?.SetValue(entity, Value);
+            if (prop != null)
+            {
+                if (prop.DeclaringType?.IsAssignableFrom(entity.GetType()) == false)
+                {
+                    prop = entity.GetType().GetProperty(prop.Name) ?? prop;
+                }
+                prop.SetValue(entity, Value);
+            }
         }
         catch (Exception ex)
         {
-            throw new InvalidOperationException($"Failed to set property {SourceMember?.Name ?? DbName}", ex);
+            throw new InvalidOperationException($"Failed to set property {prop?.DeclaringType?.FullName ?? "(unknown)"}.{prop?.Name ?? DbName}", ex);
         }
     }
 

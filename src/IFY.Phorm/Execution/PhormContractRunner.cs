@@ -109,7 +109,7 @@ internal sealed class PhormContractRunner<TActionContract> : IPhormContractRunne
             CommandGuid = Guid.NewGuid(),
             CommandText = cmd.CommandText,
             CommandParameters = cmd.Parameters.Cast<IDbDataParameter>()
-                .ToDictionary(p => p.ParameterName, p => p.Value)
+                .ToDictionary(p => p.ParameterName, p => (object?)p.Value)
         };
         _session.OnCommandExecuting(eventArgs);
 
@@ -176,10 +176,9 @@ internal sealed class PhormContractRunner<TActionContract> : IPhormContractRunne
                     // Defer secure members until after non-secure, to allow for authenticator properties
                     secureMembers[memb] = rdr.GetValue(i);
                 }
-                else
+                else if (memb.TryFromDatasource(rdr.GetValue(i), entity, out var member))
                 {
-                    memb.FromDatasource(rdr.GetValue(i), entity)
-                        .ApplyToEntity(entity);
+                    member.ApplyToEntity(entity);
                 }
             }
             else
@@ -197,8 +196,10 @@ internal sealed class PhormContractRunner<TActionContract> : IPhormContractRunne
         // Apply secure values
         foreach (var kvp in secureMembers)
         {
-            kvp.Key.FromDatasource(kvp.Value, entity)
-                .ApplyToEntity(entity);
+            if (kvp.Key.TryFromDatasource(kvp.Value, entity, out var member))
+            {
+                member.ApplyToEntity(entity);
+            }
         }
 
         // Warnings for missing expected columns
@@ -255,16 +256,10 @@ internal sealed class PhormContractRunner<TActionContract> : IPhormContractRunne
                 memb.SetValue(returnValue);
             }
         }
-        else if (contract != null && (param.Direction & ParameterDirection.Output) > 0)
+        else if (contract != null && (param.Direction & ParameterDirection.Output) > 0
+            && members.Single(a => a.DbName == param.ParameterName[1..]).TryFromDatasource(param.Value, contract, out var memb))
         {
-            var memb = members.Single(a => a.DbName == param.ParameterName[1..])
-                .FromDatasource(param.Value, contract); // NOTE: Always given as VARCHAR
-            var prop = memb.SourceMember;
-            if (prop != null && prop.ReflectedType?.IsAssignableFrom(contract.GetType()) == false)
-            {
-                prop = contract.GetType().GetProperty(prop.Name);
-            }
-            ((PropertyInfo?)prop)?.SetValue(contract, memb.Value);
+            memb.ApplyToEntity(contract);
         }
     }
 
@@ -439,9 +434,9 @@ internal sealed class PhormContractRunner<TActionContract> : IPhormContractRunne
             foreach (var spec in specs)
             {
                 // Check Gen property for the Spec type (cached)
-                if (!tempProps.TryGetValue(spec.GenProperty!.SourceMemberId!, out var propValue))
+                if (!tempProps.TryGetValue(spec.GenProperty!.SourceMemberId!, out var propValue)
+                    && spec.GenProperty.TryFromDatasource(rdr[spec.GenProperty.DbName], null, out var gen))
                 {
-                    var gen = spec.GenProperty.FromDatasource(rdr[spec.GenProperty.DbName], null);
                     propValue = gen.Value;
                     tempProps[gen.SourceMemberId!] = propValue;
                 }

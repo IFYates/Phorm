@@ -667,12 +667,28 @@ public class ContractMemberTests
     public byte[] SecureDataProperty { get; set; } = Array.Empty<byte>();
 
     [TestMethod]
-    public void FromDatasource__DBNull_is_null()
+    public void FromDatasource__Resolve_to_self()
     {
+        // Arrange
         var memb = ContractMember.Out<string>();
 
-        memb.FromDatasource(DBNull.Value, null);
+        // Act
+        var res = memb.TryFromDatasource(DBNull.Value, null, out var result);
 
+        // Assert
+        Assert.IsTrue(res);
+        Assert.AreSame(result, memb);
+    }
+
+    [TestMethod]
+    public void FromDatasource__DBNull_is_null()
+    {
+        // Arrange
+        var memb = ContractMember.Out<string>();
+
+        memb.TryFromDatasource(DBNull.Value, null, out _);
+
+        // Assert
         Assert.IsNull(memb.Value);
     }
 
@@ -682,14 +698,17 @@ public class ContractMemberTests
     [DataRow("2022-01-02", true)]
     public void FromDatasource__Supports_DateOnly(string dtStr, bool asDateTime)
     {
+        // Arrange
         var memb = ContractMember.Out<DateOnly>();
 
         object val = asDateTime
             ? DateTime.Parse(dtStr)
             : dtStr;
 
-        memb.FromDatasource(val, null);
+        // Act
+        memb.TryFromDatasource(val, null, out _);
 
+        // Assert
         Assert.AreEqual(dtStr, memb.Value.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc).ToString("yyyy-MM-dd"));
         Assert.IsTrue(memb.HasChanged);
     }
@@ -698,10 +717,13 @@ public class ContractMemberTests
     [TestMethod]
     public void FromDatasource__Type_changed_to_T()
     {
+        // Arrange
         var memb = ContractMember.Out<int>();
 
-        memb.FromDatasource("1234", null);
+        // Act
+        memb.TryFromDatasource("1234", null, out _);
 
+        // Assert
         Assert.AreEqual(1234, memb.Value);
         Assert.IsTrue(memb.HasChanged);
     }
@@ -709,24 +731,30 @@ public class ContractMemberTests
     [TestMethod]
     public void FromDatasource__Transphorms_value()
     {
+        // Arrange
         var prop = GetType().GetProperty(nameof(TransphormedStringProperty))!;
 
         var memb = new ContractMember("name", null, ParameterType.Output, prop);
 
-        memb.FromDatasource("Value", null);
+        // Act
+        memb.TryFromDatasource("Value", null, out _);
 
+        // Assert
         Assert.AreEqual("FromDatasource_Value", memb.Value);
     }
 
     [TestMethod]
     public void FromDatasource__Decrypts_value()
     {
+        // Arrange
         var prop = GetType().GetProperty(nameof(SecureDataProperty))!;
 
         var memb = new ContractMember("name", null, ParameterType.Output, prop);
 
-        memb.FromDatasource(new byte[] { 0 }, null);
+        // Act
+        memb.TryFromDatasource(new byte[] { 0 }, null, out _);
 
+        // Assert
         CollectionAssert.AreEqual(new byte[] { 1 }, (byte[])memb.Value!);
     }
 
@@ -738,10 +766,13 @@ public class ContractMemberTests
     [DataRow(typeof(double), "12.34", 12.34)]
     public void SetValue__Converts_value_to_type_T(Type valueType, string value, object exp)
     {
+        // Arrange
         var memb = new ContractMember(null, default, ParameterType.Input, valueType);
 
+        // Act
         memb.SetValue(value);
 
+        // Assert
         Assert.AreEqual(exp, memb.Value);
     }
 
@@ -750,13 +781,16 @@ public class ContractMemberTests
     [DataRow(nameof(NullableIntProperty), "12345", 12345)]
     public void SetValue__Converts_value_to_property_type(string propertyName, string value, object exp)
     {
+        // Arrange
         var prop = GetType().GetProperty(propertyName)!;
 
         var memb = new ContractMember(propertyName, null, ParameterType.Input, prop);
 
+        // Act
         memb.SetValue(value);
         _ = ((PropertyInfo)memb.SourceMember!).GetValue(this);
 
+        // Assert
         Assert.AreEqual(exp, memb.Value);
     }
 }
