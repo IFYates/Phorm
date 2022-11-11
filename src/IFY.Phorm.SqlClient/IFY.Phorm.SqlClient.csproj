@@ -2,9 +2,12 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>netstandard2.1;net6.0</TargetFrameworks>
-		<Nullable>enable</Nullable>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <LangVersion>10.0</LangVersion>
+        <IsPackable>false</IsPackable>
 
-		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<PublishRepositoryUrl>true</PublishRepositoryUrl>
 		<IncludeSymbols>true</IncludeSymbols>

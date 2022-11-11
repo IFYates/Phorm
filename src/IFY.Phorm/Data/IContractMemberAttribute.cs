@@ -1,9 +1,8 @@
-﻿namespace IFY.Phorm.Data
+﻿namespace IFY.Phorm.Data;
+
+/// <summary>
+/// An attribute on a contract member
+/// </summary>
+public interface IContractMemberAttribute
 {
-    /// <summary>
-    /// An attribute on a contract member
-    /// </summary>
-    public interface IContractMemberAttribute
-    {
-    }
 }
