@@ -4,7 +4,8 @@
 		<TargetFrameworks>netcoreapp3.1;net6.0</TargetFrameworks>
 		<Nullable>enable</Nullable>
 		<IsPackable>false</IsPackable>
-	</PropertyGroup>
+        <LangVersion>10.0</LangVersion>
+    </PropertyGroup>
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.4.0" />

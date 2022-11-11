@@ -103,11 +103,7 @@ namespace IFY.Phorm.Data
             var param = cmd.CreateParameter();
             param.ParameterName = "@" + DbName;
             param.Direction = (ParameterDirection)(int)Direction;
-#if !NET5_0_OR_GREATER
-            if (Direction.IsOneOf(ParameterType.Output, ParameterType.InputOutput))
-#else
             if (Direction is ParameterType.Output or ParameterType.InputOutput)
-#endif
             {
                 param.Size = Size > 0 ? Size : 256;
             }

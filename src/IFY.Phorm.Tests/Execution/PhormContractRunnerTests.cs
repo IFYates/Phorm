@@ -26,17 +26,10 @@ namespace IFY.Phorm.Execution.Tests
         {
         }
 
-#if !NET5_0_OR_GREATER
-        private static T getFieldValue<T>(object obj, string fieldName)
-        {
-            return (T)obj.GetType().GetField(fieldName, BindingFlags.NonPublic | BindingFlags.Instance)?.GetValue(obj)!;
-        }
-#else
         private static T? getFieldValue<T>(object obj, string fieldName)
         {
             return (T?)obj.GetType().GetField(fieldName, BindingFlags.NonPublic | BindingFlags.Instance)?.GetValue(obj);
         }
-#endif
 
         class TestDto
         {

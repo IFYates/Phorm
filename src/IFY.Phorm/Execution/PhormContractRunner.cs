@@ -79,11 +79,7 @@ namespace IFY.Phorm.Execution
             var cmd = _session.CreateCommand(_schema, _objectName, _objectType);
 
             // Build WHERE clause from members
-#if !NET5_0_OR_GREATER
-            if (_objectType.IsOneOf(DbObjectType.Table, DbObjectType.View))
-#else
             if (_objectType is DbObjectType.Table or DbObjectType.View)
-#endif
             {
                 var sb = new StringBuilder();
                 foreach (var memb in members.Where(m => (m.Direction & ParameterType.Input) > 0)

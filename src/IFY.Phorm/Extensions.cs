@@ -50,13 +50,8 @@ namespace IFY.Phorm
             };
         }
 
-#if !NET5_0_OR_GREATER
-        public static T FromBytes<T>(this byte[]? bytes) // Nullable
-            => (T)FromBytes(bytes, typeof(T))!;
-#else
         public static T? FromBytes<T>(this byte[]? bytes)
             => (T?)FromBytes(bytes, typeof(T));
-#endif
         public static object? FromBytes(this byte[]? bytes, Type resultType)
         {
             if (bytes == null)
@@ -92,20 +87,6 @@ namespace IFY.Phorm
             }
 
             var def = Activator.CreateInstance(resultType);
-#if !NET5_0_OR_GREATER
-            switch (def)
-            {
-                case byte _: return bytes.Single();
-                case char _: return BitConverter.ToChar(bytes);
-                case double _: return BitConverter.ToDouble(bytes);
-                case float _: return BitConverter.ToSingle(bytes);
-                case Guid _: return new Guid(bytes);
-                case int _: return BitConverter.ToInt32(bytes);
-                case long _: return BitConverter.ToInt64(bytes);
-                case short _: return BitConverter.ToInt16(bytes);
-                default: throw new InvalidCastException();
-            }
-#else
             return def switch
             {
                 byte => bytes.Single(),
@@ -118,14 +99,6 @@ namespace IFY.Phorm
                 short => BitConverter.ToInt16(bytes),
                 _ => throw new InvalidCastException(),
             };
-#endif
         }
-
-#if !NET5_0_OR_GREATER
-        public static bool IsOneOf<T>(this T value, params T[] values)
-        {
-            return values.Contains(value);
-        }
-#endif
     }
 }

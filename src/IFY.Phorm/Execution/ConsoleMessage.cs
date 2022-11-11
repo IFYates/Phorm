@@ -1,10 +1,6 @@
 ﻿namespace IFY.Phorm.Execution
 {
-#if !NET5_0_OR_GREATER
-    public class ConsoleMessage
-#else
     public record ConsoleMessage
-#endif
     {
         /// <summary>
         /// Whether this message is for an error that interrupted execution.

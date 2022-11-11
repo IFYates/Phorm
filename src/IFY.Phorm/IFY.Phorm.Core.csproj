@@ -5,6 +5,7 @@
         <Nullable>enable</Nullable>
 		<RootNamespace>IFY.Phorm</RootNamespace>
         <AssemblyName>IFY.Phorm</AssemblyName>
+        <LangVersion>10.0</LangVersion>
 
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>

@@ -186,11 +186,7 @@ namespace IFY.Phorm.Execution
 
             var cmd = connection.CreateCommand();
 
-#if !NET5_0_OR_GREATER
-            if (objectType.IsOneOf(DbObjectType.Table, DbObjectType.View))
-#else
             if (objectType is DbObjectType.Table or DbObjectType.View)
-#endif
             {
                 cmd.CommandType = CommandType.Text;
                 // TODO: Could replace '*' with desired column names, validated by cached SchemaOnly call

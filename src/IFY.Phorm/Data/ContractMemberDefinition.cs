@@ -168,11 +168,7 @@ namespace IFY.Phorm.Data
             }
 
             // Ignore unusable properties
-#if !NET5_0_OR_GREATER
-            if (!dir.IsOneOf(ParameterType.Input, ParameterType.Output, ParameterType.InputOutput, ParameterType.ReturnValue))
-#else
-                if (dir is not ParameterType.Input and not ParameterType.Output and not ParameterType.InputOutput and not ParameterType.ReturnValue)
-#endif
+            if (dir is not ParameterType.Input and not ParameterType.Output and not ParameterType.InputOutput and not ParameterType.ReturnValue)
             {
                 return null;
             }
@@ -219,11 +215,7 @@ namespace IFY.Phorm.Data
             }
 
             // Wrap as ContractMember, if not already
-#if !NET5_0_OR_GREATER
-            if (!(value is ContractMember memb))
-#else
             if (value is not ContractMember memb)
-#endif
             {
                 // Can only be method or property
                 memb = new ContractMember(this, value);
