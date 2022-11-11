@@ -297,7 +297,7 @@ public class ContractMemberTests
         cmdMock.Verify();
         dbpMock.Verify();
         Assert.AreEqual(dbpMock.Object, dbp);
-        Assert.AreEqual("@Name", dbp.ParameterName);
+        Assert.AreEqual("@Name", dbp!.ParameterName);
         Assert.AreEqual(ParameterDirection.Input, dbp.Direction);
         Assert.AreEqual(0, ((IDbDataParameter)dbp).Size);
         Assert.AreEqual(DbType.AnsiString, dbp.DbType);
@@ -321,7 +321,7 @@ public class ContractMemberTests
         cmdMock.Verify();
         dbpMock.Verify();
         Assert.AreEqual(dbpMock.Object, dbp);
-        Assert.AreEqual("@Name", dbp.ParameterName);
+        Assert.AreEqual("@Name", dbp!.ParameterName);
         Assert.AreEqual(ParameterDirection.Input, dbp.Direction);
         Assert.AreEqual(0, ((IDbDataParameter)dbp).Size);
         Assert.AreEqual(DbType.AnsiString, dbp.DbType);
@@ -342,7 +342,7 @@ public class ContractMemberTests
         // Assert
         cmdMock.Verify();
         dbpMock.Verify();
-        Assert.AreEqual(256, ((IDbDataParameter)dbp).Size);
+        Assert.AreEqual(256, ((IDbDataParameter)dbp!).Size);
         Assert.AreEqual(DbType.AnsiString, dbp.DbType);
         Assert.AreEqual(DBNull.Value, dbp.Value);
     }
@@ -363,7 +363,7 @@ public class ContractMemberTests
         // Assert
         cmdMock.Verify();
         dbpMock.Verify();
-        Assert.AreEqual("ToDatasource_value", dbp.Value);
+        Assert.AreEqual("ToDatasource_value", dbp!.Value);
     }
 
     [TestMethod]
@@ -380,7 +380,7 @@ public class ContractMemberTests
         // Assert
         cmdMock.Verify();
         dbpMock.Verify();
-        Assert.AreEqual(DbType.Int32, dbp.DbType);
+        Assert.AreEqual(DbType.Int32, dbp!.DbType);
         Assert.AreEqual(1, dbp.Value);
     }
 
@@ -400,7 +400,7 @@ public class ContractMemberTests
         // Assert
         cmdMock.Verify();
         dbpMock.Verify();
-        Assert.AreEqual(DbType.Date, dbp.DbType);
+        Assert.AreEqual(DbType.Date, dbp!.DbType);
         Assert.AreEqual(dt, dbp.Value);
     }
 
@@ -424,7 +424,7 @@ public class ContractMemberTests
         // Assert
         cmdMock.Verify();
         dbpMock.Verify();
-        Assert.AreEqual(DbType.Date, dbp.DbType);
+        Assert.AreEqual(DbType.Date, dbp!.DbType);
         Assert.AreEqual(exp, dbp.Value);
     }
 
@@ -446,7 +446,7 @@ public class ContractMemberTests
         // Assert
         cmdMock.Verify();
         dbpMock.Verify();
-        Assert.AreEqual(DbType.Date, dbp.DbType);
+        Assert.AreEqual(DbType.Date, dbp!.DbType);
         Assert.AreEqual(exp, dbp.Value);
     }
 #endif
@@ -466,7 +466,7 @@ public class ContractMemberTests
         // Assert
         cmdMock.Verify();
         dbpMock.Verify();
-        Assert.AreEqual(DbType.DateTime2, dbp.DbType);
+        Assert.AreEqual(DbType.DateTime2, dbp!.DbType);
         Assert.AreEqual(dt, dbp.Value);
     }
 
@@ -488,7 +488,7 @@ public class ContractMemberTests
         // Assert
         cmdMock.Verify();
         dbpMock.Verify();
-        Assert.AreEqual(DbType.DateTime2, dbp.DbType);
+        Assert.AreEqual(DbType.DateTime2, dbp!.DbType);
         Assert.AreEqual(SqlDateTime.MinValue.Value, dbp.Value);
     }
 
@@ -508,7 +508,7 @@ public class ContractMemberTests
         // Assert
         cmdMock.Verify();
         dbpMock.Verify();
-        Assert.AreEqual(DbType.DateTime2, dbp.DbType);
+        Assert.AreEqual(DbType.DateTime2, dbp!.DbType);
         Assert.AreEqual(SqlDateTime.MaxValue.Value, dbp.Value);
     }
 
@@ -527,7 +527,7 @@ public class ContractMemberTests
         // Assert
         cmdMock.Verify();
         dbpMock.Verify();
-        Assert.AreEqual(DbType.Guid, dbp.DbType);
+        Assert.AreEqual(DbType.Guid, dbp!.DbType);
         Assert.AreEqual(val, dbp.Value);
     }
 
@@ -545,7 +545,7 @@ public class ContractMemberTests
         // Assert
         cmdMock.Verify();
         dbpMock.Verify();
-        Assert.AreEqual(ParameterDirection.Output, dbp.Direction);
+        Assert.AreEqual(ParameterDirection.Output, dbp!.Direction);
         Assert.AreEqual(DbType.Binary, dbp.DbType);
         Assert.AreEqual(DBNull.Value, dbp.Value);
     }
@@ -558,7 +558,10 @@ public class ContractMemberTests
 
         var prop = GetType().GetProperty(nameof(RequiredString))!;
 
-        var memb = new ContractMember(prop.Name, null, ParameterType.Input, prop);
+        var memb = new ContractMember(prop.Name, null, ParameterType.Input, prop)
+        {
+            IsRequired = true
+        };
 
         // Act
         Assert.ThrowsException<ArgumentNullException>(() =>
@@ -587,7 +590,7 @@ public class ContractMemberTests
         // Assert
         cmdMock.Verify();
         dbpMock.Verify();
-        Assert.AreEqual("value", res.Value);
+        Assert.AreEqual("value", res!.Value);
     }
 
     [TestMethod]
@@ -606,7 +609,7 @@ public class ContractMemberTests
         // Assert
         cmdMock.Verify();
         dbpMock.Verify();
-        Assert.AreEqual(0, (int)res.Value!);
+        Assert.AreEqual(0, (int)res!.Value!);
     }
 
     [TestMethod]
@@ -625,7 +628,7 @@ public class ContractMemberTests
         // Assert
         cmdMock.Verify();
         dbpMock.Verify();
-        Assert.AreEqual(DbType.Binary, dbp.DbType);
+        Assert.AreEqual(DbType.Binary, dbp!.DbType);
         Assert.AreEqual(1, ((IDbDataParameter)dbp).Size);
         CollectionAssert.AreEqual(new byte[] { 2 }, (byte[]?)dbp.Value);
     }

@@ -43,7 +43,7 @@ public class ContractMemberDefinition
     /// <summary>
     /// Whether this member is marked as required on the contract.
     /// </summary>
-    public bool IsRequired { get; private set; }
+    public bool IsRequired { get; internal set; }
     /// <summary>
     /// Relevant attributes for this contract member.
     /// </summary>

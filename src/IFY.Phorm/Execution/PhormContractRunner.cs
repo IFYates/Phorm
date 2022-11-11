@@ -97,8 +97,8 @@ internal sealed class PhormContractRunner<TActionContract> : IPhormContractRunne
         foreach (var memb in members)
         {
             var param = memb.ToDataParameter(cmd, _runArgs);
-            if (param.Direction != ParameterDirection.Input
-                || param.Value != null && param.Value != DBNull.Value)
+            if (param?.Value != null
+                && (param.Direction != ParameterDirection.Input || param.Value != DBNull.Value))
             {
                 cmd.Parameters.Add(param);
             }
