@@ -5,25 +5,24 @@
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         <LangVersion>10.0</LangVersion>
-        <IsPackable>false</IsPackable>
-		<RootNamespace>IFY.Phorm</RootNamespace>
+        <RootNamespace>IFY.Phorm</RootNamespace>
         <AssemblyName>IFY.Phorm</AssemblyName>
 
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-		<GenerateDocumentationFile>true</GenerateDocumentationFile>
-		<PublishRepositoryUrl>true</PublishRepositoryUrl>
-		<IncludeSymbols>true</IncludeSymbols>
-		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <PublishRepositoryUrl>true</PublishRepositoryUrl>
+        <IncludeSymbols>true</IncludeSymbols>
+        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
         <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
 
         <PackageId>IFY.Phorm.Core</PackageId>
         <Authors>IFYates</Authors>
-		<PackageLicenseExpression>MPL-2.0</PackageLicenseExpression>
-		<Version>1.5.1</Version>
-		<PackageProjectUrl>https://github.com/IFYates/Phorm</PackageProjectUrl>
-		<RepositoryUrl>https://github.com/IFYates/Phorm</RepositoryUrl>
-		<RepositoryType>GitHub</RepositoryType>
-		<PackageReleaseNotes>v1.5.1 - Support DateOnly
+        <PackageLicenseExpression>MPL-2.0</PackageLicenseExpression>
+        <Version>1.5.1</Version>
+        <PackageProjectUrl>https://github.com/IFYates/Phorm</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/IFYates/Phorm</RepositoryUrl>
+        <RepositoryType>GitHub</RepositoryType>
+        <PackageReleaseNotes>v1.5.1 - Support DateOnly
 v1.5.0.1 - Minor internal changes
 v1.5.0 - Contract structures cached by type. Out of beta
 v1.4.1-beta - Reduced wasted connections. Replaced Shimterface with Shimr
@@ -33,28 +32,30 @@ v1.2.0-beta - GenSpec support and event system
 v1.1.1-beta - Supports .NET Standard 2.1
 v1.1.0-beta - New syntax
 v1.0.0-beta - First fully-functional release</PackageReleaseNotes>
-		<Copyright>(c) IFYates</Copyright>
-		<Description>The core "Procedure-heavy object-relational mapping" framework.
-Intended to be implemented by a provider-specific package.</Description>
-		<PackageReadmeFile>README.md</PackageReadmeFile>
-		<DocumentationFile>IFY.Phorm.xml</DocumentationFile>
-	</PropertyGroup>
+        <Copyright>(c) IFYates</Copyright>
+        <Description>
+            The core "Procedure-heavy object-relational mapping" framework.
+            Intended to be implemented by a provider-specific package.
+        </Description>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <DocumentationFile>IFY.Phorm.xml</DocumentationFile>
+    </PropertyGroup>
 
     <ItemGroup>
-      <None Remove="IFY.Phorm.xml" />
+        <None Remove="IFY.Phorm.xml" />
     </ItemGroup>
 
     <ItemGroup>
-      <None Include="..\..\README.md">
-        <Pack>True</Pack>
-        <PackagePath>\</PackagePath>
-      </None>
+        <None Include="..\..\README.md">
+            <Pack>True</Pack>
+            <PackagePath>\</PackagePath>
+        </None>
     </ItemGroup>
 
     <ItemGroup>
         <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
         <PackageReference Include="IFY.Shimr" Version="2.0.0" />
-		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
-	</ItemGroup>
+        <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
+    </ItemGroup>
 
 </Project>
