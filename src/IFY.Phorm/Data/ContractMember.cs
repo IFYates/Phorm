@@ -163,11 +163,11 @@ public class ContractMember : ContractMemberDefinition
                 param.DbType = DbType.DateTime2;
 
                 // Must be shifted in to SQL date range
-                if (dt <= SqlDateTime.MinValue.Value)
+                if (dt < SqlDateTime.MinValue.Value)
                 {
                     val = SqlDateTime.MinValue.Value;
                 }
-                else if (dt >= SqlDateTime.MaxValue.Value)
+                else if (dt > SqlDateTime.MaxValue.Value)
                 {
                     val = SqlDateTime.MaxValue.Value;
                 }
@@ -179,14 +179,15 @@ public class ContractMember : ContractMemberDefinition
 
                 // Must be shifted in to SQL date range
                 dt = date.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
-                if (dt <= SqlDateTime.MinValue.Value)
+                if (dt < SqlDateTime.MinValue.Value)
                 {
                     val = DateOnly.FromDateTime(SqlDateTime.MinValue.Value);
                 }
-                else if (dt >= SqlDateTime.MaxValue.Value)
-                {
-                    val = DateOnly.FromDateTime(SqlDateTime.MaxValue.Value);
-                }
+                // Currently impossible, given that DateOnly.MaxValue < SqlDateTime.MaxValue
+                //else if (dt > SqlDateTime.MaxValue.Value)
+                //{
+                //    val = DateOnly.FromDateTime(SqlDateTime.MaxValue.Value);
+                //}
             }
 #endif
         }

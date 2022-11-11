@@ -430,7 +430,7 @@ public class ContractMemberTests
 
     [TestMethod]
     [DataRow("9999-12-31")]
-    public void ToDataParameter__DateOnly__DateTime_caps_at_db_maximum(string dtStr)
+    public void ToDataParameter__DateOnly__DateTime_does_not_breach_db_maximum(string dtStr)
     {
         // Arrange
         getDbMocks(out var cmdMock, out var dbpMock);
