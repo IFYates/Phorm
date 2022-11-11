@@ -1,18 +1,16 @@
 ﻿using IFY.Phorm.Execution;
 using System.Data;
-using System.Threading;
 
-namespace IFY.Phorm.SqlClient.IntegrationTests
+namespace IFY.Phorm.SqlClient.IntegrationTests;
+
+internal class SqlTestHelpers
 {
-    internal class SqlTestHelpers
+    public static void ApplySql(AbstractPhormSession connProv, string sql)
     {
-        public static void ApplySql(AbstractPhormSession connProv, string sql)
-        {
-            using var conn = connProv.GetConnection();
-            using var cmd = conn.CreateCommand();
-            cmd.CommandType = CommandType.Text;
-            cmd.CommandText = sql;
-            _ = cmd.ExecuteReaderAsync(CancellationToken.None).Result.Read();
-        }
+        using var conn = connProv.GetConnection();
+        using var cmd = conn.CreateCommand();
+        cmd.CommandType = CommandType.Text;
+        cmd.CommandText = sql;
+        _ = cmd.ExecuteReaderAsync(CancellationToken.None).Result.Read();
     }
 }

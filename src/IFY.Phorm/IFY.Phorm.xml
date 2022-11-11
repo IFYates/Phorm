@@ -127,7 +127,7 @@
             Create an instance of this member by resolving the value from the appropriate entity member.
             </summary>
         </member>
-        <member name="M:IFY.Phorm.Data.ContractMemberDefinition.FromDatasource(System.Object,System.Object)">
+        <member name="M:IFY.Phorm.Data.ContractMemberDefinition.TryFromDatasource(System.Object,System.Object,IFY.Phorm.Data.ContractMember@)">
             <summary>
             Create an instance of this member by using the datasource value provided.
             </summary>
