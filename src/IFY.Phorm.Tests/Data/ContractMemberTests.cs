@@ -384,6 +384,73 @@ public class ContractMemberTests
         Assert.AreEqual(1, dbp.Value);
     }
 
+#if NET6_0_OR_GREATER
+    [TestMethod]
+    public void ToDataParameter__DateOnly()
+    {
+        // Arrange
+        getDbMocks(out var cmdMock, out var dbpMock);
+
+        var dt = DateOnly.FromDateTime(DateTime.Today);
+        var memb = new ContractMember("Name", dt, ParameterType.Input, typeof(DateOnly));
+
+        // Act
+        var dbp = memb.ToDataParameter(cmdMock.Object, null);
+
+        // Assert
+        cmdMock.Verify();
+        dbpMock.Verify();
+        Assert.AreEqual(DbType.Date, dbp.DbType);
+        Assert.AreEqual(dt, dbp.Value);
+    }
+
+    [TestMethod]
+    [DataRow("0001-01-01")]
+    [DataRow("1000-01-01")]
+    [DataRow("1753-01-01")]
+    public void ToDataParameter__DateOnly__DateTime_caps_at_db_minimum(string dtStr)
+    {
+        // Arrange
+        getDbMocks(out var cmdMock, out var dbpMock);
+
+        var exp = DateOnly.FromDateTime(SqlDateTime.MinValue.Value);
+
+        var dt = DateOnly.Parse(dtStr);
+        var memb = new ContractMember("Name", dt, ParameterType.Input, typeof(DateOnly));
+
+        // Act
+        var dbp = memb.ToDataParameter(cmdMock.Object, null);
+
+        // Assert
+        cmdMock.Verify();
+        dbpMock.Verify();
+        Assert.AreEqual(DbType.Date, dbp.DbType);
+        Assert.AreEqual(exp, dbp.Value);
+    }
+
+    [TestMethod]
+    [DataRow("9999-12-31")]
+    public void ToDataParameter__DateOnly__DateTime_caps_at_db_maximum(string dtStr)
+    {
+        // Arrange
+        getDbMocks(out var cmdMock, out var dbpMock);
+
+        var exp = DateOnly.FromDateTime(SqlDateTime.MaxValue.Value);
+
+        var dt = DateOnly.Parse(dtStr);
+        var memb = new ContractMember("Name", dt, ParameterType.Input, typeof(DateOnly));
+
+        // Act
+        var dbp = memb.ToDataParameter(cmdMock.Object, null);
+
+        // Assert
+        cmdMock.Verify();
+        dbpMock.Verify();
+        Assert.AreEqual(DbType.Date, dbp.DbType);
+        Assert.AreEqual(exp, dbp.Value);
+    }
+#endif
+
     [TestMethod]
     public void ToDataParameter__DateTime()
     {
@@ -563,9 +630,9 @@ public class ContractMemberTests
         CollectionAssert.AreEqual(new byte[] { 2 }, (byte[]?)dbp.Value);
     }
 
-#endregion ToDataParameter
+    #endregion ToDataParameter
 
-#region FromDatasource
+    #region FromDatasource
 
     public class TestTransphormAttribute : AbstractTransphormAttribute
     {
@@ -644,7 +711,7 @@ public class ContractMemberTests
         CollectionAssert.AreEqual(new byte[] { 1 }, (byte[])memb.Value!);
     }
 
-#endregion FromDatasource
+    #endregion FromDatasource
 
     [TestMethod]
     [DataRow(typeof(int), "12345", 12345)]
