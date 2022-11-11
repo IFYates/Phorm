@@ -1,140 +1,138 @@
 ﻿using IFY.Phorm.Tests;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
 
-namespace IFY.Phorm.Execution.Tests
+namespace IFY.Phorm.Execution.Tests;
+
+[TestClass]
+public class PhormContractRunnerTests_Errors
 {
-    [TestClass]
-    public class PhormContractRunnerTests_Errors
+    class FailingDataReader : TestDbDataReader
     {
-        class FailingDataReader : TestDbDataReader
+        public Exception ReadException { get; set; } = null!;
+
+        public override bool Read()
         {
-            public Exception ReadException { get; set; } = null!;
-
-            public override bool Read()
-            {
-                throw ReadException;
-            }
+            throw ReadException;
         }
+    }
 
-        [TestInitialize]
-        public void Init()
+    [TestInitialize]
+    public void Init()
+    {
+        AbstractPhormSession.ResetConnectionPool();
+    }
+
+    [TestMethod]
+    public void Call__Error_not_processed_by_console__Thrown()
+    {
+        // Arrange
+        var readException = new InvalidOperationException();
+        var cmd = new TestDbCommand(new FailingDataReader
         {
-            AbstractPhormSession.ResetConnectionPool();
-        }
+            ReadException = readException
+        });
 
-        [TestMethod]
-        public void Call__Error_not_processed_by_console__Thrown()
+        var conn = new TestPhormConnection("");
+        conn.CommandQueue.Enqueue(cmd);
+
+        var phorm = new TestPhormSession(conn)
         {
-            // Arrange
-            var readException = new InvalidOperationException();
-            var cmd = new TestDbCommand(new FailingDataReader
-            {
-                ReadException = readException
-            });
+            ExceptionsAsConsoleMessage = true
+        };
 
-            var conn = new TestPhormConnection("");
-            conn.CommandQueue.Enqueue(cmd);
-
-            var phorm = new TestPhormSession(conn)
-            {
-                ExceptionsAsConsoleMessage = true
-            };
-
-            // Act
-            var ex = Assert.ThrowsException<InvalidOperationException>(() =>
-            {
-                _ = phorm.Call("Test", null);
-            });
-
-            // Assert
-            Assert.AreSame(readException, ex);
-        }
-
-        [TestMethod]
-        public void Call__Error_processed_by_console__Consumed()
+        // Act
+        var ex = Assert.ThrowsException<InvalidOperationException>(() =>
         {
-            // Arrange
-            var readException = new InvalidOperationException();
-            var cmd = new TestDbCommand(new FailingDataReader
-            {
-                ReadException = readException
-            });
+            _ = phorm.Call("Test", null);
+        });
 
-            var conn = new TestPhormConnection("");
-            conn.CommandQueue.Enqueue(cmd);
+        // Assert
+        Assert.AreSame(readException, ex);
+    }
 
-            var phorm = new TestPhormSession(conn)
-            {
-                ConsoleMessageCaptureProvider = (s, g) => new TestConsoleMessageCapture(s, g)
-                {
-                    ProcessExceptionLogic = (e) => e == readException
-                },
-                ExceptionsAsConsoleMessage = true
-            };
-
-            // Act
-            var res = phorm.Call("Test", null);
-
-            // Assert
-            Assert.AreEqual(1, res);
-        }
-
-        [TestMethod]
-        public void Get__Error_not_processed_by_console__Thrown()
+    [TestMethod]
+    public void Call__Error_processed_by_console__Consumed()
+    {
+        // Arrange
+        var readException = new InvalidOperationException();
+        var cmd = new TestDbCommand(new FailingDataReader
         {
-            // Arrange
-            var readException = new InvalidOperationException();
-            var cmd = new TestDbCommand(new FailingDataReader
-            {
-                ReadException = readException
-            });
+            ReadException = readException
+        });
 
-            var conn = new TestPhormConnection("");
-            conn.CommandQueue.Enqueue(cmd);
+        var conn = new TestPhormConnection("");
+        conn.CommandQueue.Enqueue(cmd);
 
-            var phorm = new TestPhormSession(conn)
-            {
-                ExceptionsAsConsoleMessage = true
-            };
-
-            // Act
-            var ex = Assert.ThrowsException<InvalidOperationException>(() =>
-            {
-                _ = phorm.From("Test", null).Get<object>();
-            });
-
-            // Assert
-            Assert.AreSame(readException, ex);
-        }
-
-        [TestMethod]
-        public void Get__Error_processed_by_console__Consumed()
+        var phorm = new TestPhormSession(conn)
         {
-            // Arrange
-            var readException = new InvalidOperationException();
-            var cmd = new TestDbCommand(new FailingDataReader
+            ConsoleMessageCaptureProvider = (s, g) => new TestConsoleMessageCapture(s, g)
             {
-                ReadException = readException
-            });
+                ProcessExceptionLogic = (e) => e == readException
+            },
+            ExceptionsAsConsoleMessage = true
+        };
 
-            var conn = new TestPhormConnection("");
-            conn.CommandQueue.Enqueue(cmd);
+        // Act
+        var res = phorm.Call("Test", null);
 
-            var phorm = new TestPhormSession(conn)
+        // Assert
+        Assert.AreEqual(1, res);
+    }
+
+    [TestMethod]
+    public void Get__Error_not_processed_by_console__Thrown()
+    {
+        // Arrange
+        var readException = new InvalidOperationException();
+        var cmd = new TestDbCommand(new FailingDataReader
+        {
+            ReadException = readException
+        });
+
+        var conn = new TestPhormConnection("");
+        conn.CommandQueue.Enqueue(cmd);
+
+        var phorm = new TestPhormSession(conn)
+        {
+            ExceptionsAsConsoleMessage = true
+        };
+
+        // Act
+        var ex = Assert.ThrowsException<InvalidOperationException>(() =>
+        {
+            _ = phorm.From("Test", null).Get<object>();
+        });
+
+        // Assert
+        Assert.AreSame(readException, ex);
+    }
+
+    [TestMethod]
+    public void Get__Error_processed_by_console__Consumed()
+    {
+        // Arrange
+        var readException = new InvalidOperationException();
+        var cmd = new TestDbCommand(new FailingDataReader
+        {
+            ReadException = readException
+        });
+
+        var conn = new TestPhormConnection("");
+        conn.CommandQueue.Enqueue(cmd);
+
+        var phorm = new TestPhormSession(conn)
+        {
+            ConsoleMessageCaptureProvider = (s, g) => new TestConsoleMessageCapture(s, g)
             {
-                ConsoleMessageCaptureProvider = (s, g) => new TestConsoleMessageCapture(s, g)
-                {
-                    ProcessExceptionLogic = (e) => e == readException
-                },
-                ExceptionsAsConsoleMessage = true
-            };
+                ProcessExceptionLogic = (e) => e == readException
+            },
+            ExceptionsAsConsoleMessage = true
+        };
 
-            // Act
-            var res = phorm.From("Test", null).Get<object>();
+        // Act
+        var res = phorm.From("Test", null).Get<object>();
 
-            // Assert
-            Assert.IsNull(res);
-        }
+        // Assert
+        Assert.IsNull(res);
     }
 }
