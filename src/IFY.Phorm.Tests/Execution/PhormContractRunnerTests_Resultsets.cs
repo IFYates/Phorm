@@ -128,7 +128,7 @@ public class PhormContractRunnerTests_Resultsets
         }).InnerException!;
 
         // Assert
-        Assert.AreEqual("Failed to set property Key", ex.Message);
+        Assert.AreEqual("Failed to set property IFY.Phorm.Execution.Tests.PhormContractRunnerTests_Resultsets+TestParentBadProperty.Key", ex.Message);
         Assert.IsNotNull(ex.InnerException);
     }
 

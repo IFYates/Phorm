@@ -297,7 +297,7 @@ public class ContractMemberTests
         cmdMock.Verify();
         dbpMock.Verify();
         Assert.AreEqual(dbpMock.Object, dbp);
-        Assert.AreEqual("@Name", dbp.ParameterName);
+        Assert.AreEqual("@Name", dbp!.ParameterName);
         Assert.AreEqual(ParameterDirection.Input, dbp.Direction);
         Assert.AreEqual(0, ((IDbDataParameter)dbp).Size);
         Assert.AreEqual(DbType.AnsiString, dbp.DbType);
@@ -321,7 +321,7 @@ public class ContractMemberTests
         cmdMock.Verify();
         dbpMock.Verify();
         Assert.AreEqual(dbpMock.Object, dbp);
-        Assert.AreEqual("@Name", dbp.ParameterName);
+        Assert.AreEqual("@Name", dbp!.ParameterName);
         Assert.AreEqual(ParameterDirection.Input, dbp.Direction);
         Assert.AreEqual(0, ((IDbDataParameter)dbp).Size);
         Assert.AreEqual(DbType.AnsiString, dbp.DbType);
@@ -342,7 +342,7 @@ public class ContractMemberTests
         // Assert
         cmdMock.Verify();
         dbpMock.Verify();
-        Assert.AreEqual(256, ((IDbDataParameter)dbp).Size);
+        Assert.AreEqual(256, ((IDbDataParameter)dbp!).Size);
         Assert.AreEqual(DbType.AnsiString, dbp.DbType);
         Assert.AreEqual(DBNull.Value, dbp.Value);
     }
@@ -355,6 +355,8 @@ public class ContractMemberTests
 
         var prop = GetType().GetProperty(nameof(TransphormedStringProperty))!;
 
+        TestTransphormAttribute.ToDatasourceReturnValue = "ToDatasource_value";
+
         var memb = new ContractMember("Name", "value", ParameterType.Input, prop);
 
         // Act
@@ -363,7 +365,29 @@ public class ContractMemberTests
         // Assert
         cmdMock.Verify();
         dbpMock.Verify();
-        Assert.AreEqual("ToDatasource_value", dbp.Value);
+        Assert.AreEqual("ToDatasource_value", dbp!.Value);
+    }
+
+    [TestMethod]
+    [DynamicData(nameof(IgnoreDataMemberAttributeProvider), DynamicDataSourceType.Method)]
+    public void ToDataParameter__Transphormer_ignores_property(object value)
+    {
+        // Arrange
+        getDbMocks(out var cmdMock, out _);
+
+        var prop = GetType().GetProperty(nameof(TransphormedStringProperty))!;
+
+        TestTransphormAttribute.ToDatasourceReturnValue = value;
+
+        var origValue = Guid.NewGuid().ToString();
+
+        var memb = new ContractMember("name", origValue, ParameterType.Input, prop);
+
+        // Act
+        var res = memb.ToDataParameter(cmdMock.Object, null);
+
+        // Assert
+        Assert.IsNull(res);
     }
 
     [TestMethod]
@@ -380,7 +404,7 @@ public class ContractMemberTests
         // Assert
         cmdMock.Verify();
         dbpMock.Verify();
-        Assert.AreEqual(DbType.Int32, dbp.DbType);
+        Assert.AreEqual(DbType.Int32, dbp!.DbType);
         Assert.AreEqual(1, dbp.Value);
     }
 
@@ -400,7 +424,7 @@ public class ContractMemberTests
         // Assert
         cmdMock.Verify();
         dbpMock.Verify();
-        Assert.AreEqual(DbType.Date, dbp.DbType);
+        Assert.AreEqual(DbType.Date, dbp!.DbType);
         Assert.AreEqual(dt, dbp.Value);
     }
 
@@ -424,7 +448,7 @@ public class ContractMemberTests
         // Assert
         cmdMock.Verify();
         dbpMock.Verify();
-        Assert.AreEqual(DbType.Date, dbp.DbType);
+        Assert.AreEqual(DbType.Date, dbp!.DbType);
         Assert.AreEqual(exp, dbp.Value);
     }
 
@@ -446,7 +470,7 @@ public class ContractMemberTests
         // Assert
         cmdMock.Verify();
         dbpMock.Verify();
-        Assert.AreEqual(DbType.Date, dbp.DbType);
+        Assert.AreEqual(DbType.Date, dbp!.DbType);
         Assert.AreEqual(exp, dbp.Value);
     }
 #endif
@@ -466,7 +490,7 @@ public class ContractMemberTests
         // Assert
         cmdMock.Verify();
         dbpMock.Verify();
-        Assert.AreEqual(DbType.DateTime2, dbp.DbType);
+        Assert.AreEqual(DbType.DateTime2, dbp!.DbType);
         Assert.AreEqual(dt, dbp.Value);
     }
 
@@ -488,7 +512,7 @@ public class ContractMemberTests
         // Assert
         cmdMock.Verify();
         dbpMock.Verify();
-        Assert.AreEqual(DbType.DateTime2, dbp.DbType);
+        Assert.AreEqual(DbType.DateTime2, dbp!.DbType);
         Assert.AreEqual(SqlDateTime.MinValue.Value, dbp.Value);
     }
 
@@ -508,7 +532,7 @@ public class ContractMemberTests
         // Assert
         cmdMock.Verify();
         dbpMock.Verify();
-        Assert.AreEqual(DbType.DateTime2, dbp.DbType);
+        Assert.AreEqual(DbType.DateTime2, dbp!.DbType);
         Assert.AreEqual(SqlDateTime.MaxValue.Value, dbp.Value);
     }
 
@@ -527,7 +551,7 @@ public class ContractMemberTests
         // Assert
         cmdMock.Verify();
         dbpMock.Verify();
-        Assert.AreEqual(DbType.Guid, dbp.DbType);
+        Assert.AreEqual(DbType.Guid, dbp!.DbType);
         Assert.AreEqual(val, dbp.Value);
     }
 
@@ -545,7 +569,7 @@ public class ContractMemberTests
         // Assert
         cmdMock.Verify();
         dbpMock.Verify();
-        Assert.AreEqual(ParameterDirection.Output, dbp.Direction);
+        Assert.AreEqual(ParameterDirection.Output, dbp!.Direction);
         Assert.AreEqual(DbType.Binary, dbp.DbType);
         Assert.AreEqual(DBNull.Value, dbp.Value);
     }
@@ -558,7 +582,10 @@ public class ContractMemberTests
 
         var prop = GetType().GetProperty(nameof(RequiredString))!;
 
-        var memb = new ContractMember(prop.Name, null, ParameterType.Input, prop);
+        var memb = new ContractMember(prop.Name, null, ParameterType.Input, prop)
+        {
+            IsRequired = true
+        };
 
         // Act
         Assert.ThrowsException<ArgumentNullException>(() =>
@@ -579,7 +606,10 @@ public class ContractMemberTests
 
         var prop = GetType().GetProperty(nameof(RequiredString))!;
 
-        var memb = new ContractMember(prop.Name, "value", ParameterType.Input, prop);
+        var memb = new ContractMember(prop.Name, "value", ParameterType.Input, prop)
+        {
+            IsRequired = true
+        };
 
         // Act
         var res = memb.ToDataParameter(cmdMock.Object, null);
@@ -587,7 +617,7 @@ public class ContractMemberTests
         // Assert
         cmdMock.Verify();
         dbpMock.Verify();
-        Assert.AreEqual("value", res.Value);
+        Assert.AreEqual("value", res!.Value);
     }
 
     [TestMethod]
@@ -598,7 +628,10 @@ public class ContractMemberTests
 
         var prop = GetType().GetProperty(nameof(RequiredNumber))!;
 
-        var memb = new ContractMember(prop.Name, 0, ParameterType.Input, prop);
+        var memb = new ContractMember(prop.Name, 0, ParameterType.Input, prop)
+        {
+            IsRequired = true
+        };
 
         // Act
         var res = memb.ToDataParameter(cmdMock.Object, null);
@@ -606,7 +639,7 @@ public class ContractMemberTests
         // Assert
         cmdMock.Verify();
         dbpMock.Verify();
-        Assert.AreEqual(0, (int)res.Value!);
+        Assert.AreEqual(0, (int)res!.Value!);
     }
 
     [TestMethod]
@@ -625,26 +658,24 @@ public class ContractMemberTests
         // Assert
         cmdMock.Verify();
         dbpMock.Verify();
-        Assert.AreEqual(DbType.Binary, dbp.DbType);
+        Assert.AreEqual(DbType.Binary, dbp!.DbType);
         Assert.AreEqual(1, ((IDbDataParameter)dbp).Size);
         CollectionAssert.AreEqual(new byte[] { 2 }, (byte[]?)dbp.Value);
     }
 
     #endregion ToDataParameter
 
-    #region FromDatasource
+    #region TryFromDatasource
 
     public class TestTransphormAttribute : AbstractTransphormAttribute
     {
-        public override object? FromDatasource(Type type, object? data, object? context)
-        {
-            return "FromDatasource_" + data;
-        }
+        public static object? FromDatasourceReturnValue = null;
+        public static object? ToDatasourceReturnValue = null;
 
+        public override object? FromDatasource(Type type, object? data, object? context)
+            => FromDatasourceReturnValue;
         public override object? ToDatasource(object? data, object? context)
-        {
-            return "ToDatasource_" + data;
-        }
+            => ToDatasourceReturnValue;
     }
 
     [TestTransphorm]
@@ -667,12 +698,14 @@ public class ContractMemberTests
     public byte[] SecureDataProperty { get; set; } = Array.Empty<byte>();
 
     [TestMethod]
-    public void FromDatasource__DBNull_is_null()
+    public void TryFromDatasource__DBNull_is_null()
     {
+        // Arrange
         var memb = ContractMember.Out<string>();
 
-        memb.FromDatasource(DBNull.Value, null);
+        memb.TryFromDatasource(DBNull.Value, null, out _);
 
+        // Assert
         Assert.IsNull(memb.Value);
     }
 
@@ -680,57 +713,100 @@ public class ContractMemberTests
     [TestMethod]
     [DataRow("2022-01-02", false)]
     [DataRow("2022-01-02", true)]
-    public void FromDatasource__Supports_DateOnly(string dtStr, bool asDateTime)
+    public void TryFromDatasource__Supports_DateOnly(string dtStr, bool asDateTime)
     {
+        // Arrange
         var memb = ContractMember.Out<DateOnly>();
 
         object val = asDateTime
             ? DateTime.Parse(dtStr)
             : dtStr;
 
-        memb.FromDatasource(val, null);
+        // Act
+        memb.TryFromDatasource(val, null, out _);
 
+        // Assert
         Assert.AreEqual(dtStr, memb.Value.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc).ToString("yyyy-MM-dd"));
         Assert.IsTrue(memb.HasChanged);
     }
 #endif
 
     [TestMethod]
-    public void FromDatasource__Type_changed_to_T()
+    public void TryFromDatasource__Type_changed_to_T()
     {
+        // Arrange
         var memb = ContractMember.Out<int>();
 
-        memb.FromDatasource("1234", null);
+        // Act
+        memb.TryFromDatasource("1234", null, out _);
 
+        // Assert
         Assert.AreEqual(1234, memb.Value);
         Assert.IsTrue(memb.HasChanged);
     }
 
     [TestMethod]
-    public void FromDatasource__Transphorms_value()
+    public void TryFromDatasource__Transphorms_value()
     {
+        // Arrange
         var prop = GetType().GetProperty(nameof(TransphormedStringProperty))!;
+
+        TestTransphormAttribute.FromDatasourceReturnValue = "FromDatasource_Value";
 
         var memb = new ContractMember("name", null, ParameterType.Output, prop);
 
-        memb.FromDatasource("Value", null);
+        // Act
+        var res = memb.TryFromDatasource("Value", null, out var result);
 
+        // Assert
+        Assert.IsTrue(res);
+        Assert.AreSame(memb, result);
         Assert.AreEqual("FromDatasource_Value", memb.Value);
     }
 
     [TestMethod]
-    public void FromDatasource__Decrypts_value()
+    [DynamicData(nameof(IgnoreDataMemberAttributeProvider), DynamicDataSourceType.Method)]
+    public void TryFromDatasource__Transphormer_ignores_property(object value)
     {
+        // Arrange
+        var prop = GetType().GetProperty(nameof(TransphormedStringProperty))!;
+
+        TestTransphormAttribute.FromDatasourceReturnValue = value;
+
+        var origValue = Guid.NewGuid().ToString();
+
+        var memb = new ContractMember("name", origValue, ParameterType.Output, prop);
+
+        // Act
+        var res = memb.TryFromDatasource("Value", null, out var result);
+
+        // Assert
+        Assert.IsFalse(res);
+        Assert.IsNull(result);
+        Assert.AreEqual(origValue, memb.Value); // Unchanged
+    }
+    private static IEnumerable<object[]> IgnoreDataMemberAttributeProvider()
+    {
+        yield return new object[] { typeof(IgnoreDataMemberAttribute) };
+        yield return new object[] { new IgnoreDataMemberAttribute() };
+    }
+
+    [TestMethod]
+    public void TryFromDatasource__Decrypts_value()
+    {
+        // Arrange
         var prop = GetType().GetProperty(nameof(SecureDataProperty))!;
 
         var memb = new ContractMember("name", null, ParameterType.Output, prop);
 
-        memb.FromDatasource(new byte[] { 0 }, null);
+        // Act
+        memb.TryFromDatasource(new byte[] { 0 }, null, out _);
 
+        // Assert
         CollectionAssert.AreEqual(new byte[] { 1 }, (byte[])memb.Value!);
     }
 
-    #endregion FromDatasource
+    #endregion TryFromDatasource
 
     [TestMethod]
     [DataRow(typeof(int), "12345", 12345)]
@@ -738,10 +814,13 @@ public class ContractMemberTests
     [DataRow(typeof(double), "12.34", 12.34)]
     public void SetValue__Converts_value_to_type_T(Type valueType, string value, object exp)
     {
+        // Arrange
         var memb = new ContractMember(null, default, ParameterType.Input, valueType);
 
+        // Act
         memb.SetValue(value);
 
+        // Assert
         Assert.AreEqual(exp, memb.Value);
     }
 
@@ -750,13 +829,16 @@ public class ContractMemberTests
     [DataRow(nameof(NullableIntProperty), "12345", 12345)]
     public void SetValue__Converts_value_to_property_type(string propertyName, string value, object exp)
     {
+        // Arrange
         var prop = GetType().GetProperty(propertyName)!;
 
         var memb = new ContractMember(propertyName, null, ParameterType.Input, prop);
 
+        // Act
         memb.SetValue(value);
         _ = ((PropertyInfo)memb.SourceMember!).GetValue(this);
 
+        // Assert
         Assert.AreEqual(exp, memb.Value);
     }
 }

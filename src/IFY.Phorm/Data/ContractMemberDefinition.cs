@@ -2,6 +2,7 @@
 using IFY.Phorm.Transformation;
 using System.Collections.Concurrent;
 using System.Data;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.Serialization;
 
@@ -42,7 +43,7 @@ public class ContractMemberDefinition
     /// <summary>
     /// Whether this member is marked as required on the contract.
     /// </summary>
-    public bool IsRequired { get; private set; }
+    public bool IsRequired { get; internal set; }
     /// <summary>
     /// Relevant attributes for this contract member.
     /// </summary>
@@ -93,7 +94,7 @@ public class ContractMemberDefinition
     /// <summary>
     /// Convert properties of any object to <see cref="ContractMemberDefinition"/>s.
     /// </summary>
-    public static ContractMemberDefinition[] GetFromContract(Type contractType, Type? argType)
+    internal static ContractMemberDefinition[] GetFromContract(Type contractType, Type? argType)
     {
         // If runtime contract type, must have object
         if (contractType == typeof(IPhormContract))
@@ -183,7 +184,7 @@ public class ContractMemberDefinition
     /// <summary>
     /// Create an instance of this member by resolving the value from the appropriate entity member.
     /// </summary>
-    public ContractMember FromEntity(object? entity)
+    internal ContractMember FromEntity(object? entity)
     {
         object? getValue(MemberInfo? mem)
         {
@@ -234,18 +235,18 @@ public class ContractMemberDefinition
     /// <summary>
     /// Create an instance of this member by using the datasource value provided.
     /// </summary>
-    public ContractMember FromDatasource(object? value, object? entity)
+    internal bool TryFromDatasource(object? value, object? entity, [NotNullWhen(true)] out ContractMember? member)
     {
-        var memb = this as ContractMember ?? new ContractMember(this, null);
+        member = this as ContractMember ?? new ContractMember(this, null);
 
         if (value == DBNull.Value)
         {
             value = null;
         }
-        if (memb.Attributes.Length > 0)
+        if (member.Attributes.Length > 0)
         {
             // AbstractSecureValue
-            var secvalAttr = memb.Attributes
+            var secvalAttr = member.Attributes
                 .OfType<AbstractSecureValueAttribute>().SingleOrDefault();
             if (secvalAttr != null)
             {
@@ -253,15 +254,20 @@ public class ContractMemberDefinition
             }
 
             // Transformation
-            var transfAttr = memb.Attributes
+            var transfAttr = member.Attributes
                 .OfType<AbstractTransphormAttribute>().SingleOrDefault();
             if (transfAttr != null)
             {
                 value = transfAttr.FromDatasource(ValueType, value, entity);
+                if (value is IgnoreDataMemberAttribute || (value as Type) == typeof(IgnoreDataMemberAttribute))
+                {
+                    member = null;
+                    return false;
+                }
             }
         }
 
-        memb.SetValue(value);
-        return memb;
+        member.SetValue(value);
+        return true;
     }
 }

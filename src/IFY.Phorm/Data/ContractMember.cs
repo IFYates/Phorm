@@ -92,7 +92,7 @@ public class ContractMember : ContractMemberDefinition
     }
 
     // TODO: Extensible
-    internal IDataParameter ToDataParameter(IAsyncDbCommand cmd, object? context)
+    internal IDataParameter? ToDataParameter(IAsyncDbCommand cmd, object? context)
     {
         var param = cmd.CreateParameter();
         param.ParameterName = "@" + DbName;
@@ -102,7 +102,10 @@ public class ContractMember : ContractMemberDefinition
             param.Size = Size > 0 ? Size : 256;
         }
 
-        transformParameter(param, context);
+        if (!transformParameter(param, context))
+        {
+            return null;
+        }
 
         // Apply value
         if (param.Value == null)
@@ -114,8 +117,6 @@ public class ContractMember : ContractMemberDefinition
                 param.Size = Size > 0 ? Size : 256;
             }
         }
-
-        param.Value ??= DBNull.Value; // Must send non-null
 
         if (param.Value is Guid)
         {
@@ -139,10 +140,11 @@ public class ContractMember : ContractMemberDefinition
             param.DbType = DbType.Binary;
         }
 
+        param.Value ??= DBNull.Value; // Must send non-null
         return param;
     }
 
-    private void transformParameter(IDbDataParameter param, object? context)
+    private bool transformParameter(IDbDataParameter param, object? context)
     {
         // Transformation
         var transfAttr = Attributes.OfType<AbstractTransphormAttribute>().SingleOrDefault();
@@ -150,6 +152,10 @@ public class ContractMember : ContractMemberDefinition
         if (transfAttr != null)
         {
             val = transfAttr.ToDatasource(val, context);
+            if (val is IgnoreDataMemberAttribute || (val as Type) == typeof(IgnoreDataMemberAttribute))
+            {
+                return false;
+            }
         }
         if (val != null)
         {
@@ -193,16 +199,13 @@ public class ContractMember : ContractMemberDefinition
         }
         param.Value = val;
 
-        // Check for DataMemberAttribute
-        var dmAttr = SourceMember?.GetCustomAttribute<DataMemberAttribute>();
-        if (dmAttr != null)
+        // Check if required (Primitives are never "missing", so only check null)
+        if (IsRequired && param.Value == null)
         {
-            // Primitives are never "missing", so only check null
-            if (dmAttr.IsRequired && param.Value == null)
-            {
-                throw new ArgumentNullException(DbName, $"Parameter {DbName} for contract {SourceMember?.ReflectedType?.FullName} is required but was null");
-            }
+            throw new ArgumentNullException(DbName, $"Parameter {DbName} for contract {SourceMember?.DeclaringType?.FullName} is required but was null");
         }
+
+        return true;
     }
 
     /// <summary>
@@ -210,13 +213,21 @@ public class ContractMember : ContractMemberDefinition
     /// </summary>
     public void ApplyToEntity(object entity)
     {
+        var prop = SourceMember as PropertyInfo;
         try
         {
-            ((PropertyInfo?)SourceMember)?.SetValue(entity, Value);
+            if (prop != null)
+            {
+                if (prop.DeclaringType?.IsAssignableFrom(entity.GetType()) == false)
+                {
+                    prop = entity.GetType().GetProperty(prop.Name) ?? prop;
+                }
+                prop.SetValue(entity, Value);
+            }
         }
         catch (Exception ex)
         {
-            throw new InvalidOperationException($"Failed to set property {SourceMember?.Name ?? DbName}", ex);
+            throw new InvalidOperationException($"Failed to set property {prop?.DeclaringType?.FullName ?? "(unknown)"}.{prop?.Name ?? DbName}", ex);
         }
     }
 
