@@ -235,7 +235,7 @@ public class ContractMember : ContractMemberDefinition
                 }
                 else
                 {
-                    value = Convert.ChangeType(value, targetType);
+                    value = value.ChangeType(targetType);
                 }
             }
         }

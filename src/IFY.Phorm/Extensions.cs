@@ -1,4 +1,5 @@
 ﻿using System.Data;
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
 
 namespace IFY.Phorm;
@@ -8,6 +9,28 @@ internal static class Extensions
     public static IDataParameter[] AsParameters(this IDataParameterCollection coll)
     {
         return coll.Cast<IDataParameter>().ToArray();
+    }
+
+    [return: NotNullIfNotNull("value")]
+    public static object? ChangeType(this object? value, Type conversionType)
+    {
+        if (value != null)
+        {
+            if (value.GetType().IsAssignableFrom(conversionType))
+            {
+                return value;
+            }
+
+#if NET6_0_OR_GREATER
+            if (conversionType == typeof(DateOnly))
+            {
+                var dt = (DateTime)Convert.ChangeType(value, typeof(DateTime));
+                return DateOnly.FromDateTime(dt);
+            }
+#endif
+        }
+
+        return Convert.ChangeType(value, conversionType);
     }
 
     public static byte[] GetBytes(this object? value)

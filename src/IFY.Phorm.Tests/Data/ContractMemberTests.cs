@@ -676,6 +676,25 @@ public class ContractMemberTests
         Assert.IsNull(memb.Value);
     }
 
+#if NET6_0_OR_GREATER
+    [TestMethod]
+    [DataRow("2022-01-02", false)]
+    [DataRow("2022-01-02", true)]
+    public void FromDatasource__Supports_DateOnly(string dtStr, bool asDateTime)
+    {
+        var memb = ContractMember.Out<DateOnly>();
+
+        object val = asDateTime
+            ? DateTime.Parse(dtStr)
+            : dtStr;
+
+        memb.FromDatasource(val, null);
+
+        Assert.AreEqual(dtStr, memb.Value.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc).ToString("yyyy-MM-dd"));
+        Assert.IsTrue(memb.HasChanged);
+    }
+#endif
+
     [TestMethod]
     public void FromDatasource__Type_changed_to_T()
     {
