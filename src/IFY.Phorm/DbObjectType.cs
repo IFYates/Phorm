@@ -1,10 +1,9 @@
-﻿namespace IFY.Phorm
+﻿namespace IFY.Phorm;
+
+public enum DbObjectType
 {
-    public enum DbObjectType
-    {
-        Default,
-        StoredProcedure,
-        Table,
-        View,
-    }
+    Default,
+    StoredProcedure,
+    Table,
+    View,
 }

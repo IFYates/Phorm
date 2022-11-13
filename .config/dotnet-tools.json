@@ -3,13 +3,13 @@
   "isRoot": true,
   "tools": {
     "dotnet-stryker": {
-      "version": "1.5.0",
+      "version": "3.0.1",
       "commands": [
         "dotnet-stryker"
       ]
     },
     "coverlet.console": {
-      "version": "5.7.2",
+      "version": "3.2.0",
       "commands": [
         "coverlet"
       ]

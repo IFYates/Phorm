@@ -2,66 +2,108 @@ name: Build & Test
 
 on:
   push:
-    branches: [ master ]
+    branches:
+      - main
+    paths:
+      - src
   pull_request:
-    branches: [ master ]
-
+    types: [opened, synchronize, reopened]
+    branches:
+      - main
+  workflow_dispatch:
+  
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
+    # Setup
     - uses: actions/checkout@v2
 
     - name: Setup .NET Core 3.1
       uses: actions/setup-dotnet@v1.7.2
       with:
         dotnet-version: 3.1.x
-    - name: Setup .NET 5
-      uses: actions/setup-dotnet@v1.7.2
-      with:
-        dotnet-version: 5.0.x
     - name: Setup .NET 6
       uses: actions/setup-dotnet@v1.7.2
       with:
         dotnet-version: 6.0.x
 
     - name: Restore dependencies
-      run: dotnet restore
+      run: dotnet restore src
     - name: Restore tools
       run: dotnet tool restore
       
-    - name: Build
-      run: dotnet build --no-restore
-#    - name: Test
-#      run: dotnet test --no-build --verbosity normal
-    - name: Coverlet coverage test
-      run: dotnet coverlet ./Shimterface.Tests/bin/Debug/net5.0/Shimterface.Standard.Tests.dll --target "dotnet" --targetargs "test ./Shimterface.Tests/Shimterface.Standard.Tests.csproj --no-build" --format lcov
-
-    - name: Publish coverage results to Coveralls
-      uses: coverallsapp/github-action@v1.1.2
+    - name: Set branch-based environment variables
+      uses: iamtheyammer/branch-env-vars@v1.1.2
       with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        path-to-lcov: coverage.info
-#      run: dotnet coverlet ./Shimterface.Tests/bin/Debug/net5.0/Shimterface.Standard.Tests.dll --target "dotnet" --targetargs "test ./Shimterface.Tests/Shimterface.Standard.Tests.csproj --no-build" --format cobertura
-#    - name: Codecov
-#      uses: codecov/codecov-action@v1.3.1
-#      with:
-#        token: ${{ secrets.GITHUB_TOKEN }}
-#        flags: unittests
-#        files: coverage.cobertura.xml
-#        verbose: true
+        BUILD_CONFIG: |
+          main:Release
+          !default:Debug
 
+    # Build
+    - name: Build
+      run: dotnet build src --configuration $BUILD_CONFIG --no-restore
+
+    - name: Publish package
+      uses: nanoufo/action-upload-artifacts-and-release-assets@v1.4
+      with:
+        path: ./src/**/IFY.Phorm.*.*nupkg
+
+    # Test & coverage
+    - name: Test and coverage - IFY.Phorm
+      run: dotnet coverlet ./src/IFY.Phorm.Tests/bin/$BUILD_CONFIG/net6.0/IFY.Phorm.Tests.dll --target "dotnet" --targetargs "test ./src/IFY.Phorm.Tests/IFY.Phorm.Tests.csproj --configuration $BUILD_CONFIG --no-build" --include-test-assembly --exclude-by-file "**/.nuget/**" --format lcov -o ify_phorm.lcov
+    - name: Test and coverage - IFY.Phorm.SqlClient
+      run: dotnet coverlet ./src/IFY.Phorm.SqlClient.Tests/bin/$BUILD_CONFIG/net6.0/IFY.Phorm.SqlClient.Tests.dll --target "dotnet" --targetargs "test ./src/IFY.Phorm.SqlClient.Tests/IFY.Phorm.SqlClient.Tests.csproj --configuration $BUILD_CONFIG --no-build" --include-test-assembly --exclude "[IFY.Phorm]*" --format lcov -o ify_phorm_sqlclient.lcov       
+    - name: Report coverage to Codacy
+      uses: codacy/codacy-coverage-reporter-action@v1.3.0
+      with:
+        project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+        coverage-reports: ify_phorm.lcov,ify_phorm_sqlclient.lcov
+
+    # Mutation test
+    - name: Configure Stryker.NET for IFY.Phorm
+      uses: DamianReeves/write-file-action@v1.0
+      with:
+        path: stryker-config.json
+        write-mode: overwrite
+        contents: |
+          {
+            "stryker-config": {
+              "project": "IFY.Phorm.Core.csproj",
+              "test-projects": ["./src/IFY.Phorm.Tests/IFY.Phorm.Tests.csproj"],
+              "project-info": {
+                "name": "github.com/IFYates/Phorm",
+                "module": "IFY.Phorm",
+                "version": "${{ github.base_ref }}"
+              },
+              "reporters": ["cleartext", "html", "dashboard"]
+            }
+          }
     - name: Run Stryker.NET
-      run: dotnet stryker -s "Shimterface.Standard.sln" --reporters "['cleartext','html','dashboard']" --dashboard-api-key ${{ secrets.STRYKER_DASHBOARD }} --dashboard-project github.com/IFYates/Shimterface --dashboard-version $GITHUB_REF
-    - name: Upload mutation report
+      run: dotnet stryker --dashboard-api-key ${{ secrets.STRYKER_DASHBOARD }}
+    - name: Configure Stryker.NET for IFY.Phorm.SqlClient
+      uses: DamianReeves/write-file-action@v1.0
+      with:
+        path: stryker-config.json
+        write-mode: overwrite
+        contents: |
+          {
+            "stryker-config": {
+              "project": "IFY.Phorm.SqlClient.csproj",
+              "test-projects": ["./src/IFY.Phorm.SqlClient.Tests/IFY.Phorm.SqlClient.Tests.csproj"],
+              "project-info": {
+                "name": "github.com/IFYates/Phorm",
+                "module": "IFY.Phorm.SqlClient",
+                "version": "${{ github.base_ref }}"
+              },
+              "reporters": ["cleartext", "html", "dashboard"]
+            }
+          }
+    - name: Run Stryker.NET
+      run: dotnet stryker --dashboard-api-key ${{ secrets.STRYKER_DASHBOARD }}
+    - name: Upload mutation reports
       uses: actions/upload-artifact@v2.2.2
       with:
         name: mutation-report.html
         path: ./**/mutation-report.html
-
-    - name: Publish package
-      uses: actions/upload-artifact@v2
-      with:
-        path: ./**/Shimterface.Standard.*.nupkg

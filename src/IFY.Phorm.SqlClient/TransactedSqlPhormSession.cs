@@ -1,40 +1,46 @@
 ﻿using IFY.Phorm.Connectivity;
+using IFY.Phorm.Execution;
 using System.Data;
 
-namespace IFY.Phorm.SqlClient
+namespace IFY.Phorm.SqlClient;
+
+// TODO: this file isn't SQL-specific, but making it generic in current structure increases amount of code
+public class TransactedSqlPhormSession : SqlPhormSession, ITransactedPhormSession
 {
-    // TODO: this file isn't SQL-specific, but making it generic in current structure increases amount of code
-    public class TransactedSqlPhormSession : SqlPhormSession, ITransactedPhormSession
+    private bool _isDisposed;
+
+    private readonly IPhormDbConnection _connection;
+    private readonly IDbTransaction _transaction;
+
+    internal TransactedSqlPhormSession(IPhormDbConnection connection, IDbTransaction transaction)
+        : base(connection.ConnectionString, connection.ConnectionName)
     {
-        private bool _isDisposed = false;
-        private readonly IDbTransaction _transaction;
+        _connection = connection;
+        _transaction = transaction;
+    }
 
-        public TransactedSqlPhormSession(IPhormDbConnectionProvider dbProvider, string? contextUser, IDbTransaction transaction)
-            : base(dbProvider, contextUser)
+    public override bool IsInTransaction => true;
+
+    protected override IPhormDbConnection GetConnection()
+        => _connection;
+
+    public void Commit()
+    {
+        _transaction.Commit();
+    }
+
+    public void Rollback()
+    {
+        _transaction.Rollback();
+    }
+
+    public void Dispose()
+    {
+        if (!_isDisposed)
         {
-            _transaction = transaction;
-        }
-
-        public override bool IsInTransaction => true;
-
-        public void Commit()
-        {
-            _transaction.Commit();
-        }
-
-        public void Rollback()
-        {
-            _transaction.Rollback();
-        }
-
-        public void Dispose()
-        {
-            if (!_isDisposed)
-            {
-                _transaction.Connection?.Dispose();
-                _transaction.Dispose();
-                _isDisposed = true;
-            }
+            _connection.Dispose();
+            _transaction.Dispose();
+            _isDisposed = true;
         }
     }
 }

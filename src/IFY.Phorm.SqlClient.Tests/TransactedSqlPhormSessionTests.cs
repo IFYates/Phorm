@@ -1,65 +1,102 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using IFY.Phorm.Connectivity;
+using IFY.Phorm.Execution;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using System.Data;
 
-namespace IFY.Phorm.SqlClient.Tests
+namespace IFY.Phorm.SqlClient.Tests;
+
+[TestClass]
+public class TransactedSqlPhormSessionTests
 {
-    [TestClass]
-    public class TransactedSqlPhormSessionTests
+    [TestInitialize]
+    public void Init()
     {
-        [TestMethod]
-        public void Commit()
-        {
-            // Arrange
-            var transMock = new Mock<IDbTransaction>(MockBehavior.Strict);
-            transMock.Setup(m => m.Commit()).Verifiable();
+        AbstractPhormSession.ResetConnectionPool();
+    }
 
-            var runner = new TransactedSqlPhormSession(null!, null, transMock.Object);
+    [TestMethod]
+    public void IsInTransaction__True()
+    {
+        // Arrange
+        var connMock = new Mock<IPhormDbConnection>();
 
-            // Act
-            runner.Commit();
+        var sess = new TransactedSqlPhormSession(connMock.Object, null!);
 
-            // Assert
-            transMock.Verify();
-            Assert.IsTrue(runner.IsInTransaction);
-        }
+        // Assert
+        Assert.IsTrue(sess.IsInTransaction);
+    }
 
-        [TestMethod]
-        public void Rollback()
-        {
-            // Arrange
-            var transMock = new Mock<IDbTransaction>(MockBehavior.Strict);
-            transMock.Setup(m => m.Rollback()).Verifiable();
+    [TestMethod]
+    public void GetConnection()
+    {
+        // Arrange
+        var connMock = new Mock<IPhormDbConnection>();
 
-            var runner = new TransactedSqlPhormSession(null!, null, transMock.Object);
+        var sess = new TransactedSqlPhormSession(connMock.Object, null!);
 
-            // Act
-            runner.Rollback();
+        // Act
+        var res = sess.GetConnection();
 
-            // Assert
-            transMock.Verify();
-        }
+        // Assert
+        Assert.AreSame(connMock.Object, res);
+    }
 
-        [TestMethod]
-        public void Dispose()
-        {
-            // Arrange
-            var connMock = new Mock<IDbConnection>(MockBehavior.Strict);
-            connMock.Setup(m => m.Dispose()).Verifiable();
+    [TestMethod]
+    public void Commit()
+    {
+        // Arrange
+        var connMock = new Mock<IPhormDbConnection>();
 
-            var transMock = new Mock<IDbTransaction>(MockBehavior.Strict);
-            transMock.SetupGet(m => m.Connection)
-                .Returns(connMock.Object);
-            transMock.Setup(m => m.Dispose()).Verifiable();
+        var transMock = new Mock<IDbTransaction>(MockBehavior.Strict);
+        transMock.Setup(m => m.Commit()).Verifiable();
 
-            var runner = new TransactedSqlPhormSession(null!, null, transMock.Object);
+        var sess = new TransactedSqlPhormSession(connMock.Object, transMock.Object);
 
-            // Act
-            runner.Dispose();
+        // Act
+        sess.Commit();
 
-            // Assert
-            transMock.Verify();
-            connMock.Verify();
-        }
+        // Assert
+        transMock.Verify();
+        Assert.IsTrue(sess.IsInTransaction);
+    }
+
+    [TestMethod]
+    public void Rollback()
+    {
+        // Arrange
+        var connMock = new Mock<IPhormDbConnection>();
+
+        var transMock = new Mock<IDbTransaction>(MockBehavior.Strict);
+        transMock.Setup(m => m.Rollback()).Verifiable();
+
+        var sess = new TransactedSqlPhormSession(connMock.Object, transMock.Object);
+
+        // Act
+        sess.Rollback();
+
+        // Assert
+        transMock.Verify();
+    }
+
+    [TestMethod]
+    public void Dispose()
+    {
+        // Arrange
+        var connMock = new Mock<IPhormDbConnection>(MockBehavior.Strict);
+        connMock.SetupAllProperties();
+        connMock.Setup(m => m.Dispose()).Verifiable();
+
+        var transMock = new Mock<IDbTransaction>(MockBehavior.Strict);
+        transMock.Setup(m => m.Dispose()).Verifiable();
+
+        var sess = new TransactedSqlPhormSession(connMock.Object, transMock.Object);
+
+        // Act
+        sess.Dispose();
+
+        // Assert
+        transMock.Verify();
+        connMock.Verify();
     }
 }

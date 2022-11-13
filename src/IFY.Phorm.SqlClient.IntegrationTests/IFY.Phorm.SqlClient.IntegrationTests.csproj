@@ -1,13 +1,15 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<TargetFrameworks>netcoreapp3.1;net6.0</TargetFrameworks>
 		<Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <LangVersion>10.0</LangVersion>
 		<IsPackable>false</IsPackable>
-	</PropertyGroup>
+    </PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.3.2" />
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.4.0" />
 		<PackageReference Include="Moq" Version="4.18.2" />
 		<PackageReference Include="MSTest.TestAdapter" Version="2.2.10" />
 		<PackageReference Include="MSTest.TestFramework" Version="2.2.10" />
@@ -19,7 +21,7 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\IFY.Phorm.SqlClient\IFY.Phorm.SqlClient.csproj" />
-		<ProjectReference Include="..\IFY.Phorm\IFY.Phorm.csproj" />
+		<ProjectReference Include="..\IFY.Phorm\IFY.Phorm.Core.csproj" />
 	</ItemGroup>
 
 </Project>

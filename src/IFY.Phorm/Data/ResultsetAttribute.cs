@@ -1,44 +1,39 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿namespace IFY.Phorm.Data;
 
-namespace IFY.Phorm.Data
+[AttributeUsage(AttributeTargets.Property)]
+public class ResultsetAttribute : Attribute
 {
-    [AttributeUsage(AttributeTargets.Property)]
-    public class ResultsetAttribute : Attribute
+    public int Order { get; }
+    public string SelectorPropertyName { get; }
+
+    private Type? _lastSelectorType;
+    private IRecordMatcher? _lastMatcher;
+
+    public ResultsetAttribute(int order, string selectorPropertyName)
     {
-        public int Order { get; }
-        public string SelectorPropertyName { get; }
+        Order = order;
+        SelectorPropertyName = selectorPropertyName;
+    }
 
-        private Type? _lastSelectorType = null;
-        private IRecordMatcher? _lastMatcher = null;
-
-        public ResultsetAttribute(int order, string selectorPropertyName)
+    public object[] FilterMatched(object parent, IEnumerable<object> children)
+    {
+        if (_lastSelectorType != parent.GetType())
         {
-            Order = order;
-            SelectorPropertyName = selectorPropertyName;
-        }
-
-        public object[] FilterMatched(object parent, IEnumerable<object> children)
-        {
-            if (_lastSelectorType != parent.GetType())
-            {
-                var selectorProp = parent.GetType().GetProperty(SelectorPropertyName);
+            var selectorProp = parent.GetType().GetProperty(SelectorPropertyName);
 #if !NET5_0_OR_GREATER
-                if (selectorProp?.PropertyType == null || !typeof(IRecordMatcher).IsAssignableFrom(selectorProp.PropertyType))
+            if (selectorProp?.PropertyType == null || !typeof(IRecordMatcher).IsAssignableFrom(selectorProp.PropertyType))
 #else
-                if (selectorProp?.PropertyType.IsAssignableTo(typeof(IRecordMatcher)) != true)
+            if (selectorProp?.PropertyType.IsAssignableTo(typeof(IRecordMatcher)) != true)
 #endif
-                {
-                    throw new InvalidCastException($"Selector property '{SelectorPropertyName}' does not return IRecordMatcher.");
-                }
-
-                _lastSelectorType = parent.GetType();
-                _lastMatcher = selectorProp.GetAccessors()[0].IsStatic
-                    ? (IRecordMatcher?)selectorProp.GetValue(null)
-                    : (IRecordMatcher?)selectorProp.GetValue(parent);
+            {
+                throw new InvalidCastException($"Selector property '{SelectorPropertyName}' does not return IRecordMatcher.");
             }
-            return children.Where(c => _lastMatcher!.IsMatch(parent, c) == true).ToArray();
+
+            _lastSelectorType = parent.GetType();
+            _lastMatcher = selectorProp.GetAccessors()[0].IsStatic
+                ? (IRecordMatcher?)selectorProp.GetValue(null)
+                : (IRecordMatcher?)selectorProp.GetValue(parent);
         }
+        return children.Where(c => _lastMatcher!.IsMatch(parent, c) == true).ToArray();
     }
 }

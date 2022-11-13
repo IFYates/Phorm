@@ -1,45 +1,43 @@
 ﻿using IFY.Phorm.Execution;
-using System;
 
-namespace IFY.Phorm.Tests
+namespace IFY.Phorm.Tests;
+
+internal class TestConsoleMessageCapture : AbstractConsoleMessageCapture
 {
-    internal class TestConsoleMessageCapture : AbstractConsoleMessageCapture
+    private readonly new TestPhormSession _session;
+
+    public Func<Exception, bool>? ProcessExceptionLogic { get; set; }
+
+    public TestConsoleMessageCapture(TestPhormSession session, Guid commandGuid)
+        : base(session, commandGuid)
     {
-        private readonly new TestPhormSession _session;
+        _session = session;
+        sendAllMessages();
+    }
 
-        public Func<Exception, bool>? ProcessExceptionLogic { get; set; }
-
-        public TestConsoleMessageCapture(TestPhormSession session, Guid commandGuid)
-            : base(session, commandGuid)
+    private void sendAllMessages()
+    {
+        var messages = _session.ConsoleMessages.ToArray();
+        _session.ConsoleMessages.Clear();
+        foreach (var message in messages)
         {
-            _session = session;
-            sendAllMessages();
-        }
-
-        private void sendAllMessages()
-        {
-            var messages = _session.ConsoleMessages.ToArray();
-            _session.ConsoleMessages.Clear();
-            foreach (var message in messages)
+            OnConsoleMessage(new ConsoleMessage
             {
-                OnConsoleMessage(new ConsoleMessage
-                {
-                    Level = message.Level,
-                    Source = message.Source,
-                    Message = message.Message
-                });
-            }
+                Level = message.Level,
+                Source = message.Source,
+                Message = message.Message
+            });
         }
+    }
 
-        public override bool ProcessException(Exception ex)
-        {
-            return ProcessExceptionLogic?.Invoke(ex)
-                ?? false;
-        }
+    public override bool ProcessException(Exception ex)
+    {
+        return ProcessExceptionLogic?.Invoke(ex)
+            ?? false;
+    }
 
-        public override void Dispose()
-        {
-            sendAllMessages();
-        }
+    public override void Dispose()
+    {
+        sendAllMessages();
     }
 }

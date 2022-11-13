@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\IFY.Phorm\IFY.Phorm.csproj" />
+    <ProjectReference Include="..\IFY.Phorm\IFY.Phorm.Core.csproj" />
     <ProjectReference Include="..\IFY.Phorm.SqlClient\IFY.Phorm.SqlClient.csproj" />
   </ItemGroup>
 

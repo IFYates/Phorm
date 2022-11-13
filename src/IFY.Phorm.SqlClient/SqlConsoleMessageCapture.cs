@@ -1,55 +1,53 @@
 ﻿using IFY.Phorm.Execution;
 using Microsoft.Data.SqlClient;
-using System;
 
-namespace IFY.Phorm.SqlClient
+namespace IFY.Phorm.SqlClient;
+
+public class SqlConsoleMessageCapture : AbstractConsoleMessageCapture
 {
-    public class SqlConsoleMessageCapture : AbstractConsoleMessageCapture
+    private readonly SqlConnection _conn;
+
+    public SqlConsoleMessageCapture(AbstractPhormSession session, Guid commandGuid, SqlConnection conn)
+        : base(session, commandGuid)
     {
-        private readonly SqlConnection _conn;
+        _conn = conn;
+        conn.InfoMessage += captureInfoMessage;
+    }
 
-        public SqlConsoleMessageCapture(AbstractPhormSession session, Guid commandGuid, SqlConnection conn)
-            : base(session, commandGuid)
+    public override bool ProcessException(Exception ex)
+    {
+        if (ex is SqlException sqlException)
         {
-            _conn = conn;
-            conn.InfoMessage += captureInfoMessage;
+            HasError = true;
+            fromSqlErrors(sqlException.Errors, true);
+            return true;
         }
+        return false;
+    }
 
-        public override bool ProcessException(Exception ex)
+    private void captureInfoMessage(object sender, SqlInfoMessageEventArgs e)
+    {
+        // TODO: How to limit to only events for this session?
+        fromSqlErrors(e.Errors, false);
+    }
+
+    private void fromSqlErrors(SqlErrorCollection errors, bool isException)
+    {
+        foreach (SqlError err in errors)
         {
-            if (ex is SqlException sqlException)
+            OnConsoleMessage(new ConsoleMessage
             {
-                HasError = true;
-                fromSqlErrors(sqlException.Errors, true);
-                return true;
-            }
-            return false;
+                IsError = isException,
+                Level = err.Class,
+                Source = $"{err.Procedure} @ {err.LineNumber}",
+                Message = err.Message
+            });
         }
+    }
 
-        private void captureInfoMessage(object sender, SqlInfoMessageEventArgs e)
-        {
-            // TODO: How to limit to only events for this session?
-            fromSqlErrors(e.Errors, false);
-        }
-
-        private void fromSqlErrors(SqlErrorCollection errors, bool isException)
-        {
-            foreach (SqlError err in errors)
-            {
-                OnConsoleMessage(new ConsoleMessage
-                {
-                    IsError = isException,
-                    Level = err.Class,
-                    Source = $"{err.Procedure} @ {err.LineNumber}",
-                    Message = err.Message
-                });
-            }
-        }
-
-        public override void Dispose()
-        {
-            _conn.InfoMessage -= captureInfoMessage;
-            GC.SuppressFinalize(this);
-        }
+    public override void Dispose()
+    {
+        _conn.InfoMessage -= captureInfoMessage;
+        GC.SuppressFinalize(this);
     }
 }

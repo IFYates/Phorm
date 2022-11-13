@@ -1,59 +1,58 @@
-using IFY.Phorm.Connectivity;
 using IFY.Phorm.Data;
+using IFY.Phorm.Execution;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
 using System.Runtime.Serialization;
 using System.Text;
 
-namespace IFY.Phorm.SqlClient.IntegrationTests
+namespace IFY.Phorm.SqlClient.IntegrationTests;
+
+[TestClass]
+public class CallTests : SqlIntegrationTestBase
 {
-    [TestClass]
-    public class CallTests : SqlIntegrationTestBase
+    [PhormContract(Name = "CallTestTable", Target = DbObjectType.Table)]
+    class DataItem : IUpsert, IUpsertOnlyIntWithId
     {
-        [PhormContract(Name = "CallTestTable", Target = DbObjectType.Table)]
-        class DataItem : IUpsert, IUpsertOnlyIntWithId
-        {
-            public long Id { get; set; } = 0;
-            [DataMember(Name = "Int")]
-            public int? Num { get; set; } = null;
-            public string? Text { get; set; } = null;
-            public byte[]? Data { get; set; } = null;
-            public DateTime? DateTime { get; set; } = null;
+        public long Id { get; set; } = 0;
+        [DataMember(Name = "Int")]
+        public int? Num { get; set; } = null;
+        public string? Text { get; set; } = null;
+        public byte[]? Data { get; set; } = null;
+        public DateTime? DateTime { get; set; } = null;
 
-            public DataItem(long id, int? num, string? text, byte[]? data, DateTime? dateTime)
-            {
-                Id = id;
-                Num = num;
-                Text = text;
-                Data = data;
-                DateTime = dateTime;
-            }
-            public DataItem() : this(default, default, default, default, default)
-            { }
+        public DataItem(long id, int? num, string? text, byte[]? data, DateTime? dateTime)
+        {
+            Id = id;
+            Num = num;
+            Text = text;
+            Data = data;
+            DateTime = dateTime;
         }
+        public DataItem() : this(default, default, default, default, default)
+        { }
+    }
 
-        [PhormContract(Name = "CallTest_Upsert")]
-        interface IUpsert : IPhormContract
-        {
-            [DataMember(Name = "Int")]
-            int? Num { get; }
-            string? Text { get; }
-            byte[]? Data { get; }
-            DateTime? DateTime { get; }
-        }
+    [PhormContract(Name = "CallTest_Upsert")]
+    interface IUpsert : IPhormContract
+    {
+        [DataMember(Name = "Int")]
+        int? Num { get; }
+        string? Text { get; }
+        byte[]? Data { get; }
+        DateTime? DateTime { get; }
+    }
 
-        [PhormContract(Name = "CallTest_Upsert")]
-        interface IUpsertOnlyIntWithId : IPhormContract
-        {
-            long Id { set; }
-            [DataMember(Name = "Int")]
-            int? Num { get; }
-        }
+    [PhormContract(Name = "CallTest_Upsert")]
+    interface IUpsertOnlyIntWithId : IPhormContract
+    {
+        long Id { set; }
+        [DataMember(Name = "Int")]
+        int? Num { get; }
+    }
 
-        private void setupCallTestSchema(IPhormDbConnectionProvider connProv)
-        {
-            SqlTestHelpers.ApplySql(connProv, @"DROP TABLE IF EXISTS [dbo].[CallTestTable]");
-            SqlTestHelpers.ApplySql(connProv, @"CREATE TABLE [dbo].[CallTestTable] (
+    private void setupCallTestSchema(AbstractPhormSession phorm)
+    {
+        SqlTestHelpers.ApplySql(phorm, @"DROP TABLE IF EXISTS [dbo].[CallTestTable]");
+        SqlTestHelpers.ApplySql(phorm, @"CREATE TABLE [dbo].[CallTestTable] (
 	[Id] BIGINT NOT NULL IDENTITY(1,1) PRIMARY KEY,
 	[Int] INT NULL,
 	[Text] VARCHAR(256) NULL,
@@ -62,7 +61,7 @@ namespace IFY.Phorm.SqlClient.IntegrationTests
 	[IsInView] BIT NOT NULL DEFAULT (1)
 )");
 
-            SqlTestHelpers.ApplySql(connProv, @"CREATE OR ALTER PROC [dbo].[usp_CallTest_Upsert]
+        SqlTestHelpers.ApplySql(phorm, @"CREATE OR ALTER PROC [dbo].[usp_CallTest_Upsert]
 	@Id BIGINT = NULL OUTPUT,
 	@Int INT = NULL,
 	@Text VARCHAR(256) = NULL,
@@ -86,119 +85,118 @@ AS
 		[IsInView] = ISNULL(@IsInView, [IsInView])
 		WHERE [Id] = @Id
 RETURN @@ROWCOUNT");
-        }
+    }
 
-        [TestMethod]
-        public void Call__By_anon_Insert_various_types()
+    [TestMethod]
+    public void Call__By_anon_Insert_various_types()
+    {
+        // Arrange
+        var phorm = getPhormSession();
+        setupCallTestSchema(phorm);
+
+        var randNum = DateTime.UtcNow.Millisecond;
+        var randStr = Guid.NewGuid().ToString();
+        var randData = Encoding.UTF8.GetBytes(Guid.NewGuid().ToString());
+        var randDT = DateTime.UtcNow;
+
+        // Act
+        var res = phorm.Call("CallTest_Upsert", new { Int = randNum, Text = randStr, Data = randData, DateTime = randDT });
+        var obj = phorm.Get<DataItem>()!;
+
+        // Assert
+        Assert.AreEqual(1, res);
+        Assert.AreEqual(randNum, obj.Num);
+        Assert.AreEqual(randStr, obj.Text);
+        CollectionAssert.AreEqual(randData, obj.Data);
+        Assert.AreEqual(randDT, obj.DateTime);
+    }
+
+    [TestMethod]
+    public void Call__By_contract_and_anon_arg_Insert_various_types()
+    {
+        // Arrange
+        var phorm = getPhormSession();
+        setupCallTestSchema(phorm);
+
+        var randNum = DateTime.UtcNow.Millisecond;
+        var randStr = Guid.NewGuid().ToString();
+        var randData = Encoding.UTF8.GetBytes(Guid.NewGuid().ToString());
+        var randDT = DateTime.UtcNow;
+
+        // Act
+        var res = phorm.Call<IUpsert>(new { Num = randNum, Text = randStr, Data = randData, DateTime = randDT });
+        var obj = phorm.Get<DataItem>()!;
+
+        // Assert
+        Assert.AreEqual(1, res);
+        Assert.AreEqual(randNum, obj.Num);
+        Assert.AreEqual(randStr, obj.Text);
+        CollectionAssert.AreEqual(randData, obj.Data);
+        Assert.AreEqual(randDT, obj.DateTime);
+    }
+
+    [TestMethod]
+    public void Call__By_contract_arg_Insert_various_types()
+    {
+        // Arrange
+        var phorm = getPhormSession();
+        setupCallTestSchema(phorm);
+
+        var arg = new DataItem(0,
+            DateTime.UtcNow.Millisecond,
+            Guid.NewGuid().ToString(),
+            Encoding.UTF8.GetBytes(Guid.NewGuid().ToString()),
+            DateTime.UtcNow
+        );
+
+        // Act
+        var res = phorm.Call<IUpsert>(arg);
+        var obj = phorm.Get<DataItem>()!;
+
+        // Assert
+        Assert.AreEqual(1, res);
+        Assert.AreEqual(arg.Num, obj.Num);
+        Assert.AreEqual(arg.Text, obj.Text);
+        CollectionAssert.AreEqual(arg.Data, obj.Data);
+        Assert.AreEqual(arg.DateTime, obj.DateTime);
+    }
+
+    [TestMethod]
+    public void Call__Get_by_anon_output()
+    {
+        // Arrange
+        var phorm = getPhormSession();
+        setupCallTestSchema(phorm);
+
+        var arg = new
         {
-            // Arrange
-            var phorm = getPhormSession(out var connProv);
-            setupCallTestSchema(connProv);
+            Id = ContractMember.Out<long>()
+        };
 
-            var randNum = DateTime.UtcNow.Millisecond;
-            var randStr = Guid.NewGuid().ToString();
-            var randData = Encoding.UTF8.GetBytes(Guid.NewGuid().ToString());
-            var randDT = DateTime.UtcNow;
+        // Act
+        var res = phorm.Call("CallTest_Upsert", arg);
+        var obj = phorm.Get<DataItem>()!;
 
-            // Act
-            var res = phorm.Call("CallTest_Upsert", new { Int = randNum, Text = randStr, Data = randData, DateTime = randDT });
-            var obj = phorm.Get<DataItem>()!;
+        // Assert
+        Assert.AreEqual(1, res);
+        Assert.AreEqual(obj.Id, arg.Id.Value);
+    }
 
-            // Assert
-            Assert.AreEqual(1, res);
-            Assert.AreEqual(randNum, obj.Num);
-            Assert.AreEqual(randStr, obj.Text);
-            CollectionAssert.AreEqual(randData, obj.Data);
-            Assert.AreEqual(randDT, obj.DateTime);
-        }
+    [TestMethod]
+    public void Call__Get_by_contract_output()
+    {
+        // Arrange
+        var phorm = getPhormSession();
+        setupCallTestSchema(phorm);
 
-        [TestMethod]
-        public void Call__By_contract_and_anon_arg_Insert_various_types()
-        {
-            // Arrange
-            var phorm = getPhormSession(out var connProv);
-            setupCallTestSchema(connProv);
+        var arg = new DataItem();
 
-            var randNum = DateTime.UtcNow.Millisecond;
-            var randStr = Guid.NewGuid().ToString();
-            var randData = Encoding.UTF8.GetBytes(Guid.NewGuid().ToString());
-            var randDT = DateTime.UtcNow;
+        // Act
+        var res = phorm.Call<IUpsertOnlyIntWithId>(arg);
+        var obj = phorm.Get<DataItem>()!;
 
-            // Act
-            var res = phorm.Call<IUpsert>(new { Num = randNum, Text = randStr, Data = randData, DateTime = randDT });
-            var obj = phorm.Get<DataItem>()!;
-
-            // Assert
-            Assert.AreEqual(1, res);
-            Assert.AreEqual(randNum, obj.Num);
-            Assert.AreEqual(randStr, obj.Text);
-            CollectionAssert.AreEqual(randData, obj.Data);
-            Assert.AreEqual(randDT, obj.DateTime);
-        }
-
-        [TestMethod]
-        public void Call__By_contract_arg_Insert_various_types()
-        {
-            // Arrange
-            var phorm = getPhormSession(out var connProv);
-            setupCallTestSchema(connProv);
-
-            var arg = new DataItem(0,
-                DateTime.UtcNow.Millisecond,
-                Guid.NewGuid().ToString(),
-                Encoding.UTF8.GetBytes(Guid.NewGuid().ToString()),
-                DateTime.UtcNow
-            );
-
-            // Act
-            var res = phorm.Call<IUpsert>(arg);
-            var obj = phorm.Get<DataItem>()!;
-
-            // Assert
-            Assert.AreEqual(1, res);
-            Assert.AreEqual(arg.Num, obj.Num);
-            Assert.AreEqual(arg.Text, obj.Text);
-            CollectionAssert.AreEqual(arg.Data, obj.Data);
-            Assert.AreEqual(arg.DateTime, obj.DateTime);
-        }
-
-        [TestMethod]
-        public void Call__Get_by_anon_output()
-        {
-            // Arrange
-            var phorm = getPhormSession(out var connProv);
-            setupCallTestSchema(connProv);
-
-            var arg = new
-            {
-                Id = ContractMember.Out<long>()
-            };
-
-            // Act
-            var res = phorm.Call("CallTest_Upsert", arg);
-            var obj = phorm.Get<DataItem>()!;
-
-            // Assert
-            Assert.AreEqual(1, res);
-            Assert.AreEqual(obj.Id, arg.Id.Value);
-        }
-
-        [TestMethod]
-        public void Call__Get_by_contract_output()
-        {
-            // Arrange
-            var phorm = getPhormSession(out var connProv);
-            setupCallTestSchema(connProv);
-
-            var arg = new DataItem();
-
-            // Act
-            var res = phorm.Call<IUpsertOnlyIntWithId>(arg);
-            var obj = phorm.Get<DataItem>()!;
-
-            // Assert
-            Assert.AreEqual(1, res);
-            Assert.AreEqual(obj.Id, arg.Id);
-        }
+        // Assert
+        Assert.AreEqual(1, res);
+        Assert.AreEqual(obj.Id, arg.Id);
     }
 }
