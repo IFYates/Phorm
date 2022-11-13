@@ -12,9 +12,15 @@ public class DbGateway
         _session = session;
     }
 
-    public bool CreateUser(UserDto user)
+    public bool CreateEmployee(EmployeeDto employee)
     {
-        var res = _session.Call<ICreateUser>(user);
+        var res = _session.Call<ICreateEmployee>(employee);
+        return res == 1;
+    }
+
+    public bool CreateManager(ManagerDto manager)
+    {
+        var res = _session.Call<ICreateManager>(manager);
         return res == 1;
     }
 }
