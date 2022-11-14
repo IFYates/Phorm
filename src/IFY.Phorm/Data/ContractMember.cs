@@ -51,7 +51,12 @@ public class ContractMember : ContractMemberDefinition
     /// </summary>
     public static ContractMember[] GetMembersFromContract(object? obj, Type contractType, bool withReturnValue)
     {
-        var defs = ContractMemberDefinition.GetFromContract(contractType, obj?.GetType());
+        // If runtime contract type, must have object
+        if (contractType == typeof(IPhormContract))
+        {
+            contractType = obj?.GetType() ?? typeof(IPhormContract);
+        }
+        var defs = ContractMemberDefinition.GetFromContract(contractType);
 
         // Resolve member values
         var members = new List<ContractMember>(defs.Length);

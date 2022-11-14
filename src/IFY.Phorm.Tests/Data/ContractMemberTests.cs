@@ -60,27 +60,45 @@ public class ContractMemberTests
     #region GetMembersFromContract
 
     [ExcludeFromCodeCoverage]
-    class ObjectWithMethodMember
+    class ObjectWithMethodMember : IContractWithMethodMember, IContractWithParentMethodMember
     {
-        public string Value1
+        public string Value1 { get; set; } = "A";
+
+        [ContractMember]
+        public string Value4() => "X"; // Ignored by default through interface
+        public string Value5() => "Y"; // Ignored
+    }
+    interface IContractWithMethodMember
+    {
+        string Value1
         {
             [ContractMember]
             get; // Must not be picked up separately
             [ContractMember]
             set; // Must not be picked up separately
-        } = "A";
-#pragma warning disable CA1822 // Mark members as static
+        }
+
         [ContractMember]
         public string Value2() => "B";
+        [ExcludeFromCodeCoverage]
         public string Value3(int arg) => "C" + arg; // Ignored
-#pragma warning restore CA1822 // Mark members as static
+    }
+    interface IContractWithParentMethodMember
+    {
+        [ContractMember]
+        string Value4();
+    }
+    interface IContractWithAnonMethodMember
+    {
+        [ContractMember]
+        string Value5();
     }
 
     [TestMethod]
     public void GetMembersFromContract__Includes_decorated_methods()
     {
         // Act
-        var res = ContractMember.GetMembersFromContract(new ObjectWithMethodMember(), typeof(ObjectWithMethodMember), false);
+        var res = ContractMember.GetMembersFromContract(new ObjectWithMethodMember(), typeof(IContractWithMethodMember), false);
 
         // Assert
         Assert.AreEqual(2, res.Length);
@@ -88,6 +106,51 @@ public class ContractMemberTests
         Assert.AreEqual("A", res[0].Value);
         Assert.AreEqual("Value2", res[1].DbName);
         Assert.AreEqual("B", res[1].Value);
+    }
+
+    [TestMethod]
+    public void GetMembersFromContract__Ignores_decorated_methods_Anon_arg()
+    {
+        // Arrange
+        var arg = new
+        {
+            Value1 = "C",
+            Value2 = "D"
+        };
+
+        // Act
+        var res = ContractMember.GetMembersFromContract(arg, typeof(IContractWithMethodMember), false);
+
+        // Assert
+        Assert.AreEqual(2, res.Length);
+        Assert.AreEqual("Value1", res[0].DbName);
+        Assert.AreEqual("C", res[0].Value);
+        Assert.AreEqual("Value2", res[1].DbName);
+        Assert.AreEqual("D", res[1].Value);
+    }
+
+    [TestMethod]
+    public void GetMembersFromContract__Includes_decorated_methods_from_parent()
+    {
+        // Act
+        var res = ContractMember.GetMembersFromContract(new ObjectWithMethodMember(), typeof(IContractWithParentMethodMember), false);
+
+        // Assert
+        Assert.AreEqual(1, res.Length);
+        Assert.AreEqual("Value4", res[0].DbName);
+        Assert.AreEqual("X", res[0].Value);
+    }
+
+    [TestMethod]
+    public void GetMembersFromContract__Includes_decorated_methods_from_unrelated_entity()
+    {
+        // Act
+        var res = ContractMember.GetMembersFromContract(new ObjectWithMethodMember(), typeof(IContractWithAnonMethodMember), false);
+
+        // Assert
+        Assert.AreEqual(1, res.Length);
+        Assert.AreEqual("Value5", res[0].DbName);
+        Assert.AreEqual("Y", res[0].Value);
     }
 
     [ExcludeFromCodeCoverage]
@@ -219,9 +282,9 @@ public class ContractMemberTests
     public void ResolveContract__Caches_members_by_type()
     {
         // Act
-        var res1 = ContractMemberDefinition.GetFromContract(typeof(IPhormContract), typeof(ObjectWithDynamicProperty));
-        var res2 = ContractMemberDefinition.GetFromContract(typeof(IPhormContract), typeof(ObjectWithDynamicProperty));
-        var res3 = ContractMemberDefinition.GetFromContract(typeof(IPhormContract), typeof(ObjectWithDynamicProperty));
+        var res1 = ContractMemberDefinition.GetFromContract(typeof(ObjectWithDynamicProperty));
+        var res2 = ContractMemberDefinition.GetFromContract(typeof(ObjectWithDynamicProperty));
+        var res3 = ContractMemberDefinition.GetFromContract(typeof(ObjectWithDynamicProperty));
 
         // Assert
         Assert.AreSame(res1, res2);
@@ -237,9 +300,9 @@ public class ContractMemberTests
         var obj3 = new { Test = 3 };
 
         // Act
-        var res1 = ContractMemberDefinition.GetFromContract(typeof(IPhormContract), obj1.GetType());
-        var res2 = ContractMemberDefinition.GetFromContract(typeof(IPhormContract), obj2.GetType());
-        var res3 = ContractMemberDefinition.GetFromContract(typeof(IPhormContract), obj3.GetType());
+        var res1 = ContractMemberDefinition.GetFromContract(obj1.GetType());
+        var res2 = ContractMemberDefinition.GetFromContract(obj2.GetType());
+        var res3 = ContractMemberDefinition.GetFromContract(obj3.GetType());
 
         // Assert
         Assert.AreSame(res1, res2);

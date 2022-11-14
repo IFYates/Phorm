@@ -129,7 +129,7 @@ internal sealed class PhormContractRunner<TActionContract> : IPhormContractRunne
         // Get data
         var recordType = rsProp.PropertyType.IsArray ? rsProp.PropertyType.GetElementType()! : rsProp.PropertyType;
         var records = new List<object>();
-        var recordMembers = ContractMemberDefinition.GetFromContract(recordType, null)
+        var recordMembers = ContractMemberDefinition.GetFromContract(recordType)
             .ToDictionary(m => m.DbName.ToUpperInvariant());
         while (safeRead(rdr, console))
         {
@@ -337,7 +337,7 @@ internal sealed class PhormContractRunner<TActionContract> : IPhormContractRunne
         }
         else
         {
-            var resultMembers = ContractMemberDefinition.GetFromContract(entityType, null)
+            var resultMembers = ContractMemberDefinition.GetFromContract(entityType)
                 .ToDictionary(m => m.DbName.ToUpperInvariant());
 
             // Parse recordset
@@ -399,7 +399,7 @@ internal sealed class PhormContractRunner<TActionContract> : IPhormContractRunne
         {
             Type = type;
             var attr = type.GetCustomAttribute<PhormSpecOfAttribute>(false);
-            Members = ContractMemberDefinition.GetFromContract(type, null)
+            Members = ContractMemberDefinition.GetFromContract(type)
                 .ToDictionary(m => m.DbName.ToUpperInvariant());
             if (attr != null)
             {
@@ -455,7 +455,7 @@ internal sealed class PhormContractRunner<TActionContract> : IPhormContractRunne
             {
                 if (!genspec.GenType.IsAbstract)
                 {
-                    baseMembers ??= ContractMemberDefinition.GetFromContract(genspec.GenType, null)
+                    baseMembers ??= ContractMemberDefinition.GetFromContract(genspec.GenType)
                         .ToDictionary(m => m.DbName.ToUpperInvariant());
                     var result = getEntity(genspec.GenType, rdr, baseMembers, commandGuid);
                     results.Add(result);
