@@ -144,6 +144,11 @@ public class ContractMemberDefinition
             {
                 throw new InvalidDataContractException($"Cannot include method '{contractType.FullName}.{method.Name}' in contract: specifies parameters.");
             }
+            // Must have return type
+            if (method.ReturnType == typeof(void))
+            {
+                throw new InvalidDataContractException($"Cannot include method '{contractType.FullName}.{method.Name}' in contract: void return type.");
+            }
 
             var memb = new ContractMemberDefinition(method.Name, ParameterType.Input, method);
 

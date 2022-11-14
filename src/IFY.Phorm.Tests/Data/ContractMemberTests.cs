@@ -91,7 +91,7 @@ public class ContractMemberTests
     }
 
     [ExcludeFromCodeCoverage]
-    class ObjectWithBadMethodMember
+    class ObjectWithBadMethodMember1
     {
         public string Value1 { get; set; } = "A";
 #pragma warning disable CA1822 // Mark members as static
@@ -101,14 +101,35 @@ public class ContractMemberTests
     }
 
     [TestMethod]
-    public void GetMembersFromContract__Method_has_parameter__Fail()
+    public void GetMembersFromContract__Decorated_method_has_parameter__Fail()
     {
         // Act
         var ex = Assert.ThrowsException<InvalidDataContractException>
-            (() => ContractMember.GetMembersFromContract(null, typeof(ObjectWithBadMethodMember), false));
+            (() => ContractMember.GetMembersFromContract(null, typeof(ObjectWithBadMethodMember1), false));
 
         // Assert
-        Assert.IsTrue(ex.Message.Contains("'IFY.Phorm.Data.Tests.ContractMemberTests+ObjectWithBadMethodMember.Value2'"), "Actual: " + ex.Message);
+        Assert.IsTrue(ex.Message.Contains("'IFY.Phorm.Data.Tests.ContractMemberTests+ObjectWithBadMethodMember1.Value2'"), "Actual: " + ex.Message);
+    }
+
+    [ExcludeFromCodeCoverage]
+    class ObjectWithBadMethodMember2
+    {
+        public string Value1 { get; set; } = "A";
+#pragma warning disable CA1822 // Mark members as static
+        [ContractMember]
+        public void Value2() { }
+#pragma warning restore CA1822 // Mark members as static
+    }
+
+    [TestMethod]
+    public void GetMembersFromContract__Decorated_method_has_return_type_Fail()
+    {
+        // Act
+        var ex = Assert.ThrowsException<InvalidDataContractException>
+            (() => ContractMember.GetMembersFromContract(null, typeof(ObjectWithBadMethodMember2), false));
+
+        // Assert
+        Assert.IsTrue(ex.Message.Contains("'IFY.Phorm.Data.Tests.ContractMemberTests+ObjectWithBadMethodMember2.Value2'"), "Actual: " + ex.Message);
     }
 
     class ObjectWithoutReturnValueProperty
