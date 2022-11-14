@@ -198,8 +198,11 @@ public class ContractMemberDefinition
             {
                 if (!mi.DeclaringType.IsAssignableFrom(objType))
                 {
-                    // Resolve property with same name on non-contract
-                    mi = objType.GetProperty(SourceMember.Name, BindingFlags.Instance | BindingFlags.Public)?.GetMethod!;
+                    // Resolve identical method on non-contract
+                    mi = objType.GetMethod(SourceMember.Name, BindingFlags.Instance | BindingFlags.Public);
+
+                    // Otherwise, resolve property with same name on non-contract
+                    mi ??= objType.GetProperty(SourceMember.Name, BindingFlags.Instance | BindingFlags.Public)?.GetMethod!;
                 }
                 value = mi?.Invoke(entity, Array.Empty<object>());
             }

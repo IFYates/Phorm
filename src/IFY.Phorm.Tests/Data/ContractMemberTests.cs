@@ -60,9 +60,13 @@ public class ContractMemberTests
     #region GetMembersFromContract
 
     [ExcludeFromCodeCoverage]
-    class ObjectWithMethodMember : IContractWithMethodMember
+    class ObjectWithMethodMember : IContractWithMethodMember, IContractWithParentMethodMember
     {
         public string Value1 { get; set; } = "A";
+
+        [ContractMember]
+        public string Value4() => "X"; // Ignored by default through interface
+        public string Value5() => "Y"; // Ignored
     }
     interface IContractWithMethodMember
     {
@@ -78,6 +82,16 @@ public class ContractMemberTests
         public string Value2() => "B";
         [ExcludeFromCodeCoverage]
         public string Value3(int arg) => "C" + arg; // Ignored
+    }
+    interface IContractWithParentMethodMember
+    {
+        [ContractMember]
+        string Value4();
+    }
+    interface IContractWithAnonMethodMember
+    {
+        [ContractMember]
+        string Value5();
     }
 
     [TestMethod]
@@ -113,6 +127,30 @@ public class ContractMemberTests
         Assert.AreEqual("C", res[0].Value);
         Assert.AreEqual("Value2", res[1].DbName);
         Assert.AreEqual("D", res[1].Value);
+    }
+
+    [TestMethod]
+    public void GetMembersFromContract__Includes_decorated_methods_from_parent()
+    {
+        // Act
+        var res = ContractMember.GetMembersFromContract(new ObjectWithMethodMember(), typeof(IContractWithParentMethodMember), false);
+
+        // Assert
+        Assert.AreEqual(1, res.Length);
+        Assert.AreEqual("Value4", res[0].DbName);
+        Assert.AreEqual("X", res[0].Value);
+    }
+
+    [TestMethod]
+    public void GetMembersFromContract__Includes_decorated_methods_from_unrelated_entity()
+    {
+        // Act
+        var res = ContractMember.GetMembersFromContract(new ObjectWithMethodMember(), typeof(IContractWithAnonMethodMember), false);
+
+        // Assert
+        Assert.AreEqual(1, res.Length);
+        Assert.AreEqual("Value5", res[0].DbName);
+        Assert.AreEqual("Y", res[0].Value);
     }
 
     [ExcludeFromCodeCoverage]
