@@ -197,16 +197,12 @@ public class ContractMemberDefinition
             var objType = entity.GetType();
             if (SourceMember is PropertyInfo pi && pi.CanRead)
             {
-                if (pi.DeclaringType.IsAssignableFrom(objType))
+                if (!pi.DeclaringType.IsAssignableFrom(objType))
                 {
-                    value = pi.GetValue(entity);
+                    // Resolve same property on non-contract
+                    pi = objType.GetProperty(SourceMember.Name, BindingFlags.Instance | BindingFlags.Public);
                 }
-                else
-                {
-                    // Support non-contract
-                    var anonProp = objType.GetProperty(SourceMember.Name, BindingFlags.Instance | BindingFlags.Public);
-                    value = anonProp?.GetValue(entity);
-                }
+                value = pi?.GetValue(entity);
             }
             else if (SourceMember is MethodInfo mi)
             {
