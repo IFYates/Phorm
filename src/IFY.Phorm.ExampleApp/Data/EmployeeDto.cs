@@ -3,11 +3,17 @@ using System.Runtime.Serialization;
 
 namespace IFY.Phorm.ExampleApp.Data;
 
-public class EmployeeDto : ICreateEmployee
+[PhormSpecOf(nameof(PersonType), "Employee")]
+public class EmployeeDto : PersonDto, ICreateEmployee
 {
-    public long Id { get; set; }
-    public string Name { get; set; } = string.Empty;
     public ManagerDto Manager { get; set; } = null!;
+
+    public long ManagerId
+    {
+        get => Manager?.Id ?? _managerId;
+        set => _managerId = value;
+    }
+    private long _managerId;
 }
 
 [PhormContract(Namespace = "ExampleApp")]

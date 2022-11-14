@@ -3,11 +3,19 @@ using System.Runtime.Serialization;
 
 namespace IFY.Phorm.ExampleApp.Data;
 
-public class ManagerDto : ICreateManager
+[PhormSpecOf(nameof(PersonType), "Manager")]
+public class ManagerDto : PersonDto, ICreateManager
 {
-    public long Id { get; set; }
-    public string Name { get; set; } = string.Empty;
+    [DataMember(Name = "DepartmentName")]
     public string Department { get; set; } = string.Empty;
+}
+
+public class ManagerDtoWithEmployees : ManagerDto
+{
+    [Resultset(0, nameof(EmployeeSelector))]
+    public EmployeeDto[] Employees { get; set; } = Array.Empty<EmployeeDto>();
+    public static IRecordMatcher EmployeeSelector { get; }
+        = new RecordMatcher<ManagerDto, EmployeeDto>((p, c) => p.Id == c.ManagerId);
 }
 
 [PhormContract(Namespace = "ExampleApp")]
@@ -18,4 +26,10 @@ public interface ICreateManager : IPhormContract
     string Name { get; }
     [DataMember(Name = "DepartmentName", IsRequired = true)]
     string Department { get; }
+}
+
+[PhormContract(Namespace = "ExampleApp")]
+public interface IGetManager : IPhormContract
+{
+    long Id { get; }
 }

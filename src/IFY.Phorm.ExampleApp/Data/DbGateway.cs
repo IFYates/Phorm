@@ -1,4 +1,6 @@
-﻿namespace IFY.Phorm.ExampleApp.Data;
+﻿using IFY.Phorm.Data;
+
+namespace IFY.Phorm.ExampleApp.Data;
 
 /// <summary>
 /// Repository of database access logic.
@@ -22,5 +24,17 @@ public class DbGateway
     {
         var res = _session.Call<ICreateManager>(manager);
         return res == 1;
+    }
+
+    public GenSpec<PersonDto, EmployeeDto, ManagerDto> GetAllPeople()
+    {
+        return _session.From<IGetAllPeople>()
+            .Get<GenSpec<PersonDto, EmployeeDto, ManagerDto>>()!;
+    }
+
+    public ManagerDtoWithEmployees GetManager(long id)
+    {
+        return _session.From<IGetManager>(new { Id = id })
+            .Get<ManagerDtoWithEmployees>()!;
     }
 }
