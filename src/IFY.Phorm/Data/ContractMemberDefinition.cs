@@ -134,6 +134,11 @@ public class ContractMemberDefinition
             {
                 throw new InvalidDataContractException($"Cannot include method '{contractType.FullName}.{method.Name}' in contract: specifies parameters.");
             }
+            // Must have return type
+            if (method.ReturnType == typeof(void))
+            {
+                throw new InvalidDataContractException($"Cannot include method '{contractType.FullName}.{method.Name}' in contract: void return type.");
+            }
 
             var memb = new ContractMemberDefinition(method.Name, ParameterType.Input, method);
 
@@ -176,29 +181,22 @@ public class ContractMemberDefinition
     /// </summary>
     internal ContractMember FromEntity(object? entity)
     {
-        object? getValue(MemberInfo? mem)
-        {
-            return mem switch
-            {
-                PropertyInfo pi => pi.GetValue(entity),
-                MethodInfo mi => mi.Invoke(entity, Array.Empty<object>()),
-                _ => null
-            };
-        }
-
         object? value = null;
-        if (entity != null && SourceMember != null)
+        if (entity != null)
         {
             var objType = entity.GetType();
-            if (SourceMember.DeclaringType == objType)
+            if (SourceMember is PropertyInfo pi && pi.CanRead)
             {
-                value = getValue(SourceMember);
+                if (!pi.DeclaringType.IsAssignableFrom(objType))
+                {
+                    // Resolve same property on non-contract
+                    pi = objType.GetProperty(SourceMember.Name, BindingFlags.Instance | BindingFlags.Public);
+                }
+                value = pi?.GetValue(entity);
             }
-            else
+            else if (SourceMember is MethodInfo mi)
             {
-                // Support non-contract
-                var anonProp = objType?.GetProperty(SourceMember.Name, BindingFlags.Instance | BindingFlags.Public);
-                value = getValue(anonProp);
+                value = mi.Invoke(entity, Array.Empty<object>());
             }
         }
 

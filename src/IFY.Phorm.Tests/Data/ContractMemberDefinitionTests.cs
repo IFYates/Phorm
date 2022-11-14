@@ -1,6 +1,7 @@
 ﻿using IFY.Phorm.Encryption;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.Serialization;
 
 namespace IFY.Phorm.Data.Tests;
 
@@ -73,5 +74,53 @@ public class ContractMemberDefinitionTests
 
         // Assert
         Assert.IsNull(res.Value);
+    }
+
+    public class MyEntity : IEntityWithImplementedProperty
+    {
+        public string InternalValue { get; set; } = null!;
+    }
+    interface IEntityWithImplementedProperty
+    {
+        [IgnoreDataMember]
+        string InternalValue { get; }
+        string Value => InternalValue;
+    }
+
+    [TestMethod]
+    public void FromEntity__Supports_interface_implemented_property()
+    {
+        // Arrange
+        var obj = new MyEntity { InternalValue = Guid.NewGuid().ToString() };
+
+        var def = ContractMemberDefinition.GetFromContract(typeof(IEntityWithImplementedProperty), null)
+            .First();
+
+        // Act
+        var res = def.FromEntity(obj);
+
+        // Assert
+        Assert.AreEqual("Value", res.DbName);
+        Assert.AreEqual(obj.InternalValue, (string)res.Value!);
+    }
+
+    [TestMethod]
+    public void FromEntity__Contract_interface_implemented_property_with_anon_object__Not_supported()
+    {
+        // Arrange
+        var val1 = Guid.NewGuid().ToString();
+        var val2 = Guid.NewGuid().ToString();
+
+        var obj = new MyEntity { InternalValue = val1 };
+
+        var def = ContractMemberDefinition.GetFromContract(typeof(IEntityWithImplementedProperty), null)
+            .First();
+
+        // Act
+        var res = def.FromEntity(new { Value = val2 });
+
+        // Assert
+        Assert.AreEqual("Value", res.DbName);
+        Assert.AreEqual(val2, (string)res.Value!);
     }
 }
