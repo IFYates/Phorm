@@ -198,9 +198,9 @@ public class ContractMemberTests
     public void ResolveContract__Caches_members_by_type()
     {
         // Act
-        var res1 = ContractMemberDefinition.GetFromContract(typeof(IPhormContract), typeof(ObjectWithDynamicProperty));
-        var res2 = ContractMemberDefinition.GetFromContract(typeof(IPhormContract), typeof(ObjectWithDynamicProperty));
-        var res3 = ContractMemberDefinition.GetFromContract(typeof(IPhormContract), typeof(ObjectWithDynamicProperty));
+        var res1 = ContractMemberDefinition.GetFromContract(typeof(ObjectWithDynamicProperty));
+        var res2 = ContractMemberDefinition.GetFromContract(typeof(ObjectWithDynamicProperty));
+        var res3 = ContractMemberDefinition.GetFromContract(typeof(ObjectWithDynamicProperty));
 
         // Assert
         Assert.AreSame(res1, res2);
@@ -216,9 +216,9 @@ public class ContractMemberTests
         var obj3 = new { Test = 3 };
 
         // Act
-        var res1 = ContractMemberDefinition.GetFromContract(typeof(IPhormContract), obj1.GetType());
-        var res2 = ContractMemberDefinition.GetFromContract(typeof(IPhormContract), obj2.GetType());
-        var res3 = ContractMemberDefinition.GetFromContract(typeof(IPhormContract), obj3.GetType());
+        var res1 = ContractMemberDefinition.GetFromContract(obj1.GetType());
+        var res2 = ContractMemberDefinition.GetFromContract(obj2.GetType());
+        var res3 = ContractMemberDefinition.GetFromContract(obj3.GetType());
 
         // Assert
         Assert.AreSame(res1, res2);

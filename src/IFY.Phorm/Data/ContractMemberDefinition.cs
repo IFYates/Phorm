@@ -89,23 +89,13 @@ public class ContractMemberDefinition
         Direction = dir;
     }
 
-    private static readonly ConcurrentDictionary<Type, ContractMemberDefinition[]> _memberCache = new ConcurrentDictionary<Type, ContractMemberDefinition[]>();
+    private static readonly ConcurrentDictionary<Type, ContractMemberDefinition[]> _memberCache = new();
 
     /// <summary>
     /// Convert properties of any object to <see cref="ContractMemberDefinition"/>s.
     /// </summary>
-    internal static ContractMemberDefinition[] GetFromContract(Type contractType, Type? argType)
+    internal static ContractMemberDefinition[] GetFromContract(Type contractType)
     {
-        // If runtime contract type, must have object
-        if (contractType == typeof(IPhormContract))
-        {
-            if (argType == null)
-            {
-                return Array.Empty<ContractMemberDefinition>();
-            }
-            contractType = argType;
-        }
-
         var members = _memberCache.GetOrAdd(contractType,
             _ => getMemberDefs(contractType));
         return members;

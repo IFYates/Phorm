@@ -51,7 +51,7 @@ public class ContractMemberDefinitionTests
     public void GetFromContract__Has_ContractOutMember_property__Output_direction()
     {
         // Act
-        var mems = ContractMemberDefinition.GetFromContract(typeof(ITestContractOutMember), null);
+        var mems = ContractMemberDefinition.GetFromContract(typeof(ITestContractOutMember));
 
         // Assert
         Assert.AreEqual(ParameterType.Output, mems.Single().Direction);
@@ -66,7 +66,7 @@ public class ContractMemberDefinitionTests
     public void FromEntity__Contract_member_missing_from_anonymous_arg__Null()
     {
         // Arrange
-        var mems = ContractMemberDefinition.GetFromContract(typeof(ITestContract), null);
+        var mems = ContractMemberDefinition.GetFromContract(typeof(ITestContract));
 
         // Act
         var res = mems.Single().FromEntity(new { });
