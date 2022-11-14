@@ -117,7 +117,7 @@
             Returns true if this property is transformed by a secure attribute.
             </summary>
         </member>
-        <member name="M:IFY.Phorm.Data.ContractMemberDefinition.GetFromContract(System.Type,System.Type)">
+        <member name="M:IFY.Phorm.Data.ContractMemberDefinition.GetFromContract(System.Type)">
             <summary>
             Convert properties of any object to <see cref="T:IFY.Phorm.Data.ContractMemberDefinition"/>s.
             </summary>

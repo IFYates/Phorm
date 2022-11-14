@@ -1,6 +1,7 @@
 ﻿using IFY.Phorm.Encryption;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.Serialization;
 
 namespace IFY.Phorm.Data.Tests;
 
@@ -51,7 +52,7 @@ public class ContractMemberDefinitionTests
     public void GetFromContract__Has_ContractOutMember_property__Output_direction()
     {
         // Act
-        var mems = ContractMemberDefinition.GetFromContract(typeof(ITestContractOutMember), null);
+        var mems = ContractMemberDefinition.GetFromContract(typeof(ITestContractOutMember));
 
         // Assert
         Assert.AreEqual(ParameterType.Output, mems.Single().Direction);
@@ -66,12 +67,57 @@ public class ContractMemberDefinitionTests
     public void FromEntity__Contract_member_missing_from_anonymous_arg__Null()
     {
         // Arrange
-        var mems = ContractMemberDefinition.GetFromContract(typeof(ITestContract), null);
+        var mems = ContractMemberDefinition.GetFromContract(typeof(ITestContract));
 
         // Act
         var res = mems.Single().FromEntity(new { });
 
         // Assert
         Assert.IsNull(res.Value);
+    }
+
+    public class MyEntity : IEntityWithImplementedProperty
+    {
+        public string InternalValue { get; set; } = null!;
+    }
+    interface IEntityWithImplementedProperty
+    {
+        [IgnoreDataMember]
+        string InternalValue { get; }
+        string Value => InternalValue;
+    }
+
+    [TestMethod]
+    public void FromEntity__Supports_interface_implemented_property()
+    {
+        // Arrange
+        var obj = new MyEntity { InternalValue = Guid.NewGuid().ToString() };
+
+        var def = ContractMemberDefinition.GetFromContract(typeof(IEntityWithImplementedProperty))
+            .First();
+
+        // Act
+        var res = def.FromEntity(obj);
+
+        // Assert
+        Assert.AreEqual("Value", res.DbName);
+        Assert.AreEqual(obj.InternalValue, (string)res.Value!);
+    }
+
+    [TestMethod]
+    public void FromEntity__Contract_interface_implemented_property_with_anon_object__Not_supported()
+    {
+        // Arrange
+        var val = Guid.NewGuid().ToString();
+
+        var def = ContractMemberDefinition.GetFromContract(typeof(IEntityWithImplementedProperty))
+            .First();
+
+        // Act
+        var res = def.FromEntity(new { Value = val });
+
+        // Assert
+        Assert.AreEqual("Value", res.DbName);
+        Assert.AreEqual(val, (string)res.Value!);
     }
 }
