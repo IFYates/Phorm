@@ -186,29 +186,26 @@ public class ContractMemberDefinition
     /// </summary>
     internal ContractMember FromEntity(object? entity)
     {
-        object? getValue(MemberInfo? mem)
-        {
-            return mem switch
-            {
-                PropertyInfo pi => pi.GetValue(entity),
-                MethodInfo mi => mi.Invoke(entity, Array.Empty<object>()),
-                _ => null
-            };
-        }
-
         object? value = null;
-        if (entity != null && SourceMember != null)
+        if (entity != null)
         {
             var objType = entity.GetType();
-            if (SourceMember.DeclaringType == objType)
+            if (SourceMember is PropertyInfo pi && pi.CanRead)
             {
-                value = getValue(SourceMember);
+                if (pi.DeclaringType.IsAssignableFrom(objType))
+                {
+                    value = pi.GetValue(entity);
+                }
+                else
+                {
+                    // Support non-contract
+                    var anonProp = objType.GetProperty(SourceMember.Name, BindingFlags.Instance | BindingFlags.Public);
+                    value = anonProp?.GetValue(entity);
+                }
             }
-            else
+            else if (SourceMember is MethodInfo mi)
             {
-                // Support non-contract
-                var anonProp = objType?.GetProperty(SourceMember.Name, BindingFlags.Instance | BindingFlags.Public);
-                value = getValue(anonProp);
+                value = mi.Invoke(entity, Array.Empty<object>());
             }
         }
 
