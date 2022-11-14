@@ -60,27 +60,31 @@ public class ContractMemberTests
     #region GetMembersFromContract
 
     [ExcludeFromCodeCoverage]
-    class ObjectWithMethodMember
+    class ObjectWithMethodMember : IContractWithMethodMember
     {
-        public string Value1
+        public string Value1 { get; set; } = "A";
+    }
+    interface IContractWithMethodMember
+    {
+        string Value1
         {
             [ContractMember]
             get; // Must not be picked up separately
             [ContractMember]
             set; // Must not be picked up separately
-        } = "A";
-#pragma warning disable CA1822 // Mark members as static
+        }
+
         [ContractMember]
         public string Value2() => "B";
+        [ExcludeFromCodeCoverage]
         public string Value3(int arg) => "C" + arg; // Ignored
-#pragma warning restore CA1822 // Mark members as static
     }
 
     [TestMethod]
     public void GetMembersFromContract__Includes_decorated_methods()
     {
         // Act
-        var res = ContractMember.GetMembersFromContract(new ObjectWithMethodMember(), typeof(ObjectWithMethodMember), false);
+        var res = ContractMember.GetMembersFromContract(new ObjectWithMethodMember(), typeof(IContractWithMethodMember), false);
 
         // Assert
         Assert.AreEqual(2, res.Length);
@@ -88,6 +92,27 @@ public class ContractMemberTests
         Assert.AreEqual("A", res[0].Value);
         Assert.AreEqual("Value2", res[1].DbName);
         Assert.AreEqual("B", res[1].Value);
+    }
+
+    [TestMethod]
+    public void GetMembersFromContract__Ignores_decorated_methods_Anon_arg()
+    {
+        // Arrange
+        var arg = new
+        {
+            Value1 = "C",
+            Value2 = "D"
+        };
+
+        // Act
+        var res = ContractMember.GetMembersFromContract(arg, typeof(IContractWithMethodMember), false);
+
+        // Assert
+        Assert.AreEqual(2, res.Length);
+        Assert.AreEqual("Value1", res[0].DbName);
+        Assert.AreEqual("C", res[0].Value);
+        Assert.AreEqual("Value2", res[1].DbName);
+        Assert.AreEqual("D", res[1].Value);
     }
 
     [ExcludeFromCodeCoverage]

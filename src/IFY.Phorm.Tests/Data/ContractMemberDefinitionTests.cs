@@ -93,7 +93,7 @@ public class ContractMemberDefinitionTests
         // Arrange
         var obj = new MyEntity { InternalValue = Guid.NewGuid().ToString() };
 
-        var def = ContractMemberDefinition.GetFromContract(typeof(IEntityWithImplementedProperty), null)
+        var def = ContractMemberDefinition.GetFromContract(typeof(IEntityWithImplementedProperty))
             .First();
 
         // Act
@@ -108,19 +108,16 @@ public class ContractMemberDefinitionTests
     public void FromEntity__Contract_interface_implemented_property_with_anon_object__Not_supported()
     {
         // Arrange
-        var val1 = Guid.NewGuid().ToString();
-        var val2 = Guid.NewGuid().ToString();
+        var val = Guid.NewGuid().ToString();
 
-        var obj = new MyEntity { InternalValue = val1 };
-
-        var def = ContractMemberDefinition.GetFromContract(typeof(IEntityWithImplementedProperty), null)
+        var def = ContractMemberDefinition.GetFromContract(typeof(IEntityWithImplementedProperty))
             .First();
 
         // Act
-        var res = def.FromEntity(new { Value = val2 });
+        var res = def.FromEntity(new { Value = val });
 
         // Assert
         Assert.AreEqual("Value", res.DbName);
-        Assert.AreEqual(val2, (string)res.Value!);
+        Assert.AreEqual(val, (string)res.Value!);
     }
 }

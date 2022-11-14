@@ -196,7 +196,12 @@ public class ContractMemberDefinition
             }
             else if (SourceMember is MethodInfo mi)
             {
-                value = mi.Invoke(entity, Array.Empty<object>());
+                if (!mi.DeclaringType.IsAssignableFrom(objType))
+                {
+                    // Resolve property with same name on non-contract
+                    mi = objType.GetProperty(SourceMember.Name, BindingFlags.Instance | BindingFlags.Public)?.GetMethod!;
+                }
+                value = mi?.Invoke(entity, Array.Empty<object>());
             }
         }
 
