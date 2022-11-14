@@ -16,11 +16,12 @@
 
 		<Authors>IFYates</Authors>
 		<PackageLicenseExpression>MPL-2.0</PackageLicenseExpression>
-		<Version>1.5.1</Version>
+		<Version>1.5.2</Version>
 		<PackageProjectUrl>https://github.com/IFYates/Phorm</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/IFYates/Phorm</RepositoryUrl>
 		<RepositoryType>GitHub</RepositoryType>
-		<PackageReleaseNotes>v1.5.1 - Support DateOnly
+		<PackageReleaseNotes>v1.5.2 - Improved support for implemented interface properties
+v1.5.1 - Support DateOnly
 v1.5.0.1 - Minor internal changes
 v1.5.0 - Contract structures cached by type. Out of beta
 v1.4.1-beta - Reduced wasted connections. Replaced Shimterface with Shimr
