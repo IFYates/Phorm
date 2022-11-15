@@ -21,6 +21,7 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\IFY.Phorm\IFY.Phorm.Core.csproj" />
+		<ProjectReference Include="..\IFY.Phorm.ExampleApp\IFY.Phorm.ExampleApp.csproj" />
 	</ItemGroup>
 
 </Project>
