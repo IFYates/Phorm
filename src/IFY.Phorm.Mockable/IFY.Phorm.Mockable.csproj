@@ -1,12 +1,14 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.1</TargetFramework>
-    <Nullable>enable</Nullable>
+	  <TargetFrameworks>netstandard2.1;net6.0</TargetFrameworks>
+	  <Nullable>enable</Nullable>
+	  <ImplicitUsings>enable</ImplicitUsings>
+	  <LangVersion>10.0</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\IFY.Phorm\IFY.Phorm.csproj" />
+    <ProjectReference Include="..\IFY.Phorm\IFY.Phorm.Core.csproj" />
   </ItemGroup>
 
 </Project>

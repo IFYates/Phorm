@@ -20,6 +20,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<ProjectReference Include="..\IFY.Phorm.Mockable\IFY.Phorm.Mockable.csproj" />
 		<ProjectReference Include="..\IFY.Phorm\IFY.Phorm.Core.csproj" />
 		<ProjectReference Include="..\IFY.Phorm.ExampleApp\IFY.Phorm.ExampleApp.csproj" />
 	</ItemGroup>

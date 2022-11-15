@@ -1,5 +1,6 @@
 using IFY.Phorm.ExampleApp.Data;
 using IFY.Phorm.Execution;
+using IFY.Phorm.Mockable;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 
@@ -28,6 +29,33 @@ public class DbGatewayTests
             });
 
         var dbGateway = new DbGateway(phormSessionMock.Object);
+
+        long id = new Random().Next();
+
+        // Act
+        var res = dbGateway.GetManager(id);
+
+        // Assert
+        Assert.AreEqual(id, fromArg_Id);
+        Assert.AreSame(data, res);
+    }
+
+    [TestMethod]
+    public void GetManager__Using_Mockable_framework()
+    {
+        // Arrange
+        var data = new ManagerDtoWithEmployees();
+
+        long? fromArg_Id = null;
+        var phormSessionMock = new Mock<IPhormSessionMock>(MockBehavior.Strict);
+        phormSessionMock.Setup(m => m.GetFrom<IGetManager, ManagerDtoWithEmployees>(It.IsAny<object>()))
+            .Returns<object>(o =>
+            {
+                fromArg_Id = (long)o.GetType().GetProperty("Id")!.GetValue(o)!;
+                return data;
+            });
+
+        var dbGateway = new DbGateway(new MockPhormSession(phormSessionMock.Object));
 
         long id = new Random().Next();
 
