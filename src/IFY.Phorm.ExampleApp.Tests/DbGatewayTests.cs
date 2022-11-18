@@ -48,8 +48,8 @@ public class DbGatewayTests
 
         long? fromArg_Id = null;
         var phormSessionMock = new Mock<IPhormSessionMock>(MockBehavior.Strict);
-        phormSessionMock.Setup(m => m.GetFrom<IGetManager, ManagerDtoWithEmployees>(It.IsAny<object>()))
-            .Returns<object>(o =>
+        phormSessionMock.Setup(m => m.GetFrom<IGetManager, ManagerDtoWithEmployees>(It.IsAny<object>(), It.IsAny<CallContext>()))
+            .Returns<object, CallContext>((o, c) =>
             {
                 fromArg_Id = (long)o.GetType().GetProperty("Id")!.GetValue(o)!;
                 return data;
