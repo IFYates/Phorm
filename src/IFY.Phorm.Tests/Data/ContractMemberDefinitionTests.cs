@@ -82,7 +82,7 @@ public class ContractMemberDefinitionTests
     }
 
     [TestMethod]
-    public void FromEntity__Anon_object_without_property__Ignored()
+    public void ApplyToEntity__Anon_object_without_property__Ignored()
     {
         // Arrange
         var arg = new { };
@@ -93,6 +93,23 @@ public class ContractMemberDefinitionTests
 
         // Act
         memb.ApplyToEntity(arg);
+    }
+
+    [TestMethod]
+    public void ApplyToEntity__Anon_object_gets_output_by_ContractMember()
+    {
+        // Arrange
+        var arg = new { Prop1 = ContractMember.Out<int>() };
+
+        var memb = ContractMemberDefinition.GetFromContract(typeof(IOutParameterContract))
+            .Single().FromEntity(arg);
+        memb.SetValue(123);
+
+        // Act
+        memb.ApplyToEntity(arg);
+
+        // Assert
+        Assert.AreEqual(123, arg.Prop1.Value);
     }
 
     public class MyEntity : IEntityWithImplementedProperty
