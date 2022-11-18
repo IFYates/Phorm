@@ -221,13 +221,21 @@ public class ContractMember : ContractMemberDefinition
         var prop = SourceMember as PropertyInfo;
         try
         {
+            if (prop?.DeclaringType?.IsAssignableFrom(entity.GetType()) == false)
+            {
+                prop = entity.GetType().GetProperty(prop.Name);
+            }
             if (prop != null)
             {
-                if (prop.DeclaringType?.IsAssignableFrom(entity.GetType()) == false)
+                if (prop.PropertyType.IsGenericType && typeof(ContractOutMember<>) == prop.PropertyType.GetGenericTypeDefinition())
                 {
-                    prop = entity.GetType().GetProperty(prop.Name) ?? prop;
+                    var val = (ContractMember)prop.GetValue(entity);
+                    val.SetValue(Value);
                 }
-                prop.SetValue(entity, Value);
+                else
+                {
+                    prop.SetValue(entity, Value);
+                }
             }
         }
         catch (Exception ex)

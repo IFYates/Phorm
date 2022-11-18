@@ -76,6 +76,25 @@ public class ContractMemberDefinitionTests
         Assert.IsNull(res.Value);
     }
 
+    public interface IOutParameterContract : IPhormContract
+    {
+        long Prop1 { set; }
+    }
+
+    [TestMethod]
+    public void FromEntity__Anon_object_without_property__Ignored()
+    {
+        // Arrange
+        var arg = new { };
+
+        var memb = ContractMemberDefinition.GetFromContract(typeof(IOutParameterContract))
+            .Single().FromEntity(arg);
+        memb.SetValue(123);
+
+        // Act
+        memb.ApplyToEntity(arg);
+    }
+
     public class MyEntity : IEntityWithImplementedProperty
     {
         public string InternalValue { get; set; } = null!;
