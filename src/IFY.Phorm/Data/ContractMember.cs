@@ -225,22 +225,20 @@ public class ContractMember : ContractMemberDefinition
             {
                 prop = entity.GetType().GetProperty(prop.Name);
             }
-            if (prop != null)
+            if (prop?.PropertyType.IsGenericType == true
+                && typeof(ContractOutMember<>) == prop.PropertyType.GetGenericTypeDefinition())
             {
-                if (prop.PropertyType.IsGenericType && typeof(ContractOutMember<>) == prop.PropertyType.GetGenericTypeDefinition())
-                {
-                    var val = (ContractMember)prop.GetValue(entity);
-                    val.SetValue(Value);
-                }
-                else
-                {
-                    prop.SetValue(entity, Value);
-                }
+                var val = (ContractMember)prop.GetValue(entity);
+                val.SetValue(Value);
+            }
+            else if (prop?.SetMethod != null)
+            {
+                prop.SetValue(entity, Value);
             }
         }
         catch (Exception ex)
         {
-            throw new InvalidOperationException($"Failed to set property {prop?.DeclaringType?.FullName ?? "(unknown)"}.{prop?.Name ?? DbName}", ex);
+            throw new InvalidOperationException($"Failed to set property {SourceMember?.DeclaringType?.FullName ?? "(unknown)"}.{SourceMember?.Name ?? DbName}", ex);
         }
     }
 
