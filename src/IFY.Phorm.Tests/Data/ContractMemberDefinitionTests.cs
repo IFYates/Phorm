@@ -2,6 +2,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.Serialization;
+using System.Text;
 
 namespace IFY.Phorm.Data.Tests;
 
@@ -74,6 +75,88 @@ public class ContractMemberDefinitionTests
 
         // Assert
         Assert.IsNull(res.Value);
+    }
+
+    public interface IOutParameterContract : IPhormContract
+    {
+        long Prop1 { set; }
+    }
+
+    [TestMethod]
+    public void ApplyToEntity__Anon_object_without_property__Ignored()
+    {
+        // Arrange
+        var arg = new { };
+
+        var memb = ContractMemberDefinition.GetFromContract(typeof(IOutParameterContract))
+            .Single().FromEntity(arg);
+        memb.SetValue(123);
+
+        // Act
+        memb.ApplyToEntity(arg);
+    }
+
+    [TestMethod]
+    public void ApplyToEntity__Anon_object_gets_output_by_ContractMember()
+    {
+        // Arrange
+        var arg = new { Prop1 = ContractMember.Out<int>() };
+
+        var memb = ContractMemberDefinition.GetFromContract(typeof(IOutParameterContract))
+            .Single().FromEntity(arg);
+        memb.SetValue(123);
+
+        // Act
+        memb.ApplyToEntity(arg);
+
+        // Assert
+        Assert.AreEqual(123, arg.Prop1.Value);
+    }
+
+    [TestMethod]
+    public void ApplyToEntity__Anon_object_wrong_property_type__Fail()
+    {
+        // Arrange
+        var arg = new { Prop1 = ContractMember.Out<DateTime>() };
+
+        var memb = ContractMemberDefinition.GetFromContract(typeof(IOutParameterContract))
+            .Single().FromEntity(arg);
+        memb.SetValue(123);
+
+        // Act
+        var ex = Assert.ThrowsException<InvalidOperationException>
+            (() => memb.ApplyToEntity(arg));
+
+        // Assert
+        Assert.AreEqual("Failed to set property IFY.Phorm.Data.Tests.ContractMemberDefinitionTests+IOutParameterContract.Prop1", ex.Message);
+        Assert.IsNotNull(ex.InnerException);
+    }
+
+    class UnsettableDTO
+    {
+        public long Prop1 { get; }
+
+        public UnsettableDTO(long prop1)
+        {
+            Prop1 = prop1;
+        }
+    }
+
+    [TestMethod]
+    public void ApplyToEntity__Arg_type_has_unsettable_output_property__No_fail()
+    {
+        // Arrange
+        var arg = new UnsettableDTO(12345);
+
+        var memb = ContractMemberDefinition.GetFromContract(typeof(IOutParameterContract))
+            .Single().FromEntity(arg);
+        memb.SetValue(123);
+
+        // Act
+        memb.ApplyToEntity(arg);
+
+        // Assert
+        Assert.AreEqual(12345, arg.Prop1);
     }
 
     public class MyEntity : IEntityWithImplementedProperty
