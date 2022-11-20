@@ -24,46 +24,54 @@ internal sealed class PhormContractRunner<TActionContract> : IPhormContractRunne
     {
         _session = session;
 
+        (_schema, _objectName, _objectType) = ResolveContractName(contractType, objectName, objectType);
+
+        _runArgs = args;
+    }
+
+    internal static (string? SchemaName, string ObjectName, DbObjectType ObjectType) ResolveContractName(Type contractType, string? objectName, DbObjectType objectType = DbObjectType.Default)
+    {
+        string? schema = null;
         contractType = contractType.IsArray ? contractType.GetElementType()! : contractType;
-        var contractName = contractType.Name;
         if (contractType == typeof(IPhormContract))
         {
-            _objectName = objectName ?? throw new ArgumentNullException(nameof(objectName));
+            objectName = objectName ?? throw new ArgumentNullException(nameof(objectName));
         }
         else
         {
-            if (contractType.IsInterface && contractName[0] == 'I')
+            objectName = contractType.Name;
+            if (contractType.IsInterface && objectName[0] == 'I')
             {
-                contractName = contractName[1..];
+                objectName = objectName[1..];
             }
-            objectName = null;
-            _objectName = contractName;
         }
 
         // Check for override attribute
         var pcAttr = contractType.GetCustomAttribute<PhormContractAttribute>(false);
         if (pcAttr != null)
         {
-            _schema = pcAttr.Namespace;
-            _objectName = objectName ?? pcAttr.Name ?? contractName;
-            _objectType = pcAttr.Target;
+            schema = pcAttr.Namespace;
+            objectName = pcAttr.Name ?? objectName;
+            objectType = pcAttr.Target;
         }
         else
         {
             var dcAttr = contractType.GetCustomAttribute<DataContractAttribute>(false);
             if (dcAttr != null)
             {
-                _schema = dcAttr.Namespace ?? _schema;
-                _objectName = objectName ?? dcAttr.Name ?? contractName;
+                schema = dcAttr.Namespace ?? schema;
+                objectName = dcAttr.Name ?? objectName;
             }
         }
 
-        if (_objectType == DbObjectType.Default)
+        if (objectType == DbObjectType.Default)
         {
-            _objectType = objectType == DbObjectType.Default ? DbObjectType.StoredProcedure : objectType;
+            objectType = objectType == DbObjectType.Default
+                ? DbObjectType.StoredProcedure
+                : objectType;
         }
 
-        _runArgs = args;
+        return (schema, objectName, objectType);
     }
 
     #region Execution
