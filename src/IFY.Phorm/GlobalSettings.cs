@@ -1,6 +1,7 @@
 ﻿using IFY.Phorm.Encryption;
 using Newtonsoft.Json;
 
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("IFY.Phorm.Mockable")]
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo("IFY.Phorm.Tests")]
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo("IFY.Phorm.SqlClient.Tests")]
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo("IFY.Phorm.SqlClient.IntegrationTests")]

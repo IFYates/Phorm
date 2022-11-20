@@ -29,7 +29,7 @@ internal sealed class PhormContractRunner<TActionContract> : IPhormContractRunne
         _runArgs = args;
     }
 
-    internal static (string? SchemaName, string ObjectName, DbObjectType ObjectType) ResolveContractName(Type contractType, string? objectName, DbObjectType objectType = DbObjectType.Default)
+    internal static (string? SchemaName, string ObjectName, DbObjectType ObjectType) ResolveContractName(Type contractType, string? objectName = null, DbObjectType objectType = DbObjectType.Default)
     {
         string? schema = null;
         contractType = contractType.IsArray ? contractType.GetElementType()! : contractType;
