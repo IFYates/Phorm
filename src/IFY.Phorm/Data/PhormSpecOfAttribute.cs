@@ -3,7 +3,7 @@
 /// <summary>
 /// Mark this "Specialised" type with the details on how to differentiate it within the "Generalised" data.
 /// </summary>
-[AttributeUsage(AttributeTargets.Class)]
+[AttributeUsage(AttributeTargets.Class, AllowMultiple = true, Inherited = false)]
 public class PhormSpecOfAttribute : Attribute
 {
     /// <summary>

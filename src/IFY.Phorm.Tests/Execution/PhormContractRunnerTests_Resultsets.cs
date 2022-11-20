@@ -38,11 +38,6 @@ public class PhormContractRunnerTests_Resultsets
             = new RecordMatcher<TestParentBadResultsetProperty, TestChild>((p, c) => true);
     }
 
-    class TestParentBadProperty
-    {
-        public string? Key { get; } = null;
-    }
-
     interface ITestContract : IPhormContract
     {
     }
@@ -93,43 +88,6 @@ public class PhormContractRunnerTests_Resultsets
 
         // Assert
         Assert.AreEqual("Attempt to get type IFY.Phorm.Execution.Tests.PhormContractRunnerTests_Resultsets+TestBadEntity without empty constructor.", ex.Message);
-    }
-
-    [TestMethod]
-    public void GetAsync__Value_for_property_without_setter__Fail()
-    {
-        // Arrange
-        var conn = new TestPhormConnection("")
-        {
-            DefaultSchema = "schema"
-        };
-
-        var cmd = new TestDbCommand(new TestDbDataReader
-        {
-            Data = new List<Dictionary<string, object>>
-            {
-                new Dictionary<string, object>
-                {
-                    ["Id"] = 1,
-                    ["Key"] = "key1"
-                }
-            }
-        });
-        conn.CommandQueue.Enqueue(cmd);
-
-        var phorm = new TestPhormSession(conn);
-
-        var runner = new PhormContractRunner<ITestContract>(phorm, "ContractName", DbObjectType.StoredProcedure, null);
-
-        // Act
-        var ex = (InvalidOperationException)Assert.ThrowsException<AggregateException>(() =>
-        {
-            _ = runner.GetAsync<TestParentBadProperty>().Result;
-        }).InnerException!;
-
-        // Assert
-        Assert.AreEqual("Failed to set property IFY.Phorm.Execution.Tests.PhormContractRunnerTests_Resultsets+TestParentBadProperty.Key", ex.Message);
-        Assert.IsNotNull(ex.InnerException);
     }
 
     [TestMethod]

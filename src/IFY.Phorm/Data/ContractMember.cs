@@ -221,18 +221,24 @@ public class ContractMember : ContractMemberDefinition
         var prop = SourceMember as PropertyInfo;
         try
         {
-            if (prop != null)
+            if (prop?.DeclaringType?.IsAssignableFrom(entity.GetType()) == false)
             {
-                if (prop.DeclaringType?.IsAssignableFrom(entity.GetType()) == false)
-                {
-                    prop = entity.GetType().GetProperty(prop.Name) ?? prop;
-                }
+                prop = entity.GetType().GetProperty(prop.Name);
+            }
+            if (prop?.PropertyType.IsGenericType == true
+                && typeof(ContractOutMember<>) == prop.PropertyType.GetGenericTypeDefinition())
+            {
+                var val = (ContractMember)prop.GetValue(entity);
+                val.SetValue(Value);
+            }
+            else if (prop?.SetMethod != null)
+            {
                 prop.SetValue(entity, Value);
             }
         }
         catch (Exception ex)
         {
-            throw new InvalidOperationException($"Failed to set property {prop?.DeclaringType?.FullName ?? "(unknown)"}.{prop?.Name ?? DbName}", ex);
+            throw new InvalidOperationException($"Failed to set property {SourceMember?.DeclaringType?.FullName ?? "(unknown)"}.{SourceMember?.Name ?? DbName}", ex);
         }
     }
 
