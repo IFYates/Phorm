@@ -4,35 +4,6 @@ using IFY.Phorm.Execution;
 
 namespace IFY.Phorm.Mockable;
 
-/// <summary>
-/// 
-/// </summary>
-public interface IPhormSessionMock
-{
-    int Call(string contractName, object? args, CallContext context);
-    int Call<TActionContract>(object? args, CallContext context);
-    TResult? GetFrom<TResult>(string? contractName, object? args, CallContext context);
-    TResult? GetFrom<TActionContract, TResult>(object? args, CallContext context)
-        where TActionContract : IPhormContract;
-}
-
-public class CallContext
-{
-    public string? ConnectionName { get; set; }
-    public string? TargetSchema { get; set; }
-    public string? TargetObject { get; set; }
-    public DbObjectType? ObjectType { get; }
-
-    public CallContext() { }
-    public CallContext(string? connectionName, string? targetSchema, string? targetObject, DbObjectType objectType)
-    {
-        ConnectionName = connectionName;
-        TargetSchema = targetSchema;
-        TargetObject = targetObject;
-        ObjectType = objectType;
-    }
-}
-
 public class MockPhormSession : IPhormSession
 {
     private readonly IPhormSessionMock _mockObject;
@@ -316,5 +287,13 @@ public class MockPhormSession : IPhormSession
     {
         return new MockPhormContractRunner<IPhormContract>(this, _mockObject, null, args)
             .GetAsync<TResult>(cancellationToken);
+    }
+}
+
+public static class PhormSessionMockExtensions
+{
+    public static MockPhormSession ToMock(this IPhormSessionMock mockObject)
+    {
+        return new MockPhormSession(mockObject);
     }
 }
