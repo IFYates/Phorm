@@ -296,4 +296,22 @@ public static class PhormSessionMockExtensions
     {
         return new MockPhormSession(mockObject);
     }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public static bool IsLike<TContract>(this object? obj1, object? obj2)
+    {
+        var defs = ContractMemberDefinition.GetFromContract(typeof(TContract));
+        foreach (var def in defs)
+        {
+            var val1 = def.FromEntity(obj1);
+            var val2 = def.FromEntity(obj2);
+            if (!val1.Value.Equals(val2.Value))
+            {
+                return false;
+            }
+        }
+        return true;
+    }
 }

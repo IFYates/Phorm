@@ -165,24 +165,18 @@ public class DbGatewayTests
         // Arrange
         var data = new ManagerDtoWithEmployees();
 
-        long? fromArg_Id = null;
+        long id = new Random().Next();
+
         var phormSessionMock = new Mock<IPhormSessionMock>(MockBehavior.Strict);
-        phormSessionMock.Setup(m => m.GetFrom<IGetManager, ManagerDtoWithEmployees>(It.IsAny<object>(), It.IsAny<CallContext>()))
-            .Returns<object, CallContext>((o, c) =>
-            {
-                fromArg_Id = (long)o.GetType().GetProperty("Id")!.GetValue(o)!;
-                return data;
-            });
+        phormSessionMock.Setup(m => m.GetFrom<IGetManager, ManagerDtoWithEmployees>(It.Is<object>(o => o.IsLike<IGetManager>(new { Id = id })), It.IsAny<CallContext>()))
+            .Returns(data);
 
         var dbGateway = new DbGateway(new MockPhormSession(phormSessionMock.Object));
-
-        long id = new Random().Next();
 
         // Act
         var res = dbGateway.GetManager(id);
 
         // Assert
-        Assert.AreEqual(id, fromArg_Id);
         Assert.AreSame(data, res);
     }
 }
