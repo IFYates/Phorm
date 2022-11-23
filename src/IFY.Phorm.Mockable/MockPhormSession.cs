@@ -4,24 +4,14 @@ using IFY.Phorm.Execution;
 
 namespace IFY.Phorm.Mockable;
 
+/// <summary>
+/// A functional <see cref="IPhormSession"/> implementation that makes it easier to mock out Pho/rm logic for testing.
+/// </summary>
 public class MockPhormSession : IPhormSession
 {
     private readonly IPhormSessionMock _mockObject;
 
-    // Call
-    // - name, contract, anon name
-    // - null, contract, anon args
-    //
-    // From<T>
-    // - null, contract, anon args
-    // - object comparer for both
-    // 
-    // don't treat Async/non different (opt. strict?)
-    //
-    // Easy check for target Table / View / SProc
-    //
-    // Default is to provide verbatim result, but way to provide "raw" data that will be processed like from datasource (i.e., through attributes)
-    //
+    // TODO: Some way to make the invocation do all contract way in and out, to test transformations, etc.
 
     public string? ConnectionName { get; set; }
     public bool ExceptionsAsConsoleMessage { get; set; }
