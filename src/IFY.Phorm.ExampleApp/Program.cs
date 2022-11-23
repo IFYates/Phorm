@@ -1,5 +1,4 @@
-﻿using IFY.Phorm.ExampleApp;
-using IFY.Phorm.ExampleApp.Data;
+﻿using IFY.Phorm.ExampleApp.Data;
 using IFY.Phorm.SqlClient;
 
 namespace IFY.Phorm.ExampleApp;
@@ -8,7 +7,8 @@ public static class Program
 {
     public static void Main()
     {
-        DatabaseHelper.ResetDatabase();
+        DatabaseHelper.RunScript("ExampleApp_Remove.sql");
+        DatabaseHelper.RunScript("ExampleApp.sql");
 
         // Setup
         var phorm = new SqlPhormSession(DatabaseHelper.DB_CONN);

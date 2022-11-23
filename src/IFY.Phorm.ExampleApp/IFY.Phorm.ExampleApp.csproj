@@ -6,7 +6,18 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<LangVersion>10.0</LangVersion>
 		<IsPackable>false</IsPackable>
+		<OutputType>Exe</OutputType>
 	</PropertyGroup>
+
+	<ItemGroup>
+	  <None Remove="ExampleApp.sql" />
+	  <None Remove="ExampleApp_Remove.sql" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <EmbeddedResource Include="ExampleApp_Remove.sql" />
+	  <EmbeddedResource Include="ExampleApp.sql" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\IFY.Phorm\IFY.Phorm.Core.csproj" />
