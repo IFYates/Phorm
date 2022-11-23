@@ -16,15 +16,15 @@
 
 		<Authors>IFYates</Authors>
 		<PackageLicenseExpression>MPL-2.0</PackageLicenseExpression>
-		<Version>1.5.3</Version>
 		<PackageProjectUrl>https://github.com/IFYates/Phorm</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/IFYates/Phorm</RepositoryUrl>
 		<RepositoryType>GitHub</RepositoryType>
-		<PackageReleaseNotes>v1.5.3 - Fix out paraneter on anon args
+		<Version>1.6.0</Version>
+		<PackageReleaseNotes>v1.6.0 - Fix #34. Breaking change to IEncryptor.
+v1.5.3 - Fix out paraneter on anon args
 v1.5.2 - Improved support for implemented interface properties
 v1.5.1 - Support DateOnly
-v1.5.0.1 - Minor internal changes
-v1.5.0 - Contract structures cached by type. Out of beta.</PackageReleaseNotes>
+v1.5.0.1 - Minor internal changes</PackageReleaseNotes>
 		<Copyright>(c) IFYates</Copyright>
 		<Description>SqlClient implementation of the Procedure-heavy object-relational mapping framework.</Description>
         <PackageReadmeFile>README.md</PackageReadmeFile>
