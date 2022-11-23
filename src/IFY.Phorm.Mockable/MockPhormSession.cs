@@ -307,7 +307,8 @@ public static class PhormSessionMockExtensions
         {
             var val1 = def.FromEntity(obj1);
             var val2 = def.FromEntity(obj2);
-            if (!val1.Value.Equals(val2.Value))
+            if ((val1.Value == null && val2.Value == null)
+                || val1.Value?.Equals(val2.Value) != true)
             {
                 return false;
             }
