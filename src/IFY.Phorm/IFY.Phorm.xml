@@ -305,6 +305,16 @@
             Basic implementation of <see cref="T:IFY.Phorm.Encryption.IEncryptor"/>-based encryption of secure values.
             </summary>
         </member>
+        <member name="P:IFY.Phorm.Encryption.SecureValueAttribute.DataClassification">
+            <summary>
+            The identifier for the classification of the data, used to determine the encryption/decryption implementation.
+            </summary>
+        </member>
+        <member name="P:IFY.Phorm.Encryption.SecureValueAttribute.AuthenticatorPropertyName">
+            <summary>
+            The name of a property on this contract/DTO that is used as an encryption/decryption authenticator.
+            </summary>
+        </member>
         <member name="M:IFY.Phorm.Encryption.SecureValueAttribute.#ctor(System.String)">
             <summary>
             This contract property represents a value that is stored encrypted.
@@ -317,6 +327,12 @@
             </summary>
             <param name="dataClassification">The classification for this value type, which can be used to control the encryption used.</param>
             <param name="authenticatorPropertyName">The name of the property holding the authenticator value.</param>
+        </member>
+        <member name="M:IFY.Phorm.Encryption.SecureValueAttribute.Decrypt(System.Byte[],System.Object)">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Encryption.SecureValueAttribute.Encrypt(System.Object,System.Object)">
+            <inheritdoc/>
         </member>
         <member name="P:IFY.Phorm.EventArgs.CommandExecutedEventArgs.CommandGuid">
             <summary>
