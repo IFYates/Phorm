@@ -54,6 +54,13 @@
             Apply this value to an entity.
             </summary>
         </member>
+        <member name="M:IFY.Phorm.Data.ContractMember.SetFromDatasource(System.Object,System.Object)">
+            <summary>
+            Set this value as from a datasource.
+            </summary>
+            <param name="value">The value from the datasource.</param>
+            <param name="source">The DTO that is being built from the datasource.</param>
+        </member>
         <member name="P:IFY.Phorm.Data.ContractMemberAttribute.DisableInput">
             <summary>
             Set to true to ensure that this member is never used as input to the data source.
@@ -243,6 +250,22 @@
             Provides factory method for getting the required encryption handler.
             </summary>
         </member>
+        <member name="M:IFY.Phorm.Encryption.IEncryptionProvider.GetDecryptor(System.String,System.Byte[])">
+            <summary>
+            Returns the appropriate implementation of <see cref="T:IFY.Phorm.Encryption.IEncryptor"/> that can be used to decrypt data classified as <paramref name="dataClassification"/>.
+            Can use the <paramref name="data"/> to be decrypted to pick the most appropriate implementation.
+            </summary>
+            <param name="dataClassification">The data classification of the value to be decrypted.</param>
+            <param name="data">The data that will need to be decrypted by the instance.</param>
+            <returns>The <see cref="T:IFY.Phorm.Encryption.IEncryptor"/> instance that will be used to decrypt the data.</returns>
+        </member>
+        <member name="M:IFY.Phorm.Encryption.IEncryptionProvider.GetEncryptor(System.String)">
+            <summary>
+            Returns the appropriate implementation of <see cref="T:IFY.Phorm.Encryption.IEncryptor"/> that can be used to encrypt data classified as <paramref name="dataClassification"/>.
+            </summary>
+            <param name="dataClassification">The data classification of the value to be encrypted.</param>
+            <returns>The <see cref="T:IFY.Phorm.Encryption.IEncryptor"/> instance that will be used to encrypt the data.</returns>
+        </member>
         <member name="T:IFY.Phorm.Encryption.IEncryptor">
             <summary>
             The implementation of an encryption and decryption handler.
@@ -263,7 +286,6 @@
             Decrypt the bytes using this implementation.
             </summary>
             <param name="data">The data to be decrypted.</param>
-            <param name="instance">The contract instance that this action is related to.</param>
             <returns>The decrypted value as bytes.</returns>
         </member>
         <member name="M:IFY.Phorm.Encryption.IEncryptor.Encrypt(System.Byte[])">
@@ -271,7 +293,6 @@
             Encrypt the value bytes using this implementation.
             </summary>
             <param name="value">The value (as bytes) to be encrypted.</param>
-            <param name="instance">The contract instance that this action is related to.</param>
             <returns>The encrypted data.</returns>
         </member>
         <member name="T:IFY.Phorm.Encryption.NullEncryptor">

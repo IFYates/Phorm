@@ -629,15 +629,21 @@ public class PhormContractRunnerTests
 
         var data = "secure_value".GetBytes();
         var encdata = Guid.NewGuid().ToString().GetBytes();
+
+        var decrMock = new Mock<IEncryptor>(MockBehavior.Strict);
+        decrMock.SetupProperty(m => m.Authenticator);
+        decrMock.Setup(m => m.Decrypt(encdata))
+            .Returns(data);
+
         var encrMock = new Mock<IEncryptor>(MockBehavior.Strict);
         encrMock.SetupProperty(m => m.Authenticator);
         encrMock.Setup(m => m.Encrypt(data))
             .Returns(encdata);
-        encrMock.Setup(m => m.Decrypt(encdata))
-            .Returns(data);
 
         var provMock = new Mock<IEncryptionProvider>(MockBehavior.Strict);
-        provMock.Setup(m => m.GetInstance("class"))
+        provMock.Setup(m => m.GetDecryptor("class", encdata))
+            .Returns(() => decrMock.Object);
+        provMock.Setup(m => m.GetEncryptor("class"))
             .Returns(() => encrMock.Object);
         GlobalSettings.EncryptionProvider = provMock.Object;
 
@@ -1048,16 +1054,22 @@ public class PhormContractRunnerTests
 
         var data = "secure_value".GetBytes();
         var encdata = Guid.NewGuid().ToString().GetBytes();
-        var encrMock = mocks.Create<IEncryptor>();
+
+        var decrMock = new Mock<IEncryptor>(MockBehavior.Strict);
+        decrMock.SetupProperty(m => m.Authenticator);
+        decrMock.Setup(m => m.Decrypt(encdata))
+            .Returns(data);
+
+        var encrMock = new Mock<IEncryptor>(MockBehavior.Strict);
         encrMock.SetupProperty(m => m.Authenticator);
         encrMock.Setup(m => m.Encrypt(data))
-            .Returns(encdata).Verifiable();
-        encrMock.Setup(m => m.Decrypt(encdata))
-            .Returns(data).Verifiable();
+            .Returns(encdata);
 
-        var provMock = mocks.Create<IEncryptionProvider>();
-        provMock.Setup(m => m.GetInstance("class"))
-            .Returns(() => encrMock.Object).Verifiable();
+        var provMock = new Mock<IEncryptionProvider>(MockBehavior.Strict);
+        provMock.Setup(m => m.GetDecryptor("class", encdata))
+            .Returns(() => decrMock.Object);
+        provMock.Setup(m => m.GetEncryptor("class"))
+            .Returns(() => encrMock.Object);
         GlobalSettings.EncryptionProvider = provMock.Object;
 
         var rdr = new TestDbDataReader();

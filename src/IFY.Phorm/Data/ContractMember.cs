@@ -242,6 +242,45 @@ public class ContractMember : ContractMemberDefinition
         }
     }
 
+    /// <summary>
+    /// Set this value as from a datasource.
+    /// </summary>
+    /// <param name="value">The value from the datasource.</param>
+    /// <param name="source">The DTO that is being built from the datasource.</param>
+    public bool SetFromDatasource(object? value, object? source)
+    {
+        if (value == DBNull.Value)
+        {
+            value = null;
+        }
+
+        if (Attributes.Any())
+        {
+            // AbstractSecureValue
+            var secvalAttr = Attributes
+                .OfType<AbstractSecureValueAttribute>().SingleOrDefault();
+            if (secvalAttr != null)
+            {
+                value = secvalAttr.Decrypt((byte[]?)value, source);
+            }
+
+            // Transformation
+            var transfAttr = Attributes
+                .OfType<AbstractTransphormAttribute>().SingleOrDefault();
+            if (transfAttr != null)
+            {
+                value = transfAttr.FromDatasource(ValueType, value, source);
+                if (value is IgnoreDataMemberAttribute || (value as Type) == typeof(IgnoreDataMemberAttribute))
+                {
+                    return false;
+                }
+            }
+        }
+
+        SetValue(value);
+        return true;
+    }
+
     internal void SetValue(object? value)
     {
         if (value != null)

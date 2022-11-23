@@ -25,16 +25,6 @@ public class EncryptionTests : SqlIntegrationTestBase
         [SecureValue("test", nameof(Num))] string Data { get; }
     }
 
-    class TestEncryptor : IEncryptor
-    {
-        public byte[] Authenticator { get; set; } = Array.Empty<byte>();
-        public byte[] InitialVector { get; } = Array.Empty<byte>();
-
-        public byte[] Encrypt(byte[] data) => data;
-
-        public byte[] Decrypt(byte[] data) => data;
-    }
-
     private void setupEncryptionSchema(AbstractPhormSession phorm)
     {
         SqlTestHelpers.ApplySql(phorm, @"DROP TABLE IF EXISTS [dbo].[EncryptionTable]");
@@ -73,12 +63,24 @@ RETURN @@ROWCOUNT");
 
         var randInt = DateTime.UtcNow.Millisecond;
         var randStr = Guid.NewGuid().ToString();
+        var decdata = randStr.GetBytes();
+        var encdata = Guid.NewGuid().ToString().GetBytes();
 
-        var encryptor = new TestEncryptor();
+        var decryptor = new Mock<IEncryptor>(MockBehavior.Strict);
+        decryptor.SetupAllProperties();
+        decryptor.Setup(m => m.Decrypt(encdata))
+            .Returns(decdata);
+
+        var encryptor = new Mock<IEncryptor>(MockBehavior.Strict);
+        encryptor.SetupAllProperties();
+        encryptor.Setup(m => m.Encrypt(decdata))
+            .Returns(encdata);
 
         var provider = new Mock<IEncryptionProvider>(MockBehavior.Strict);
-        provider.Setup(m => m.GetInstance("test"))
-            .Returns(encryptor);
+        provider.Setup(m => m.GetEncryptor("test"))
+            .Returns(encryptor.Object);
+        provider.Setup(m => m.GetDecryptor("test", encdata))
+            .Returns(decryptor.Object);
         GlobalSettings.EncryptionProvider = provider.Object;
 
         // Act
@@ -88,6 +90,7 @@ RETURN @@ROWCOUNT");
         // Assert
         Assert.AreEqual(1, res);
         Assert.AreEqual(randStr, obj.Data);
-        CollectionAssert.AreEqual(randInt.GetBytes(), encryptor.Authenticator);
+        CollectionAssert.AreEqual(randInt.GetBytes(), decryptor.Object.Authenticator);
+        CollectionAssert.AreEqual(randInt.GetBytes(), encryptor.Object.Authenticator);
     }
 }

@@ -46,7 +46,7 @@ public class SecureValueAttributeTests
         var attr = new SecureValueAttribute("class", null);
 
         var provMock = new Mock<IEncryptionProvider>(MockBehavior.Strict);
-        provMock.Setup(m => m.GetInstance("class"))
+        provMock.Setup(m => m.GetDecryptor("class", It.IsAny<byte[]>()))
             .Returns(() => null!);
         GlobalSettings.EncryptionProvider = provMock.Object;
 
@@ -74,7 +74,7 @@ public class SecureValueAttributeTests
             .Returns(result);
 
         var provMock = new Mock<IEncryptionProvider>(MockBehavior.Strict);
-        provMock.Setup(m => m.GetInstance("class"))
+        provMock.Setup(m => m.GetDecryptor("class", data))
             .Returns(() => encrMock.Object);
         GlobalSettings.EncryptionProvider = provMock.Object;
 
@@ -103,7 +103,7 @@ public class SecureValueAttributeTests
             .Returns(result);
 
         var provMock = new Mock<IEncryptionProvider>(MockBehavior.Strict);
-        provMock.Setup(m => m.GetInstance("class"))
+        provMock.Setup(m => m.GetDecryptor("class", data))
             .Returns(() => encrMock.Object);
         GlobalSettings.EncryptionProvider = provMock.Object;
 
@@ -150,7 +150,7 @@ public class SecureValueAttributeTests
         var attr = new SecureValueAttribute("class", null);
 
         var provMock = new Mock<IEncryptionProvider>(MockBehavior.Strict);
-        provMock.Setup(m => m.GetInstance("class"))
+        provMock.Setup(m => m.GetEncryptor("class"))
             .Returns(() => null!);
         GlobalSettings.EncryptionProvider = provMock.Object;
 
@@ -178,7 +178,7 @@ public class SecureValueAttributeTests
             .Returns(result);
 
         var provMock = new Mock<IEncryptionProvider>(MockBehavior.Strict);
-        provMock.Setup(m => m.GetInstance("class"))
+        provMock.Setup(m => m.GetEncryptor("class"))
             .Returns(() => encrMock.Object);
         GlobalSettings.EncryptionProvider = provMock.Object;
 
@@ -207,7 +207,7 @@ public class SecureValueAttributeTests
             .Returns(result);
 
         var provMock = new Mock<IEncryptionProvider>(MockBehavior.Strict);
-        provMock.Setup(m => m.GetInstance("class"))
+        provMock.Setup(m => m.GetEncryptor("class"))
             .Returns(() => encrMock.Object);
         GlobalSettings.EncryptionProvider = provMock.Object;
 

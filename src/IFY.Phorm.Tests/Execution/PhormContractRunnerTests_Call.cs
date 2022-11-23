@@ -308,15 +308,21 @@ public class PhormContractRunnerTests_Call
 
         var data = "secure_value".GetBytes();
         var encdata = Guid.NewGuid().ToString().GetBytes();
+
+        var decrMock = new Mock<IEncryptor>(MockBehavior.Strict);
+        decrMock.SetupProperty(m => m.Authenticator);
+        decrMock.Setup(m => m.Decrypt(encdata))
+            .Returns(data);
+
         var encrMock = new Mock<IEncryptor>(MockBehavior.Strict);
         encrMock.SetupProperty(m => m.Authenticator);
         encrMock.Setup(m => m.Encrypt(data))
             .Returns(encdata);
-        encrMock.Setup(m => m.Decrypt(encdata))
-            .Returns(data);
 
         var provMock = new Mock<IEncryptionProvider>(MockBehavior.Strict);
-        provMock.Setup(m => m.GetInstance("class"))
+        provMock.Setup(m => m.GetDecryptor("class", encdata))
+            .Returns(() => decrMock.Object);
+        provMock.Setup(m => m.GetEncryptor("class"))
             .Returns(() => encrMock.Object);
         GlobalSettings.EncryptionProvider = provMock.Object;
 
@@ -330,7 +336,7 @@ public class PhormContractRunnerTests_Call
         // Assert
         Assert.AreEqual(1, res);
         Assert.AreEqual("secure_value", dto.Arg3);
-        CollectionAssert.AreEqual(100.GetBytes(), encrMock.Object.Authenticator);
+        CollectionAssert.AreEqual(100.GetBytes(), decrMock.Object.Authenticator);
     }
 
     [TestMethod]

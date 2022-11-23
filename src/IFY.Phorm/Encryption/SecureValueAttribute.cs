@@ -56,7 +56,7 @@ public class SecureValueAttribute : AbstractSecureValueAttribute
         return _lastValue;
     }
 
-    public override byte[] Decrypt(byte[]? value, object? context)
+    public override byte[]? Decrypt(byte[]? value, object? context)
     {
         if (value == null)
         {
@@ -68,7 +68,7 @@ public class SecureValueAttribute : AbstractSecureValueAttribute
             throw new InvalidOperationException($"The {nameof(GlobalSettings.EncryptionProvider)} has not not been registered.");
         }
 
-        var encryptor = GlobalSettings.EncryptionProvider.GetInstance(_dataClassification);
+        var encryptor = GlobalSettings.EncryptionProvider.GetDecryptor(_dataClassification, value);
         if (encryptor == null)
         {
             // TODO: Fail instead?
@@ -92,7 +92,7 @@ public class SecureValueAttribute : AbstractSecureValueAttribute
             throw new InvalidOperationException($"The {nameof(GlobalSettings.EncryptionProvider)} has not not been registered.");
         }
 
-        var encryptor = GlobalSettings.EncryptionProvider.GetInstance(_dataClassification);
+        var encryptor = GlobalSettings.EncryptionProvider.GetEncryptor(_dataClassification);
         if (encryptor == null)
         {
             // TODO: Fail instead?
