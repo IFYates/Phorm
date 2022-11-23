@@ -68,7 +68,7 @@ public class EncryptorTests
             .Returns(secureData);
 
         var encProcMock = new Mock<IEncryptionProvider>();
-        encProcMock.Setup(m => m.GetInstance("Test"))
+        encProcMock.Setup(m => m.GetEncryptor("Test"))
             .Returns(encMock.Object);
 
         GlobalSettings.EncryptionProvider = encProcMock.Object;
@@ -100,7 +100,7 @@ public class EncryptorTests
             .Returns(Array.Empty<byte>());
 
         var encProcMock = new Mock<IEncryptionProvider>();
-        encProcMock.Setup(m => m.GetInstance("Test"))
+        encProcMock.Setup(m => m.GetEncryptor("Test"))
             .Returns(encMock.Object);
 
         GlobalSettings.EncryptionProvider = encProcMock.Object;
@@ -128,7 +128,7 @@ public class EncryptorTests
             .Returns(secureData);
 
         var encProcMock = new Mock<IEncryptionProvider>();
-        encProcMock.Setup(m => m.GetInstance("Test"))
+        encProcMock.Setup(m => m.GetEncryptor("Test"))
             .Returns(encMock.Object);
 
         GlobalSettings.EncryptionProvider = encProcMock.Object;

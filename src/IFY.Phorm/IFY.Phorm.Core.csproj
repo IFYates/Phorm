@@ -18,20 +18,13 @@
         <PackageId>IFY.Phorm.Core</PackageId>
         <Authors>IFYates</Authors>
         <PackageLicenseExpression>MPL-2.0</PackageLicenseExpression>
-		<Version>1.5.3</Version>
 		<PackageProjectUrl>https://github.com/IFYates/Phorm</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/IFYates/Phorm</RepositoryUrl>
 		<RepositoryType>GitHub</RepositoryType>
-		<PackageReleaseNotes>v1.5.3 - Fix out paraneter on anon args
-v1.5.2 - Improved support for implemented interface properties
-v1.5.1 - Support DateOnly
-v1.5.0.1 - Minor internal changes
-v1.5.0 - Contract structures cached by type. Out of beta.</PackageReleaseNotes>
+		<Version>1.6.0</Version>
         <Copyright>(c) IFYates</Copyright>
-        <Description>
-            The core "Procedure-heavy object-relational mapping" framework.
-            Intended to be implemented by a provider-specific package.
-        </Description>
+        <Description>The core "Procedure-heavy object-relational mapping" framework.
+Intended to be implemented by a provider-specific package.</Description>
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <DocumentationFile>IFY.Phorm.xml</DocumentationFile>
     </PropertyGroup>
@@ -52,5 +45,14 @@ v1.5.0 - Contract structures cached by type. Out of beta.</PackageReleaseNotes>
         <PackageReference Include="IFY.Shimr" Version="2.0.0" />
         <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
     </ItemGroup>
-
+	
+	<Target Name="PreparePackageReleaseNotesFromFile" BeforeTargets="GenerateNuspec">
+		<ReadLinesFromFile File="../RELEASE_NOTES.txt" >
+			<Output TaskParameter="Lines" ItemName="ReleaseNoteLines"/>
+		</ReadLinesFromFile>
+		<PropertyGroup>
+			<PackageReleaseNotes>@(ReleaseNoteLines, '%0a')</PackageReleaseNotes>
+		</PropertyGroup>
+	</Target>
+	
 </Project>
