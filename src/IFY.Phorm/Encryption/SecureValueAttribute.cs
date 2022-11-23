@@ -16,8 +16,9 @@ public class SecureValueAttribute : AbstractSecureValueAttribute
     /// </summary>
     public string? AuthenticatorPropertyName { get; }
 
+    private static readonly object _lock = 1;
+    private static PropertyInfo? _lastProperty;
     private static object? _lastInstance;
-    private static string? _lastProperty;
     private static byte[] _lastValue = Array.Empty<byte>();
 
     /// <summary>
@@ -45,19 +46,26 @@ public class SecureValueAttribute : AbstractSecureValueAttribute
         {
             return Array.Empty<byte>();
         }
-        if (_lastInstance != context || _lastProperty != propertyName)
+        if (_lastInstance != context)
         {
-            // Find property
-            var authenticatorProperty = context.GetType().GetProperty(propertyName, BindingFlags.Public | BindingFlags.Instance)
-                ?? throw new InvalidOperationException($"Specified authenticator '{propertyName}' is not a public property on type {context.GetType().FullName}");
+            lock (_lock)
+            {
+                if (_lastInstance != context)
+                {
+                    if (_lastProperty?.Name != propertyName
+                        || _lastProperty.DeclaringType != context.GetType())
+                    {
+                        // Find property
+                        _lastProperty = context.GetType().GetProperty(propertyName, BindingFlags.Public | BindingFlags.Instance)
+                            ?? throw new InvalidOperationException($"Specified authenticator '{propertyName}' is not a public property on type {context.GetType().FullName}");
+                    }
 
-            // Remember this state
-            _lastInstance = context;
-            _lastProperty = propertyName;
-
-            // Get value as byte[]
-            var value = authenticatorProperty.GetValue(context);
-            _lastValue = value.GetBytes();
+                    // Get value as byte[]
+                    var value = _lastProperty.GetValue(context);
+                    _lastInstance = context;
+                    _lastValue = value.GetBytes();
+                }
+            }
         }
         return _lastValue;
     }
