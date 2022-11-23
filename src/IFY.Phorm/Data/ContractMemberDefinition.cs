@@ -1,5 +1,4 @@
 ﻿using IFY.Phorm.Encryption;
-using IFY.Phorm.Transformation;
 using System.Collections.Concurrent;
 using System.Data;
 using System.Diagnostics.CodeAnalysis;
@@ -233,37 +232,14 @@ public class ContractMemberDefinition
     /// </summary>
     internal bool TryFromDatasource(object? value, object? entity, [NotNullWhen(true)] out ContractMember? member)
     {
-        member = this as ContractMember ?? new ContractMember(this, null);
-
-        if (value == DBNull.Value)
+        var memb = this as ContractMember ?? new ContractMember(this, null);
+        if (!memb.SetFromDatasource(value, entity))
         {
-            value = null;
-        }
-        if (member.Attributes.Length > 0)
-        {
-            // AbstractSecureValue
-            var secvalAttr = member.Attributes
-                .OfType<AbstractSecureValueAttribute>().SingleOrDefault();
-            if (secvalAttr != null)
-            {
-                value = secvalAttr.Decrypt((byte[]?)value, entity);
-            }
-
-            // Transformation
-            var transfAttr = member.Attributes
-                .OfType<AbstractTransphormAttribute>().SingleOrDefault();
-            if (transfAttr != null)
-            {
-                value = transfAttr.FromDatasource(ValueType, value, entity);
-                if (value is IgnoreDataMemberAttribute || (value as Type) == typeof(IgnoreDataMemberAttribute))
-                {
-                    member = null;
-                    return false;
-                }
-            }
+            member = null;
+            return false;
         }
 
-        member.SetValue(value);
+        member = memb;
         return true;
     }
 }
