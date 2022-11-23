@@ -22,16 +22,9 @@
 		<RepositoryUrl>https://github.com/IFYates/Phorm</RepositoryUrl>
 		<RepositoryType>GitHub</RepositoryType>
 		<Version>1.6.0</Version>
-		<PackageReleaseNotes>v1.6.0 - Fix #34. Breaking change to IEncryptor.
-v1.5.3 - Fix out paraneter on anon args
-v1.5.2 - Improved support for implemented interface properties
-v1.5.1 - Support DateOnly
-v1.5.0.1 - Minor internal changes</PackageReleaseNotes>
         <Copyright>(c) IFYates</Copyright>
-        <Description>
-            The core "Procedure-heavy object-relational mapping" framework.
-            Intended to be implemented by a provider-specific package.
-        </Description>
+        <Description>The core "Procedure-heavy object-relational mapping" framework.
+Intended to be implemented by a provider-specific package.</Description>
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <DocumentationFile>IFY.Phorm.xml</DocumentationFile>
     </PropertyGroup>
@@ -52,5 +45,14 @@ v1.5.0.1 - Minor internal changes</PackageReleaseNotes>
         <PackageReference Include="IFY.Shimr" Version="2.0.0" />
         <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
     </ItemGroup>
-
+	
+	<Target Name="PreparePackageReleaseNotesFromFile" BeforeTargets="GenerateNuspec">
+		<ReadLinesFromFile File="../RELEASE_NOTES.txt" >
+			<Output TaskParameter="Lines" ItemName="ReleaseNoteLines"/>
+		</ReadLinesFromFile>
+		<PropertyGroup>
+			<PackageReleaseNotes>@(ReleaseNoteLines, '%0a')</PackageReleaseNotes>
+		</PropertyGroup>
+	</Target>
+	
 </Project>

@@ -1,0 +1,16 @@
+v1.6.0
+- Breaking change to IEncryptor
+- #34: Allow decryptor to be chosen using encrypted data
+
+v1.5.3
+- #32: Contract out parameter fails if anon object doesn't define it
+
+v1.5.2
+- #29: Interface implemented properties not resolving on call contract
+
+v1.5.1
+- #24: Support DateOnly
+- #19: Dynamic removal of members
+
+v1.5.0.1
+- Minor internal changes
