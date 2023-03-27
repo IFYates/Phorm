@@ -1,6 +1,8 @@
 using IFY.Phorm.Data;
 using IFY.Phorm.Execution;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Collections;
+using System.Reflection;
 using System.Runtime.Serialization;
 
 namespace IFY.Phorm.SqlClient.IntegrationTests;
@@ -103,7 +105,7 @@ public class GetTests : SqlIntegrationTestBase
 	[DateTime] DATETIME2 NULL,
 	[IsInView] BIT NOT NULL DEFAULT (1)
 )");
-        
+
         SqlTestHelpers.ApplySql(phorm, @"CREATE OR ALTER VIEW [dbo].[vw_Data] AS SELECT * FROM [dbo].[GetTestTable] WHERE [IsInView] = 1");
 
         SqlTestHelpers.ApplySql(phorm, @"CREATE OR ALTER PROC [dbo].[usp_GetAll]
@@ -233,6 +235,58 @@ RETURN @@ROWCOUNT");
 
         Assert.AreEqual(1, res);
         Assert.AreEqual(1, x.Single().Id);
+    }
+
+    [TestMethod]
+    public void Many__IEnumerable_resolves_later()
+    {
+        static bool hasUnresolvedEntities(IEnumerable l)
+        {
+            var resolversField = typeof(EntityList<DataItem>)
+                .GetField("_resolvers", BindingFlags.Instance | BindingFlags.NonPublic)!;
+            return ((ICollection)resolversField.GetValue(l)!).Count > 0;
+        }
+
+        var phorm = getPhormSession();
+        setupGetTestSchema(phorm);
+
+        _ = phorm.Call("GetTest_Upsert");
+        _ = phorm.Call("GetTest_Upsert");
+        _ = phorm.Call("GetTest_Upsert");
+
+        var res = phorm.From<IDataView>().Get<IEnumerable<DataItem>>()!;
+
+        Assert.IsTrue(hasUnresolvedEntities(res));
+        Assert.AreEqual(3, res.Count());
+        Assert.IsTrue(hasUnresolvedEntities(res));
+        Assert.AreEqual(3, res.ToArray().Length);
+        Assert.IsFalse(hasUnresolvedEntities(res));
+    }
+
+    [TestMethod]
+    public void Many__ICollection_resolves_later()
+    {
+        static bool hasUnresolvedEntities(IEnumerable l)
+        {
+            var resolversField = typeof(EntityList<DataItem>)
+                .GetField("_resolvers", BindingFlags.Instance | BindingFlags.NonPublic)!;
+            return ((ICollection)resolversField.GetValue(l)!).Count > 0;
+        }
+
+        var phorm = getPhormSession();
+        setupGetTestSchema(phorm);
+
+        _ = phorm.Call("GetTest_Upsert");
+        _ = phorm.Call("GetTest_Upsert");
+        _ = phorm.Call("GetTest_Upsert");
+
+        var res = phorm.From<IDataView>().Get<ICollection<DataItem>>()!;
+
+        Assert.IsTrue(hasUnresolvedEntities(res));
+        Assert.AreEqual(3, res.Count());
+        Assert.IsTrue(hasUnresolvedEntities(res));
+        Assert.AreEqual(3, res.ToArray().Length);
+        Assert.IsFalse(hasUnresolvedEntities(res));
     }
 
     #endregion Many

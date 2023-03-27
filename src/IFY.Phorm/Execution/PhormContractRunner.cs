@@ -159,24 +159,44 @@ internal sealed class PhormContractRunner<TActionContract> : IPhormContractRunne
         }
     }
 
+    private static IDictionary<string, object?> getRowValues(IDataReader rdr)
+    {
+        var result = new Dictionary<string, object?>();
+        for (var i = 0; i < rdr.FieldCount; ++i)
+        {
+            var fieldName = rdr.GetName(i);
+            var value = rdr.GetValue(i);
+            if (value == DBNull.Value)
+            {
+                value = null;
+            }
+
+            result[fieldName] = value;
+        }
+        return result;
+    }
     private object getEntity(Type entityType, IDataReader rdr, IDictionary<string, ContractMemberDefinition> members, Guid commandGuid)
+    {
+        var values = getRowValues(rdr);
+        return getEntity(entityType, values, members, commandGuid);
+    }
+    private object getEntity(Type entityType, IDictionary<string, object?> values, IDictionary<string, ContractMemberDefinition> members, Guid commandGuid)
     {
         members = members.ToDictionary(k => k.Key, v => v.Value); // Copy
         var entity = Activator.CreateInstance(entityType)!;
 
-        // Resolve member values
-        var secureMembers = new Dictionary<ContractMemberDefinition, object>();
-        for (var i = 0; i < rdr.FieldCount; ++i)
+        // Apply member values
+        var secureMembers = new Dictionary<ContractMemberDefinition, object?>();
+        foreach (var (fieldName, value) in values)
         {
-            var fieldName = rdr.GetName(i);
             if (members.Remove(fieldName.ToUpperInvariant(), out var memb))
             {
                 if (memb.HasSecureAttribute)
                 {
                     // Defer secure members until after non-secure, to allow for authenticator properties
-                    secureMembers[memb] = rdr.GetValue(i);
+                    secureMembers[memb] = value;
                 }
-                else if (memb.TryFromDatasource(rdr.GetValue(i), entity, out var member))
+                else if (memb.TryFromDatasource(value, entity, out var member))
                 {
                     member.ApplyToEntity(entity);
                 }
@@ -312,80 +332,98 @@ internal sealed class PhormContractRunner<TActionContract> : IPhormContractRunne
     {
         // Check whether this is One or Many
         var entityType = typeof(TResult);
-        var isArray = entityType.IsArray;
+        bool isArray = entityType.IsArray, isEnumerable = false;
         if (isArray)
         {
             entityType = entityType.GetElementType()!;
+        }
+        else if (entityType.IsGenericType)
+        {
+            isEnumerable = entityType.GetGenericTypeDefinition() == typeof(IEnumerable<>)
+                || entityType.GetGenericTypeDefinition() == typeof(ICollection<>);
+            if (isEnumerable)
+            {
+                entityType = entityType.GenericTypeArguments[0];
+            }
         }
         if (entityType.GetConstructor(Array.Empty<Type>()) == null)
         {
             throw new MissingMethodException($"Attempt to get type {entityType.FullName} without empty constructor.");
         }
 
-        // Prepare execution
+        // Prepare and execute
         using var cmd = startCommand(out var pars, out var eventArgs);
         using var console = _session.StartConsoleCapture(eventArgs.CommandGuid, cmd);
-
-        // Execution
         using var rdr = await cmd.ExecuteReaderAsync(cancellationToken);
+
+        // Handle GenSpec differently
         var results = new List<object>();
-        GenSpecBase? genspec = null;
         if (typeof(GenSpecBase).IsAssignableFrom(typeof(TResult)))
         {
-            // Handle GenSpec differently
-            genspec = parseGenSpec<TResult>(results, rdr, eventArgs.CommandGuid, console);
+            var genspec = parseGenSpec<TResult>(results, rdr, eventArgs.CommandGuid, console);
+            parseCommandResult(cmd, _runArgs, pars, console.GetConsoleMessages(), eventArgs, results.Count);
+            return (TResult)(object)genspec;
         }
-        else
-        {
-            var resultMembers = ContractMemberDefinition.GetFromContract(entityType)
-                .ToDictionary(m => m.DbName.ToUpperInvariant());
 
-            // Parse recordset
-            if (!isArray && safeRead(rdr, console))
+        var resultMembers = ContractMemberDefinition.GetFromContract(entityType)
+            .ToDictionary(m => m.DbName.ToUpperInvariant());
+
+        // Parse recordset
+        IEntityList? resolverList = null;
+        if (isArray)
+        {
+            while (!cancellationToken.IsCancellationRequested && safeRead(rdr, console))
             {
                 var result = getEntity(entityType, rdr, resultMembers, eventArgs.CommandGuid);
                 results.Add(result);
-
-                if (_session.StrictResultSize && safeRead(rdr, console))
-                {
-                    throw new InvalidOperationException("Expected a single-record result, but more than one found.");
-                }
             }
-            else if (isArray)
+        }
+        else if (isEnumerable)
+        {
+            // Build list of self-resolving entities
+            var resolverListType = typeof(EntityList<>).MakeGenericType(entityType);
+            resolverList = (IEntityList)Activator.CreateInstance(resolverListType);
+            while (!cancellationToken.IsCancellationRequested && safeRead(rdr, console))
             {
-                while (safeRead(rdr, console))
-                {
-                    var result = getEntity(entityType, rdr, resultMembers, eventArgs.CommandGuid);
-                    results.Add(result);
-                }
+                var row = PhormContractRunner<TActionContract>.getRowValues(rdr);
+                resolverList.AddEntity(() => getEntity(entityType, row, resultMembers, eventArgs.CommandGuid));
             }
+        }
+        else if (!cancellationToken.IsCancellationRequested && safeRead(rdr, console))
+        {
+            var result = getEntity(entityType, rdr, resultMembers, eventArgs.CommandGuid);
+            results.Add(result);
 
-            // Process sub results
-            if (!console.HasError)
+            if (_session.StrictResultSize && safeRead(rdr, console))
             {
-                var rsOrder = 0;
-                while (await rdr.NextResultAsync())
-                {
-                    matchResultset(entityType, rsOrder++, rdr, results, eventArgs.CommandGuid, console);
-                }
+                throw new InvalidOperationException("Expected a single-record result, but more than one found.");
             }
         }
 
-        parseCommandResult(cmd, _runArgs, pars, console.GetConsoleMessages(), eventArgs, results.Count);
+        // Process sub results
+        if (!console.HasError)
+        {
+            var rsOrder = 0;
+            while (!cancellationToken.IsCancellationRequested && await rdr.NextResultAsync())
+            {
+                matchResultset(entityType, rsOrder++, rdr, results, eventArgs.CommandGuid, console);
+            }
+        }
+
+        parseCommandResult(cmd, _runArgs, pars, console.GetConsoleMessages(), eventArgs, resolverList?.Count ?? results.Count);
 
         // Return expected type
-        if (genspec != null)
+        if (isArray)
         {
-            return (TResult)(object)genspec;
+            var resultArr = (Array)Activator.CreateInstance(typeof(TResult), new object[] { results.Count })!;
+            Array.Copy(results.ToArray(), resultArr, results.Count);
+            return (TResult)(object)resultArr;
         }
-        if (!isArray)
+        if (isEnumerable)
         {
-            return (TResult?)results.SingleOrDefault();
+            return (TResult?)(object)resolverList!;
         }
-
-        var resultArr = (Array)Activator.CreateInstance(typeof(TResult), new object[] { results.Count })!;
-        Array.Copy(results.ToArray(), resultArr, results.Count);
-        return (TResult)(object)resultArr;
+        return (TResult?)results.SingleOrDefault();
     }
 
     private class SpecDef
