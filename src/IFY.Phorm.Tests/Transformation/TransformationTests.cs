@@ -1,4 +1,5 @@
 ﻿using IFY.Phorm.Data;
+using IFY.Phorm.Encryption;
 using IFY.Phorm.Execution;
 using IFY.Phorm.Transformation;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -70,9 +71,9 @@ public class TransformationTests
         // Arrange
         var cmd = new TestDbCommand(new TestDbDataReader
         {
-            Data = new List<Dictionary<string, object>>
+            Data = new()
             {
-                new Dictionary<string, object>
+                new()
                 {
                     ["Value"] = "value"
                 }
@@ -88,5 +89,51 @@ public class TransformationTests
         // Assert
         Assert.IsNotNull(res);
         Assert.AreEqual("FromSource_value", res?.Value);
+    }
+
+    class DataObject2
+    {
+        public string? A { get; set; }
+        [TransformFromSourceLast]
+        public string? Value { get; set; }
+        public string? Z { get; set; }
+    }
+    class TransformFromSourceLastAttribute : AbstractTransphormAttribute
+    {
+        public override object? FromDatasource(Type type, object? data, object? context)
+        {
+            var obj = (DataObject2?)context;
+            return string.Join(',', obj?.A, data, obj?.Z);
+        }
+        [ExcludeFromCodeCoverage]
+        public override object? ToDatasource(object? data, object? context)
+            => throw new NotImplementedException();
+    }
+    [TestMethod]
+    public void Transformed_values_happen_last()
+    {
+        // Arrange
+        var cmd = new TestDbCommand(new TestDbDataReader
+        {
+            Data = new()
+            {
+                new()
+                {
+                    ["A"] = "AAA",
+                    ["Value"] = "Value",
+                    ["Z"] = "ZZZ"
+                }
+            }
+        });
+
+        var runner = new TestPhormSession();
+        runner.TestConnection?.CommandQueue.Enqueue(cmd);
+
+        // Act
+        var res = runner.From("Get").Get<DataObject2>();
+
+        // Assert
+        Assert.IsNotNull(res);
+        Assert.AreEqual("AAA,Value,ZZZ", res?.Value);
     }
 }

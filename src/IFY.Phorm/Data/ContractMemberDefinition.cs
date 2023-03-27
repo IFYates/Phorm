@@ -1,4 +1,5 @@
 ﻿using IFY.Phorm.Encryption;
+using IFY.Phorm.Transformation;
 using System.Collections.Concurrent;
 using System.Data;
 using System.Diagnostics.CodeAnalysis;
@@ -51,6 +52,10 @@ public class ContractMemberDefinition
     /// Returns true if this property is transformed by a secure attribute.
     /// </summary>
     public bool HasSecureAttribute => Attributes.OfType<AbstractSecureValueAttribute>().Any();
+    /// <summary>
+    /// Returns true if this property is transformed by an attribute.
+    /// </summary>
+    public bool HasTransphormation => Attributes.OfType<AbstractTransphormAttribute>().Any();
 
     internal ContractMemberDefinition(ContractMemberDefinition orig)
     {
