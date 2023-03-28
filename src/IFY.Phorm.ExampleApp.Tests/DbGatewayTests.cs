@@ -119,7 +119,7 @@ public class DbGatewayTests
         phormSessionMock.Setup(m => m.GetFrom<IGetAllPeople, GenSpec<PersonDto, EmployeeDto, ManagerDto>>(null, It.IsAny<CallContext>()))
             .Returns(data);
 
-        var dbGateway = new DbGateway(new MockPhormSession(phormSessionMock.Object));
+        var dbGateway = new DbGateway(phormSessionMock.Object.ToMock());
 
         // Act
         var res = dbGateway.GetAllPeople();
@@ -171,7 +171,7 @@ public class DbGatewayTests
         phormSessionMock.Setup(m => m.GetFrom<IGetManager, ManagerDtoWithEmployees>(It.Is<object>(o => o.IsLike<IGetManager>(new { Id = id })), It.IsAny<CallContext>()))
             .Returns(data);
 
-        var dbGateway = new DbGateway(new MockPhormSession(phormSessionMock.Object));
+        var dbGateway = new DbGateway(phormSessionMock.Object.ToMock());
 
         // Act
         var res = dbGateway.GetManager(id);

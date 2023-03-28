@@ -1,6 +1,4 @@
-﻿using IFY.Phorm.Execution;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Moq;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections;
 
 namespace IFY.Phorm.Tests;
