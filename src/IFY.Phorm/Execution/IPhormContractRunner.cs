@@ -1,4 +1,5 @@
 ﻿using IFY.Phorm.Data;
+using System.Linq.Expressions;
 
 namespace IFY.Phorm.Execution;
 
@@ -32,4 +33,7 @@ public interface IPhormContractRunner<T> : IPhormContractRunner
     where T : IPhormContract
 {
     public Type ContractType => typeof(T);
+
+    public IPhormContractRunner<T> Where(Expression<Func<T, bool>> predicate)
+        => this;
 }

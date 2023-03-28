@@ -309,4 +309,35 @@ RETURN @@ROWCOUNT");
     }
 
     #endregion One
+
+    #region Filtered
+
+    [TestMethod]
+    public void Many__Filtered_result_doesnt_resolve_unwanted()
+    {
+        static bool hasUnresolvedEntities(IEnumerable l)
+        {
+            var resolversField = typeof(EntityList<DataItem>)
+                .GetField("_resolvers", BindingFlags.Instance | BindingFlags.NonPublic)!;
+            return ((ICollection)resolversField.GetValue(l)!).Count > 0;
+        }
+
+        var phorm = getPhormSession();
+        setupGetTestSchema(phorm);
+
+        _ = phorm.Call("GetTest_Upsert", new DataItem { Id = 1, Text = "A" });
+        _ = phorm.Call("GetTest_Upsert", new DataItem { Id = 2, Text = "B" });
+        _ = phorm.Call("GetTest_Upsert", new DataItem { Id = 3, Text = "C" });
+
+        var res = phorm.From<IDataView>()
+            .Where(o => o.Id < 3)
+            .Get<DataItem[]>()!;
+
+        Assert.IsTrue(hasUnresolvedEntities(res));
+        Assert.AreEqual(2, res.Count());
+        Assert.AreEqual(2, res.ToArray().Length);
+        Assert.IsFalse(hasUnresolvedEntities(res));
+    }
+
+    #endregion Filtered
 }
