@@ -19,6 +19,7 @@ public class GetTests : SqlIntegrationTestBase
         public string? Text { get; set; }
         public byte[]? Data { get; set; }
         public DateTime? DateTime { get; set; }
+        public bool Flag { get; set; } = true;
 
         public DataItem(long id, int? num, string? text, byte[]? data, DateTime? dateTime)
         {
@@ -312,6 +313,8 @@ RETURN @@ROWCOUNT");
 
     #region Filtered
 
+    private bool Test(DataItem o) => o.Num.HasValue;
+
     [TestMethod]
     public void Many__Filtered_result_doesnt_resolve_unwanted()
     {
@@ -332,7 +335,7 @@ RETURN @@ROWCOUNT");
 
         // Act
         var res = phorm.From<IDataView>()
-            .Where<DataItem>(o => o.Id < 3)
+            .Where<DataItem>(o => Test(o) && o.Id < 3 && o.Text == null && !o.Num.HasValue && o.Flag)
             .GetAll();
 
         Assert.IsTrue(hasUnresolvedEntities(res));

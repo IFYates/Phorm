@@ -574,6 +574,12 @@
             </summary>
             <typeparam name="TEntity">The entity type that will be received and filtered.</typeparam>
         </member>
+        <member name="M:IFY.Phorm.Execution.PhormContractRunner`1.FilteredContractRunner`1.getPredicateProperties(System.Linq.Expressions.Expression{System.Func{`1,System.Boolean}})">
+            <summary>
+            Resolve the entity properties used in the predicate.
+            </summary>
+            <returns></returns>
+        </member>
         <member name="P:IFY.Phorm.GlobalSettings.EncryptionProvider">
             <summary>
             The registered instance of the <see cref="T:IFY.Phorm.Encryption.IEncryptionProvider"/> to use for secure value handling.

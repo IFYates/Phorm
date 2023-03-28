@@ -1,5 +1,6 @@
 ﻿using IFY.Phorm.Data;
 using System.Linq.Expressions;
+using System.Reflection;
 
 namespace IFY.Phorm.Execution;
 
@@ -12,6 +13,53 @@ internal sealed partial class PhormContractRunner<TActionContract> where TAction
     protected sealed class FilteredContractRunner<TEntity> : BaseContractRunner, IPhormContractRunner<TActionContract, TEntity>
         where TEntity : class, new()
     {
+        /// <summary>
+        /// Resolve the entity properties used in the predicate.
+        /// </summary>
+        /// <returns></returns>
+        private static string[] getPredicateProperties(Expression<Func<TEntity, bool>> predicate)
+        {
+            var props = new List<PropertyInfo>();
+            getPropertiesFromExpression(typeof(TEntity), predicate.Body, props);
+            return props.Select(p => p.Name).ToArray(); // TODO: property aliases
+        }
+        private static void getPropertiesFromExpression(Type objectType, Expression expr, List<PropertyInfo> props)
+        {
+            switch (expr)
+            {
+                case BinaryExpression be:
+                    getPropertiesFromExpression(objectType, be.Left, props);
+                    getPropertiesFromExpression(objectType, be.Right, props);
+                    break;
+                case ConstantExpression:
+                    break;
+                case MethodCallExpression:
+                    throw new NotSupportedException("Phorm resultset filtering does not support method calls.");
+                case MemberExpression me:
+                    if (me.Member.DeclaringType == objectType
+                        && me.Member is PropertyInfo pi)
+                    {
+                        props.Add(pi);
+                    }
+                    else if (me.Expression != null)
+                    {
+                        getPropertiesFromExpression(objectType, me.Expression, props);
+                    }
+                    break;
+                case UnaryExpression ue:
+                    if (ue.NodeType == ExpressionType.Not)
+                    {
+                        getPropertiesFromExpression(objectType, ue.Operand, props);
+                    }
+                    else
+                    {
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
+
         private readonly PhormContractRunner<TActionContract> _parent;
         private readonly Expression<Func<TEntity, bool>> _predicate;
 
@@ -39,6 +87,7 @@ internal sealed partial class PhormContractRunner<TActionContract> where TAction
                 .ToDictionary(m => m.DbName.ToUpperInvariant());
 
             // TODO: Prepare minimum properties required from expression
+            var predicateProperties = getPredicateProperties(_predicate);
             var cond = _predicate.Compile();
 
             // Build list of self-resolving entities
@@ -47,6 +96,8 @@ internal sealed partial class PhormContractRunner<TActionContract> where TAction
             {
                 var row = PhormContractRunner<TActionContract>.getRowValues(rdr);
 
+                // TODO: Resolve predicate properties for entity
+
                 // TODO: Filter row based on predicate
                 var e = (TEntity)_parent.getEntity(entityType, row, resultMembers, eventArgs.CommandGuid);
                 if (!cond(e))
@@ -54,6 +105,7 @@ internal sealed partial class PhormContractRunner<TActionContract> where TAction
                     continue;
                 }
 
+                // Resolver for remaining properties
                 resolverList.AddEntity(() => _parent.getEntity(entityType, row, resultMembers, eventArgs.CommandGuid));
             }
 
