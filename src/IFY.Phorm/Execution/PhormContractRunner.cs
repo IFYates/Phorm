@@ -186,7 +186,7 @@ internal sealed class PhormContractRunner<TActionContract> : IPhormContractRunne
         var entity = Activator.CreateInstance(entityType)!;
 
         // Apply member values
-        var secureMembers = new Dictionary<ContractMemberDefinition, object?>();
+        var deferredMembers = new Dictionary<ContractMemberDefinition, object?>();
         foreach (var (fieldName, value) in values)
         {
             if (members.Remove(fieldName.ToUpperInvariant(), out var memb))
@@ -194,7 +194,12 @@ internal sealed class PhormContractRunner<TActionContract> : IPhormContractRunne
                 if (memb.HasSecureAttribute)
                 {
                     // Defer secure members until after non-secure, to allow for authenticator properties
-                    secureMembers[memb] = value;
+                    deferredMembers[memb] = value;
+                }
+                else if (memb.HasTransphormation)
+                {
+                    // Defer transformation members until after non-transformed
+                    deferredMembers[memb] = value;
                 }
                 else if (memb.TryFromDatasource(value, entity, out var member))
                 {
@@ -213,8 +218,8 @@ internal sealed class PhormContractRunner<TActionContract> : IPhormContractRunne
             }
         }
 
-        // Apply secure values
-        foreach (var kvp in secureMembers)
+        // Apply deferred values
+        foreach (var kvp in deferredMembers.OrderBy(m => m.Key.HasSecureAttribute))
         {
             if (kvp.Key.TryFromDatasource(kvp.Value, entity, out var member))
             {
