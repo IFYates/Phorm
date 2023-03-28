@@ -7,7 +7,7 @@ on:
     paths:
       - src
   pull_request:
-    types: [opened, synchronize, reopened]
+    types: [opened, synchronize, reopened, closed]
     branches:
       - main
   workflow_dispatch:
