@@ -29,11 +29,38 @@ public interface IPhormContractRunner
         where TResult : class;
 }
 
-public interface IPhormContractRunner<T> : IPhormContractRunner
-    where T : IPhormContract
+public interface IPhormContractRunner<TActionContract> : IPhormContractRunner
+    where TActionContract : IPhormContract
 {
-    public Type ContractType => typeof(T);
+    /// <summary>
+    /// The resolve contract type.
+    /// </summary>
+    public Type ContractType => typeof(TActionContract);
 
-    public IPhormContractRunner<T> Where(Expression<Func<T, bool>> predicate)
-        => this;
+    /// <summary>
+    /// Adds a predicate to filter the resultset before the entire entity is parsed.
+    /// </summary>
+    /// <typeparam name="TEntity">The entity type that will be fetched in the subsequent Get call.</typeparam>
+    IPhormContractRunner<TActionContract, TEntity> Where<TEntity>(Expression<Func<TEntity, bool>> predicate)
+    where TEntity : class, new();
+
+    // TODO: OrderBy, Skip, Take?
+}
+
+public interface IPhormContractRunner<TActionContract, TEntity>
+    where TActionContract : IPhormContract
+    where TEntity : class, new()
+{
+    /// <summary>
+    /// The resolve contract type.
+    /// </summary>
+    public Type ContractType => typeof(TActionContract);
+    /// <summary>
+    /// The resolve entity type.
+    /// </summary>
+    public Type EntityType => typeof(TEntity);
+
+    IEnumerable<TEntity> GetAll();
+    Task<IEnumerable<TEntity>> GetAllAsync();
+    Task<IEnumerable<TEntity>> GetAllAsync(CancellationToken cancellationToken);
 }

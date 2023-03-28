@@ -325,13 +325,15 @@ RETURN @@ROWCOUNT");
         var phorm = getPhormSession();
         setupGetTestSchema(phorm);
 
-        _ = phorm.Call("GetTest_Upsert", new DataItem { Id = 1, Text = "A" });
-        _ = phorm.Call("GetTest_Upsert", new DataItem { Id = 2, Text = "B" });
-        _ = phorm.Call("GetTest_Upsert", new DataItem { Id = 3, Text = "C" });
+        phorm.Call("GetTest_Upsert", new { Int = 1 });
+        phorm.Call("GetTest_Upsert", new { Int = 2 });
+        phorm.Call("GetTest_Upsert", new { Int = 3 });
+        phorm.Call("GetTest_Upsert", new { Int = 4 });
 
+        // Act
         var res = phorm.From<IDataView>()
-            .Where(o => o.Id < 3)
-            .Get<DataItem[]>()!;
+            .Where<DataItem>(o => o.Id < 3)
+            .GetAll();
 
         Assert.IsTrue(hasUnresolvedEntities(res));
         Assert.AreEqual(2, res.Count());

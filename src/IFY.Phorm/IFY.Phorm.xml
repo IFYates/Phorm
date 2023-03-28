@@ -531,6 +531,27 @@
             <param name="cancellationToken">A token to cancel the asynchronous operation.</param>
             <returns>When <typeparamref name="TResult"/> is the entity type, will return the single result instance or null. When <typeparamref name="TResult"/> is an array of the entity type, will return an array of all types from the result (never null).</returns>
         </member>
+        <member name="P:IFY.Phorm.Execution.IPhormContractRunner`1.ContractType">
+            <summary>
+            The resolve contract type.
+            </summary>
+        </member>
+        <member name="M:IFY.Phorm.Execution.IPhormContractRunner`1.Where``1(System.Linq.Expressions.Expression{System.Func{``0,System.Boolean}})">
+            <summary>
+            Adds a predicate to filter the resultset before the entire entity is parsed.
+            </summary>
+            <typeparam name="TEntity">The entity type that will be fetched in the subsequent Get call.</typeparam>
+        </member>
+        <member name="P:IFY.Phorm.Execution.IPhormContractRunner`2.ContractType">
+            <summary>
+            The resolve contract type.
+            </summary>
+        </member>
+        <member name="P:IFY.Phorm.Execution.IPhormContractRunner`2.EntityType">
+            <summary>
+            The resolve entity type.
+            </summary>
+        </member>
         <member name="T:IFY.Phorm.Execution.ITransactedPhormSession">
             <summary>
             A <see cref="T:IFY.Phorm.IPhormSession"/> that is in a transaction.
@@ -546,6 +567,12 @@
             <summary>
             Rollback the transaction, making this runner unusable for further calls.
             </summary>
+        </member>
+        <member name="T:IFY.Phorm.Execution.PhormContractRunner`1.FilteredContractRunner`1">
+            <summary>
+            Reads entities from the datasource and filters them using minimal resolution.
+            </summary>
+            <typeparam name="TEntity">The entity type that will be received and filtered.</typeparam>
         </member>
         <member name="P:IFY.Phorm.GlobalSettings.EncryptionProvider">
             <summary>

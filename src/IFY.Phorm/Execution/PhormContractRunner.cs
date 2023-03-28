@@ -1,13 +1,18 @@
 ﻿using IFY.Phorm.Data;
 using IFY.Phorm.EventArgs;
 using System.Data;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.Serialization;
 using System.Text;
 
 namespace IFY.Phorm.Execution;
 
-internal sealed class PhormContractRunner<TActionContract> : IPhormContractRunner<TActionContract>
+internal abstract class BaseContractRunner
+{
+}
+
+internal sealed partial class PhormContractRunner<TActionContract> : BaseContractRunner, IPhormContractRunner<TActionContract>
     where TActionContract : IPhormContract
 {
     private readonly AbstractPhormSession _session;
@@ -64,6 +69,12 @@ internal sealed class PhormContractRunner<TActionContract> : IPhormContractRunne
         }
 
         _runArgs = args;
+    }
+
+    public IPhormContractRunner<TActionContract, TEntity> Where<TEntity>(Expression<Func<TEntity, bool>> predicate)
+        where TEntity : class, new()
+    {
+        return new FilteredContractRunner<TEntity>(this, predicate);
     }
 
     #region Execution
