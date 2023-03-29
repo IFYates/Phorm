@@ -79,11 +79,19 @@ internal static class Extensions
         };
     }
 
-    public static PropertyInfo[] GetReferencedObjectProperties(this Expression expr, Type objectType)
+    /// <summary>
+    /// Return array of all properties referenced in an expression for the parameter of given type.
+    /// </summary>
+    /// <param name="expr"></param>
+    /// <param name="parameterType"></param>
+    /// <returns></returns>
+    /// <exception cref="NotSupportedException"></exception>
+    /// <exception cref="NotImplementedException"></exception>
+    public static PropertyInfo[] GetExpressionParameterProperties(this Expression expr, Type parameterType)
     {
         var props = new List<PropertyInfo>();
         parseExpression(expr);
-        return props.ToArray();
+        return props.Distinct().ToArray();
 
         void parseExpression(Expression expr)
         {
@@ -101,53 +109,50 @@ internal static class Extensions
                 case ConstantExpression:
                     break;
                 case MethodCallExpression mce:
-                    if (mce.Method.IsStatic)
-                    {
-                        foreach (var arg in mce.Arguments)
-                        {
-                            parseExpression(arg);
-                        }
-                        break;
-                    }
                     if (mce.Object is MemberExpression)
                     {
                         parseExpression(mce.Object);
-                        break;
                     }
-                    throw new NotSupportedException($"Phorm resultset filtering does not support instance method calls ({mce}).");
+                    foreach (var arg in mce.Arguments)
+                    {
+                        parseExpression(arg);
+                    }
+                    break;
                 case MemberExpression me:
                     if (me.Member is PropertyInfo pi)
                     {
-                        if (pi.GetGetMethod()?.IsStatic == true)
-                        {
-                            // Reading a static property is safe
-                            break;
-                        }
-                        if (me.Member.DeclaringType == objectType)
+                        // Remember properties on target object
+                        // Ignore all othrs - if the expression compiles, it must be valid
+                        if (me.Expression.NodeType == ExpressionType.Parameter && me.Expression.Type == parameterType)
                         {
                             props.Add(pi);
                             break;
                         }
-                    }
-                    if (me.Member is FieldInfo fi
-                        && fi.IsStatic)
-                    {
-                        // Reading a static field is safe
-                        break;
+
+                        // Ignore static properties on other items
+                        if (me.Expression == null && pi.GetGetMethod().IsStatic == true)
+                        {
+                            break;
+                        }
                     }
                     if (me.Expression != null)
                     {
                         parseExpression(me.Expression);
                         break;
                     }
+                    if (me.Member is FieldInfo fi && fi.IsStatic)
+                    {
+                        // Ignore static fields
+                        break;
+                    }
                     throw new NotSupportedException($"Phorm resultset filtering does not support accessing instance members of other objects ({me}).");
                 case UnaryExpression ue:
-                    if (ue.NodeType is ExpressionType.Convert or ExpressionType.Not)
+                    if (ue.NodeType is ExpressionType.ArrayLength or ExpressionType.Convert or ExpressionType.Not)
                     {
                         parseExpression(ue.Operand);
                         break;
                     }
-                    throw new NotSupportedException();
+                    throw new NotImplementedException();
                 default:
                     throw new NotImplementedException();
             }

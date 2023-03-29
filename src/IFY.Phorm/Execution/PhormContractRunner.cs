@@ -197,7 +197,7 @@ internal sealed partial class PhormContractRunner<TActionContract> : BaseContrac
     {
         members = members.ToDictionary(k => k.Key, v => v.Value); // Copy
         var entity = Activator.CreateInstance(entityType)!;
-        return fillEntity(entityType, values, members, commandGuid, true);
+        return fillEntity(entity, values, members, commandGuid, true);
     }
     private object fillEntity(object entity, IDictionary<string, object?> values, IDictionary<string, ContractMemberDefinition> members, Guid commandGuid, bool warnOnUnresolved)
     {

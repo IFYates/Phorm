@@ -19,7 +19,7 @@ internal sealed partial class PhormContractRunner<TActionContract> where TAction
         /// <returns></returns>
         private static string[] getPredicateProperties(Expression<Func<TEntity, bool>> predicate)
         {
-            var props = predicate.Body.GetReferencedObjectProperties(typeof(TEntity));
+            var props = predicate.Body.GetExpressionParameterProperties(typeof(TEntity));
             return props.Select(p => p.Name).ToArray(); // TODO: property aliases
         }
 

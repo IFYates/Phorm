@@ -1,6 +1,7 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections;
 using System.Linq.Expressions;
+using System.Text.RegularExpressions;
 
 namespace IFY.Phorm.Tests;
 
@@ -118,12 +119,13 @@ public class ExtensionsTests
     }
 
     [TestMethod]
-    public void GetReferencedObjectProperties__Can_handle_all_individual_expression()
+    public void GetReferencedObjectProperties__Can_handle_all_individual_expressions()
     {
         static void exprRefsProperty(Expression<Func<TestObject, bool>> fn, string prop)
         {
-            var props = fn.Body.GetReferencedObjectProperties(typeof(TestObject));
-            Assert.AreEqual(prop, props.Single().Name);
+            _ = fn.Compile(); // Must compile
+            var props = fn.Body.GetExpressionParameterProperties(typeof(TestObject));
+            Assert.AreEqual(prop, props.Single().Name, prop);
         }
 
         // Numeric
@@ -137,7 +139,11 @@ public class ExtensionsTests
         exprRefsProperty(o => o.String == string.Empty, nameof(TestObject.String));
         exprRefsProperty(o => o.String != null, nameof(TestObject.String));
         exprRefsProperty(o => o.String.Length > 0, nameof(TestObject.String));
+        exprRefsProperty(o => o.String.Contains(""), nameof(TestObject.String));
         exprRefsProperty(o => o.String.ToLower() == string.Empty, nameof(TestObject.String));
+
+        var re = new Regex("");
+        exprRefsProperty(o => re.IsMatch(o.String), nameof(TestObject.String));
 
         // Boolean
         exprRefsProperty(o => o.Boolean, nameof(TestObject.Boolean));
@@ -148,6 +154,7 @@ public class ExtensionsTests
 
         // Array
         exprRefsProperty(o => o.Array.IsFixedSize, nameof(TestObject.Array));
+        exprRefsProperty(o => o.Array.Length > 0, nameof(TestObject.Array));
         exprRefsProperty(o => o.Array.GetLength(0) > 0, nameof(TestObject.Array));
         exprRefsProperty(o => o.Array[0] != 0, nameof(TestObject.Array));
         exprRefsProperty(o => o.Array.Any(), nameof(TestObject.Array));
@@ -157,6 +164,21 @@ public class ExtensionsTests
         exprRefsProperty(o => o.Nullable.HasValue, nameof(TestObject.Nullable));
         exprRefsProperty(o => !o.Nullable.HasValue, nameof(TestObject.Nullable));
         exprRefsProperty(o => o.Nullable!.Value > 0, nameof(TestObject.Nullable));
+    }
+
+    [TestMethod]
+    public void GetReferencedObjectProperties__Can_handle_complex_expressions()
+    {
+        static void exprRefsProperty(string name, Expression<Func<TestObject, bool>> fn, params string[] expProps)
+        {
+            _ = fn.Compile(); // Must compile
+            var props = fn.Body.GetExpressionParameterProperties(typeof(TestObject));
+            CollectionAssert.AreEquivalent(expProps, props.Select(p => p.Name).ToArray(), name);
+        }
+
+        exprRefsProperty("Multiple properties", o => (o.Numeric > 0 && o.String != null && o.Boolean && o.Array.Length > 0) || o.Nullable.HasValue, nameof(TestObject.Numeric), nameof(TestObject.String), nameof(TestObject.Boolean), nameof(TestObject.Array), nameof(TestObject.Nullable));
+
+        exprRefsProperty("Multiple uses returned once", o => o.Numeric == 0 && (double)o.Numeric == 0 && o.Numeric != 0 && o.Numeric < 0 && o.Numeric > 0, nameof(TestObject.Numeric));
     }
 
     #endregion GetReferencedObjectProperties
