@@ -1,5 +1,6 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections;
+using System.Linq.Expressions;
 
 namespace IFY.Phorm.Tests;
 
@@ -103,6 +104,62 @@ public class ExtensionsTests
     }
 
     #endregion GetBytes
+
+    #region GetReferencedObjectProperties
+
+    class TestObject
+    {
+        public int Numeric { get; set; }
+        public string String { get; set; } = null!;
+        public bool Boolean { get; set; }
+        public byte[] Array { get; set; } = null!;
+        public double? Nullable { get; set; }
+        //public TestObject Child { get; set; }
+    }
+
+    [TestMethod]
+    public void GetReferencedObjectProperties__Can_handle_all_individual_expression()
+    {
+        static void exprRefsProperty(Expression<Func<TestObject, bool>> fn, string prop)
+        {
+            var props = fn.Body.GetReferencedObjectProperties(typeof(TestObject));
+            Assert.AreEqual(prop, props.Single().Name);
+        }
+
+        // Numeric
+        exprRefsProperty(o => o.Numeric == 0, nameof(TestObject.Numeric));
+        exprRefsProperty(o => (double)o.Numeric == 0, nameof(TestObject.Numeric));
+        exprRefsProperty(o => o.Numeric != 0, nameof(TestObject.Numeric));
+        exprRefsProperty(o => o.Numeric < 0, nameof(TestObject.Numeric));
+        exprRefsProperty(o => o.Numeric > 0, nameof(TestObject.Numeric));
+
+        // String
+        exprRefsProperty(o => o.String == string.Empty, nameof(TestObject.String));
+        exprRefsProperty(o => o.String != null, nameof(TestObject.String));
+        exprRefsProperty(o => o.String.Length > 0, nameof(TestObject.String));
+        exprRefsProperty(o => o.String.ToLower() == string.Empty, nameof(TestObject.String));
+
+        // Boolean
+        exprRefsProperty(o => o.Boolean, nameof(TestObject.Boolean));
+        exprRefsProperty(o => !o.Boolean, nameof(TestObject.Boolean));
+#pragma warning disable IDE0075 // Simplify conditional expression
+        exprRefsProperty(o => o.Boolean ? false : true, nameof(TestObject.Boolean));
+#pragma warning restore IDE0075 // Simplify conditional expression
+
+        // Array
+        exprRefsProperty(o => o.Array.IsFixedSize, nameof(TestObject.Array));
+        exprRefsProperty(o => o.Array.GetLength(0) > 0, nameof(TestObject.Array));
+        exprRefsProperty(o => o.Array[0] != 0, nameof(TestObject.Array));
+        exprRefsProperty(o => o.Array.Any(), nameof(TestObject.Array));
+
+        // Nullable
+        exprRefsProperty(o => o.Nullable == null, nameof(TestObject.Nullable));
+        exprRefsProperty(o => o.Nullable.HasValue, nameof(TestObject.Nullable));
+        exprRefsProperty(o => !o.Nullable.HasValue, nameof(TestObject.Nullable));
+        exprRefsProperty(o => o.Nullable!.Value > 0, nameof(TestObject.Nullable));
+    }
+
+    #endregion GetReferencedObjectProperties
 
     #region FromBytes
 

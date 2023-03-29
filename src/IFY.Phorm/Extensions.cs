@@ -1,5 +1,7 @@
 ﻿using System.Data;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq.Expressions;
+using System.Reflection;
 using System.Text;
 
 namespace IFY.Phorm;
@@ -75,6 +77,81 @@ internal static class Extensions
             string val => Encoding.UTF8.GetBytes(val),
             _ => throw new InvalidCastException(),
         };
+    }
+
+    public static PropertyInfo[] GetReferencedObjectProperties(this Expression expr, Type objectType)
+    {
+        var props = new List<PropertyInfo>();
+        parseExpression(expr);
+        return props.ToArray();
+
+        void parseExpression(Expression expr)
+        {
+            switch (expr)
+            {
+                case BinaryExpression be:
+                    parseExpression(be.Left);
+                    parseExpression(be.Right);
+                    break;
+                case ConditionalExpression ce:
+                    parseExpression(ce.Test);
+                    parseExpression(ce.IfTrue);
+                    parseExpression(ce.IfFalse);
+                    break;
+                case ConstantExpression:
+                    break;
+                case MethodCallExpression mce:
+                    if (mce.Method.IsStatic)
+                    {
+                        foreach (var arg in mce.Arguments)
+                        {
+                            parseExpression(arg);
+                        }
+                        break;
+                    }
+                    if (mce.Object != null)
+                    {
+                        parseExpression(mce.Object);
+                        break;
+                    }
+                    throw new NotSupportedException($"Phorm resultset filtering does not support instance method calls ({mce}).");
+                case MemberExpression me:
+                    if (me.Member is PropertyInfo pi)
+                    {
+                        if (pi.GetGetMethod()?.IsStatic == true)
+                        {
+                            // Reading a static property is safe
+                            break;
+                        }
+                        if (me.Member.DeclaringType == objectType)
+                        {
+                            props.Add(pi);
+                            break;
+                        }
+                    }
+                    if (me.Member is FieldInfo fi
+                        && fi.IsStatic)
+                    {
+                        // Reading a static field is safe
+                        break;
+                    }
+                    if (me.Expression != null)
+                    {
+                        parseExpression(me.Expression);
+                        break;
+                    }
+                    throw new NotSupportedException($"Phorm resultset filtering does not support accessing instance members of other objects ({me}).");
+                case UnaryExpression ue:
+                    if (ue.NodeType is ExpressionType.Convert or ExpressionType.Not)
+                    {
+                        parseExpression(ue.Operand);
+                        break;
+                    }
+                    throw new NotSupportedException();
+                default:
+                    throw new NotImplementedException();
+            }
+        }
     }
 
     public static T? FromBytes<T>(this byte[]? bytes)

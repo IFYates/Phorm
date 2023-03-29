@@ -19,45 +19,8 @@ internal sealed partial class PhormContractRunner<TActionContract> where TAction
         /// <returns></returns>
         private static string[] getPredicateProperties(Expression<Func<TEntity, bool>> predicate)
         {
-            var props = new List<PropertyInfo>();
-            getPropertiesFromExpression(typeof(TEntity), predicate.Body, props);
+            var props = predicate.Body.GetReferencedObjectProperties(typeof(TEntity));
             return props.Select(p => p.Name).ToArray(); // TODO: property aliases
-        }
-        private static void getPropertiesFromExpression(Type objectType, Expression expr, List<PropertyInfo> props)
-        {
-            switch (expr)
-            {
-                case BinaryExpression be:
-                    getPropertiesFromExpression(objectType, be.Left, props);
-                    getPropertiesFromExpression(objectType, be.Right, props);
-                    break;
-                case ConstantExpression:
-                    break;
-                case MethodCallExpression:
-                    throw new NotSupportedException("Phorm resultset filtering does not support method calls.");
-                case MemberExpression me:
-                    if (me.Member.DeclaringType == objectType
-                        && me.Member is PropertyInfo pi)
-                    {
-                        props.Add(pi);
-                    }
-                    else if (me.Expression != null)
-                    {
-                        getPropertiesFromExpression(objectType, me.Expression, props);
-                    }
-                    break;
-                case UnaryExpression ue:
-                    if (ue.NodeType == ExpressionType.Not)
-                    {
-                        getPropertiesFromExpression(objectType, ue.Operand, props);
-                    }
-                    else
-                    {
-                    }
-                    break;
-                default:
-                    break;
-            }
         }
 
         private readonly PhormContractRunner<TActionContract> _parent;
