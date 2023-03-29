@@ -9,19 +9,9 @@ internal sealed partial class PhormContractRunner<TActionContract> where TAction
     /// Reads entities from the datasource and filters them using minimal resolution.
     /// </summary>
     /// <typeparam name="TEntity">The entity type that will be received and filtered.</typeparam>
-    protected sealed class FilteredContractRunner<TEntity> : IPhormFilteredContractRunner<TEntity>
+    private sealed class FilteredContractRunner<TEntity> : IPhormFilteredContractRunner<TEntity>
         where TEntity : class, new()
     {
-        /// <summary>
-        /// Resolve the entity properties used in the predicate.
-        /// </summary>
-        /// <returns></returns>
-        private static string[] getPredicateProperties(Expression<Func<TEntity, bool>> predicate)
-        {
-            var props = predicate.Body.GetExpressionParameterProperties(typeof(TEntity));
-            return props.Select(p => p.Name).ToArray(); // TODO: property aliases
-        }
-
         private readonly PhormContractRunner<TActionContract> _parent;
         private readonly Expression<Func<TEntity, bool>> _predicate;
 
@@ -49,29 +39,29 @@ internal sealed partial class PhormContractRunner<TActionContract> where TAction
                 .ToDictionary(m => m.DbName.ToUpperInvariant());
 
             // Discover minimum properties required from expression
-            var predicateProperties = getPredicateProperties(_predicate);
+            var predicateProperties = _predicate.Body.GetExpressionParameterProperties(typeof(TEntity));
             var cond = _predicate.Compile();
 
             // Build list of self-resolving entities
             var resolverList = new EntityList<TEntity>();
             while (!cancellationToken.IsCancellationRequested && _parent.safeRead(rdr, console))
             {
+                var predicateMembers = resultMembers.Where(m => predicateProperties.Contains(m.Value.SourceMember))
+                    .ToDictionary(k => k.Key, v => v.Value);
+                var otherMembers = resultMembers.Except(predicateMembers)
+                    .ToDictionary(k => k.Key, v => v.Value);
+
                 var row = PhormContractRunner<TActionContract>.getRowValues(rdr);
-                var members = resultMembers.ToDictionary(k => k.Key, v => v.Value);
 
                 // Resolve predicate properties for entity and filter
-                var predicateValues = row.Where(r => predicateProperties.Contains(r.Key))
-                    .ToDictionary(r => r.Key, r => r.Value);
-                var entity = (TEntity)_parent.fillEntity(new TEntity(), predicateValues, members, eventArgs.CommandGuid, false);
+                var entity = (TEntity)_parent.fillEntity(new TEntity(), row, predicateMembers, eventArgs.CommandGuid, false);
                 if (!cond(entity))
                 {
                     continue;
                 }
 
                 // Resolver for remaining properties
-                row = row.Where(r => !predicateProperties.Contains(r.Key))
-                    .ToDictionary(r => r.Key, r => r.Value);
-                resolverList.AddEntity(() => _parent.fillEntity(entity, row, members, eventArgs.CommandGuid, true));
+                resolverList.AddEntity(() => _parent.fillEntity(entity, row, otherMembers, eventArgs.CommandGuid, true));
             }
 
             // TODO: Process sub results

@@ -209,23 +209,6 @@ RETURN @@ROWCOUNT");
     }
 
     [TestMethod]
-    public void Many__Filtered_from_view_resultset()
-    {
-        var phorm = getPhormSession();
-        setupGetTestSchema(phorm);
-
-        _ = phorm.Call("GetTest_Upsert");
-        _ = phorm.Call("GetTest_Upsert");
-        _ = phorm.Call("GetTest_Upsert");
-
-        var x = phorm.From<IDataView>()
-            .Where<DataItem>(o => o.Id == 1)
-            .GetAll();
-
-        Assert.AreEqual(1, x.Single().Id);
-    }
-
-    [TestMethod]
     public void Many__All_from_table()
     {
         var phorm = getPhormSession();
@@ -251,23 +234,6 @@ RETURN @@ROWCOUNT");
         _ = phorm.Call("GetTest_Upsert");
 
         var x = phorm.Get<DataItem[]>(new { Id = 1 })!;
-
-        Assert.AreEqual(1, x.Single().Id);
-    }
-
-    [TestMethod]
-    public void Many__Filtered_from_table_resultset()
-    {
-        var phorm = getPhormSession();
-        setupGetTestSchema(phorm);
-
-        _ = phorm.Call("GetTest_Upsert");
-        _ = phorm.Call("GetTest_Upsert");
-        _ = phorm.Call("GetTest_Upsert");
-
-        var x = phorm.From<DataItem>()
-            .Where<DataItem>(o => o.Id == 1)
-            .GetAll();
 
         Assert.AreEqual(1, x.Single().Id);
     }
@@ -348,6 +314,40 @@ RETURN @@ROWCOUNT");
     #region Filtered
 
     [TestMethod]
+    public void Many__Filtered_from_view_resultset()
+    {
+        var phorm = getPhormSession();
+        setupGetTestSchema(phorm);
+
+        _ = phorm.Call("GetTest_Upsert");
+        _ = phorm.Call("GetTest_Upsert");
+        _ = phorm.Call("GetTest_Upsert");
+
+        var x = phorm.From<IDataView>()
+            .Where<DataItem>(o => o.Id == 1)
+            .GetAll();
+
+        Assert.AreEqual(1, x.Single().Id);
+    }
+
+    [TestMethod]
+    public void Many__Filtered_from_table_resultset()
+    {
+        var phorm = getPhormSession();
+        setupGetTestSchema(phorm);
+
+        _ = phorm.Call("GetTest_Upsert");
+        _ = phorm.Call("GetTest_Upsert");
+        _ = phorm.Call("GetTest_Upsert");
+
+        var x = phorm.From<DataItem>()
+            .Where<DataItem>(o => o.Id == 1)
+            .GetAll();
+
+        Assert.AreEqual(1, x.Single().Id);
+    }
+
+    [TestMethod]
     public void Many__Filtered_result_doesnt_resolve_unwanted()
     {
         static bool hasUnresolvedEntities(IEnumerable l)
@@ -360,14 +360,14 @@ RETURN @@ROWCOUNT");
         var phorm = getPhormSession();
         setupGetTestSchema(phorm);
 
-        phorm.Call("GetTest_Upsert", new { Int = 1 });
-        phorm.Call("GetTest_Upsert", new { Int = 2 });
-        phorm.Call("GetTest_Upsert", new { Int = 3 });
-        phorm.Call("GetTest_Upsert", new { Int = 4 });
+        phorm.Call("GetTest_Upsert", new { Int = 10 });
+        phorm.Call("GetTest_Upsert", new { Int = 20 });
+        phorm.Call("GetTest_Upsert", new { Int = 30 });
+        phorm.Call("GetTest_Upsert", new { Int = 40 });
 
         // Act
         var res = phorm.From<IDataView>()
-            .Where<DataItem>(o => o.Id < 3 && o.Text == null && !o.Num.HasValue && o.Flag)
+            .Where<DataItem>(o => o.Id <= 3 && o.Text == null && o.Num.HasValue && o.Num.Value > 10 && o.Flag)
             .GetAll();
 
         Assert.IsTrue(hasUnresolvedEntities(res));

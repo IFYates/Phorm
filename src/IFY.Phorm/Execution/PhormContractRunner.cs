@@ -218,7 +218,7 @@ internal sealed partial class PhormContractRunner<TActionContract> : IPhormContr
                     member.ApplyToEntity(entity);
                 }
             }
-            else
+            else if (warnOnUnresolved)
             {
                 // Report unexpected column
                 _session.OnUnexpectedRecordColumn(new UnexpectedRecordColumnEventArgs
