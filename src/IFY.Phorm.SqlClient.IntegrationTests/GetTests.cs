@@ -163,6 +163,28 @@ RETURN @@ROWCOUNT");
     }
 
     [TestMethod]
+    public void Many__All_from_view()
+    {
+        // Arrange
+        var phorm = getPhormSession();
+        setupGetTestSchema(phorm);
+
+        phorm.Call("GetTest_Upsert", new { Int = 0, IsInView = false });
+        phorm.Call("GetTest_Upsert", new { Int = 0, IsInView = false });
+        phorm.Call("GetTest_Upsert", new { Int = 1, IsInView = true });
+        phorm.Call("GetTest_Upsert", new { Int = 1, IsInView = true });
+        phorm.Call("GetTest_Upsert", new { Int = 1, IsInView = true });
+
+        // Act
+        var res = phorm.From<IDataView>()
+            .Get<DataItem[]>()!;
+
+        // Assert
+        Assert.AreEqual(3, res.Length);
+        Assert.IsTrue(res.All(e => e.Num == 1));
+    }
+
+    [TestMethod]
     public void Many__Filtered_from_view()
     {
         // Arrange
@@ -187,25 +209,20 @@ RETURN @@ROWCOUNT");
     }
 
     [TestMethod]
-    public void Many__Filtered_by_view()
+    public void Many__Filtered_from_view_resultset()
     {
-        // Arrange
         var phorm = getPhormSession();
         setupGetTestSchema(phorm);
 
-        phorm.Call("GetTest_Upsert", new { Int = 0, IsInView = false });
-        phorm.Call("GetTest_Upsert", new { Int = 0, IsInView = false });
-        phorm.Call("GetTest_Upsert", new { Int = 1, IsInView = true });
-        phorm.Call("GetTest_Upsert", new { Int = 1, IsInView = true });
-        phorm.Call("GetTest_Upsert", new { Int = 1, IsInView = true });
+        _ = phorm.Call("GetTest_Upsert");
+        _ = phorm.Call("GetTest_Upsert");
+        _ = phorm.Call("GetTest_Upsert");
 
-        // Act
-        var res = phorm.From<IDataView>()
-            .Get<DataItem[]>()!;
+        var x = phorm.From<IDataView>()
+            .Where<DataItem>(o => o.Id == 1)
+            .GetAll();
 
-        // Assert
-        Assert.AreEqual(3, res.Length);
-        Assert.IsTrue(res.All(e => e.Num == 1));
+        Assert.AreEqual(1, x.Single().Id);
     }
 
     [TestMethod]
@@ -229,12 +246,29 @@ RETURN @@ROWCOUNT");
         var phorm = getPhormSession();
         setupGetTestSchema(phorm);
 
-        var res = phorm.Call("GetTest_Upsert");
+        _ = phorm.Call("GetTest_Upsert");
+        _ = phorm.Call("GetTest_Upsert");
+        _ = phorm.Call("GetTest_Upsert");
 
-        var x = phorm.From<IDataView>(new { Id = 1 })
-            .Get<DataItem[]>()!;
+        var x = phorm.Get<DataItem[]>(new { Id = 1 })!;
 
-        Assert.AreEqual(1, res);
+        Assert.AreEqual(1, x.Single().Id);
+    }
+
+    [TestMethod]
+    public void Many__Filtered_from_table_resultset()
+    {
+        var phorm = getPhormSession();
+        setupGetTestSchema(phorm);
+
+        _ = phorm.Call("GetTest_Upsert");
+        _ = phorm.Call("GetTest_Upsert");
+        _ = phorm.Call("GetTest_Upsert");
+
+        var x = phorm.From<DataItem>()
+            .Where<DataItem>(o => o.Id == 1)
+            .GetAll();
+
         Assert.AreEqual(1, x.Single().Id);
     }
 
@@ -312,8 +346,6 @@ RETURN @@ROWCOUNT");
     #endregion One
 
     #region Filtered
-
-    private bool Test(DataItem o) => o.Num.HasValue;
 
     [TestMethod]
     public void Many__Filtered_result_doesnt_resolve_unwanted()

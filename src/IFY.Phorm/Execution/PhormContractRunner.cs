@@ -8,11 +8,7 @@ using System.Text;
 
 namespace IFY.Phorm.Execution;
 
-internal abstract class BaseContractRunner
-{
-}
-
-internal sealed partial class PhormContractRunner<TActionContract> : BaseContractRunner, IPhormContractRunner<TActionContract>
+internal sealed partial class PhormContractRunner<TActionContract> : IPhormContractRunner<TActionContract>
     where TActionContract : IPhormContract
 {
     private readonly AbstractPhormSession _session;
@@ -71,7 +67,7 @@ internal sealed partial class PhormContractRunner<TActionContract> : BaseContrac
         _runArgs = args;
     }
 
-    public IPhormContractRunner<TActionContract, TEntity> Where<TEntity>(Expression<Func<TEntity, bool>> predicate)
+    public IPhormFilteredContractRunner<TEntity> Where<TEntity>(Expression<Func<TEntity, bool>> predicate)
         where TEntity : class, new()
     {
         return new FilteredContractRunner<TEntity>(this, predicate);

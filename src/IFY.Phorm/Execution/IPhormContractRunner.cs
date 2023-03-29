@@ -27,6 +27,15 @@ public interface IPhormContractRunner
     /// <returns>When <typeparamref name="TResult"/> is the entity type, will return the single result instance or null. When <typeparamref name="TResult"/> is an array of the entity type, will return an array of all types from the result (never null).</returns>
     Task<TResult?> GetAsync<TResult>(CancellationToken cancellationToken)
         where TResult : class;
+
+    /// <summary>
+    /// Adds a predicate to filter the resultset before the entire entity is parsed.
+    /// </summary>
+    /// <typeparam name="TEntity">The entity type that will be fetched in the subsequent Get call.</typeparam>
+    IPhormFilteredContractRunner<TEntity> Where<TEntity>(Expression<Func<TEntity, bool>> predicate)
+        where TEntity : class, new();
+
+    // TODO: OrderBy, Skip, Take?
 }
 
 public interface IPhormContractRunner<TActionContract> : IPhormContractRunner
@@ -36,31 +45,4 @@ public interface IPhormContractRunner<TActionContract> : IPhormContractRunner
     /// The resolve contract type.
     /// </summary>
     public Type ContractType => typeof(TActionContract);
-
-    /// <summary>
-    /// Adds a predicate to filter the resultset before the entire entity is parsed.
-    /// </summary>
-    /// <typeparam name="TEntity">The entity type that will be fetched in the subsequent Get call.</typeparam>
-    IPhormContractRunner<TActionContract, TEntity> Where<TEntity>(Expression<Func<TEntity, bool>> predicate)
-    where TEntity : class, new();
-
-    // TODO: OrderBy, Skip, Take?
-}
-
-public interface IPhormContractRunner<TActionContract, TEntity>
-    where TActionContract : IPhormContract
-    where TEntity : class, new()
-{
-    /// <summary>
-    /// The resolve contract type.
-    /// </summary>
-    public Type ContractType => typeof(TActionContract);
-    /// <summary>
-    /// The resolve entity type.
-    /// </summary>
-    public Type EntityType => typeof(TEntity);
-
-    IEnumerable<TEntity> GetAll();
-    Task<IEnumerable<TEntity>> GetAllAsync();
-    Task<IEnumerable<TEntity>> GetAllAsync(CancellationToken cancellationToken);
 }

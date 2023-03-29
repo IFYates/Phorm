@@ -1,6 +1,5 @@
 ﻿using IFY.Phorm.Data;
 using System.Linq.Expressions;
-using System.Reflection;
 
 namespace IFY.Phorm.Execution;
 
@@ -10,7 +9,7 @@ internal sealed partial class PhormContractRunner<TActionContract> where TAction
     /// Reads entities from the datasource and filters them using minimal resolution.
     /// </summary>
     /// <typeparam name="TEntity">The entity type that will be received and filtered.</typeparam>
-    protected sealed class FilteredContractRunner<TEntity> : BaseContractRunner, IPhormContractRunner<TActionContract, TEntity>
+    protected sealed class FilteredContractRunner<TEntity> : IPhormFilteredContractRunner<TEntity>
         where TEntity : class, new()
     {
         /// <summary>
