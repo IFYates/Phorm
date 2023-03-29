@@ -109,7 +109,7 @@ internal static class Extensions
                         }
                         break;
                     }
-                    if (mce.Object != null)
+                    if (mce.Object is MemberExpression)
                     {
                         parseExpression(mce.Object);
                         break;

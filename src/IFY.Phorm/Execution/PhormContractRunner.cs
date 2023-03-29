@@ -189,13 +189,18 @@ internal sealed partial class PhormContractRunner<TActionContract> : BaseContrac
     private object getEntity(Type entityType, IDataReader rdr, IDictionary<string, ContractMemberDefinition> members, Guid commandGuid)
     {
         var values = getRowValues(rdr);
-        return getEntity(entityType, values, members, commandGuid);
+        members = members.ToDictionary(k => k.Key, v => v.Value); // Copy
+        var entity = Activator.CreateInstance(entityType)!;
+        return fillEntity(entity, values, members, commandGuid, true);
     }
     private object getEntity(Type entityType, IDictionary<string, object?> values, IDictionary<string, ContractMemberDefinition> members, Guid commandGuid)
     {
         members = members.ToDictionary(k => k.Key, v => v.Value); // Copy
         var entity = Activator.CreateInstance(entityType)!;
-
+        return fillEntity(entityType, values, members, commandGuid, true);
+    }
+    private object fillEntity(object entity, IDictionary<string, object?> values, IDictionary<string, ContractMemberDefinition> members, Guid commandGuid, bool warnOnUnresolved)
+    {
         // Apply member values
         var deferredMembers = new Dictionary<ContractMemberDefinition, object?>();
         foreach (var (fieldName, value) in values)
@@ -223,7 +228,7 @@ internal sealed partial class PhormContractRunner<TActionContract> : BaseContrac
                 _session.OnUnexpectedRecordColumn(new UnexpectedRecordColumnEventArgs
                 {
                     CommandGuid = commandGuid,
-                    EntityType = entityType,
+                    EntityType = entity.GetType(),
                     ColumnName = fieldName
                 });
             }
@@ -239,12 +244,12 @@ internal sealed partial class PhormContractRunner<TActionContract> : BaseContrac
         }
 
         // Warnings for missing expected columns
-        if (members.Count > 0)
+        if (warnOnUnresolved && members.Count > 0)
         {
             _session.OnUnresolvedContractMember(new UnresolvedContractMemberEventArgs
             {
                 CommandGuid = commandGuid,
-                EntityType = entityType,
+                EntityType = entity.GetType(),
                 MemberNames = members.Values.Where(m => (m.Direction & ParameterType.Output) > 0 && m.Direction != ParameterType.ReturnValue)
                     .Select(m => m.SourceMember?.Name ?? m.DbName).ToArray()
             });

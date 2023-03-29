@@ -49,7 +49,7 @@ internal sealed partial class PhormContractRunner<TActionContract> where TAction
             var resultMembers = ContractMemberDefinition.GetFromContract(entityType)
                 .ToDictionary(m => m.DbName.ToUpperInvariant());
 
-            // TODO: Prepare minimum properties required from expression
+            // Discover minimum properties required from expression
             var predicateProperties = getPredicateProperties(_predicate);
             var cond = _predicate.Compile();
 
@@ -58,18 +58,21 @@ internal sealed partial class PhormContractRunner<TActionContract> where TAction
             while (!cancellationToken.IsCancellationRequested && _parent.safeRead(rdr, console))
             {
                 var row = PhormContractRunner<TActionContract>.getRowValues(rdr);
+                var members = resultMembers.ToDictionary(k => k.Key, v => v.Value);
 
-                // TODO: Resolve predicate properties for entity
-
-                // TODO: Filter row based on predicate
-                var e = (TEntity)_parent.getEntity(entityType, row, resultMembers, eventArgs.CommandGuid);
-                if (!cond(e))
+                // Resolve predicate properties for entity and filter
+                var predicateValues = row.Where(r => predicateProperties.Contains(r.Key))
+                    .ToDictionary(r => r.Key, r => r.Value);
+                var entity = (TEntity)_parent.fillEntity(new TEntity(), predicateValues, members, eventArgs.CommandGuid, false);
+                if (!cond(entity))
                 {
                     continue;
                 }
 
                 // Resolver for remaining properties
-                resolverList.AddEntity(() => _parent.getEntity(entityType, row, resultMembers, eventArgs.CommandGuid));
+                row = row.Where(r => !predicateProperties.Contains(r.Key))
+                    .ToDictionary(r => r.Key, r => r.Value);
+                resolverList.AddEntity(() => _parent.fillEntity(entity, row, members, eventArgs.CommandGuid, true));
             }
 
             // TODO: Process sub results

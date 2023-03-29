@@ -335,7 +335,7 @@ RETURN @@ROWCOUNT");
 
         // Act
         var res = phorm.From<IDataView>()
-            .Where<DataItem>(o => Test(o) && o.Id < 3 && o.Text == null && !o.Num.HasValue && o.Flag)
+            .Where<DataItem>(o => o.Id < 3 && o.Text == null && !o.Num.HasValue && o.Flag)
             .GetAll();
 
         Assert.IsTrue(hasUnresolvedEntities(res));
