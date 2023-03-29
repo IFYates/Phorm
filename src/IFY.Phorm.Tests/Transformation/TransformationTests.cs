@@ -1,5 +1,4 @@
 ﻿using IFY.Phorm.Data;
-using IFY.Phorm.Encryption;
 using IFY.Phorm.Execution;
 using IFY.Phorm.Transformation;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -84,7 +83,7 @@ public class TransformationTests
         runner.TestConnection?.CommandQueue.Enqueue(cmd);
 
         // Act
-        var res = runner.From("Get").Get<DataObject>();
+        var res = runner.From("Get", null).Get<DataObject>();
 
         // Assert
         Assert.IsNotNull(res);
@@ -130,7 +129,7 @@ public class TransformationTests
         runner.TestConnection?.CommandQueue.Enqueue(cmd);
 
         // Act
-        var res = runner.From("Get").Get<DataObject2>();
+        var res = runner.From("Get", null).Get<DataObject2>();
 
         // Assert
         Assert.IsNotNull(res);

@@ -469,6 +469,42 @@
             Becomes true if this instance has captured at least one error.
             </summary>
         </member>
+        <member name="P:IFY.Phorm.Execution.AbstractPhormSession.ConnectionName">
+            <inheritdoc/>
+        </member>
+        <member name="E:IFY.Phorm.Execution.AbstractPhormSession.Connected">
+            <inheritdoc/>
+        </member>
+        <member name="E:IFY.Phorm.Execution.AbstractPhormSession.CommandExecuting">
+            <inheritdoc/>
+        </member>
+        <member name="E:IFY.Phorm.Execution.AbstractPhormSession.CommandExecuted">
+            <inheritdoc/>
+        </member>
+        <member name="E:IFY.Phorm.Execution.AbstractPhormSession.UnexpectedRecordColumn">
+            <inheritdoc/>
+        </member>
+        <member name="E:IFY.Phorm.Execution.AbstractPhormSession.UnresolvedContractMember">
+            <inheritdoc/>
+        </member>
+        <member name="E:IFY.Phorm.Execution.AbstractPhormSession.ConsoleMessage">
+            <inheritdoc/>
+        </member>
+        <member name="P:IFY.Phorm.Execution.AbstractPhormSession.ExceptionsAsConsoleMessage">
+            <inheritdoc/>
+        </member>
+        <member name="P:IFY.Phorm.Execution.AbstractPhormSession.StrictResultSize">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.#ctor(System.String,System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.GetConnection">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.CreateConnection">
+            <inheritdoc/>
+        </member>
         <member name="M:IFY.Phorm.Execution.AbstractPhormSession.GetDefaultSchema(IFY.Phorm.Connectivity.IPhormDbConnection)">
             <summary>
             Implementations to provide logic for resolving the default schema of the connection.
@@ -480,6 +516,9 @@
             Request a session with a different connection name.
             </summary>
         </member>
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.CreateCommand(IFY.Phorm.Connectivity.IPhormDbConnection,System.String,System.String,IFY.Phorm.DbObjectType)">
+            <inheritdoc/>
+        </member>
         <member name="M:IFY.Phorm.Execution.AbstractPhormSession.StartConsoleCapture(System.Guid,System.Data.IAsyncDbCommand)">
             <summary>
             If the connection implementation supports capture of console output (print statements),
@@ -487,6 +526,54 @@
             </summary>
             <param name="cmd">The command to capture console output for.</param>
             <returns>The object that will be provide the final console output.</returns>
+        </member>
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.NullConsoleMessageCapture.ProcessException(System.Exception)">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.NullConsoleMessageCapture.Dispose">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.Call(System.String,System.Object)">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.CallAsync(System.String,System.Object,System.Threading.CancellationToken)">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.Call``1(System.Object)">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.CallAsync``1(System.Object,System.Threading.CancellationToken)">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.Call``1(``0)">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.CallAsync``1(``0)">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.CallAsync``1(``0,System.Threading.CancellationToken)">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.From(System.String,System.Object)">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.From``1(System.Object)">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.Get``1(System.Object)">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.GetAsync``1(System.Object,System.Threading.CancellationToken)">
+            <inheritdoc/>
+        </member>
+        <member name="P:IFY.Phorm.Execution.AbstractPhormSession.SupportsTransactions">
+            <inheritdoc/>
+        </member>
+        <member name="P:IFY.Phorm.Execution.AbstractPhormSession.IsInTransaction">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.BeginTransaction">
+            <inheritdoc/>
         </member>
         <member name="P:IFY.Phorm.Execution.ConsoleMessage.IsError">
             <summary>

@@ -101,7 +101,7 @@ RETURN @@ROWCOUNT");
 
         // Act
         var res = phorm.Call("CallTest_Upsert", new { Int = randNum, Text = randStr, Data = randData, DateTime = randDT });
-        var obj = phorm.Get<DataItem>()!;
+        var obj = phorm.Get<DataItem>(null)!;
 
         // Assert
         Assert.AreEqual(1, res);
@@ -125,7 +125,7 @@ RETURN @@ROWCOUNT");
 
         // Act
         var res = phorm.Call<IUpsert>(new { Num = randNum, Text = randStr, Data = randData, DateTime = randDT });
-        var obj = phorm.Get<DataItem>()!;
+        var obj = phorm.Get<DataItem>(null)!;
 
         // Assert
         Assert.AreEqual(1, res);
@@ -151,7 +151,7 @@ RETURN @@ROWCOUNT");
 
         // Act
         var res = phorm.Call<IUpsert>(arg);
-        var obj = phorm.Get<DataItem>()!;
+        var obj = phorm.Get<DataItem>(null)!;
 
         // Assert
         Assert.AreEqual(1, res);
@@ -175,7 +175,7 @@ RETURN @@ROWCOUNT");
 
         // Act
         var res = phorm.Call("CallTest_Upsert", arg);
-        var obj = phorm.Get<DataItem>()!;
+        var obj = phorm.Get<DataItem>(null)!;
 
         // Assert
         Assert.AreEqual(1, res);
@@ -193,7 +193,7 @@ RETURN @@ROWCOUNT");
 
         // Act
         var res = phorm.Call<IUpsertOnlyIntWithId>(arg);
-        var obj = phorm.Get<DataItem>()!;
+        var obj = phorm.Get<DataItem>(null)!;
 
         // Assert
         Assert.AreEqual(1, res);

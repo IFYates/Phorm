@@ -279,7 +279,7 @@ public class PhormContractRunnerTests
         var runner = new PhormContractRunner<IPhormContract>(phorm, "ContractName", DbObjectType.StoredProcedure, new { Arg = 1 });
 
         // Act
-        var res = runner.GetAsync<TestDto[]>().Result!;
+        var res = runner.GetAsync<TestDto[]>(CancellationToken.None).Result!;
 
         // Assert
         Assert.AreEqual(3, res.Length);
@@ -489,7 +489,7 @@ public class PhormContractRunnerTests
         var runner = new PhormContractRunner<TestContract>(phorm, "ContractName", DbObjectType.StoredProcedure, new TestContract { Arg = 1 });
 
         // Act
-        var res = runner.GetAsync<TestDto[]>().Result!;
+        var res = runner.GetAsync<TestDto[]>(CancellationToken.None).Result!;
 
         // Assert
         Assert.AreEqual(3, res.Length);
@@ -595,7 +595,7 @@ public class PhormContractRunnerTests
         var runner = new PhormContractRunner<TestContract>(phorm, "ContractName", objType, new TestContract { Arg = 1 });
 
         // Act
-        var res = runner.GetAsync<TestDto[]>().Result!;
+        var res = runner.GetAsync<TestDto[]>(CancellationToken.None).Result!;
 
         // Assert
         Assert.AreEqual(3, res.Length);
@@ -716,7 +716,7 @@ public class PhormContractRunnerTests
         var runner = new PhormContractRunner<TestContract>(phorm, "ContractName", DbObjectType.StoredProcedure, new TestContract { Arg = 1 });
 
         // Act
-        var res = runner.GetAsync<IEnumerable<TestDto>>().Result!;
+        var res = runner.GetAsync<IEnumerable<TestDto>>(CancellationToken.None).Result!;
 
         // Assert
         Assert.AreEqual(3, res.Count());
@@ -772,7 +772,7 @@ public class PhormContractRunnerTests
         var runner = new PhormContractRunner<TestContract>(phorm, "ContractName", DbObjectType.StoredProcedure, new TestContract { Arg = 1 });
 
         // Act
-        var res = runner.GetAsync<ICollection<TestDto>>().Result!;
+        var res = runner.GetAsync<ICollection<TestDto>>(CancellationToken.None).Result!;
 
         // Assert
         Assert.AreEqual(3, res.Count());
@@ -922,7 +922,7 @@ public class PhormContractRunnerTests
         var runner = new PhormContractRunner<IPhormContract>(phorm, "ContractName", DbObjectType.StoredProcedure, new { Arg = 1 });
 
         // Act
-        var res = runner.GetAsync<TestDto>().Result;
+        var res = runner.GetAsync<TestDto>(CancellationToken.None).Result;
 
         // Assert
         Assert.AreEqual(CommandType.StoredProcedure, cmd.CommandType);
@@ -1088,7 +1088,7 @@ public class PhormContractRunnerTests
         var runner = new PhormContractRunner<TestContract>(phorm, "ContractName", DbObjectType.StoredProcedure, new TestContract { Arg = 1 });
 
         // Act
-        var res = runner.GetAsync<TestDto>().Result;
+        var res = runner.GetAsync<TestDto>(CancellationToken.None).Result;
 
         // Assert
         Assert.AreEqual(CommandType.StoredProcedure, cmd.CommandType);
@@ -1172,7 +1172,7 @@ public class PhormContractRunnerTests
         var runner = new PhormContractRunner<TestContract>(phorm, "ContractName", objType, new TestContract { Arg = 1 });
 
         // Act
-        var res = runner.GetAsync<TestDto>().Result;
+        var res = runner.GetAsync<TestDto>(CancellationToken.None).Result;
 
         // Assert
         Assert.AreEqual(CommandType.Text, cmd.CommandType);
@@ -1287,7 +1287,7 @@ public class PhormContractRunnerTests
         var runner = new PhormContractRunner<IConsoleLogContract>(phorm, null, DbObjectType.Default, arg);
 
         // Act
-        _ = runner.GetAsync<object>().Result;
+        _ = runner.GetAsync<object>(CancellationToken.None).Result;
 
         // Assert
         Assert.AreEqual(3, arg.ConsoleLogs.Value.Length);
@@ -1326,7 +1326,7 @@ public class PhormContractRunnerTests
         var runner = new PhormContractRunner<IConsoleLogContract>(phorm, null, DbObjectType.Default, arg);
 
         // Act
-        _ = runner.GetAsync<object>().Result;
+        _ = runner.GetAsync<object>(CancellationToken.None).Result;
 
         // Assert
         Assert.AreEqual(3, arg.ConsoleLogs.Value.Length);

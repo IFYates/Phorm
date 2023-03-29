@@ -72,7 +72,7 @@ public class AbstractPhormSessionTests
     public void From__No_typearg()
     {
         // Arrange
-        var phorm = new TestPhormSession();
+        IPhormSession phorm = new TestPhormSession();
 
         // Act
         var runner = phorm.From("objectName");
@@ -85,7 +85,7 @@ public class AbstractPhormSessionTests
     public void From__With_typearg()
     {
         // Arrange
-        var phorm = new TestPhormSession();
+        IPhormSession phorm = new TestPhormSession();
 
         // Act
         var runner = phorm.From<ITestContract>();
@@ -98,7 +98,7 @@ public class AbstractPhormSessionTests
     public void From__With_typed_arg()
     {
         // Arrange
-        var phorm = new TestPhormSession();
+        IPhormSession phorm = new TestPhormSession();
 
         var arg = new Mock<ITestContract>().Object;
 
@@ -121,11 +121,11 @@ public class AbstractPhormSessionTests
         int res;
         if (byAsync)
         {
-            res = phorm.CallAsync("TestContract").Result;
+            res = phorm.CallAsync("TestContract", null, CancellationToken.None).Result;
         }
         else
         {
-            res = phorm.Call("TestContract");
+            res = phorm.Call("TestContract", null);
         }
 
         // Assert
@@ -146,11 +146,11 @@ public class AbstractPhormSessionTests
         int res;
         if (byAsync)
         {
-            res = phorm.CallAsync<ITestContract>((object?)null).Result;
+            res = phorm.CallAsync<ITestContract>(null!, CancellationToken.None).Result;
         }
         else
         {
-            res = phorm.Call<ITestContract>((object?)null);
+            res = phorm.Call<ITestContract>(null!);
         }
 
         // Assert
@@ -255,11 +255,11 @@ public class AbstractPhormSessionTests
         int res;
         if (byAsync)
         {
-            res = phorm.CallAsync<ITestContract>().Result;
+            res = phorm.CallAsync<ITestContract>(null!, CancellationToken.None).Result;
         }
         else
         {
-            res = phorm.Call<ITestContract>();
+            res = phorm.Call<ITestContract>(null!);
         }
 
         // Assert
@@ -277,7 +277,7 @@ public class AbstractPhormSessionTests
         var token = new CancellationToken(true);
 
         // Act
-        var res = phorm.CallAsync<ITestContract>(token).Result;
+        var res = phorm.CallAsync<ITestContract>(null!, token).Result;
 
         // Assert
         Assert.AreEqual(1, res);
@@ -295,7 +295,7 @@ public class AbstractPhormSessionTests
         var token = new CancellationToken(true);
 
         // Act
-        var res = phorm.CallAsync("TestContract", token).Result;
+        var res = phorm.CallAsync("TestContract", null!, token).Result;
 
         // Assert
         Assert.AreEqual(1, res);
@@ -316,11 +316,11 @@ public class AbstractPhormSessionTests
         ITestContract? result;
         if (byAsync)
         {
-            result = phorm.GetAsync<TestEntityView>().Result;
+            result = phorm.GetAsync<TestEntityView>(null, CancellationToken.None).Result;
         }
         else
         {
-            result = phorm.Get<TestEntityView>();
+            result = phorm.Get<TestEntityView>(null);
         }
 
         // Assert
@@ -338,7 +338,7 @@ public class AbstractPhormSessionTests
         var token = new CancellationToken(true);
 
         // Act
-        var result = phorm.GetAsync<TestEntityView>(token).Result;
+        var result = phorm.GetAsync<TestEntityView>(null, token).Result;
 
         // Assert
         Assert.IsNull(result);
@@ -361,11 +361,11 @@ public class AbstractPhormSessionTests
         ITestContract? result;
         if (byAsync)
         {
-            result = phorm.GetAsync(arg).Result;
+            result = phorm.GetAsync<TestEntityView>(arg, CancellationToken.None).Result;
         }
         else
         {
-            result = phorm.Get(arg);
+            result = phorm.Get<TestEntityView>(arg);
         }
 
         // Assert
@@ -375,9 +375,7 @@ public class AbstractPhormSessionTests
     }
 
     [TestMethod]
-    [DataRow(false)]
-    [DataRow(true)]
-    public void Get__By_typed_arg_with_CT(bool byAsync)
+    public void Get__By_typed_arg_with_CT()
     {
         // Arrange
         var phorm = new TestPhormSession();
@@ -387,7 +385,7 @@ public class AbstractPhormSessionTests
         var arg = new TestEntityView();
 
         // Act
-        var result = phorm.GetAsync(arg, token).Result;
+        var result = phorm.GetAsync<TestEntityView>(arg, token).Result;
 
         // Assert
         Assert.IsNull(result);
@@ -410,7 +408,7 @@ public class AbstractPhormSessionTests
         ITestContract? result;
         if (byAsync)
         {
-            result = phorm.GetAsync<TestEntityView>(arg).Result;
+            result = phorm.GetAsync<TestEntityView>(arg, CancellationToken.None).Result;
         }
         else
         {
@@ -440,11 +438,11 @@ public class AbstractPhormSessionTests
         ITestContract? result;
         if (byAsync)
         {
-            result = phorm.GetAsync(arg).Result;
+            result = phorm.GetAsync<TestEntityView>(arg, CancellationToken.None).Result;
         }
         else
         {
-            result = phorm.Get(arg);
+            result = phorm.Get<TestEntityView>(arg);
         }
 
         // Assert
@@ -470,11 +468,11 @@ public class AbstractPhormSessionTests
         ITestContract? result;
         if (byAsync)
         {
-            result = phorm.GetAsync(arg).Result;
+            result = phorm.GetAsync<TestEntityTable>(arg, CancellationToken.None).Result;
         }
         else
         {
-            result = phorm.Get(arg);
+            result = phorm.Get<TestEntityTable>(arg);
         }
 
         // Assert

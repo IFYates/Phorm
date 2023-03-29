@@ -49,7 +49,7 @@ RETURN 1");
         setupGenSpecContract(phorm);
 
         // Act
-        var res = phorm.From("GetAllDataItems")
+        var res = phorm.From("GetAllDataItems", null)
             .Get<GenSpec<BaseDataItem, NumericDataItem, TextDataItem>>()!;
 
         var all = res.All();
@@ -70,7 +70,7 @@ RETURN 1");
         setupGenSpecContract(phorm);
 
         // Act
-        var res = phorm.From("GetAllDataItems")
+        var res = phorm.From("GetAllDataItems", null)
             .Get<GenSpec<BaseDataItem, TextDataItem>>()!;
 
         var all = res.All();
@@ -103,7 +103,7 @@ RETURN 1");
         setupGenSpecContract(phorm);
 
         // Act
-        var res = phorm.From("GetAllDataItems")
+        var res = phorm.From("GetAllDataItems", null)
             .Get<GenSpec<BaseDataItemNonabstract, NumericDataItem2>>()!;
 
         var all = res.All();

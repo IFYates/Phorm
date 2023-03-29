@@ -9,6 +9,7 @@ public abstract class AbstractPhormSession : IPhormSession
 {
     protected readonly string _databaseConnectionString;
 
+    /// <inheritdoc/>
     public string? ConnectionName { get; private set; }
 
     public string ProcedurePrefix
@@ -41,6 +42,7 @@ public abstract class AbstractPhormSession : IPhormSession
 
     #region Events
 
+    /// <inheritdoc/>
     public event EventHandler<ConnectedEventArgs> Connected = null!;
     internal void OnConnected(ConnectedEventArgs args)
     {
@@ -48,6 +50,7 @@ public abstract class AbstractPhormSession : IPhormSession
         Events.OnConnected(this, args);
     }
 
+    /// <inheritdoc/>
     public event EventHandler<CommandExecutingEventArgs> CommandExecuting = null!;
     internal void OnCommandExecuting(CommandExecutingEventArgs args)
     {
@@ -55,6 +58,7 @@ public abstract class AbstractPhormSession : IPhormSession
         Events.OnCommandExecuting(this, args);
     }
 
+    /// <inheritdoc/>
     public event EventHandler<CommandExecutedEventArgs> CommandExecuted = null!;
     internal void OnCommandExecuted(CommandExecutedEventArgs args)
     {
@@ -62,6 +66,7 @@ public abstract class AbstractPhormSession : IPhormSession
         Events.OnCommandExecuted(this, args);
     }
 
+    /// <inheritdoc/>
     public event EventHandler<UnexpectedRecordColumnEventArgs> UnexpectedRecordColumn = null!;
     internal void OnUnexpectedRecordColumn(UnexpectedRecordColumnEventArgs args)
     {
@@ -69,6 +74,7 @@ public abstract class AbstractPhormSession : IPhormSession
         Events.OnUnexpectedRecordColumn(this, args);
     }
 
+    /// <inheritdoc/>
     public event EventHandler<UnresolvedContractMemberEventArgs> UnresolvedContractMember = null!;
     internal void OnUnresolvedContractMember(UnresolvedContractMemberEventArgs args)
     {
@@ -76,6 +82,7 @@ public abstract class AbstractPhormSession : IPhormSession
         Events.OnUnresolvedContractMember(this, args);
     }
 
+    /// <inheritdoc/>
     public event EventHandler<ConsoleMessageEventArgs> ConsoleMessage = null!;
     internal void OnConsoleMessage(ConsoleMessageEventArgs args)
     {
@@ -85,10 +92,13 @@ public abstract class AbstractPhormSession : IPhormSession
 
     #endregion Events
 
+    /// <inheritdoc/>
     public bool ExceptionsAsConsoleMessage { get; set; } = GlobalSettings.ExceptionsAsConsoleMessage;
 
+    /// <inheritdoc/>
     public bool StrictResultSize { get; set; } = GlobalSettings.StrictResultSize;
 
+    /// <inheritdoc/>
     protected AbstractPhormSession(string databaseConnectionString, string? connectionName)
     {
         _databaseConnectionString = databaseConnectionString;
@@ -110,6 +120,7 @@ public abstract class AbstractPhormSession : IPhormSession
         }
     }
 
+    /// <inheritdoc/>
     protected internal virtual IPhormDbConnection GetConnection()
     {
         // Reuse existing connections, where possible
@@ -145,6 +156,7 @@ public abstract class AbstractPhormSession : IPhormSession
         return phormConn;
     }
 
+    /// <inheritdoc/>
     protected abstract IPhormDbConnection CreateConnection();
 
     /// <summary>
@@ -167,6 +179,7 @@ public abstract class AbstractPhormSession : IPhormSession
         return CreateCommand(conn, schema, objectName, objectType);
     }
 
+    /// <inheritdoc/>
     protected virtual IAsyncDbCommand CreateCommand(IPhormDbConnection connection, string schema, string objectName, DbObjectType objectType)
     {
         // Complete object name
@@ -208,9 +221,11 @@ public abstract class AbstractPhormSession : IPhormSession
 
     protected internal class NullConsoleMessageCapture : AbstractConsoleMessageCapture
     {
-        public static readonly NullConsoleMessageCapture Instance = new NullConsoleMessageCapture();
+        public static readonly NullConsoleMessageCapture Instance = new();
         private NullConsoleMessageCapture() : base(null!, Guid.Empty) { }
+        /// <inheritdoc/>
         public override bool ProcessException(Exception ex) => false;
+        /// <inheritdoc/>
         public override void Dispose() { /* Nothing to release */ }
     }
 
@@ -218,37 +233,21 @@ public abstract class AbstractPhormSession : IPhormSession
 
     #region Call
 
-    public int Call(string contractName)
-        => CallAsync(contractName, null).GetAwaiter().GetResult();
+    /// <inheritdoc/>
     public int Call(string contractName, object? args)
-        => CallAsync(contractName, args).GetAwaiter().GetResult();
-    public Task<int> CallAsync(string contractName)
-        => CallAsync(contractName, null, CancellationToken.None);
-    public Task<int> CallAsync(string contractName, object? args)
-        => CallAsync(contractName, args, CancellationToken.None);
-    public Task<int> CallAsync(string contractName, CancellationToken cancellationToken)
-        => CallAsync(contractName, null, cancellationToken);
+        => CallAsync(contractName, args, CancellationToken.None).GetAwaiter().GetResult();
+    /// <inheritdoc/>
     public Task<int> CallAsync(string contractName, object? args, CancellationToken cancellationToken)
     {
         var runner = new PhormContractRunner<IPhormContract>(this, contractName, DbObjectType.StoredProcedure, args);
         return runner.CallAsync(cancellationToken);
     }
 
-    public int Call<TActionContract>()
-        where TActionContract : IPhormContract
-        => CallAsync<TActionContract>(null).GetAwaiter().GetResult();
+    /// <inheritdoc/>
     public int Call<TActionContract>(object? args)
         where TActionContract : IPhormContract
-        => CallAsync<TActionContract>(args).GetAwaiter().GetResult();
-    public Task<int> CallAsync<TActionContract>()
-        where TActionContract : IPhormContract
-        => CallAsync<TActionContract>(null, CancellationToken.None);
-    public Task<int> CallAsync<TActionContract>(object? args)
-        where TActionContract : IPhormContract
-        => CallAsync<TActionContract>(args, CancellationToken.None);
-    public Task<int> CallAsync<TActionContract>(CancellationToken cancellationToken)
-        where TActionContract : IPhormContract
-        => CallAsync<TActionContract>(null, cancellationToken);
+        => CallAsync<TActionContract>(args, CancellationToken.None).GetAwaiter().GetResult();
+    /// <inheritdoc/>
     public Task<int> CallAsync<TActionContract>(object? args, CancellationToken cancellationToken)
         where TActionContract : IPhormContract
     {
@@ -256,12 +255,15 @@ public abstract class AbstractPhormSession : IPhormSession
         return runner.CallAsync(cancellationToken);
     }
 
+    /// <inheritdoc/>
     public int Call<TActionContract>(TActionContract contract)
         where TActionContract : IPhormContract
         => CallAsync(contract, CancellationToken.None).GetAwaiter().GetResult();
+    /// <inheritdoc/>
     public Task<int> CallAsync<TActionContract>(TActionContract contract)
         where TActionContract : IPhormContract
         => CallAsync(contract, CancellationToken.None);
+    /// <inheritdoc/>
     public Task<int> CallAsync<TActionContract>(TActionContract contract, CancellationToken cancellationToken)
         where TActionContract : IPhormContract
     {
@@ -273,38 +275,24 @@ public abstract class AbstractPhormSession : IPhormSession
 
     #region From
 
-    public IPhormContractRunner From(string contractName)
-        => From(contractName, null);
+    /// <inheritdoc/>
     public IPhormContractRunner From(string contractName, object? args)
     {
         return new PhormContractRunner<IPhormContract>(this, contractName, DbObjectType.StoredProcedure, args);
     }
 
-    public IPhormContractRunner<TActionContract> From<TActionContract>()
-        where TActionContract : IPhormContract
-        => From<TActionContract>(null);
+    /// <inheritdoc/>
     public IPhormContractRunner<TActionContract> From<TActionContract>(object? args)
         where TActionContract : IPhormContract
     {
         return new PhormContractRunner<TActionContract>(this, null, DbObjectType.StoredProcedure, args);
     }
 
-    public IPhormContractRunner<TActionContract> From<TActionContract>(TActionContract contract)
-        where TActionContract : IPhormContract
-    {
-        return new PhormContractRunner<TActionContract>(this, null, DbObjectType.StoredProcedure, contract);
-    }
-
     #endregion From
 
     #region Get
 
-    public TResult? Get<TResult>()
-        where TResult : class
-        => Get<TResult>((object?)null);
-    public TResult? Get<TResult>(TResult args)
-        where TResult : class
-        => Get<TResult>((object?)args);
+    /// <inheritdoc/>
     public TResult? Get<TResult>(object? args)
         where TResult : class
     {
@@ -312,21 +300,7 @@ public abstract class AbstractPhormSession : IPhormSession
         return runner.Get<TResult>();
     }
 
-    public Task<TResult?> GetAsync<TResult>()
-        where TResult : class
-        => GetAsync<TResult>((object?)null, CancellationToken.None);
-    public Task<TResult?> GetAsync<TResult>(CancellationToken cancellationToken)
-        where TResult : class
-        => GetAsync<TResult>((object?)null, cancellationToken);
-    public Task<TResult?> GetAsync<TResult>(TResult args)
-        where TResult : class
-        => GetAsync<TResult>((object?)args, CancellationToken.None);
-    public Task<TResult?> GetAsync<TResult>(TResult args, CancellationToken cancellationToken)
-        where TResult : class
-        => GetAsync<TResult>((object?)args, cancellationToken);
-    public Task<TResult?> GetAsync<TResult>(object? args)
-        where TResult : class
-        => GetAsync<TResult>(args, CancellationToken.None);
+    /// <inheritdoc/>
     public Task<TResult?> GetAsync<TResult>(object? args, CancellationToken cancellationToken)
         where TResult : class
     {
@@ -338,10 +312,13 @@ public abstract class AbstractPhormSession : IPhormSession
 
     #region Transactions
 
+    /// <inheritdoc/>
     public abstract bool SupportsTransactions { get; }
 
+    /// <inheritdoc/>
     public abstract bool IsInTransaction { get; }
 
+    /// <inheritdoc/>
     public abstract ITransactedPhormSession BeginTransaction();
 
     #endregion Transactions

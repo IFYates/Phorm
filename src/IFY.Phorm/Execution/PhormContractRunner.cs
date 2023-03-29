@@ -319,8 +319,6 @@ internal sealed partial class PhormContractRunner<TActionContract> : IPhormContr
 
     #endregion Execution
 
-    public Task<int> CallAsync()
-        => CallAsync(CancellationToken.None);
     public async Task<int> CallAsync(CancellationToken cancellationToken)
     {
         // Prepare execution
@@ -341,9 +339,6 @@ internal sealed partial class PhormContractRunner<TActionContract> : IPhormContr
     public TResult? Get<TResult>()
         where TResult : class
         => GetAsync<TResult>(CancellationToken.None).GetAwaiter().GetResult();
-    public Task<TResult?> GetAsync<TResult>()
-        where TResult : class
-        => GetAsync<TResult>(CancellationToken.None);
     public async Task<TResult?> GetAsync<TResult>(CancellationToken cancellationToken)
         where TResult : class
     {

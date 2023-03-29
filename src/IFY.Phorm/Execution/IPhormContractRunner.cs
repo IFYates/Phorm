@@ -17,8 +17,9 @@ public interface IPhormContractRunner
     /// </summary>
     /// <typeparam name="TResult">The type of entity to map result data to.</typeparam>
     /// <returns>When <typeparamref name="TResult"/> is the entity type, will return the single result instance or null. When <typeparamref name="TResult"/> is an array of the entity type, will return an array of all types from the result (never null).</returns>
-    Task<TResult?> GetAsync<TResult>()
-        where TResult : class;
+    public Task<TResult?> GetAsync<TResult>()
+        where TResult : class
+        => GetAsync<TResult>(CancellationToken.None);
     /// <summary>
     /// Get one or more entity instances.
     /// </summary>

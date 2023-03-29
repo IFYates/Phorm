@@ -83,7 +83,7 @@ public class PhormContractRunnerTests_Resultsets
         // Act
         var ex = (MissingMethodException)Assert.ThrowsException<AggregateException>(() =>
         {
-            _ = runner.GetAsync<TestBadEntity>().Result;
+            _ = runner.GetAsync<TestBadEntity>(CancellationToken.None).Result;
         }).InnerException!;
 
         // Assert
@@ -132,7 +132,7 @@ public class PhormContractRunnerTests_Resultsets
         var runner = new PhormContractRunner<ITestContract>(phorm, "ContractName", DbObjectType.StoredProcedure, null);
 
         // Act
-        var res = runner.GetAsync<TestParent[]>().Result!;
+        var res = runner.GetAsync<TestParent[]>(CancellationToken.None).Result!;
 
         // Assert
         Assert.AreEqual(1, res[0].Children.Length);
@@ -179,7 +179,7 @@ public class PhormContractRunnerTests_Resultsets
         // Act
         var ex = (InvalidDataContractException)Assert.ThrowsException<AggregateException>(() =>
         {
-            _ = runner.GetAsync<TestParentBadResultsetProperty[]>().Result;
+            _ = runner.GetAsync<TestParentBadResultsetProperty[]>(CancellationToken.None).Result;
         }).InnerException!;
 
         // Assert
@@ -228,7 +228,7 @@ public class PhormContractRunnerTests_Resultsets
         var runner = new PhormContractRunner<ITestContract>(phorm, "ContractName", DbObjectType.StoredProcedure, null);
 
         // Act
-        var res = runner.GetAsync<TestParent>().Result;
+        var res = runner.GetAsync<TestParent>(CancellationToken.None).Result;
 
         // Assert
         Assert.AreEqual(1, res?.Children.Length);
@@ -281,7 +281,7 @@ public class PhormContractRunnerTests_Resultsets
         // Act
         var ex = (InvalidCastException)Assert.ThrowsException<AggregateException>(() =>
         {
-            _ = runner.GetAsync<TestParent>().Result;
+            _ = runner.GetAsync<TestParent>(CancellationToken.None).Result;
         }).InnerException!;
         Assert.IsTrue(ex.Message.Contains("not an array") == true);
     }
@@ -325,7 +325,7 @@ public class PhormContractRunnerTests_Resultsets
         var runner = new PhormContractRunner<ITestContract>(phorm, "ContractName", DbObjectType.StoredProcedure, null);
 
         // Act
-        var res = runner.GetAsync<TestParent>().Result;
+        var res = runner.GetAsync<TestParent>(CancellationToken.None).Result;
 
         // Assert
         Assert.AreEqual("value1", res?.Child?.Value);

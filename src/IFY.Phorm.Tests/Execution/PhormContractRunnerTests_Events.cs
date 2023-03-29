@@ -262,7 +262,7 @@ public class PhormContractRunnerTests_Events
         // Act
         _ = (NotImplementedException)Assert.ThrowsException<AggregateException>(() =>
         {
-            _ = runner.CallAsync().Result;
+            _ = runner.CallAsync(CancellationToken.None).Result;
         }).InnerException!;
 
         // Assert
@@ -323,7 +323,7 @@ public class PhormContractRunnerTests_Events
             new { Arg1 = 1, Arg2 = "2" });
 
         // Act
-        var res = runner.CallAsync().Result;
+        var res = runner.CallAsync(CancellationToken.None).Result;
 
         // Assert
         Assert.AreSame(phorm, instanceEvent!.Value.sender);
@@ -631,7 +631,7 @@ public class PhormContractRunnerTests_Events
         var runner = new PhormContractRunner<IPhormContract>(phorm, "Test", DbObjectType.Default, null);
 
         // Act
-        var res = runner.CallAsync().Result;
+        var res = runner.CallAsync(CancellationToken.None).Result;
 
         // Assert
         Assert.AreEqual(1, res);
@@ -678,7 +678,7 @@ public class PhormContractRunnerTests_Events
         var runner = new PhormContractRunner<IPhormContract>(phorm, "Test", DbObjectType.Default, null);
 
         // Act
-        _ = runner.GetAsync<object>().Result;
+        _ = runner.GetAsync<object>(CancellationToken.None).Result;
 
         // Assert
         Assert.AreEqual(3, consoleMessages.Count);

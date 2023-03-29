@@ -149,10 +149,10 @@ RETURN @@ROWCOUNT");
         var phorm = getPhormSession();
         setupGetTestSchema(phorm);
 
-        phorm.Call("GetTest_Upsert");
-        phorm.Call("GetTest_Upsert");
-        phorm.Call("GetTest_Upsert");
-        phorm.Call("GetTest_Upsert");
+        phorm.Call("GetTest_Upsert", null);
+        phorm.Call("GetTest_Upsert", null);
+        phorm.Call("GetTest_Upsert", null);
+        phorm.Call("GetTest_Upsert", null);
 
         var obj = new { ReturnValue = ContractMember.RetVal() };
         var x = phorm.From<IGetAll>(obj)
@@ -176,7 +176,7 @@ RETURN @@ROWCOUNT");
         phorm.Call("GetTest_Upsert", new { Int = 1, IsInView = true });
 
         // Act
-        var res = phorm.From<IDataView>()
+        var res = phorm.From<IDataView>(null)
             .Get<DataItem[]>()!;
 
         // Assert
@@ -214,11 +214,11 @@ RETURN @@ROWCOUNT");
         var phorm = getPhormSession();
         setupGetTestSchema(phorm);
 
-        _ = phorm.Call("GetTest_Upsert");
-        _ = phorm.Call("GetTest_Upsert");
-        _ = phorm.Call("GetTest_Upsert");
+        _ = phorm.Call("GetTest_Upsert", null);
+        _ = phorm.Call("GetTest_Upsert", null);
+        _ = phorm.Call("GetTest_Upsert", null);
 
-        var res = phorm.Get<DataItemWithoutText[]>()!;
+        var res = phorm.Get<DataItemWithoutText[]>(null)!;
 
         Assert.AreEqual(3, res.Length);
     }
@@ -229,9 +229,9 @@ RETURN @@ROWCOUNT");
         var phorm = getPhormSession();
         setupGetTestSchema(phorm);
 
-        _ = phorm.Call("GetTest_Upsert");
-        _ = phorm.Call("GetTest_Upsert");
-        _ = phorm.Call("GetTest_Upsert");
+        _ = phorm.Call("GetTest_Upsert", null);
+        _ = phorm.Call("GetTest_Upsert", null);
+        _ = phorm.Call("GetTest_Upsert", null);
 
         var x = phorm.Get<DataItem[]>(new { Id = 1 })!;
 
@@ -251,11 +251,11 @@ RETURN @@ROWCOUNT");
         var phorm = getPhormSession();
         setupGetTestSchema(phorm);
 
-        _ = phorm.Call("GetTest_Upsert");
-        _ = phorm.Call("GetTest_Upsert");
-        _ = phorm.Call("GetTest_Upsert");
+        _ = phorm.Call("GetTest_Upsert", null);
+        _ = phorm.Call("GetTest_Upsert", null);
+        _ = phorm.Call("GetTest_Upsert", null);
 
-        var res = phorm.From<IDataView>().Get<IEnumerable<DataItem>>()!;
+        var res = phorm.From<IDataView>(null).Get<IEnumerable<DataItem>>()!;
 
         Assert.IsTrue(hasUnresolvedEntities(res));
         Assert.AreEqual(3, res.Count());
@@ -277,11 +277,11 @@ RETURN @@ROWCOUNT");
         var phorm = getPhormSession();
         setupGetTestSchema(phorm);
 
-        _ = phorm.Call("GetTest_Upsert");
-        _ = phorm.Call("GetTest_Upsert");
-        _ = phorm.Call("GetTest_Upsert");
+        _ = phorm.Call("GetTest_Upsert", null);
+        _ = phorm.Call("GetTest_Upsert", null);
+        _ = phorm.Call("GetTest_Upsert", null);
 
-        var res = phorm.From<IDataView>().Get<ICollection<DataItem>>()!;
+        var res = phorm.From<IDataView>(null).Get<ICollection<DataItem>>()!;
 
         Assert.IsTrue(hasUnresolvedEntities(res));
         Assert.AreEqual(3, res.Count());
@@ -300,7 +300,7 @@ RETURN @@ROWCOUNT");
         var phorm = getPhormSession();
         setupGetTestSchema(phorm);
 
-        var res = phorm.Call("GetTest_Upsert");
+        var res = phorm.Call("GetTest_Upsert", null);
 
         var obj = phorm.From<IDataView>(new { Id = 1 })
             .Get<DataItemWithoutText>()!;
@@ -319,11 +319,11 @@ RETURN @@ROWCOUNT");
         var phorm = getPhormSession();
         setupGetTestSchema(phorm);
 
-        _ = phorm.Call("GetTest_Upsert");
-        _ = phorm.Call("GetTest_Upsert");
-        _ = phorm.Call("GetTest_Upsert");
+        _ = phorm.Call("GetTest_Upsert", null);
+        _ = phorm.Call("GetTest_Upsert", null);
+        _ = phorm.Call("GetTest_Upsert", null);
 
-        var x = phorm.From<IDataView>()
+        var x = phorm.From<IDataView>(null)
             .Where<DataItem>(o => o.Id == 1)
             .GetAll();
 
@@ -336,11 +336,11 @@ RETURN @@ROWCOUNT");
         var phorm = getPhormSession();
         setupGetTestSchema(phorm);
 
-        _ = phorm.Call("GetTest_Upsert");
-        _ = phorm.Call("GetTest_Upsert");
-        _ = phorm.Call("GetTest_Upsert");
+        _ = phorm.Call("GetTest_Upsert", null);
+        _ = phorm.Call("GetTest_Upsert", null);
+        _ = phorm.Call("GetTest_Upsert", null);
 
-        var x = phorm.From<DataItem>()
+        var x = phorm.From<DataItem>(null)
             .Where<DataItem>(o => o.Id == 1)
             .GetAll();
 
@@ -366,7 +366,7 @@ RETURN @@ROWCOUNT");
         phorm.Call("GetTest_Upsert", new { Int = 40 });
 
         // Act
-        var res = phorm.From<IDataView>()
+        var res = phorm.From<IDataView>(null)
             .Where<DataItem>(o => o.Id <= 3 && o.Text == null && o.Num.HasValue && o.Num.Value > 10 && o.Flag)
             .GetAll();
 
