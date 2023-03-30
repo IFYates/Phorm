@@ -3,7 +3,7 @@ using System.Linq.Expressions;
 
 namespace IFY.Phorm.Execution;
 
-internal sealed partial class PhormContractRunner<TActionContract>
+partial class PhormContractRunner<TActionContract>
     where TActionContract : IPhormContract
 {
     /// <summary>

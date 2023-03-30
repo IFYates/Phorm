@@ -93,30 +93,31 @@ internal static class Extensions
         parseExpression(expr);
         return props.Distinct().ToArray();
 
-        bool parseExpression(Expression expr)
+        void parseExpression(Expression expr)
         {
             switch (expr)
             {
                 case BinaryExpression be:
-                    return parseExpression(be.Left)
-                        | parseExpression(be.Right);
+                    parseExpression(be.Left);
+                    parseExpression(be.Right);
+                    break;
                 case ConditionalExpression ce:
-                    return parseExpression(ce.Test)
-                        | parseExpression(ce.IfTrue)
-                        | parseExpression(ce.IfFalse);
+                    parseExpression(ce.Test);
+                    parseExpression(ce.IfTrue);
+                    parseExpression(ce.IfFalse);
+                    break;
                 case ConstantExpression:
-                    return false;
+                    break;
                 case MethodCallExpression mce:
-                    var result = false;
                     if (mce.Object is MemberExpression)
                     {
-                        result |= parseExpression(mce.Object);
+                        parseExpression(mce.Object);
                     }
                     foreach (var arg in mce.Arguments)
                     {
-                        result |= parseExpression(arg);
+                        parseExpression(arg);
                     }
-                    return result;
+                    break;
                 case MemberExpression me:
                     if (me.Member is PropertyInfo pi)
                     {
@@ -125,20 +126,21 @@ internal static class Extensions
                         if (me.Expression?.NodeType == ExpressionType.Parameter && me.Expression?.Type == parameterType)
                         {
                             props.Add(pi);
-                            return true;
+                            break;
                         }
                     }
                     if (me.Expression != null)
                     {
-                        return parseExpression(me.Expression);
+                        parseExpression(me.Expression);
                     }
-                    return false;
+                    break;
                 default:
                     // Unary types
                     if (expr is UnaryExpression ue
                         && ue.NodeType is ExpressionType.ArrayLength or ExpressionType.Convert or ExpressionType.Not)
                     {
-                        return parseExpression(ue.Operand);
+                        parseExpression(ue.Operand);
+                        break;
                     }
                     throw new NotImplementedException();
             }

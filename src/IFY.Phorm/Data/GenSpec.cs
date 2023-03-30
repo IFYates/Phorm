@@ -52,11 +52,14 @@ public abstract class GenSpecBase
     internal abstract void SetData(System.Collections.IEnumerable data);
 }
 
-public abstract class GenSpecBase<TBase> : GenSpecBase
+public class GenSpecBase<TBase> : GenSpecBase
 {
     public int Count() => _data.Count();
 
     private IEnumerable<TBase> _data = Array.Empty<TBase>();
+
+    protected GenSpecBase()
+    { }
 
     internal override void SetData(System.Collections.IEnumerable data)
     {
