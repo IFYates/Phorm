@@ -52,13 +52,7 @@ public abstract class GenSpecBase
     internal abstract void SetData(IEnumerable<object> data);
 }
 
-/// <summary>
-/// Fetch a resultset containing "Specialised" instances with a common "Generalised" base type.
-/// </summary>
-/// <typeparam name="TBase">The "Generalised" base type that the other types share.</typeparam>
-/// <typeparam name="T1">A "Specialised" type.</typeparam>
-public class GenSpec<TBase, T1> : GenSpecBase
-    where T1 : TBase
+public abstract class GenSpecBase<TBase> : GenSpecBase
 {
     private IEnumerable<TBase> _data = Array.Empty<TBase>();
 
@@ -75,6 +69,16 @@ public class GenSpec<TBase, T1> : GenSpecBase
     /// Get all records that are of the specified "Specialised" type.
     /// </summary>
     public IEnumerable<T> OfType<T>() => _data.OfType<T>();
+}
+
+/// <summary>
+/// Fetch a resultset containing "Specialised" instances with a common "Generalised" base type.
+/// </summary>
+/// <typeparam name="TBase">The "Generalised" base type that the other types share.</typeparam>
+/// <typeparam name="T1">A "Specialised" type.</typeparam>
+public class GenSpec<TBase, T1> : GenSpecBase<TBase>
+    where T1 : TBase
+{
 }
 
 /// <summary>

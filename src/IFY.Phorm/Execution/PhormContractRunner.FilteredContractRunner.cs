@@ -28,7 +28,7 @@ internal sealed partial class PhormContractRunner<TActionContract>
                     throw new ArgumentException($"Type argument TResult for FilteredContractRunner must have a public default constructor.");
                 }
             }
-            else if (typeof(TResult).BaseType == typeof(GenSpecBase))
+            else if (typeof(GenSpecBase).IsAssignableFrom(typeof(TResult)))
             {
                 if (typeof(TResult).GenericTypeArguments.Length == 0 || typeof(TResult).GenericTypeArguments[0] != typeof(TEntity))
                 {
@@ -53,37 +53,64 @@ internal sealed partial class PhormContractRunner<TActionContract>
             using var console = _parent._session.StartConsoleCapture(eventArgs.CommandGuid, cmd);
             using var rdr = await cmd.ExecuteReaderAsync(cancellationToken);
 
-            var isGenSpec = typeof(TResult).BaseType == typeof(GenSpecBase);
-
-            var entityType = typeof(TEntity);
-            var resultMembers = ContractMemberDefinition.GetFromContract(entityType)
-                .ToDictionary(m => m.DbName.ToUpperInvariant());
+            // Prepare genspec
+            GenSpecBase? genspec = null;
+            Dictionary<string, object?>? tempProps = null;
+            if (typeof(GenSpecBase).IsAssignableFrom(typeof(TResult)))
+            {
+                genspec = (GenSpecBase)Activator.CreateInstance(typeof(TResult))!;
+                tempProps ??= new();
+            }
 
             // Discover minimum properties required from expression
             var predicateProperties = _predicate.Body.GetExpressionParameterProperties(typeof(TEntity));
             var cond = _predicate.Compile();
 
             // Build list of self-resolving entities
+            ContractMemberDefinition[]? entityMembers = null;
             var resolverList = new EntityList<TEntity>();
             while (!cancellationToken.IsCancellationRequested && _parent.safeRead(rdr, console))
             {
-                var predicateMembers = resultMembers.Where(m => predicateProperties.Contains(m.Value.SourceMember))
-                    .ToDictionary(k => k.Key, v => v.Value);
-                var otherMembers = resultMembers.Except(predicateMembers)
-                    .ToDictionary(k => k.Key, v => v.Value);
-
-                var row = PhormContractRunner<TActionContract>.getRowValues(rdr);
-
                 TEntity inst;
-                if (!isGenSpec)
+                if (genspec == null)
                 {
                     inst = Activator.CreateInstance<TEntity>();
+                    entityMembers ??= ContractMemberDefinition.GetFromContract(typeof(TEntity));
                 }
                 else
                 {
-                    // TODO: resolve spec instance
-                    inst = null!;
+                    // Resolve spec type
+                    tempProps!.Clear();
+                    var spec = genspec.GetFirstSpecType(m =>
+                    {
+                        // Check Gen property for the Spec type (cached)
+                        if (!tempProps.TryGetValue(m.SourceMemberId!, out var propValue)
+                            && m.TryFromDatasource(rdr[m.DbName], null, out var gen))
+                        {
+                            propValue = gen.Value;
+                            tempProps[gen.SourceMemberId!] = propValue;
+                        }
+                        return propValue;
+                    });
+
+                    // No spec type and base type abstract
+                    if (spec == null && genspec.GenType.IsAbstract)
+                    {
+                        // TODO: Warning events for dropped records
+                        continue;
+                    }
+                    
+                    var entityType = spec?.Type ?? genspec.GenType;
+                    entityMembers = ContractMemberDefinition.GetFromContract(entityType);
+                    inst = (TEntity)Activator.CreateInstance(entityType)!;
                 }
+
+                var predicateMembers = entityMembers.Where(m => predicateProperties.Any(p => p.Name == m.SourceMember!.Name))
+                    .ToDictionary(k => k.DbName.ToUpperInvariant(), v => v);
+                var otherMembers = entityMembers.Except(predicateMembers.Values)
+                    .ToDictionary(k => k.DbName.ToUpperInvariant(), v => v);
+
+                var row = PhormContractRunner<TActionContract>.getRowValues(rdr);
 
                 // Resolve predicate properties for entity and filter
                 var entity = (TEntity)_parent.fillEntity(inst, row, predicateMembers, eventArgs.CommandGuid, false);
@@ -100,11 +127,10 @@ internal sealed partial class PhormContractRunner<TActionContract>
 
             _parent.parseCommandResult(cmd, _parent._runArgs, pars, console.GetConsoleMessages(), eventArgs, resolverList.Count);
 
-            if (isGenSpec)
+            if (genspec != null)
             {
-                var gs = (GenSpecBase)Activator.CreateInstance(typeof(TResult));
-                gs.SetData(resolverList); // TODO: Must not resolve
-                return (TResult)(object)gs;
+                genspec.SetData(resolverList); // TODO: Must not resolve
+                return (TResult)(object)genspec;
             }
 
             return (TResult)(object)resolverList;

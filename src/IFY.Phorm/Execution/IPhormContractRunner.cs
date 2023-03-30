@@ -35,28 +35,14 @@ public interface IPhormContractRunner
     /// <typeparam name="TEntity">The entity type that will be fetched in the subsequent Get call.</typeparam>
     IPhormFilteredContractRunner<IEnumerable<TEntity>> Where<TEntity>(Expression<Func<TEntity, bool>> predicate)
         where TEntity : class, new();
-    IPhormFilteredContractRunner<GenSpec<TBase, T1, T2>> Where<TBase, T1, T2>(Expression<Func<TBase, bool>> predicate)
+    /// <summary>
+    /// Adds a predicate to filter the resultset before the entire entity is parsed as a gen-spec.
+    /// </summary>
+    /// <typeparam name="TBase">The base entity type that will be used to filter results.</typeparam>
+    /// <typeparam name="TGenSpec">The full gen-spec definition of the resultset</typeparam>
+    IPhormFilteredContractRunner<TGenSpec> Where<TBase, TGenSpec>(Expression<Func<TBase, bool>> predicate)
         where TBase : class
-        where T1 : TBase
-        where T2 : TBase;
-    //IPhormFilteredContractRunner<GenSpec<TBase, T1, T2, T3>> Where<TBase, T1, T2, T3>(Expression<Func<TBase, bool>> predicate)
-    //    where TBase : class
-    //    where T1 : TBase
-    //    where T2 : TBase
-    //    where T3 : TBase;
-    //IPhormFilteredContractRunner<GenSpec<TBase, T1, T2, T3, T4>> Where<TBase, T1, T2, T3, T4>(Expression<Func<TBase, bool>> predicate)
-    //    where TBase : class
-    //    where T1 : TBase
-    //    where T2 : TBase
-    //    where T3 : TBase
-    //    where T4 : TBase;
-    //IPhormFilteredContractRunner<GenSpec<TBase, T1, T2, T3, T4, T5>> Where<TBase, T1, T2, T3, T4, T5>(Expression<Func<TBase, bool>> predicate)
-    //    where TBase : class
-    //    where T1 : TBase
-    //    where T2 : TBase
-    //    where T3 : TBase
-    //    where T4 : TBase
-    //    where T5 : TBase;
+        where TGenSpec : GenSpecBase<TBase>;
 
     // TODO: OrderBy, Skip, Take?
 }

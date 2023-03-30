@@ -144,22 +144,22 @@
             Create an instance of this member by using the datasource value provided.
             </summary>
         </member>
+        <member name="M:IFY.Phorm.Data.GenSpecBase`1.All">
+            <summary>
+            Get all records from the resultset, as the "Generalised" base type.
+            </summary>
+        </member>
+        <member name="M:IFY.Phorm.Data.GenSpecBase`1.OfType``1">
+            <summary>
+            Get all records that are of the specified "Specialised" type.
+            </summary>
+        </member>
         <member name="T:IFY.Phorm.Data.GenSpec`2">
             <summary>
             Fetch a resultset containing "Specialised" instances with a common "Generalised" base type.
             </summary>
             <typeparam name="TBase">The "Generalised" base type that the other types share.</typeparam>
             <typeparam name="T1">A "Specialised" type.</typeparam>
-        </member>
-        <member name="M:IFY.Phorm.Data.GenSpec`2.All">
-            <summary>
-            Get all records from the resultset, as the "Generalised" base type.
-            </summary>
-        </member>
-        <member name="M:IFY.Phorm.Data.GenSpec`2.OfType``1">
-            <summary>
-            Get all records that are of the specified "Specialised" type.
-            </summary>
         </member>
         <member name="T:IFY.Phorm.Data.GenSpec`3">
             <summary>
@@ -566,12 +566,6 @@
         <member name="M:IFY.Phorm.Execution.AbstractPhormSession.BeginTransaction">
             <inheritdoc/>
         </member>
-        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.Call``1(``0)">
-            <inheritdoc/>
-        </member>
-        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.CallAsync``1(System.Object)">
-            <inheritdoc/>
-        </member>
         <member name="P:IFY.Phorm.Execution.ConsoleMessage.IsError">
             <summary>
             Whether this message is for an error that interrupted execution.
@@ -620,6 +614,13 @@
             Adds a predicate to filter the resultset before the entire entity is parsed.
             </summary>
             <typeparam name="TEntity">The entity type that will be fetched in the subsequent Get call.</typeparam>
+        </member>
+        <member name="M:IFY.Phorm.Execution.IPhormContractRunner.Where``2(System.Linq.Expressions.Expression{System.Func{``0,System.Boolean}})">
+            <summary>
+            Adds a predicate to filter the resultset before the entire entity is parsed as a gen-spec.
+            </summary>
+            <typeparam name="TBase">The base entity type that will be used to filter results.</typeparam>
+            <typeparam name="TGenSpec">The full gen-spec definition of the resultset</typeparam>
         </member>
         <member name="P:IFY.Phorm.Execution.IPhormContractRunner`1.ContractType">
             <summary>
