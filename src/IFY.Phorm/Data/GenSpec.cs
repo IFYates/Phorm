@@ -49,7 +49,7 @@ public abstract class GenSpecBase
         return SpecDefs.FirstOrDefault(s => valueProvider(s.GenProperty!)?.Equals(s.SpecValue) == true);
     }
 
-    internal abstract void SetData(IEnumerable<object> data);
+    internal abstract void SetData(System.Collections.IEnumerable data);
 }
 
 public abstract class GenSpecBase<TBase> : GenSpecBase
@@ -58,9 +58,9 @@ public abstract class GenSpecBase<TBase> : GenSpecBase
 
     private IEnumerable<TBase> _data = Array.Empty<TBase>();
 
-    internal override void SetData(IEnumerable<object> data)
+    internal override void SetData(System.Collections.IEnumerable data)
     {
-        _data = data.Cast<TBase>();
+        _data = data is IEnumerable<TBase> col ? col : data.Cast<TBase>();
     }
 
     /// <summary>

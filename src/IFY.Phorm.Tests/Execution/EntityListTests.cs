@@ -18,9 +18,9 @@ public class EntityListTests
     {
         var lst = new EntityList<object>();
 
-        lst.AddEntity(() => new());
-        lst.AddEntity(() => new());
-        lst.AddEntity(() => new());
+        lst.AddResolver(() => new());
+        lst.AddResolver(() => new());
+        lst.AddResolver(() => new());
 
         var enumerator = lst.GetEnumerator();
         Assert.AreEqual(3, lst.Count);
@@ -47,9 +47,9 @@ public class EntityListTests
     {
         var lst = new EntityList<object>();
 
-        lst.AddEntity(() => new());
-        lst.AddEntity(() => new());
-        lst.AddEntity(() => new());
+        lst.AddResolver(() => new());
+        lst.AddResolver(() => new());
+        lst.AddResolver(() => new());
 
         Assert.AreEqual(3, lst.Count);
         Assert.AreEqual(3, getUnresolvedEntitycount(lst));
@@ -62,9 +62,9 @@ public class EntityListTests
 
         var obj = new object();
 
-        lst.AddEntity(() => obj);
-        lst.AddEntity(() => new());
-        lst.AddEntity(() => new());
+        lst.AddResolver(() => obj);
+        lst.AddResolver(() => new());
+        lst.AddResolver(() => new());
 
         Assert.IsFalse(lst.Contains(obj));
 
@@ -81,9 +81,9 @@ public class EntityListTests
         
         var obj = new object();
 
-        lst.AddEntity(() => obj);
-        lst.AddEntity(() => obj);
-        lst.AddEntity(() => new());
+        lst.AddResolver(() => obj);
+        lst.AddResolver(() => obj);
+        lst.AddResolver(() => new());
 
         var arr = new object[3];
         lst.CopyTo(arr, 1);
@@ -106,9 +106,9 @@ public class EntityListTests
             return new();
         }
 
-        lst.AddEntity(resolver);
-        lst.AddEntity(resolver);
-        lst.AddEntity(resolver);
+        lst.AddResolver(resolver);
+        lst.AddResolver(resolver);
+        lst.AddResolver(resolver);
 
         var enumerator = ((IEnumerable)lst).GetEnumerator();
         Assert.AreEqual(0, invokes);
@@ -147,9 +147,9 @@ public class EntityListTests
             return new();
         }
 
-        lst.AddEntity(resolver);
-        lst.AddEntity(resolver);
-        lst.AddEntity(resolver);
+        lst.AddResolver(resolver);
+        lst.AddResolver(resolver);
+        lst.AddResolver(resolver);
 
         var enumerator = lst.GetEnumerator();
         enumerator.MoveNext();

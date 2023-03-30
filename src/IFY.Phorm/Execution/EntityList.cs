@@ -5,22 +5,25 @@ namespace IFY.Phorm.Execution;
 internal interface IEntityList : IEnumerable
 {
     int Count { get; }
-
-    void AddEntity(Func<object> resolver);
+    void AddResolver(Func<object> resolver);
 }
 
 internal class EntityList<TEntity> : IEntityList, IEnumerable<TEntity>, ICollection<TEntity>
 {
-    private readonly Queue<Func<object>> _resolvers = new();
+    private readonly Queue<Func<TEntity>> _resolvers = new();
     private readonly List<TEntity> _entities = new();
 
     public int Count => _entities.Count + _resolvers.Count;
 
     public bool IsReadOnly => true;
 
-    public void AddEntity(Func<object> resolver)
+    public void AddResolver(Func<TEntity> resolver)
     {
         _resolvers.Enqueue(resolver);
+    }
+    public void AddResolver(Func<object> resolver)
+    {
+        _resolvers.Enqueue(() => (TEntity)resolver());
     }
 
     public bool Contains(TEntity item)
