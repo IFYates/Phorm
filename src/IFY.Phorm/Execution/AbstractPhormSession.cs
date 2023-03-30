@@ -322,4 +322,38 @@ public abstract class AbstractPhormSession : IPhormSession
     public abstract ITransactedPhormSession BeginTransaction();
 
     #endregion Transactions
+
+#if NETSTANDARD
+    // These should not be necessary, but .NET Core 3.1 is failing at runtime without them
+
+    public Task<int> CallAsync<TActionContract>()
+        where TActionContract : IPhormContract
+        => CallAsync<TActionContract>(args: null, CancellationToken.None);
+    public Task<int> CallAsync<TActionContract>(object? args)
+        where TActionContract : IPhormContract
+        => CallAsync<TActionContract>(args, CancellationToken.None);
+
+    public TResult? Get<TResult>()
+        where TResult : class
+        => Get<TResult>(args: null);
+    public TResult? Get<TResult>(TResult contract)
+        where TResult : class
+        => Get<TResult>(args: contract);
+
+    public Task<TResult?> GetAsync<TResult>()
+        where TResult : class
+        => GetAsync<TResult>(args: null, CancellationToken.None);
+    public Task<TResult?> GetAsync<TResult>(object? args)
+        where TResult : class
+        => GetAsync<TResult>(args, CancellationToken.None);
+    public Task<TResult?> GetAsync<TResult>(CancellationToken cancellationToken)
+        where TResult : class
+        => GetAsync<TResult>(args: null, cancellationToken);
+    public Task<TResult?> GetAsync<TResult>(TResult contract) // Same as "object? args = null", but allows better Intellisense
+        where TResult : class
+        => GetAsync<TResult>(args: contract, CancellationToken.None);
+    public Task<TResult?> GetAsync<TResult>(TResult contract, CancellationToken cancellationToken) // Same as "object? args = null", but allows better Intellisense
+        where TResult : class
+        => GetAsync<TResult>(args: contract, cancellationToken);
+#endif
 }

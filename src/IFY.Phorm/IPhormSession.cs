@@ -87,12 +87,12 @@ public interface IPhormSession
         => CallAsync(contractName, args: null, cancellationToken);
     Task<int> CallAsync(string contractName, object? args, CancellationToken cancellationToken);
 
-    //public Task<int> CallAsync<TActionContract>()
-    //    where TActionContract : IPhormContract
-    //    => CallAsync<TActionContract>(args: null, CancellationToken.None);
-    //public Task<int> CallAsync<TActionContract>(object? args)
-    //    where TActionContract : IPhormContract
-    //    => CallAsync<TActionContract>(args, CancellationToken.None);
+    public Task<int> CallAsync<TActionContract>()
+        where TActionContract : IPhormContract
+        => CallAsync<TActionContract>(args: null, CancellationToken.None);
+    public Task<int> CallAsync<TActionContract>(object? args)
+        where TActionContract : IPhormContract
+        => CallAsync<TActionContract>(args, CancellationToken.None);
     public Task<int> CallAsync<TActionContract>(CancellationToken cancellationToken)
         where TActionContract : IPhormContract
         => CallAsync<TActionContract>(args: null, cancellationToken);
@@ -122,30 +122,30 @@ public interface IPhormSession
 
     #region Get from Table/View
 
-    //public TResult? Get<TResult>()
-    //    where TResult : class
-    //    => Get<TResult>(args: null);
-    //public TResult? Get<TResult>(TResult contract) // Same as "object? args = null", but allows better Intellisense
-    //    where TResult : class
-    //    => Get<TResult>(args: contract);
+    public TResult? Get<TResult>()
+        where TResult : class
+        => Get<TResult>(args: null);
+    public TResult? Get<TResult>(TResult contract) // Same as "object? args = null", but allows better Intellisense
+        where TResult : class
+        => Get<TResult>(args: contract);
     TResult? Get<TResult>(object? args)
         where TResult : class;
 
-    //public Task<TResult?> GetAsync<TResult>()
-    //    where TResult : class
-    //    => GetAsync<TResult>(args: null, CancellationToken.None);
-    //public Task<TResult?> GetAsync<TResult>(object? args)
-    //    where TResult : class
-    //    => GetAsync<TResult>(args, CancellationToken.None);
-    //public Task<TResult?> GetAsync<TResult>(CancellationToken cancellationToken)
-    //    where TResult : class
-    //    => GetAsync<TResult>(args: null, cancellationToken);
-    //public Task<TResult?> GetAsync<TResult>(TResult contract) // Same as "object? args = null", but allows better Intellisense
-    //    where TResult : class
-    //    => GetAsync<TResult>(args: contract, CancellationToken.None);
-    //public Task<TResult?> GetAsync<TResult>(TResult contract, CancellationToken cancellationToken) // Same as "object? args = null", but allows better Intellisense
-    //    where TResult : class
-    //    => GetAsync<TResult>(args: contract, cancellationToken);
+    public Task<TResult?> GetAsync<TResult>()
+        where TResult : class
+        => GetAsync<TResult>(args: null, CancellationToken.None);
+    public Task<TResult?> GetAsync<TResult>(object? args)
+        where TResult : class
+        => GetAsync<TResult>(args, CancellationToken.None);
+    public Task<TResult?> GetAsync<TResult>(CancellationToken cancellationToken)
+        where TResult : class
+        => GetAsync<TResult>(args: null, cancellationToken);
+    public Task<TResult?> GetAsync<TResult>(TResult contract) // Same as "object? args = null", but allows better Intellisense
+        where TResult : class
+        => GetAsync<TResult>(args: contract, CancellationToken.None);
+    public Task<TResult?> GetAsync<TResult>(TResult contract, CancellationToken cancellationToken) // Same as "object? args = null", but allows better Intellisense
+        where TResult : class
+        => GetAsync<TResult>(args: contract, cancellationToken);
     Task<TResult?> GetAsync<TResult>(object? args, CancellationToken cancellationToken)
         where TResult : class;
 

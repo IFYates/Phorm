@@ -149,10 +149,10 @@ RETURN @@ROWCOUNT");
         var phorm = getPhormSession();
         setupGetTestSchema(phorm);
 
-        phorm.Call("GetTest_Upsert", null);
-        phorm.Call("GetTest_Upsert", null);
-        phorm.Call("GetTest_Upsert", null);
-        phorm.Call("GetTest_Upsert", null);
+        ((IPhormSession)phorm).Call("GetTest_Upsert");
+        ((IPhormSession)phorm).Call("GetTest_Upsert");
+        ((IPhormSession)phorm).Call("GetTest_Upsert");
+        ((IPhormSession)phorm).Call("GetTest_Upsert");
 
         var obj = new { ReturnValue = ContractMember.RetVal() };
         var x = phorm.From<IGetAll>(obj)

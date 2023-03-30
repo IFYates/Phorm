@@ -629,11 +629,6 @@
             The resolve contract type.
             </summary>
         </member>
-        <member name="P:IFY.Phorm.Execution.IPhormFilteredContractRunner`1.EntityType">
-            <summary>
-            The resolve entity type.
-            </summary>
-        </member>
         <member name="T:IFY.Phorm.Execution.ITransactedPhormSession">
             <summary>
             A <see cref="T:IFY.Phorm.IPhormSession"/> that is in a transaction.
