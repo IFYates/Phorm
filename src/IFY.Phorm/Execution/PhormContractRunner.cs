@@ -379,7 +379,7 @@ internal sealed partial class PhormContractRunner<TActionContract> : IPhormContr
         var results = new List<object>();
         if (typeof(GenSpecBase).IsAssignableFrom(typeof(TResult)))
         {
-            var genspec = parseGenSpec<TResult>(results, rdr, eventArgs.CommandGuid, console);
+            var genspec = parseGenSpec<TResult>(results, rdr, eventArgs.CommandGuid, console, cancellationToken);
             parseCommandResult(cmd, _runArgs, pars, console.GetConsoleMessages(), eventArgs, results.Count);
             return (TResult)(object)genspec;
         }
@@ -445,83 +445,40 @@ internal sealed partial class PhormContractRunner<TActionContract> : IPhormContr
         return (TResult?)results.SingleOrDefault();
     }
 
-    private class SpecDef
-    {
-        public Type Type { get; }
-        public ContractMemberDefinition? GenProperty { get; }
-        public object SpecValue { get; }
-        public IDictionary<string, ContractMemberDefinition> Members { get; }
-
-        public SpecDef(Type type)
-        {
-            Type = type;
-            var attr = type.GetCustomAttribute<PhormSpecOfAttribute>(false);
-            Members = ContractMemberDefinition.GetFromContract(type)
-                .ToDictionary(m => m.DbName.ToUpperInvariant());
-            if (attr != null)
-            {
-                GenProperty = Members.Values.FirstOrDefault(m => m.SourceMember?.Name.ToUpperInvariant() == attr.GenProperty.ToUpperInvariant());
-                SpecValue = attr.PropertyValue;
-            }
-            else
-            {
-                SpecValue = this; // Any non-null
-            }
-        }
-    }
-
-    private GenSpecBase parseGenSpec<TResult>(IList<object> results, IDataReader rdr, Guid commandGuid, AbstractConsoleMessageCapture console)
+    private GenSpecBase parseGenSpec<TResult>(IList<object> results, IDataReader rdr, Guid commandGuid, AbstractConsoleMessageCapture console, CancellationToken cancellationToken)
     {
         var genspec = (GenSpecBase)Activator.CreateInstance(typeof(TResult))!;
-        IDictionary<string, ContractMemberDefinition>? baseMembers = null;
-
-        // Prepare models
-        var specs = genspec.SpecTypes.Select(t => new SpecDef(t)).ToArray();
-        if (specs.Any(s => s.GenProperty == null))
-        {
-            throw new InvalidOperationException("Invalid GenSpec usage. Provided type was not decorated with a PhormSpecOfAttribute referencing a valid property: " + specs.First(s => s.GenProperty == null).Type.FullName);
-        }
 
         // Parse recordset
         var tempProps = new Dictionary<string, object?>();
-        while (safeRead(rdr, console))
+        while (!cancellationToken.IsCancellationRequested && safeRead(rdr, console))
         {
-            var included = false;
+            // Find matching spec
             tempProps.Clear();
-            foreach (var spec in specs)
+            var spec = genspec.GetFirstSpecType(m =>
             {
                 // Check Gen property for the Spec type (cached)
-                if (!tempProps.TryGetValue(spec.GenProperty!.SourceMemberId!, out var propValue)
-                    && spec.GenProperty.TryFromDatasource(rdr[spec.GenProperty.DbName], null, out var gen))
+                if (!tempProps.TryGetValue(m.SourceMemberId!, out var propValue)
+                    && m.TryFromDatasource(rdr[m.DbName], null, out var gen))
                 {
                     propValue = gen.Value;
                     tempProps[gen.SourceMemberId!] = propValue;
                 }
+                return propValue;
+            });
 
-                if (spec.SpecValue.Equals(propValue))
-                {
-                    // Shape
-                    var result = getEntity(spec.Type, rdr, spec.Members, commandGuid);
-                    results.Add(result);
-                    included = true;
-                    break;
-                }
-            }
-
-            if (!included)
+            // Must have spec type or base type is concrete
+            if (spec == null && genspec.GenType.IsAbstract)
             {
-                if (!genspec.GenType.IsAbstract)
-                {
-                    baseMembers ??= ContractMemberDefinition.GetFromContract(genspec.GenType)
-                        .ToDictionary(m => m.DbName.ToUpperInvariant());
-                    var result = getEntity(genspec.GenType, rdr, baseMembers, commandGuid);
-                    results.Add(result);
-                }
-                else
-                {
-                    // TODO: Warning events for dropped records
-                }
+                // TODO: Warning events for dropped records
+                continue;
             }
+
+            var entityType = spec?.Type ?? genspec.GenType;
+            var members = spec?.Members ?? ContractMemberDefinition.GetFromContract(entityType)
+                .ToDictionary(m => m.DbName.ToUpperInvariant());
+            var result = getEntity(entityType, rdr, members, commandGuid);
+            results.Add(result);
         }
 
         genspec.SetData(results);

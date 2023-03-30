@@ -566,6 +566,12 @@
         <member name="M:IFY.Phorm.Execution.AbstractPhormSession.BeginTransaction">
             <inheritdoc/>
         </member>
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.Call``1(``0)">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.CallAsync``1(System.Object)">
+            <inheritdoc/>
+        </member>
         <member name="P:IFY.Phorm.Execution.ConsoleMessage.IsError">
             <summary>
             Whether this message is for an error that interrupted execution.
@@ -636,11 +642,12 @@
             Rollback the transaction, making this runner unusable for further calls.
             </summary>
         </member>
-        <member name="T:IFY.Phorm.Execution.PhormContractRunner`1.FilteredContractRunner`1">
+        <member name="T:IFY.Phorm.Execution.PhormContractRunner`1.FilteredContractRunner`2">
             <summary>
             Reads entities from the datasource and filters them using minimal resolution.
             </summary>
-            <typeparam name="TEntity">The entity type that will be received and filtered.</typeparam>
+            <typeparam name="TEntity">The entity type that will be received and filtered OR the base type of the <see cref="T:IFY.Phorm.Data.GenSpecBase"/> <typeparamref name="TResult"/>. Must have a default constructor, unless this is the abstract base type of the GenSpec.</typeparam>
+            <typeparam name="TResult">Either the same as <typeparamref name="TEntity"/>, or any GenSpec&lt;TEntity, ...&gt;.</typeparam>
         </member>
         <member name="M:IFY.Phorm.Extensions.GetExpressionParameterProperties(System.Linq.Expressions.Expression,System.Type)">
             <summary>
@@ -650,11 +657,6 @@
             <param name="parameterType"></param>
             <returns></returns>
             <exception cref="T:System.NotSupportedException"></exception>
-            <exception cref="T:System.NotImplementedException"></exception>
-        </member>
-        <member name="P:IFY.Phorm.GlobalSettings.EncryptionProvider">
-            <summary>
-            The registered instance of the <see cref="T:IFY.Phorm.Encryption>
             <exception cref="T:System.NotImplementedException"></exception>
         </member>
         <member name="P:IFY.Phorm.GlobalSettings.EncryptionProvider">
