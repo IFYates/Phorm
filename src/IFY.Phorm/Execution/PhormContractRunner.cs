@@ -67,10 +67,17 @@ internal sealed partial class PhormContractRunner<TActionContract> : IPhormContr
         _runArgs = args;
     }
 
-    public IPhormFilteredContractRunner<TEntity> Where<TEntity>(Expression<Func<TEntity, bool>> predicate)
+    public IPhormFilteredContractRunner<IEnumerable<TEntity>> Where<TEntity>(Expression<Func<TEntity, bool>> predicate)
         where TEntity : class, new()
     {
-        return new FilteredContractRunner<TEntity>(this, predicate);
+        return new FilteredContractRunner<TEntity, IEnumerable<TEntity>>(this, predicate);
+    }
+    public IPhormFilteredContractRunner<GenSpec<TBase, T1, T2>> Where<TBase, T1, T2>(Expression<Func<TBase, bool>> predicate)
+        where TBase : class
+        where T1 : TBase
+        where T2 : TBase
+    {
+        return new FilteredContractRunner<TBase, GenSpec<TBase, T1, T2>>(this, predicate);
     }
 
     #region Execution

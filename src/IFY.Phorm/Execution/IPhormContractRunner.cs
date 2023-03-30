@@ -33,8 +33,30 @@ public interface IPhormContractRunner
     /// Adds a predicate to filter the resultset before the entire entity is parsed.
     /// </summary>
     /// <typeparam name="TEntity">The entity type that will be fetched in the subsequent Get call.</typeparam>
-    IPhormFilteredContractRunner<TEntity> Where<TEntity>(Expression<Func<TEntity, bool>> predicate)
+    IPhormFilteredContractRunner<IEnumerable<TEntity>> Where<TEntity>(Expression<Func<TEntity, bool>> predicate)
         where TEntity : class, new();
+    IPhormFilteredContractRunner<GenSpec<TBase, T1, T2>> Where<TBase, T1, T2>(Expression<Func<TBase, bool>> predicate)
+        where TBase : class
+        where T1 : TBase
+        where T2 : TBase;
+    //IPhormFilteredContractRunner<GenSpec<TBase, T1, T2, T3>> Where<TBase, T1, T2, T3>(Expression<Func<TBase, bool>> predicate)
+    //    where TBase : class
+    //    where T1 : TBase
+    //    where T2 : TBase
+    //    where T3 : TBase;
+    //IPhormFilteredContractRunner<GenSpec<TBase, T1, T2, T3, T4>> Where<TBase, T1, T2, T3, T4>(Expression<Func<TBase, bool>> predicate)
+    //    where TBase : class
+    //    where T1 : TBase
+    //    where T2 : TBase
+    //    where T3 : TBase
+    //    where T4 : TBase;
+    //IPhormFilteredContractRunner<GenSpec<TBase, T1, T2, T3, T4, T5>> Where<TBase, T1, T2, T3, T4, T5>(Expression<Func<TBase, bool>> predicate)
+    //    where TBase : class
+    //    where T1 : TBase
+    //    where T2 : TBase
+    //    where T3 : TBase
+    //    where T4 : TBase
+    //    where T5 : TBase;
 
     // TODO: OrderBy, Skip, Take?
 }

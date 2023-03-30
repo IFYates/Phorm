@@ -1,10 +1,10 @@
 ﻿namespace IFY.Phorm.Execution;
 
-public interface IPhormFilteredContractRunner<TEntity>
-    where TEntity : class, new()
+public interface IPhormFilteredContractRunner<TResult>
+    where TResult : class
 {
-    IEnumerable<TEntity> GetAll();
-    public Task<IEnumerable<TEntity>> GetAllAsync()
+    TResult GetAll();
+    public Task<TResult> GetAllAsync()
         => GetAllAsync(CancellationToken.None);
-    Task<IEnumerable<TEntity>> GetAllAsync(CancellationToken cancellationToken);
+    Task<TResult> GetAllAsync(CancellationToken cancellationToken);
 }
