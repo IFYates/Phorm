@@ -566,12 +566,6 @@
         <member name="M:IFY.Phorm.Execution.AbstractPhormSession.BeginTransaction">
             <inheritdoc/>
         </member>
-        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.Call``1(``0)">
-            <inheritdoc/>
-        </member>
-        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.CallAsync``1(System.Object)">
-            <inheritdoc/>
-        </member>
         <member name="P:IFY.Phorm.Execution.ConsoleMessage.IsError">
             <summary>
             Whether this message is for an error that interrupted execution.
