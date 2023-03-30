@@ -52,7 +52,8 @@ public class GetTests : SqlIntegrationTestBase
             Data = data;
             DateTime = dateTime;
         }
-        public DataItemWithoutText() : this(default, default, default, default, default)
+        public DataItemWithoutText()
+            : this(default, default, default, default, default)
         { }
     }
 
@@ -284,7 +285,7 @@ RETURN @@ROWCOUNT");
         var res = phorm.From<IDataView>(null).Get<ICollection<DataItem>>()!;
 
         Assert.IsTrue(hasUnresolvedEntities(res));
-        Assert.AreEqual(3, res.Count());
+        Assert.AreEqual(3, res.Count);
         Assert.IsTrue(hasUnresolvedEntities(res));
         Assert.AreEqual(3, res.ToArray().Length);
         Assert.IsFalse(hasUnresolvedEntities(res));
@@ -314,7 +315,8 @@ RETURN @@ROWCOUNT");
     #region Filtered
 
     [TestMethod]
-    public void Many__Filtered_from_view_resultset()
+    [DataRow(false), DataRow(true)]
+    public void Many__Filtered_from_view_resultset(bool byAsync)
     {
         var phorm = getPhormSession();
         setupGetTestSchema(phorm);
@@ -323,15 +325,16 @@ RETURN @@ROWCOUNT");
         _ = phorm.Call("GetTest_Upsert", null);
         _ = phorm.Call("GetTest_Upsert", null);
 
-        var x = phorm.From<IDataView>(null)
-            .Where<DataItem>(o => o.Id == 1)
-            .GetAll();
+        var filter = phorm.From<IDataView>(null)
+            .Where<DataItem>(o => o.Id == 1);
+        var res = byAsync ? filter.GetAllAsync().Result : filter.GetAll();
 
-        Assert.AreEqual(1, x.Single().Id);
+        Assert.AreEqual(1, res.Single().Id);
     }
 
     [TestMethod]
-    public void Many__Filtered_from_table_resultset()
+    [DataRow(false), DataRow(true)]
+    public void Many__Filtered_from_table_resultset(bool byAsync)
     {
         var phorm = getPhormSession();
         setupGetTestSchema(phorm);
@@ -340,15 +343,16 @@ RETURN @@ROWCOUNT");
         _ = phorm.Call("GetTest_Upsert", null);
         _ = phorm.Call("GetTest_Upsert", null);
 
-        var x = phorm.From<DataItem>(null)
-            .Where<DataItem>(o => o.Id == 1)
-            .GetAll();
+        var filter = phorm.From<DataItem>(null)
+            .Where<DataItem>(o => o.Id == 1);
+        var res = byAsync ? filter.GetAllAsync().Result : filter.GetAll();
 
-        Assert.AreEqual(1, x.Single().Id);
+        Assert.AreEqual(1, res.Single().Id);
     }
 
     [TestMethod]
-    public void Many__Filtered_result_doesnt_resolve_unwanted()
+    [DataRow(false), DataRow(true)]
+    public void Many__Filtered_result_doesnt_resolve_unwanted(bool byAsync)
     {
         static bool hasUnresolvedEntities(IEnumerable l)
         {
@@ -360,15 +364,15 @@ RETURN @@ROWCOUNT");
         var phorm = getPhormSession();
         setupGetTestSchema(phorm);
 
-        phorm.Call("GetTest_Upsert", new { Int = 10 });
-        phorm.Call("GetTest_Upsert", new { Int = 20 });
-        phorm.Call("GetTest_Upsert", new { Int = 30 });
-        phorm.Call("GetTest_Upsert", new { Int = 40 });
+        _ = phorm.Call("GetTest_Upsert", new { Int = 10 });
+        _ = phorm.Call("GetTest_Upsert", new { Int = 20 });
+        _ = phorm.Call("GetTest_Upsert", new { Int = 30 });
+        _ = phorm.Call("GetTest_Upsert", new { Int = 40 });
 
         // Act
-        var res = phorm.From<IDataView>(null)
-            .Where<DataItem>(o => o.Id <= 3 && o.Text == null && o.Num.HasValue && o.Num.Value > 10 && o.Flag)
-            .GetAll();
+        var filter = phorm.From<IDataView>(null)
+            .Where<DataItem>(o => o.Id <= 3 && o.Text == null && o.Num.HasValue && o.Num.Value > 10 && o.Flag);
+        var res = byAsync ? filter.GetAllAsync().Result : filter.GetAll();
 
         Assert.IsTrue(hasUnresolvedEntities(res));
         Assert.AreEqual(2, res.Count());

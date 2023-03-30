@@ -107,7 +107,7 @@ public abstract class AbstractPhormSession : IPhormSession
 
     #region Connection
 
-    private static readonly Dictionary<string, IPhormDbConnection> _connectionPool = new Dictionary<string, IPhormDbConnection>();
+    private static readonly Dictionary<string, IPhormDbConnection> _connectionPool = new();
     internal static void ResetConnectionPool()
     {
         lock (_connectionPool)
@@ -255,22 +255,6 @@ public abstract class AbstractPhormSession : IPhormSession
         return runner.CallAsync(cancellationToken);
     }
 
-    /// <inheritdoc/>
-    public int Call<TActionContract>(TActionContract contract)
-        where TActionContract : IPhormContract
-        => CallAsync(contract, CancellationToken.None).GetAwaiter().GetResult();
-    /// <inheritdoc/>
-    public Task<int> CallAsync<TActionContract>(TActionContract contract)
-        where TActionContract : IPhormContract
-        => CallAsync(contract, CancellationToken.None);
-    /// <inheritdoc/>
-    public Task<int> CallAsync<TActionContract>(TActionContract contract, CancellationToken cancellationToken)
-        where TActionContract : IPhormContract
-    {
-        var runner = new PhormContractRunner<TActionContract>(this, null, DbObjectType.StoredProcedure, contract);
-        return runner.CallAsync(cancellationToken);
-    }
-
     #endregion Call
 
     #region From
@@ -326,12 +310,24 @@ public abstract class AbstractPhormSession : IPhormSession
 #if NETSTANDARD
     // These should not be necessary, but .NET Core 3.1 is failing at runtime without them
 
+    /// <inheritdoc/>
+    public int Call<TActionContract>(TActionContract contract)
+        where TActionContract : IPhormContract
+        => CallAsync<TActionContract>(args: contract, CancellationToken.None).GetAwaiter().GetResult();
+
     public Task<int> CallAsync<TActionContract>()
         where TActionContract : IPhormContract
         => CallAsync<TActionContract>(args: null, CancellationToken.None);
+    /// <inheritdoc/>
     public Task<int> CallAsync<TActionContract>(object? args)
         where TActionContract : IPhormContract
         => CallAsync<TActionContract>(args, CancellationToken.None);
+    public Task<int> CallAsync<TActionContract>(TActionContract contract)
+        where TActionContract : IPhormContract
+        => CallAsync<TActionContract>(args: contract, CancellationToken.None);
+    public Task<int> CallAsync<TActionContract>(TActionContract contract, CancellationToken cancellationToken) // Same as "object? args = null", but allows better Intellisense
+        where TActionContract : IPhormContract
+        => CallAsync<TActionContract>(args: contract, cancellationToken);
 
     public TResult? Get<TResult>()
         where TResult : class

@@ -3,13 +3,14 @@ using System.Linq.Expressions;
 
 namespace IFY.Phorm.Execution;
 
-internal sealed partial class PhormContractRunner<TActionContract> where TActionContract : IPhormContract
+internal sealed partial class PhormContractRunner<TActionContract>
+    where TActionContract : IPhormContract
 {
     /// <summary>
     /// Reads entities from the datasource and filters them using minimal resolution.
     /// </summary>
     /// <typeparam name="TEntity">The entity type that will be received and filtered.</typeparam>
-    private sealed class FilteredContractRunner<TEntity> : IPhormFilteredContractRunner<TEntity>
+    internal sealed class FilteredContractRunner<TEntity> : IPhormFilteredContractRunner<TEntity>
         where TEntity : class, new()
     {
         private readonly PhormContractRunner<TActionContract> _parent;
@@ -23,8 +24,6 @@ internal sealed partial class PhormContractRunner<TActionContract> where TAction
 
         public IEnumerable<TEntity> GetAll()
             => GetAllAsync(CancellationToken.None).GetAwaiter().GetResult();
-        public Task<IEnumerable<TEntity>> GetAllAsync()
-            => GetAllAsync(CancellationToken.None);
         public async Task<IEnumerable<TEntity>> GetAllAsync(CancellationToken cancellationToken)
         {
             // Prepare and execute

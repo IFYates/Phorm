@@ -93,67 +93,53 @@ internal static class Extensions
         parseExpression(expr);
         return props.Distinct().ToArray();
 
-        void parseExpression(Expression expr)
+        bool parseExpression(Expression expr)
         {
             switch (expr)
             {
                 case BinaryExpression be:
-                    parseExpression(be.Left);
-                    parseExpression(be.Right);
-                    break;
+                    return parseExpression(be.Left)
+                        | parseExpression(be.Right);
                 case ConditionalExpression ce:
-                    parseExpression(ce.Test);
-                    parseExpression(ce.IfTrue);
-                    parseExpression(ce.IfFalse);
-                    break;
+                    return parseExpression(ce.Test)
+                        | parseExpression(ce.IfTrue)
+                        | parseExpression(ce.IfFalse);
                 case ConstantExpression:
-                    break;
+                    return false;
                 case MethodCallExpression mce:
+                    var result = false;
                     if (mce.Object is MemberExpression)
                     {
-                        parseExpression(mce.Object);
+                        result |= parseExpression(mce.Object);
                     }
                     foreach (var arg in mce.Arguments)
                     {
-                        parseExpression(arg);
+                        result |= parseExpression(arg);
                     }
-                    break;
+                    return result;
                 case MemberExpression me:
                     if (me.Member is PropertyInfo pi)
                     {
                         // Remember properties on target object
                         // Ignore all othrs - if the expression compiles, it must be valid
-                        if (me.Expression.NodeType == ExpressionType.Parameter && me.Expression.Type == parameterType)
+                        if (me.Expression?.NodeType == ExpressionType.Parameter && me.Expression?.Type == parameterType)
                         {
                             props.Add(pi);
-                            break;
-                        }
-
-                        // Ignore static properties on other items
-                        if (me.Expression == null && pi.GetGetMethod().IsStatic == true)
-                        {
-                            break;
+                            return true;
                         }
                     }
                     if (me.Expression != null)
                     {
-                        parseExpression(me.Expression);
-                        break;
+                        return parseExpression(me.Expression);
                     }
-                    if (me.Member is FieldInfo fi && fi.IsStatic)
-                    {
-                        // Ignore static fields
-                        break;
-                    }
-                    throw new NotSupportedException($"Phorm resultset filtering does not support accessing instance members of other objects ({me}).");
-                case UnaryExpression ue:
-                    if (ue.NodeType is ExpressionType.ArrayLength or ExpressionType.Convert or ExpressionType.Not)
-                    {
-                        parseExpression(ue.Operand);
-                        break;
-                    }
-                    throw new NotImplementedException();
+                    return false;
                 default:
+                    // Unary types
+                    if (expr is UnaryExpression ue
+                        && ue.NodeType is ExpressionType.ArrayLength or ExpressionType.Convert or ExpressionType.Not)
+                    {
+                        return parseExpression(ue.Operand);
+                    }
                     throw new NotImplementedException();
             }
         }
