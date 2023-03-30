@@ -54,6 +54,8 @@ public abstract class GenSpecBase
 
 public abstract class GenSpecBase<TBase> : GenSpecBase
 {
+    public int Count() => _data.Count();
+
     private IEnumerable<TBase> _data = Array.Empty<TBase>();
 
     internal override void SetData(IEnumerable<object> data)

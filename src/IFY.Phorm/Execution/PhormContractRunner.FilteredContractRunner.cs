@@ -30,7 +30,7 @@ internal sealed partial class PhormContractRunner<TActionContract>
             }
             else if (typeof(GenSpecBase).IsAssignableFrom(typeof(TResult)))
             {
-                if (typeof(TResult).GenericTypeArguments.Length == 0 || typeof(TResult).GenericTypeArguments[0] != typeof(TEntity))
+                if (!typeof(GenSpecBase<TEntity>).IsAssignableFrom(typeof(TResult)))
                 {
                     throw new ArgumentException($"Type argument TResult for FilteredContractRunner must use TResult as the GenSpec TBase.");
                 }
@@ -99,7 +99,7 @@ internal sealed partial class PhormContractRunner<TActionContract>
                         // TODO: Warning events for dropped records
                         continue;
                     }
-                    
+
                     var entityType = spec?.Type ?? genspec.GenType;
                     entityMembers = ContractMemberDefinition.GetFromContract(entityType);
                     inst = (TEntity)Activator.CreateInstance(entityType)!;
@@ -129,7 +129,7 @@ internal sealed partial class PhormContractRunner<TActionContract>
 
             if (genspec != null)
             {
-                genspec.SetData(resolverList); // TODO: Must not resolve
+                genspec.SetData(resolverList);
                 return (TResult)(object)genspec;
             }
 
