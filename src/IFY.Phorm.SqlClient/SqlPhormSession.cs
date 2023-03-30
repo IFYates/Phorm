@@ -16,6 +16,7 @@ public class SqlPhormSession : AbstractPhormSession
         : base(databaseConnectionString, connectionName)
     { }
 
+    /// <inheritdoc/>
     public override IPhormSession SetConnectionName(string connectionName)
     {
         return new SqlPhormSession(_databaseConnectionString, connectionName)
@@ -24,6 +25,7 @@ public class SqlPhormSession : AbstractPhormSession
         };
     }
 
+    /// <inheritdoc/>
     protected override IPhormDbConnection CreateConnection()
     {
         // Ensure application name is known user
@@ -40,6 +42,7 @@ public class SqlPhormSession : AbstractPhormSession
         return conn;
     }
 
+    /// <inheritdoc/>
     protected override string? GetDefaultSchema(IPhormDbConnection phormConn)
     {
         using var cmd = ((IDbConnection)phormConn).CreateCommand();
@@ -49,6 +52,7 @@ public class SqlPhormSession : AbstractPhormSession
 
     #region Console capture
 
+    /// <inheritdoc/>
     protected override AbstractConsoleMessageCapture StartConsoleCapture(Guid commandGuid, IAsyncDbCommand cmd)
     {
         return cmd.Connection is SqlConnection sql
@@ -60,9 +64,12 @@ public class SqlPhormSession : AbstractPhormSession
 
     #region Transactions
 
+    /// <inheritdoc/>
     public override bool SupportsTransactions => true;
+    /// <inheritdoc/>
     public override bool IsInTransaction => false;
 
+    /// <inheritdoc/>
     public override ITransactedPhormSession BeginTransaction()
     {
         var conn = GetConnection();

@@ -4,5 +4,26 @@
         <name>IFY.Phorm.SqlClient</name>
     </assembly>
     <members>
+        <member name="M:IFY.Phorm.SqlClient.SqlPhormSession.SetConnectionName(System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.SqlClient.SqlPhormSession.CreateConnection">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.SqlClient.SqlPhormSession.GetDefaultSchema(IFY.Phorm.Connectivity.IPhormDbConnection)">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.SqlClient.SqlPhormSession.StartConsoleCapture(System.Guid,System.Data.IAsyncDbCommand)">
+            <inheritdoc/>
+        </member>
+        <member name="P:IFY.Phorm.SqlClient.SqlPhormSession.SupportsTransactions">
+            <inheritdoc/>
+        </member>
+        <member name="P:IFY.Phorm.SqlClient.SqlPhormSession.IsInTransaction">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.SqlClient.SqlPhormSession.BeginTransaction">
+            <inheritdoc/>
+        </member>
     </members>
 </doc>

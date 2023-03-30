@@ -144,22 +144,22 @@
             Create an instance of this member by using the datasource value provided.
             </summary>
         </member>
+        <member name="M:IFY.Phorm.Data.GenSpecBase`1.All">
+            <summary>
+            Get all records from the resultset, as the "Generalised" base type.
+            </summary>
+        </member>
+        <member name="M:IFY.Phorm.Data.GenSpecBase`1.OfType``1">
+            <summary>
+            Get all records that are of the specified "Specialised" type.
+            </summary>
+        </member>
         <member name="T:IFY.Phorm.Data.GenSpec`2">
             <summary>
             Fetch a resultset containing "Specialised" instances with a common "Generalised" base type.
             </summary>
             <typeparam name="TBase">The "Generalised" base type that the other types share.</typeparam>
             <typeparam name="T1">A "Specialised" type.</typeparam>
-        </member>
-        <member name="M:IFY.Phorm.Data.GenSpec`2.All">
-            <summary>
-            Get all records from the resultset, as the "Generalised" base type.
-            </summary>
-        </member>
-        <member name="M:IFY.Phorm.Data.GenSpec`2.OfType``1">
-            <summary>
-            Get all records that are of the specified "Specialised" type.
-            </summary>
         </member>
         <member name="T:IFY.Phorm.Data.GenSpec`3">
             <summary>
@@ -469,6 +469,42 @@
             Becomes true if this instance has captured at least one error.
             </summary>
         </member>
+        <member name="P:IFY.Phorm.Execution.AbstractPhormSession.ConnectionName">
+            <inheritdoc/>
+        </member>
+        <member name="E:IFY.Phorm.Execution.AbstractPhormSession.Connected">
+            <inheritdoc/>
+        </member>
+        <member name="E:IFY.Phorm.Execution.AbstractPhormSession.CommandExecuting">
+            <inheritdoc/>
+        </member>
+        <member name="E:IFY.Phorm.Execution.AbstractPhormSession.CommandExecuted">
+            <inheritdoc/>
+        </member>
+        <member name="E:IFY.Phorm.Execution.AbstractPhormSession.UnexpectedRecordColumn">
+            <inheritdoc/>
+        </member>
+        <member name="E:IFY.Phorm.Execution.AbstractPhormSession.UnresolvedContractMember">
+            <inheritdoc/>
+        </member>
+        <member name="E:IFY.Phorm.Execution.AbstractPhormSession.ConsoleMessage">
+            <inheritdoc/>
+        </member>
+        <member name="P:IFY.Phorm.Execution.AbstractPhormSession.ExceptionsAsConsoleMessage">
+            <inheritdoc/>
+        </member>
+        <member name="P:IFY.Phorm.Execution.AbstractPhormSession.StrictResultSize">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.#ctor(System.String,System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.GetConnection">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.CreateConnection">
+            <inheritdoc/>
+        </member>
         <member name="M:IFY.Phorm.Execution.AbstractPhormSession.GetDefaultSchema(IFY.Phorm.Connectivity.IPhormDbConnection)">
             <summary>
             Implementations to provide logic for resolving the default schema of the connection.
@@ -480,6 +516,9 @@
             Request a session with a different connection name.
             </summary>
         </member>
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.CreateCommand(IFY.Phorm.Connectivity.IPhormDbConnection,System.String,System.String,IFY.Phorm.DbObjectType)">
+            <inheritdoc/>
+        </member>
         <member name="M:IFY.Phorm.Execution.AbstractPhormSession.StartConsoleCapture(System.Guid,System.Data.IAsyncDbCommand)">
             <summary>
             If the connection implementation supports capture of console output (print statements),
@@ -487,6 +526,45 @@
             </summary>
             <param name="cmd">The command to capture console output for.</param>
             <returns>The object that will be provide the final console output.</returns>
+        </member>
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.NullConsoleMessageCapture.ProcessException(System.Exception)">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.NullConsoleMessageCapture.Dispose">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.Call(System.String,System.Object)">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.CallAsync(System.String,System.Object,System.Threading.CancellationToken)">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.Call``1(System.Object)">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.CallAsync``1(System.Object,System.Threading.CancellationToken)">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.From(System.String,System.Object)">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.From``1(System.Object)">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.Get``1(System.Object)">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.GetAsync``1(System.Object,System.Threading.CancellationToken)">
+            <inheritdoc/>
+        </member>
+        <member name="P:IFY.Phorm.Execution.AbstractPhormSession.SupportsTransactions">
+            <inheritdoc/>
+        </member>
+        <member name="P:IFY.Phorm.Execution.AbstractPhormSession.IsInTransaction">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.BeginTransaction">
+            <inheritdoc/>
         </member>
         <member name="P:IFY.Phorm.Execution.ConsoleMessage.IsError">
             <summary>
@@ -531,6 +609,24 @@
             <param name="cancellationToken">A token to cancel the asynchronous operation.</param>
             <returns>When <typeparamref name="TResult"/> is the entity type, will return the single result instance or null. When <typeparamref name="TResult"/> is an array of the entity type, will return an array of all types from the result (never null).</returns>
         </member>
+        <member name="M:IFY.Phorm.Execution.IPhormContractRunner.Where``1(System.Linq.Expressions.Expression{System.Func{``0,System.Boolean}})">
+            <summary>
+            Adds a predicate to filter the resultset before the entire entity is parsed.
+            </summary>
+            <typeparam name="TEntity">The entity type that will be fetched in the subsequent Get call.</typeparam>
+        </member>
+        <member name="M:IFY.Phorm.Execution.IPhormContractRunner.Where``2(System.Linq.Expressions.Expression{System.Func{``0,System.Boolean}})">
+            <summary>
+            Adds a predicate to filter the resultset before the entire entity is parsed as a gen-spec.
+            </summary>
+            <typeparam name="TBase">The base entity type that will be used to filter results.</typeparam>
+            <typeparam name="TGenSpec">The full gen-spec definition of the resultset</typeparam>
+        </member>
+        <member name="P:IFY.Phorm.Execution.IPhormContractRunner`1.ContractType">
+            <summary>
+            The resolve contract type.
+            </summary>
+        </member>
         <member name="T:IFY.Phorm.Execution.ITransactedPhormSession">
             <summary>
             A <see cref="T:IFY.Phorm.IPhormSession"/> that is in a transaction.
@@ -546,6 +642,23 @@
             <summary>
             Rollback the transaction, making this runner unusable for further calls.
             </summary>
+        </member>
+        <member name="T:IFY.Phorm.Execution.PhormContractRunner`1.FilteredContractRunner`2">
+            <summary>
+            Reads entities from the datasource and filters them using minimal resolution.
+            </summary>
+            <typeparam name="TEntity">The entity type that will be received and filtered OR the base type of the <see cref="T:IFY.Phorm.Data.GenSpecBase"/> <typeparamref name="TResult"/>. Must have a default constructor, unless this is the abstract base type of the GenSpec.</typeparam>
+            <typeparam name="TResult">Either the same as <typeparamref name="TEntity"/>, or any GenSpec&lt;TEntity, ...&gt;.</typeparam>
+        </member>
+        <member name="M:IFY.Phorm.Extensions.GetExpressionParameterProperties(System.Linq.Expressions.Expression,System.Type)">
+            <summary>
+            Return array of all properties referenced in an expression for the parameter of given type.
+            </summary>
+            <param name="expr"></param>
+            <param name="parameterType"></param>
+            <returns></returns>
+            <exception cref="T:System.NotSupportedException"></exception>
+            <exception cref="T:System.NotImplementedException"></exception>
         </member>
         <member name="P:IFY.Phorm.GlobalSettings.EncryptionProvider">
             <summary>

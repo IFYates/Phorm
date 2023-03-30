@@ -29,7 +29,7 @@ RETURN 1");
         setContextTestContract(phorm);
 
         // Act
-        var res = phorm.From("ContextTest").Get<ContextTest>()!;
+        var res = phorm.From("ContextTest", null).Get<ContextTest>()!;
 
         // Assert
         Assert.AreEqual("TestContext", res.Context);
@@ -51,7 +51,7 @@ RETURN 1");
         {
             for (var i = 0; i < 5; ++i)
             {
-                var res = phorm1.From("ContextTest").Get<ContextTest>()!;
+                var res = phorm1.From("ContextTest", null).Get<ContextTest>()!;
                 lock (results)
                 {
                     results.Add("1:" + res.Context);
@@ -64,7 +64,7 @@ RETURN 1");
         {
             for (var i = 0; i < 5; ++i)
             {
-                var res = phorm2.From("ContextTest").Get<ContextTest>()!;
+                var res = phorm2.From("ContextTest", null).Get<ContextTest>()!;
                 lock (results)
                 {
                     results.Add("2:" + res.Context);
@@ -89,13 +89,13 @@ RETURN 1");
         setContextTestContract(phorm1);
 
         // Act
-        var res1 = phorm1.From("ContextTest").Get<ContextTest>()!;
+        var res1 = phorm1.From("ContextTest", null).Get<ContextTest>()!;
 
         var phorm2 = getPhormSession("TestContext1");
-        var res2 = phorm2.From("ContextTest").Get<ContextTest>()!;
+        var res2 = phorm2.From("ContextTest", null).Get<ContextTest>()!;
 
         var phorm3 = getPhormSession("TestContext2");
-        var res3 = phorm3.From("ContextTest").Get<ContextTest>()!;
+        var res3 = phorm3.From("ContextTest", null).Get<ContextTest>()!;
 
         // Assert
         Assert.AreEqual("TestContext1", res1.Context);
@@ -140,16 +140,16 @@ AS
 RETURN @Count");
 
         // Act
-        var res1 = phorm.Call("GetConnectionCount");
+        var res1 = phorm.Call("GetConnectionCount", null);
         for (var i = 0; i < 100; ++i)
         {
             var t = new Thread(() =>
             {
-                _ = getPhormSession("TestContext").Call("GetConnectionCount");
+                _ = getPhormSession("TestContext").Call("GetConnectionCount", null);
             });
             t.Start();
         }
-        var res2 = phorm.Call("GetConnectionCount");
+        var res2 = phorm.Call("GetConnectionCount", null);
 
         // Assert
         Assert.IsTrue((res2 - res1) < 10, $"First:{res1}, Last:{res2}");

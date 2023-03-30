@@ -95,7 +95,7 @@ public class PhormContractRunnerTests_Call
         var runner = new PhormContractRunner<IPhormContract>(phorm, "CallTest", DbObjectType.StoredProcedure, new { Arg = 1 });
 
         // Act
-        var res = runner.CallAsync().Result;
+        var res = runner.CallAsync(CancellationToken.None).Result;
 
         // Assert
         Assert.AreEqual(1, res);
@@ -126,7 +126,7 @@ public class PhormContractRunnerTests_Call
         var runner = new PhormContractRunner<TestContract>(phorm, null, DbObjectType.StoredProcedure, new TestContract { Arg = 1 });
 
         // Act
-        var res = runner.CallAsync().Result;
+        var res = runner.CallAsync(CancellationToken.None).Result;
 
         // Assert
         Assert.AreEqual(1, res);
@@ -160,7 +160,7 @@ public class PhormContractRunnerTests_Call
         var runner = new PhormContractRunner<TestContractWithTransphormer>(phorm, null, DbObjectType.StoredProcedure, new TestContractWithTransphormer { Arg = 1 });
 
         // Act
-        var res = runner.CallAsync().Result;
+        var res = runner.CallAsync(CancellationToken.None).Result;
 
         // Assert
         Assert.AreEqual(1, res);
@@ -194,7 +194,7 @@ public class PhormContractRunnerTests_Call
         var runner = new PhormContractRunner<IMemberTestContract>(phorm, null, DbObjectType.Default, new TestContract { Arg = 1 });
 
         // Act
-        var res = runner.CallAsync().Result;
+        var res = runner.CallAsync(CancellationToken.None).Result;
 
         // Assert
         Assert.AreEqual(1, res);
@@ -223,7 +223,7 @@ public class PhormContractRunnerTests_Call
         var runner = new PhormContractRunner<TestContract2>(phorm, null, DbObjectType.Default, new TestContract2());
 
         // Act
-        var res = runner.CallAsync().Result;
+        var res = runner.CallAsync(CancellationToken.None).Result;
 
         // Assert
         Assert.AreEqual(1, res);
@@ -259,7 +259,7 @@ public class PhormContractRunnerTests_Call
         var runner = new PhormContractRunner<IMemberTestContract>(phorm, null, DbObjectType.Default, args);
 
         // Act
-        var res = runner.CallAsync().Result;
+        var res = runner.CallAsync(CancellationToken.None).Result;
 
         // Assert
         Assert.AreEqual(1, res);
@@ -289,7 +289,7 @@ public class PhormContractRunnerTests_Call
         var runner = new PhormContractRunner<IMemberTestContract>(phorm, null, DbObjectType.Default, new TestContract { Arg3 = null! });
 
         // Act
-        Assert.ThrowsException<AggregateException>(() => runner.CallAsync().Result);
+        Assert.ThrowsException<AggregateException>(() => runner.CallAsync(CancellationToken.None).Result);
     }
 
     [TestMethod]
@@ -331,7 +331,7 @@ public class PhormContractRunnerTests_Call
         var runner = new PhormContractRunner<ISecureTestContract>(phorm, null, DbObjectType.Default, dto);
 
         // Act
-        var res = runner.CallAsync().Result;
+        var res = runner.CallAsync(CancellationToken.None).Result;
 
         // Assert
         Assert.AreEqual(1, res);
@@ -367,7 +367,7 @@ public class PhormContractRunnerTests_Call
         // Act
         var ex = (InvalidOperationException)Assert.ThrowsException<AggregateException>(() =>
         {
-            _ = runner.CallAsync().Result;
+            _ = runner.CallAsync(CancellationToken.None).Result;
         }).InnerException!;
 
         // Assert
@@ -415,7 +415,7 @@ public class PhormContractRunnerTests_Call
         var runner = new PhormContractRunner<IConsoleLogContract>(phorm, null, DbObjectType.Default, arg);
 
         // Act
-        var res = runner.CallAsync().Result;
+        var res = runner.CallAsync(CancellationToken.None).Result;
 
         // Assert
         Assert.AreEqual(1, res);
@@ -456,7 +456,7 @@ public class PhormContractRunnerTests_Call
         var runner = new PhormContractRunner<IConsoleLogContract>(phorm, null, DbObjectType.Default, arg);
 
         // Act
-        var res = runner.CallAsync().Result;
+        var res = runner.CallAsync(CancellationToken.None).Result;
 
         // Assert
         Assert.AreEqual(1, res);

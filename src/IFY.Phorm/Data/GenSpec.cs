@@ -1,33 +1,69 @@
-﻿namespace IFY.Phorm.Data;
+﻿using System.Reflection;
+
+namespace IFY.Phorm.Data;
 
 public abstract class GenSpecBase
 {
+    internal class SpecDef
+    {
+        public Type Type { get; }
+        public ContractMemberDefinition? GenProperty { get; }
+        public object SpecValue { get; }
+        public IDictionary<string, ContractMemberDefinition> Members { get; }
+
+        public SpecDef(Type type)
+        {
+            Type = type;
+            var attr = type.GetCustomAttribute<PhormSpecOfAttribute>(false);
+            Members = ContractMemberDefinition.GetFromContract(type)
+                .ToDictionary(m => m.DbName.ToUpperInvariant());
+            if (attr != null)
+            {
+                GenProperty = Members.Values.FirstOrDefault(m => m.SourceMember?.Name.ToUpperInvariant() == attr.GenProperty.ToUpperInvariant());
+                SpecValue = attr.PropertyValue;
+            }
+            else
+            {
+                SpecValue = Type.Missing; // Any non-null
+            }
+        }
+    }
+
     internal Type GenType { get; }
-    internal Type[] SpecTypes { get; }
+    internal SpecDef[] SpecDefs { get; }
 
     private protected GenSpecBase()
     {
         var typeArgs = GetType().GenericTypeArguments;
         GenType = typeArgs[0];
-        SpecTypes = typeArgs[1..];
+
+        SpecDefs = typeArgs[1..].Select(t => new SpecDef(t)).ToArray();
+        if (SpecDefs.Any(s => s.GenProperty == null))
+        {
+            throw new InvalidOperationException("Invalid GenSpec usage. Provided type was not decorated with a PhormSpecOfAttribute referencing a valid property: " + SpecDefs.First(s => s.GenProperty == null).Type.FullName);
+        }
     }
 
-    internal abstract void SetData(IEnumerable<object> data);
+    internal SpecDef? GetFirstSpecType(Func<ContractMemberDefinition, object?> valueProvider)
+    {
+        return SpecDefs.FirstOrDefault(s => valueProvider(s.GenProperty!)?.Equals(s.SpecValue) == true);
+    }
+
+    internal abstract void SetData(System.Collections.IEnumerable data);
 }
 
-/// <summary>
-/// Fetch a resultset containing "Specialised" instances with a common "Generalised" base type.
-/// </summary>
-/// <typeparam name="TBase">The "Generalised" base type that the other types share.</typeparam>
-/// <typeparam name="T1">A "Specialised" type.</typeparam>
-public class GenSpec<TBase, T1> : GenSpecBase
-    where T1 : TBase
+public class GenSpecBase<TBase> : GenSpecBase
 {
-    private readonly List<TBase> _data = new List<TBase>();
+    public int Count() => _data.Count();
 
-    internal override void SetData(IEnumerable<object> data)
+    private IEnumerable<TBase> _data = Array.Empty<TBase>();
+
+    protected GenSpecBase()
+    { }
+
+    internal override void SetData(System.Collections.IEnumerable data)
     {
-        _data.AddRange(data.Cast<TBase>());
+        _data = data is IEnumerable<TBase> col ? col : data.Cast<TBase>();
     }
 
     /// <summary>
@@ -38,6 +74,16 @@ public class GenSpec<TBase, T1> : GenSpecBase
     /// Get all records that are of the specified "Specialised" type.
     /// </summary>
     public IEnumerable<T> OfType<T>() => _data.OfType<T>();
+}
+
+/// <summary>
+/// Fetch a resultset containing "Specialised" instances with a common "Generalised" base type.
+/// </summary>
+/// <typeparam name="TBase">The "Generalised" base type that the other types share.</typeparam>
+/// <typeparam name="T1">A "Specialised" type.</typeparam>
+public class GenSpec<TBase, T1> : GenSpecBase<TBase>
+    where T1 : TBase
+{
 }
 
 /// <summary>

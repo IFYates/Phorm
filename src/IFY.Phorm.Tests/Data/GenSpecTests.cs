@@ -152,7 +152,10 @@ public class GenSpecTests
         });
 
         // Assert
-        ex = ex.InnerException!;
+        while (ex.InnerException != null)
+        {
+            ex = ex.InnerException;
+        }
         Assert.AreEqual("Invalid GenSpec usage. Provided type was not decorated with a PhormSpecOfAttribute referencing a valid property: " + typeof(TypeWithoutAttribute).FullName, ex.Message);
     }
 
@@ -169,7 +172,10 @@ public class GenSpecTests
         });
 
         // Assert
-        ex = ex.InnerException!;
+        while (ex.InnerException != null)
+        {
+            ex = ex.InnerException;
+        }
         Assert.AreEqual("Invalid GenSpec usage. Provided type was not decorated with a PhormSpecOfAttribute referencing a valid property: " + typeof(TypeWithBadAttribute).FullName, ex.Message);
     }
 }

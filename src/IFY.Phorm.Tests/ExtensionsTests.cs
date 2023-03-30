@@ -1,5 +1,9 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Moq;
 using System.Collections;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq.Expressions;
+using System.Text.RegularExpressions;
 
 namespace IFY.Phorm.Tests;
 
@@ -103,6 +107,120 @@ public class ExtensionsTests
     }
 
     #endregion GetBytes
+
+    #region GetReferencedObjectProperties
+
+    [ExcludeFromCodeCoverage]
+    class TestObject
+    {
+        public int Numeric { get; set; }
+        public string String { get; set; } = null!;
+        public bool Boolean { get; set; }
+        public byte[] Array { get; set; } = null!;
+        public double? Nullable { get; set; }
+        //public TestObject Child { get; set; }
+    }
+
+    public const string OtherObjectConst = null!;
+    public string OtherObjectInstanceField = null!;
+    public static string OtherObjectStaticField = null!;
+    [ExcludeFromCodeCoverage]
+    public static string OtherObjectStaticProperty { get; } = null!;
+    [ExcludeFromCodeCoverage]
+    public static bool OtherObjectStaticMethod(string str) => true;
+    [ExcludeFromCodeCoverage]
+    public bool OtherObjectInstanceMethod(string str) => true;
+
+    [TestMethod]
+    public void GetReferencedObjectProperties__Expression_does_not_require_property_references()
+    {
+        Expression<Func<TestObject, bool>> expr = (o) => true;
+
+        _ = expr.Compile(); // Must compile
+        var props = expr.Body.GetExpressionParameterProperties(typeof(TestObject));
+
+        Assert.AreEqual(0, props.Length);
+    }
+
+    [TestMethod]
+    public void GetReferencedObjectProperties__Can_handle_all_individual_expressions()
+    {
+        static void assertExprRefProp(Expression<Func<TestObject, bool>> fn, string prop)
+        {
+            _ = fn.Compile(); // Must compile
+            var props = fn.Body.GetExpressionParameterProperties(typeof(TestObject));
+            Assert.AreEqual(prop, props.Single().Name, prop);
+        }
+
+        // Numeric
+        assertExprRefProp(o => o.Numeric == 0, nameof(TestObject.Numeric));
+        assertExprRefProp(o => (double)o.Numeric == 0, nameof(TestObject.Numeric));
+        assertExprRefProp(o => o.Numeric != 0, nameof(TestObject.Numeric));
+        assertExprRefProp(o => o.Numeric < 0, nameof(TestObject.Numeric));
+        assertExprRefProp(o => o.Numeric > 0, nameof(TestObject.Numeric));
+
+        // String
+        assertExprRefProp(o => o.String == string.Empty, nameof(TestObject.String));
+        assertExprRefProp(o => o.String != null, nameof(TestObject.String));
+        assertExprRefProp(o => o.String.Length > 0, nameof(TestObject.String));
+        assertExprRefProp(o => o.String.Contains(""), nameof(TestObject.String));
+        assertExprRefProp(o => o.String.ToLower() == string.Empty, nameof(TestObject.String));
+
+        var re = new Regex("");
+        assertExprRefProp(o => re.IsMatch(o.String), nameof(TestObject.String));
+
+        // Boolean
+        assertExprRefProp(o => o.Boolean, nameof(TestObject.Boolean));
+        assertExprRefProp(o => !o.Boolean, nameof(TestObject.Boolean));
+#pragma warning disable IDE0075 // Simplify conditional expression
+        assertExprRefProp(o => o.Boolean ? false : true, nameof(TestObject.Boolean));
+#pragma warning restore IDE0075 // Simplify conditional expression
+
+        // Array
+        assertExprRefProp(o => o.Array.IsFixedSize, nameof(TestObject.Array));
+        assertExprRefProp(o => o.Array.Length > 0, nameof(TestObject.Array));
+        assertExprRefProp(o => o.Array.GetLength(0) > 0, nameof(TestObject.Array));
+        assertExprRefProp(o => o.Array[0] != 0, nameof(TestObject.Array));
+        assertExprRefProp(o => o.Array.Any(), nameof(TestObject.Array));
+
+        // Nullable
+        assertExprRefProp(o => o.Nullable == null, nameof(TestObject.Nullable));
+        assertExprRefProp(o => o.Nullable.HasValue, nameof(TestObject.Nullable));
+        assertExprRefProp(o => !o.Nullable.HasValue, nameof(TestObject.Nullable));
+        assertExprRefProp(o => o.Nullable!.Value > 0, nameof(TestObject.Nullable));
+    }
+
+    [TestMethod]
+    public void GetReferencedObjectProperties__Can_handle_complex_expressions()
+    {
+        static void assertExprRefProps(string name, Expression<Func<TestObject, bool>> fn, params string[] expProps)
+        {
+            _ = fn.Compile(); // Must compile
+            var props = fn.Body.GetExpressionParameterProperties(typeof(TestObject));
+            CollectionAssert.AreEquivalent(expProps, props.Select(p => p.Name).ToArray(), name);
+        }
+
+        assertExprRefProps("Multiple properties", o => (o.Numeric > 0 && o.String != null && o.Boolean && o.Array.Length > 0) || o.Nullable.HasValue, nameof(TestObject.Numeric), nameof(TestObject.String), nameof(TestObject.Boolean), nameof(TestObject.Array), nameof(TestObject.Nullable));
+
+        assertExprRefProps("Multiple uses returned once", o => o.Numeric == 0 && (double)o.Numeric == 0 && o.Numeric != 0 && o.Numeric < 0 && o.Numeric > 0, nameof(TestObject.Numeric));
+
+        assertExprRefProps("Accepts external static members", o => o.String == (OtherObjectConst + OtherObjectStaticField + OtherObjectStaticProperty), nameof(TestObject.String));
+        assertExprRefProps("Accepts static method", o => OtherObjectStaticMethod(o.String), nameof(TestObject.String));
+
+        assertExprRefProps("Accepts external instance members", o => o.String == OtherObjectInstanceField, nameof(TestObject.String));
+        assertExprRefProps("Accepts external instance method", o => OtherObjectInstanceMethod(o.String), nameof(TestObject.String));
+    }
+
+    [TestMethod]
+    public void GetReferencedObjectProperties__Fails_for_unrecognised_expression()
+    {
+        // Unknown expression type
+        var exprMock = new Mock<Expression>();
+        Assert.ThrowsException<NotImplementedException>
+            (() => exprMock.Object.GetExpressionParameterProperties(typeof(TestObject)));
+    }
+
+    #endregion GetReferencedObjectProperties
 
     #region FromBytes
 

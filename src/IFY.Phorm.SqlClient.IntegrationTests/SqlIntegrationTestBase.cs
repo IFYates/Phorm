@@ -1,10 +1,12 @@
 using IFY.Phorm.EventArgs;
 using IFY.Phorm.Execution;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Diagnostics.CodeAnalysis;
 
 namespace IFY.Phorm.SqlClient.IntegrationTests;
 
 [ExcludeFromCodeCoverage]
+[DoNotParallelize]
 public abstract class SqlIntegrationTestBase
 {
     protected Action<object?, CommandExecutingEventArgs>? _globalCommandExecuting = null;

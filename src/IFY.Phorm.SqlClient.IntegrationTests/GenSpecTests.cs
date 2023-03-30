@@ -49,7 +49,7 @@ RETURN 1");
         setupGenSpecContract(phorm);
 
         // Act
-        var res = phorm.From("GetAllDataItems")
+        var res = phorm.From("GetAllDataItems", null)
             .Get<GenSpec<BaseDataItem, NumericDataItem, TextDataItem>>()!;
 
         var all = res.All();
@@ -63,6 +63,28 @@ RETURN 1");
     }
 
     [TestMethod]
+    public void GenSpec__Can_retrieve_and_handle_many_types_filtered()
+    {
+        // Arrange
+        var phorm = getPhormSession();
+        setupGenSpecContract(phorm);
+
+        // Act
+        var res = ((IPhormSession)phorm).From("GetAllDataItems", null)
+            .Where<BaseDataItem, GenSpec<BaseDataItem, NumericDataItem, TextDataItem>>(o => o.Id == 1)
+            .GetAll();
+
+        var nums = res.OfType<NumericDataItem>().ToArray();
+        var strs = res.OfType<TextDataItem>().ToArray();
+        var all = res.All();
+
+        // Assert
+        Assert.AreEqual(1, all.Length);
+        Assert.AreEqual(12.34m, nums.Single().Number);
+        Assert.AreEqual(0, strs.Length);
+    }
+
+    [TestMethod]
     public void GenSpec__Unknown_type_Abstract_base__Returns_only_shaped_items()
     {
         // Arrange
@@ -70,7 +92,7 @@ RETURN 1");
         setupGenSpecContract(phorm);
 
         // Act
-        var res = phorm.From("GetAllDataItems")
+        var res = phorm.From("GetAllDataItems", null)
             .Get<GenSpec<BaseDataItem, TextDataItem>>()!;
 
         var all = res.All();
@@ -103,7 +125,7 @@ RETURN 1");
         setupGenSpecContract(phorm);
 
         // Act
-        var res = phorm.From("GetAllDataItems")
+        var res = phorm.From("GetAllDataItems", null)
             .Get<GenSpec<BaseDataItemNonabstract, NumericDataItem2>>()!;
 
         var all = res.All();
