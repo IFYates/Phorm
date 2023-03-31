@@ -3,6 +3,7 @@ using Moq;
 using System.Collections;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
+using System.Runtime.Serialization;
 using System.Text.RegularExpressions;
 
 namespace IFY.Phorm.Tests;
@@ -37,6 +38,7 @@ public class ExtensionsTests
 
     public enum MyEnum
     {
+        [EnumMember]
         Fail = 0,
         Pass
     }
@@ -53,7 +55,9 @@ public class ExtensionsTests
     }
 
     [TestMethod]
-    [DataRow(1), DataRow((byte)1), DataRow(1L), DataRow((short)1), DataRow("Pass")]
+    [DataRow((byte)1), DataRow((short)1), DataRow(1), DataRow(1L)]
+    [DataRow((sbyte)1), DataRow((ushort)1), DataRow((uint)1), DataRow((ulong)1)]
+    [DataRow("Pass"), DataRow("pass"), DataRow("PASS")]
     public void ChangeType__To_Enum(object value)
     {
         // Act

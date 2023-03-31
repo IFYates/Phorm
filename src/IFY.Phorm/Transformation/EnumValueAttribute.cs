@@ -49,6 +49,7 @@ public class EnumValueAttribute : AbstractTransphormAttribute
 
         // Supports name by EnumMember first
         var memberMatch = enumType.GetMembers()
+            .Where(m => m is FieldInfo fi && fi.IsStatic && fi.IsLiteral)
             .FirstOrDefault(m => m.GetCustomAttribute<EnumMemberAttribute>()?.Value?.Equals(str, StringComparison.OrdinalIgnoreCase) == true);
         return Enum.Parse(enumType, memberMatch?.Name ?? str, true); // Will fail on bad value
     }
