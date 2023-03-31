@@ -19,7 +19,7 @@ public abstract class GenSpecBase
                 .ToDictionary(m => m.DbName.ToUpperInvariant());
             if (attr != null)
             {
-                GenProperty = Members.Values.FirstOrDefault(m => m.SourceMember?.Name.ToUpperInvariant() == attr.GenProperty.ToUpperInvariant());
+                GenProperty = Members.Values.FirstOrDefault(m => m.SourceMember!.Name.ToUpperInvariant() == attr.GenProperty.ToUpperInvariant());
                 SpecValue = attr.PropertyValue;
             }
             else

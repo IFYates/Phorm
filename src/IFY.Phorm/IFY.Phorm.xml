@@ -805,6 +805,12 @@
             Note: will honour <see cref="T:System.Runtime.Serialization.EnumMemberAttribute"/> decoration on the enum values, if exist.
             </summary>
         </member>
+        <member name="M:IFY.Phorm.Transformation.EnumValueAttribute.FromDatasource(System.Type,System.Object,System.Object)">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Transformation.EnumValueAttribute.ToDatasource(System.Object,System.Object)">
+            <inheritdoc/>
+        </member>
         <member name="T:IFY.Phorm.Transformation.JsonValueAttribute">
             <summary>
             Transform the contract property object to JSON, or the datasource value from JSON.

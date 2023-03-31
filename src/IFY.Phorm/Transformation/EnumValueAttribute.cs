@@ -13,10 +13,11 @@ public class EnumValueAttribute : AbstractTransphormAttribute
     /// Whether to send the string representation of this enum, or the integer.
     /// Defaults to false.
     /// 
-    /// Note: will honour <see cref="System.Runtime.Serialization.EnumMemberAttribute"/> decoration on the enum values, if exist.
+    /// Note: will honour <see cref="EnumMemberAttribute"/> decoration on the enum values, if exist.
     /// </summary>
     public bool SendAsString { get; set; }
 
+    /// <inheritdoc/>
     public override object? FromDatasource(Type type, object? data, object? context)
     {
         var enumType = Nullable.GetUnderlyingType(type) ?? type;
@@ -34,10 +35,15 @@ public class EnumValueAttribute : AbstractTransphormAttribute
             return data;
         }
 
+        return ConvertToEnum(data, enumType);
+    }
+
+    internal static object ConvertToEnum(object data, Type enumType)
+    {
         // Favour numeric
-        var str = $"{data}";
-        if (data is int)
+        if (data is not string str)
         {
+            str = $"{data}";
             return Enum.Parse(enumType, str); // Will not fail on bad value (TODO: option to check)
         }
 
@@ -47,6 +53,7 @@ public class EnumValueAttribute : AbstractTransphormAttribute
         return Enum.Parse(enumType, memberMatch?.Name ?? str, true); // Will fail on bad value
     }
 
+    /// <inheritdoc/>
     public override object? ToDatasource(object? data, object? context)
     {
         if (data == null)

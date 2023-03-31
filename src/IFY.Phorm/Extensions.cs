@@ -1,4 +1,5 @@
-﻿using System.Data;
+﻿using IFY.Phorm.Transformation;
+using System.Data;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -16,20 +17,26 @@ internal static class Extensions
     [return: NotNullIfNotNull("value")]
     public static object? ChangeType(this object? value, Type conversionType)
     {
-        if (value != null)
+        if (value == null)
         {
-            if (conversionType.IsInstanceOfType(value))
-            {
-                return value;
-            }
+            return null;
+        }
+        if (conversionType.IsInstanceOfType(value))
+        {
+            return value;
+        }
 
 #if NET6_0_OR_GREATER
-            if (conversionType == typeof(DateOnly))
-            {
-                var dt = (DateTime)Convert.ChangeType(value, typeof(DateTime));
-                return DateOnly.FromDateTime(dt);
-            }
+        if (conversionType == typeof(DateOnly))
+        {
+            var dt = (DateTime)Convert.ChangeType(value, typeof(DateTime));
+            return DateOnly.FromDateTime(dt);
+        }
 #endif
+
+        if (conversionType.IsEnum)
+        {
+            return EnumValueAttribute.ConvertToEnum(value, conversionType);
         }
 
         return Convert.ChangeType(value, conversionType);

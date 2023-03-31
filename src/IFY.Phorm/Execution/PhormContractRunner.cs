@@ -190,13 +190,7 @@ internal sealed partial class PhormContractRunner<TActionContract> : IPhormContr
         }
         return result;
     }
-    private object getEntity(Type entityType, IDataReader rdr, IDictionary<string, ContractMemberDefinition> members, Guid commandGuid)
-    {
-        var values = getRowValues(rdr);
-        members = members.ToDictionary(k => k.Key, v => v.Value); // Copy
-        var entity = Activator.CreateInstance(entityType)!;
-        return fillEntity(entity, values, members, commandGuid, true);
-    }
+
     private object fillEntity(object entity, IDictionary<string, object?> values, IDictionary<string, ContractMemberDefinition> members, Guid commandGuid, bool warnOnUnresolved)
     {
         // Apply member values

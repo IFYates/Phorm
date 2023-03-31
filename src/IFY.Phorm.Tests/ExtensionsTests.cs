@@ -10,6 +10,8 @@ namespace IFY.Phorm.Tests;
 [TestClass]
 public class ExtensionsTests
 {
+    #region ChangeType
+
     [TestMethod]
     public void ChangeType__Subtype__No_change()
     {
@@ -32,6 +34,36 @@ public class ExtensionsTests
         // Assert
         Assert.IsNull(res);
     }
+
+    public enum MyEnum
+    {
+        Fail = 0,
+        Pass
+    }
+
+    [TestMethod]
+    [DataRow(MyEnum.Fail, 0), DataRow(MyEnum.Pass, 1)]
+    public void ChangeType__From_Enum(MyEnum value, int exp)
+    {
+        // Act
+        var res = value.ChangeType(typeof(int));
+
+        // Assert
+        Assert.AreEqual(exp, res);
+    }
+
+    [TestMethod]
+    [DataRow(1), DataRow((byte)1), DataRow(1L), DataRow((short)1), DataRow("Pass")]
+    public void ChangeType__To_Enum(object value)
+    {
+        // Act
+        var res = (MyEnum)value.ChangeType(typeof(MyEnum));
+
+        // Assert
+        Assert.AreEqual(MyEnum.Pass, res);
+    }
+
+    #endregion ChangeType
 
     #region GetBytes
 

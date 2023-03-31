@@ -882,12 +882,12 @@ public class PhormContractRunnerTests
         var runner = new PhormContractRunner<IPhormContract>(phorm, "ContractName", DbObjectType.StoredProcedure, new { Arg = 1 });
 
         // Act
-        var res = runner.Get<TestDto>();
+        var res = runner.Get<TestDto>()!;
 
         // Assert
         Assert.AreEqual(CommandType.StoredProcedure, cmd.CommandType);
         Assert.AreEqual("[schema].[usp_ContractName]", cmd.CommandText);
-        Assert.AreEqual("value1", res?.Value);
+        Assert.AreEqual("value1", res.Value);
 
         var pars = cmd.Parameters.AsParameters();
         Assert.AreEqual(2, pars.Length);
@@ -922,12 +922,12 @@ public class PhormContractRunnerTests
         var runner = new PhormContractRunner<IPhormContract>(phorm, "ContractName", DbObjectType.StoredProcedure, new { Arg = 1 });
 
         // Act
-        var res = runner.GetAsync<TestDto>(CancellationToken.None).Result;
+        var res = runner.GetAsync<TestDto>(CancellationToken.None).Result!;
 
         // Assert
         Assert.AreEqual(CommandType.StoredProcedure, cmd.CommandType);
         Assert.AreEqual("[schema].[usp_ContractName]", cmd.CommandText);
-        Assert.AreEqual("value1", res?.Value);
+        Assert.AreEqual("value1", res.Value);
 
         var pars = cmd.Parameters.AsParameters();
         Assert.AreEqual(2, pars.Length);
@@ -964,12 +964,12 @@ public class PhormContractRunnerTests
         var runner = new PhormContractRunner<IPhormContract>(phorm, "ContractName", objType, new { Arg1 = 1, Arg2 = 2 });
 
         // Act
-        var res = runner.Get<TestDto>();
+        var res = runner.Get<TestDto>()!;
 
         // Assert
         Assert.AreEqual(CommandType.Text, cmd.CommandType);
         Assert.AreEqual("SELECT * FROM [schema].[" + actName + "] WHERE [Arg1] = @Arg1 AND [Arg2] = @Arg2", cmd.CommandText);
-        Assert.AreEqual("value1", res?.Value);
+        Assert.AreEqual("value1", res.Value);
 
         var pars = cmd.Parameters.AsParameters();
         Assert.AreEqual(3, pars.Length);
@@ -1007,12 +1007,12 @@ public class PhormContractRunnerTests
         var runner = new PhormContractRunner<IPhormContract>(phorm, "ContractName", objType, new { Arg1 = 1, Arg2 = 2 });
 
         // Act
-        var res = runner.Get<TestDto>();
+        var res = runner.Get<TestDto>()!;
 
         // Assert
         Assert.AreEqual(CommandType.Text, cmd.CommandType);
         Assert.AreEqual("SELECT * FROM [schema].[" + actName + "] WHERE [Arg1] = @Arg1 AND [Arg2] = @Arg2", cmd.CommandText);
-        Assert.AreEqual("value1", res?.Value);
+        Assert.AreEqual("value1", res.Value);
 
         var pars = cmd.Parameters.AsParameters();
         Assert.AreEqual(3, pars.Length);
@@ -1048,12 +1048,12 @@ public class PhormContractRunnerTests
         var runner = new PhormContractRunner<TestContract>(phorm, "ContractName", DbObjectType.StoredProcedure, new TestContract { Arg = 1 });
 
         // Act
-        var res = runner.Get<TestDto>();
+        var res = runner.Get<TestDto>()!;
 
         // Assert
         Assert.AreEqual(CommandType.StoredProcedure, cmd.CommandType);
         Assert.AreEqual("[schema].[usp_TestContract]", cmd.CommandText);
-        Assert.AreEqual("value1", res?.Value);
+        Assert.AreEqual("value1", res.Value);
 
         var pars = cmd.Parameters.AsParameters();
         Assert.AreEqual(2, pars.Length);
@@ -1088,12 +1088,12 @@ public class PhormContractRunnerTests
         var runner = new PhormContractRunner<TestContract>(phorm, "ContractName", DbObjectType.StoredProcedure, new TestContract { Arg = 1 });
 
         // Act
-        var res = runner.GetAsync<TestDto>(CancellationToken.None).Result;
+        var res = runner.GetAsync<TestDto>(CancellationToken.None).Result!;
 
         // Assert
         Assert.AreEqual(CommandType.StoredProcedure, cmd.CommandType);
         Assert.AreEqual("[schema].[usp_TestContract]", cmd.CommandText);
-        Assert.AreEqual("value1", res?.Value);
+        Assert.AreEqual("value1", res.Value);
 
         var pars = cmd.Parameters.AsParameters();
         Assert.AreEqual(2, pars.Length);
@@ -1130,12 +1130,12 @@ public class PhormContractRunnerTests
         var runner = new PhormContractRunner<TestContract>(phorm, "ContractName", objType, new TestContract { Arg = 1 });
 
         // Act
-        var res = runner.Get<TestDto>();
+        var res = runner.Get<TestDto>()!;
 
         // Assert
         Assert.AreEqual(CommandType.Text, cmd.CommandType);
         Assert.AreEqual("SELECT * FROM [schema].[" + actName + "] WHERE [Arg] = @Arg", cmd.CommandText);
-        Assert.AreEqual("value1", res?.Value);
+        Assert.AreEqual("value1", res.Value);
 
         var pars = cmd.Parameters.AsParameters();
         Assert.AreEqual(2, pars.Length);
@@ -1172,12 +1172,12 @@ public class PhormContractRunnerTests
         var runner = new PhormContractRunner<TestContract>(phorm, "ContractName", objType, new TestContract { Arg = 1 });
 
         // Act
-        var res = runner.GetAsync<TestDto>(CancellationToken.None).Result;
+        var res = runner.GetAsync<TestDto>(CancellationToken.None).Result!;
 
         // Assert
         Assert.AreEqual(CommandType.Text, cmd.CommandType);
         Assert.AreEqual("SELECT * FROM [schema].[" + actName + "] WHERE [Arg] = @Arg", cmd.CommandText);
-        Assert.AreEqual("value1", res?.Value);
+        Assert.AreEqual("value1", res.Value);
 
         var pars = cmd.Parameters.AsParameters();
         Assert.AreEqual(2, pars.Length);
