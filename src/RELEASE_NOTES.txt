@@ -1,3 +1,6 @@
+v1.7.1
+- #43: Fix enum parsing not supporting non-int values
+
 v1.7.0
 - #38: Lazy resolution of results
 - #38: Pre-resolution filtering of entity resultsets

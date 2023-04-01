@@ -80,14 +80,14 @@ public class TransformationTests
         });
 
         var runner = new TestPhormSession();
-        runner.TestConnection?.CommandQueue.Enqueue(cmd);
+        runner.TestConnection!.CommandQueue.Enqueue(cmd);
 
         // Act
-        var res = runner.From("Get", null).Get<DataObject>();
+        var res = runner.From("Get", null).Get<DataObject>()!;
 
         // Assert
         Assert.IsNotNull(res);
-        Assert.AreEqual("FromSource_value", res?.Value);
+        Assert.AreEqual("FromSource_value", res.Value);
     }
 
     class DataObject2
@@ -101,8 +101,8 @@ public class TransformationTests
     {
         public override object? FromDatasource(Type type, object? data, object? context)
         {
-            var obj = (DataObject2?)context;
-            return string.Join(',', obj?.A, data, obj?.Z);
+            var obj = (DataObject2)context!;
+            return string.Join(',', obj.A, data, obj.Z);
         }
         [ExcludeFromCodeCoverage]
         public override object? ToDatasource(object? data, object? context)
@@ -126,13 +126,13 @@ public class TransformationTests
         });
 
         var runner = new TestPhormSession();
-        runner.TestConnection?.CommandQueue.Enqueue(cmd);
+        runner.TestConnection!.CommandQueue.Enqueue(cmd);
 
         // Act
-        var res = runner.From("Get", null).Get<DataObject2>();
+        var res = runner.From("Get", null).Get<DataObject2>()!;
 
         // Assert
         Assert.IsNotNull(res);
-        Assert.AreEqual("AAA,Value,ZZZ", res?.Value);
+        Assert.AreEqual("AAA,Value,ZZZ", res.Value);
     }
 }

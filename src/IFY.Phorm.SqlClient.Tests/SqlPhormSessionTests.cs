@@ -76,6 +76,11 @@ public class SqlPhormSessionTests
         Assert.AreEqual(connName, res.ConnectionName);
     }
 
+    static object? getField<T>(T inst, string fieldName)
+    {
+        return typeof(T).GetField(fieldName, BindingFlags.NonPublic | BindingFlags.Instance)?.GetValue(inst);
+    }
+
     [TestMethod]
     public void GetConnection()
     {
@@ -325,11 +330,6 @@ public class SqlPhormSessionTests
         Assert.AreNotSame(sess2, sess1);
         Assert.AreEqual("name1", sess1.ConnectionName);
         Assert.AreEqual("name2", sess2.ConnectionName);
-    }
-
-    static object? getField<T>(T inst, string fieldName)
-    {
-        return typeof(T).GetField(fieldName, BindingFlags.NonPublic | BindingFlags.Instance)?.GetValue(inst);
     }
 
     [TestMethod]

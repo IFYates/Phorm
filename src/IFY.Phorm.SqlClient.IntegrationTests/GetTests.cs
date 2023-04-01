@@ -312,6 +312,50 @@ RETURN @@ROWCOUNT");
 
     #endregion One
 
+    #region Data
+
+    enum MyEnum
+    {
+        None = 0,
+        A,
+        B,
+        C,
+        D
+    }
+
+    [PhormContract(Name = "GetTestTable", Target = DbObjectType.Table)]
+    class EnumDto
+    {
+        public MyEnum A { get; set; }
+        public MyEnum B { get; set; }
+        public MyEnum C { get; set; }
+        public MyEnum D { get; set; }
+    }
+
+    [TestMethod]
+    public void Data__Supports_all_numeric_types_for_enum()
+    {
+        var phorm = getPhormSession();
+
+        SqlTestHelpers.ApplySql(phorm, @"DROP TABLE IF EXISTS [dbo].[GetTestTable]");
+        SqlTestHelpers.ApplySql(phorm, @"CREATE TABLE [dbo].[GetTestTable] (
+	[A] TINYINT,
+	[B] SMALLINT,
+	[C] INT,
+	[D] BIGINT
+)");
+        SqlTestHelpers.ApplySql(phorm, @"INSERT INTO [dbo].[GetTestTable] VALUES (1, 2, 3, 4)");
+
+        var dto = ((IPhormSession)phorm).Get<EnumDto>()!;
+
+        Assert.AreEqual(MyEnum.A, dto.A);
+        Assert.AreEqual(MyEnum.B, dto.B);
+        Assert.AreEqual(MyEnum.C, dto.C);
+        Assert.AreEqual(MyEnum.D, dto.D);
+    }
+
+    #endregion Data
+
     #region Filtered
 
     [TestMethod]

@@ -17,13 +17,11 @@ internal class EntityList<TEntity> : IEntityList, IEnumerable<TEntity>, ICollect
 
     public bool IsReadOnly => true;
 
+    public void AddResolver(Func<object> resolver)
+        => AddResolver(() => (TEntity)resolver());
     public void AddResolver(Func<TEntity> resolver)
     {
         _resolvers.Enqueue(resolver);
-    }
-    public void AddResolver(Func<object> resolver)
-    {
-        _resolvers.Enqueue(() => (TEntity)resolver());
     }
 
     public bool Contains(TEntity item)
