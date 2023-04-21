@@ -75,7 +75,7 @@ public class SqlPhormSession : AbstractPhormSession
         var conn = GetConnection();
         conn.Open();
         var transaction = conn.BeginTransaction();
-        return new TransactedSqlPhormSession(conn, transaction);
+        return WrapSessionAsTransacted(transaction);
     }
 
     #endregion Transactions

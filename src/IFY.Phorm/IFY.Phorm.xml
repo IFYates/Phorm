@@ -656,6 +656,89 @@
             <typeparam name="TEntity">The entity type that will be received and filtered OR the base type of the <see cref="T:IFY.Phorm.Data.GenSpecBase"/> <typeparamref name="TResult"/>. Must have a default constructor, unless this is the abstract base type of the GenSpec.</typeparam>
             <typeparam name="TResult">Either the same as <typeparamref name="TEntity"/>, or any GenSpec&lt;TEntity, ...&gt;.</typeparam>
         </member>
+        <member name="T:IFY.Phorm.Execution.TransactedPhormSession">
+            <summary>
+            A wrapper for an <see cref="T:IFY.Phorm.Execution.AbstractPhormSession"/> instance, adding standard transaction-handling logic.
+            </summary>
+        </member>
+        <member name="E:IFY.Phorm.Execution.TransactedPhormSession.Connected">
+            <inheritdoc/>
+        </member>
+        <member name="E:IFY.Phorm.Execution.TransactedPhormSession.CommandExecuting">
+            <inheritdoc/>
+        </member>
+        <member name="E:IFY.Phorm.Execution.TransactedPhormSession.CommandExecuted">
+            <inheritdoc/>
+        </member>
+        <member name="E:IFY.Phorm.Execution.TransactedPhormSession.UnexpectedRecordColumn">
+            <inheritdoc/>
+        </member>
+        <member name="E:IFY.Phorm.Execution.TransactedPhormSession.UnresolvedContractMember">
+            <inheritdoc/>
+        </member>
+        <member name="E:IFY.Phorm.Execution.TransactedPhormSession.ConsoleMessage">
+            <inheritdoc/>
+        </member>
+        <member name="P:IFY.Phorm.Execution.TransactedPhormSession.IsInTransaction">
+            <inheritdoc/>
+        </member>
+        <member name="P:IFY.Phorm.Execution.TransactedPhormSession.ConnectionName">
+            <inheritdoc/>
+        </member>
+        <member name="P:IFY.Phorm.Execution.TransactedPhormSession.ExceptionsAsConsoleMessage">
+            <inheritdoc/>
+        </member>
+        <member name="P:IFY.Phorm.Execution.TransactedPhormSession.StrictResultSize">
+            <inheritdoc/>
+        </member>
+        <member name="P:IFY.Phorm.Execution.TransactedPhormSession.SupportsTransactions">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Execution.TransactedPhormSession.CreateCommand(IFY.Phorm.Connectivity.IPhormDbConnection,System.String,System.String,IFY.Phorm.DbObjectType)">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Execution.TransactedPhormSession.GetConnection">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Execution.TransactedPhormSession.Commit">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Execution.TransactedPhormSession.Rollback">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Execution.TransactedPhormSession.Dispose">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Execution.TransactedPhormSession.SetConnectionName(System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Execution.TransactedPhormSession.Call(System.String,System.Object)">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Execution.TransactedPhormSession.Call``1(System.Object)">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Execution.TransactedPhormSession.CallAsync(System.String,System.Object,System.Threading.CancellationToken)">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Execution.TransactedPhormSession.CallAsync``1(System.Object,System.Threading.CancellationToken)">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Execution.TransactedPhormSession.From(System.String,System.Object)">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Execution.TransactedPhormSession.From``1(System.Object)">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Execution.TransactedPhormSession.Get``1(System.Object)">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Execution.TransactedPhormSession.GetAsync``1(System.Object,System.Threading.CancellationToken)">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Execution.TransactedPhormSession.BeginTransaction">
+            <inheritdoc/>
+        </member>
         <member name="M:IFY.Phorm.Extensions.GetExpressionParameterProperties(System.Linq.Expressions.Expression,System.Type)">
             <summary>
             Return array of all properties referenced in an expression for the parameter of given type.
@@ -694,14 +777,7 @@
             The event invoked when a new database connection is created.
             </summary>
         </member>
-        <member name="E:IFY.Phorm.IPhormSession.CommandExecuting">
-            <summary>
-            The event invoked when a command is about to be executed.
-            </summary>
-        </member>
-        <member name="E:IFY.Phorm.IPhormSession.CommandExecuted">
-            <summary>
-            The event invoked when a command has finished executing.
+        <member name="E:IFY.Phorm.IPhormSession.invoked when a command has finished executing.
             </summary>
         </member>
         <member name="E:IFY.Phorm.IPhormSession.UnexpectedRecordColumn">
@@ -817,6 +893,14 @@
         <member name="M:IFY.Phorm.Transformation.EnumValueAttribute.ToDatasource(System.Object,System.Object)">
             <inheritdoc/>
         </member>
+        <member name="T:IFY.Phorm.Transformation.JsonValueAttribute">
+            <summary>
+            Transform the contract property object to JSON, or the datasource value from JSON.
+            </summary>
+        </member>
+    </members>
+</doc>
+ </member>
         <member name="T:IFY.Phorm.Transformation.JsonValueAttribute">
             <summary>
             Transform the contract property object to JSON, or the datasource value from JSON.

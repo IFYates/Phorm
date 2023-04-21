@@ -49,6 +49,8 @@ public class SqlPhormSessionTests
 
         var connMock = mocks.Create<IPhormDbConnection>();
         connMock.Setup(m => m.Dispose());
+        connMock.SetupGet(m => m.State)
+            .Returns(ConnectionState.Open);
         connMock.SetupProperty(m => m.DefaultSchema).Object.DefaultSchema = "dbo";
         connMock.Setup(m => m.Open());
         connMock.Setup(m => m.BeginTransaction())
@@ -67,7 +69,7 @@ public class SqlPhormSessionTests
         };
 
         // Act
-        var res = (TransactedSqlPhormSession)sess.BeginTransaction();
+        var res = (TransactedPhormSession)sess.BeginTransaction();
 
         // Assert
         mocks.Verify();

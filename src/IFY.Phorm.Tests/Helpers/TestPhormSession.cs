@@ -36,7 +36,7 @@ internal partial class TestPhormSession : AbstractPhormSession
         throw new NotSupportedException();
     }
 
-    protected override IAsyncDbCommand CreateCommand(IPhormDbConnection connection, string schema, string objectName, DbObjectType objectType)
+    protected internal override IAsyncDbCommand CreateCommand(IPhormDbConnection connection, string schema, string objectName, DbObjectType objectType)
     {
         var cmd = base.CreateCommand(connection, schema, objectName, objectType);
         _commands.Add(cmd);

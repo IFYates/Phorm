@@ -180,7 +180,7 @@ public abstract class AbstractPhormSession : IPhormSession
     }
 
     /// <inheritdoc/>
-    protected virtual IAsyncDbCommand CreateCommand(IPhormDbConnection connection, string schema, string objectName, DbObjectType objectType)
+    protected internal virtual IAsyncDbCommand CreateCommand(IPhormDbConnection connection, string schema, string objectName, DbObjectType objectType)
     {
         // Complete object name
         objectName = objectType switch
@@ -304,6 +304,11 @@ public abstract class AbstractPhormSession : IPhormSession
 
     /// <inheritdoc/>
     public abstract ITransactedPhormSession BeginTransaction();
+
+    protected ITransactedPhormSession WrapSessionAsTransacted(IDbTransaction transaction)
+    {
+        return new TransactedPhormSession(this, transaction);
+    }
 
     #endregion Transactions
 

@@ -75,7 +75,7 @@ public class AbstractPhormSessionTests
         IPhormSession phorm = new TestPhormSession();
 
         // Act
-        var runner = ((IPhormSession)phorm).From("objectName");
+        var runner = phorm.From("objectName");
 
         // Assert
         Assert.IsInstanceOfType(runner, typeof(PhormContractRunner<IPhormContract>));
@@ -88,7 +88,7 @@ public class AbstractPhormSessionTests
         IPhormSession phorm = new TestPhormSession();
 
         // Act
-        var runner = ((IPhormSession)phorm).From<ITestContract>();
+        var runner = phorm.From<ITestContract>();
 
         // Assert
         Assert.IsInstanceOfType(runner, typeof(PhormContractRunner<ITestContract>));
@@ -103,7 +103,7 @@ public class AbstractPhormSessionTests
         var arg = new Mock<ITestContract>().Object;
 
         // Act
-        var runner = ((IPhormSession)phorm).From(arg);
+        var runner = phorm.From(arg);
 
         // Assert
         Assert.IsInstanceOfType(runner, typeof(PhormContractRunner<ITestContract>));
