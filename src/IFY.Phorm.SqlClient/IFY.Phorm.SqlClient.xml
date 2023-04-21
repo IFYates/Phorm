@@ -25,5 +25,23 @@
         <member name="M:IFY.Phorm.SqlClient.SqlPhormSession.BeginTransaction">
             <inheritdoc/>
         </member>
+        <member name="P:IFY.Phorm.SqlClient.TransactedSqlPhormSession.IsInTransaction">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.SqlClient.TransactedSqlPhormSession.CreateCommand(IFY.Phorm.Connectivity.IPhormDbConnection,System.String,System.String,IFY.Phorm.DbObjectType)">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.SqlClient.TransactedSqlPhormSession.GetConnection">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.SqlClient.TransactedSqlPhormSession.Commit">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.SqlClient.TransactedSqlPhormSession.Rollback">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.SqlClient.TransactedSqlPhormSession.Dispose">
+            <inheritdoc/>
+        </member>
     </members>
 </doc>
