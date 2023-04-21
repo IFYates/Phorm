@@ -21,7 +21,7 @@ public class SecureValueAttributeTests
         var res = attr.Decrypt(null, null);
 
         // Assert
-        Assert.AreEqual(0, res.Length);
+        Assert.AreEqual(0, res!.Length);
     }
 
     [TestMethod]

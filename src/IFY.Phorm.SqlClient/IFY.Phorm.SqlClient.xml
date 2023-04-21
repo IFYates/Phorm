@@ -4,6 +4,12 @@
         <name>IFY.Phorm.SqlClient</name>
     </assembly>
     <members>
+        <member name="M:IFY.Phorm.SqlClient.SqlConsoleMessageCapture.ProcessException(System.Exception)">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.SqlClient.SqlConsoleMessageCapture.Dispose">
+            <inheritdoc/>
+        </member>
         <member name="M:IFY.Phorm.SqlClient.SqlPhormSession.SetConnectionName(System.String)">
             <inheritdoc/>
         </member>

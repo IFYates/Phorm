@@ -191,19 +191,19 @@ public class ContractMemberDefinition
             var objType = entity.GetType();
             if (SourceMember is PropertyInfo pi && pi.CanRead)
             {
-                if (!pi.DeclaringType.IsAssignableFrom(objType))
+                if (!pi.DeclaringType!.IsAssignableFrom(objType))
                 {
                     // Resolve same property on non-contract
-                    pi = objType.GetProperty(SourceMember.Name, BindingFlags.Instance | BindingFlags.Public);
+                    pi = objType.GetProperty(SourceMember.Name, BindingFlags.Instance | BindingFlags.Public)!;
                 }
                 value = pi?.GetValue(entity);
             }
             else if (SourceMember is MethodInfo mi)
             {
-                if (!mi.DeclaringType.IsAssignableFrom(objType))
+                if (!mi.DeclaringType!.IsAssignableFrom(objType))
                 {
                     // Resolve identical method on non-contract
-                    mi = objType.GetMethod(SourceMember.Name, BindingFlags.Instance | BindingFlags.Public);
+                    mi = objType.GetMethod(SourceMember.Name, BindingFlags.Instance | BindingFlags.Public)!;
 
                     // Otherwise, resolve property with same name on non-contract
                     mi ??= objType.GetProperty(SourceMember.Name, BindingFlags.Instance | BindingFlags.Public)?.GetMethod!;

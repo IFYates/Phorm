@@ -23,7 +23,7 @@ public class PhormContractRunner
     [PhormSpecOf(nameof(TypeId), 2)]
     class TestDto : BaseDto
     {
-        public string? Value { get; set; }
+        public new string? Value { get; set; }
         public string? Value2 { get; set; }
     }
 

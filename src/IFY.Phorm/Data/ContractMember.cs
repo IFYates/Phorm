@@ -228,7 +228,7 @@ public class ContractMember : ContractMemberDefinition
             if (prop?.PropertyType.IsGenericType == true
                 && typeof(ContractOutMember<>) == prop.PropertyType.GetGenericTypeDefinition())
             {
-                var val = (ContractMember)prop.GetValue(entity);
+                var val = (ContractMember)prop.GetValue(entity)!;
                 val.SetValue(Value);
             }
             else if (prop?.SetMethod != null)

@@ -12,10 +12,14 @@ namespace IFY.Phorm.Encryption;
 #endif
 public class NullEncryptor : IEncryptor
 {
+    /// <inheritdoc/>
     public byte[] Authenticator { get => Array.Empty<byte>(); set => _ = value; /* NOOP */  }
+    /// <inheritdoc/>
     public byte[] InitialVector { get => Array.Empty<byte>(); set => _ = value; /* NOOP */  }
 
+    /// <inheritdoc/>
     public byte[] Encrypt(byte[] data) => data;
     
+    /// <inheritdoc/>
     public byte[] Decrypt(byte[] data) => data;
 }

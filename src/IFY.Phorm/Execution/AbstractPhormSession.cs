@@ -214,6 +214,7 @@ public abstract class AbstractPhormSession : IPhormSession
     /// If the connection implementation supports capture of console output (print statements),
     /// this method returns a new <see cref="AbstractConsoleMessageCapture"/> that will receive the output.
     /// </summary>
+    /// <param name="commandGuid">Unique id of the command being captured.</param>
     /// <param name="cmd">The command to capture console output for.</param>
     /// <returns>The object that will be provide the final console output.</returns>
     protected internal virtual AbstractConsoleMessageCapture StartConsoleCapture(Guid commandGuid, IAsyncDbCommand cmd)
@@ -320,6 +321,7 @@ public abstract class AbstractPhormSession : IPhormSession
         where TActionContract : IPhormContract
         => CallAsync<TActionContract>(args: contract, CancellationToken.None).GetAwaiter().GetResult();
 
+    /// <inheritdoc/>
     public Task<int> CallAsync<TActionContract>()
         where TActionContract : IPhormContract
         => CallAsync<TActionContract>(args: null, CancellationToken.None);
@@ -327,32 +329,41 @@ public abstract class AbstractPhormSession : IPhormSession
     public Task<int> CallAsync<TActionContract>(object? args)
         where TActionContract : IPhormContract
         => CallAsync<TActionContract>(args, CancellationToken.None);
+    /// <inheritdoc/>
     public Task<int> CallAsync<TActionContract>(TActionContract contract)
         where TActionContract : IPhormContract
         => CallAsync<TActionContract>(args: contract, CancellationToken.None);
+    /// <inheritdoc/>
     public Task<int> CallAsync<TActionContract>(TActionContract contract, CancellationToken cancellationToken) // Same as "object? args = null", but allows better Intellisense
         where TActionContract : IPhormContract
         => CallAsync<TActionContract>(args: contract, cancellationToken);
 
+    /// <inheritdoc/>
     public TResult? Get<TResult>()
         where TResult : class
         => Get<TResult>(args: null);
+    /// <inheritdoc/>
     public TResult? Get<TResult>(TResult contract)
         where TResult : class
         => Get<TResult>(args: contract);
 
+    /// <inheritdoc/>
     public Task<TResult?> GetAsync<TResult>()
         where TResult : class
         => GetAsync<TResult>(args: null, CancellationToken.None);
+    /// <inheritdoc/>
     public Task<TResult?> GetAsync<TResult>(object? args)
         where TResult : class
         => GetAsync<TResult>(args, CancellationToken.None);
+    /// <inheritdoc/>
     public Task<TResult?> GetAsync<TResult>(CancellationToken cancellationToken)
         where TResult : class
         => GetAsync<TResult>(args: null, cancellationToken);
+    /// <inheritdoc/>
     public Task<TResult?> GetAsync<TResult>(TResult contract) // Same as "object? args = null", but allows better Intellisense
         where TResult : class
         => GetAsync<TResult>(args: contract, CancellationToken.None);
+    /// <inheritdoc/>
     public Task<TResult?> GetAsync<TResult>(TResult contract, CancellationToken cancellationToken) // Same as "object? args = null", but allows better Intellisense
         where TResult : class
         => GetAsync<TResult>(args: contract, cancellationToken);

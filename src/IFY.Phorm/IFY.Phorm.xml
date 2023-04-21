@@ -29,6 +29,48 @@
             Wraps <see cref="T:System.Data.IDbConnection"/> with additional Pho/rm values.
             </summary>
         </member>
+        <member name="P:IFY.Phorm.Connectivity.PhormDbConnection.DbConnection">
+            <inheritdoc/>
+        </member>
+        <member name="P:IFY.Phorm.Connectivity.PhormDbConnection.ConnectionName">
+            <inheritdoc/>
+        </member>
+        <member name="P:IFY.Phorm.Connectivity.PhormDbConnection.DefaultSchema">
+            <inheritdoc/>
+        </member>
+        <member name="P:IFY.Phorm.Connectivity.PhormDbConnection.ConnectionString">
+            <inheritdoc/>
+        </member>
+        <member name="P:IFY.Phorm.Connectivity.PhormDbConnection.ConnectionTimeout">
+            <inheritdoc/>
+        </member>
+        <member name="P:IFY.Phorm.Connectivity.PhormDbConnection.Database">
+            <inheritdoc/>
+        </member>
+        <member name="P:IFY.Phorm.Connectivity.PhormDbConnection.State">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Connectivity.PhormDbConnection.BeginTransaction">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Connectivity.PhormDbConnection.BeginTransaction(System.Data.IsolationLevel)">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Connectivity.PhormDbConnection.ChangeDatabase(System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Connectivity.PhormDbConnection.Open">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Connectivity.PhormDbConnection.Close">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Connectivity.PhormDbConnection.CreateCommand">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Connectivity.PhormDbConnection.Dispose">
+            <inheritdoc/>
+        </member>
         <member name="T:IFY.Phorm.Data.ContractMember">
             <summary>
             The current instance value of a contract member.
@@ -305,6 +347,18 @@
             An implementation of an encryption and decryption handler that makes no changes.
             </summary>
         </member>
+        <member name="P:IFY.Phorm.Encryption.NullEncryptor.Authenticator">
+            <inheritdoc/>
+        </member>
+        <member name="P:IFY.Phorm.Encryption.NullEncryptor.InitialVector">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Encryption.NullEncryptor.Encrypt(System.Byte[])">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Encryption.NullEncryptor.Decrypt(System.Byte[])">
+            <inheritdoc/>
+        </member>
         <member name="T:IFY.Phorm.Encryption.SecureValueAttribute">
             <summary>
             Basic implementation of <see cref="T:IFY.Phorm.Encryption.IEncryptor"/>-based encryption of secure values.
@@ -469,6 +523,12 @@
             Becomes true if this instance has captured at least one error.
             </summary>
         </member>
+        <member name="M:IFY.Phorm.Execution.AbstractConsoleMessageCapture.ProcessException(System.Exception)">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Execution.AbstractConsoleMessageCapture.Dispose">
+            <inheritdoc/>
+        </member>
         <member name="P:IFY.Phorm.Execution.AbstractPhormSession.ConnectionName">
             <inheritdoc/>
         </member>
@@ -524,6 +584,7 @@
             If the connection implementation supports capture of console output (print statements),
             this method returns a new <see cref="T:IFY.Phorm.Execution.AbstractConsoleMessageCapture"/> that will receive the output.
             </summary>
+            <param name="commandGuid">Unique id of the command being captured.</param>
             <param name="cmd">The command to capture console output for.</param>
             <returns>The object that will be provide the final console output.</returns>
         </member>
@@ -564,12 +625,6 @@
             <inheritdoc/>
         </member>
         <member name="M:IFY.Phorm.Execution.AbstractPhormSession.BeginTransaction">
-            <inheritdoc/>
-        </member>
-        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.Call``1(``0)">
-            <inheritdoc/>
-        </member>
-        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.CallAsync``1(System.Object)">
             <inheritdoc/>
         </member>
         <member name="P:IFY.Phorm.Execution.ConsoleMessage.IsError">
@@ -660,6 +715,22 @@
             <summary>
             A wrapper for an <see cref="T:IFY.Phorm.Execution.AbstractPhormSession"/> instance, adding standard transaction-handling logic.
             </summary>
+            --- Purely wrapped members below here
+        </member>
+        <member name="P:IFY.Phorm.Execution.TransactedPhormSession.IsInTransaction">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Execution.TransactedPhormSession.CreateCommand(IFY.Phorm.Connectivity.IPhormDbConnection,System.String,System.String,IFY.Phorm.DbObjectType)">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Execution.TransactedPhormSession.Commit">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Execution.TransactedPhormSession.Rollback">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Execution.TransactedPhormSession.Dispose">
+            <inheritdoc/>
         </member>
         <member name="E:IFY.Phorm.Execution.TransactedPhormSession.Connected">
             <inheritdoc/>
@@ -679,9 +750,6 @@
         <member name="E:IFY.Phorm.Execution.TransactedPhormSession.ConsoleMessage">
             <inheritdoc/>
         </member>
-        <member name="P:IFY.Phorm.Execution.TransactedPhormSession.IsInTransaction">
-            <inheritdoc/>
-        </member>
         <member name="P:IFY.Phorm.Execution.TransactedPhormSession.ConnectionName">
             <inheritdoc/>
         </member>
@@ -694,19 +762,7 @@
         <member name="P:IFY.Phorm.Execution.TransactedPhormSession.SupportsTransactions">
             <inheritdoc/>
         </member>
-        <member name="M:IFY.Phorm.Execution.TransactedPhormSession.CreateCommand(IFY.Phorm.Connectivity.IPhormDbConnection,System.String,System.String,IFY.Phorm.DbObjectType)">
-            <inheritdoc/>
-        </member>
         <member name="M:IFY.Phorm.Execution.TransactedPhormSession.GetConnection">
-            <inheritdoc/>
-        </member>
-        <member name="M:IFY.Phorm.Execution.TransactedPhormSession.Commit">
-            <inheritdoc/>
-        </member>
-        <member name="M:IFY.Phorm.Execution.TransactedPhormSession.Rollback">
-            <inheritdoc/>
-        </member>
-        <member name="M:IFY.Phorm.Execution.TransactedPhormSession.Dispose">
             <inheritdoc/>
         </member>
         <member name="M:IFY.Phorm.Execution.TransactedPhormSession.SetConnectionName(System.String)">
@@ -777,7 +833,14 @@
             The event invoked when a new database connection is created.
             </summary>
         </member>
-        <member name="E:IFY.Phorm.IPhormSession.invoked when a command has finished executing.
+        <member name="E:IFY.Phorm.IPhormSession.CommandExecuting">
+            <summary>
+            The event invoked when a command is about to be executed.
+            </summary>
+        </member>
+        <member name="E:IFY.Phorm.IPhormSession.CommandExecuted">
+            <summary>
+            The event invoked when a command has finished executing.
             </summary>
         </member>
         <member name="E:IFY.Phorm.IPhormSession.UnexpectedRecordColumn">
@@ -898,13 +961,11 @@
             Transform the contract property object to JSON, or the datasource value from JSON.
             </summary>
         </member>
-    </members>
-</doc>
- </member>
-        <member name="T:IFY.Phorm.Transformation.JsonValueAttribute">
-            <summary>
-            Transform the contract property object to JSON, or the datasource value from JSON.
-            </summary>
+        <member name="M:IFY.Phorm.Transformation.JsonValueAttribute.FromDatasource(System.Type,System.Object,System.Object)">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Transformation.JsonValueAttribute.ToDatasource(System.Object,System.Object)">
+            <inheritdoc/>
         </member>
     </members>
 </doc>

@@ -14,6 +14,7 @@ public class SqlConsoleMessageCapture : AbstractConsoleMessageCapture
         conn.InfoMessage += captureInfoMessage;
     }
 
+    /// <inheritdoc/>
     public override bool ProcessException(Exception ex)
     {
         if (ex is SqlException sqlException)
@@ -45,6 +46,7 @@ public class SqlConsoleMessageCapture : AbstractConsoleMessageCapture
         }
     }
 
+    /// <inheritdoc/>
     public override void Dispose()
     {
         _conn.InfoMessage -= captureInfoMessage;

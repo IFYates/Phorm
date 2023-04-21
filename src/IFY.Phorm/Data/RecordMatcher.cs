@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace IFY.Phorm.Data;
+﻿namespace IFY.Phorm.Data;
 
 public interface IRecordMatcher
 {

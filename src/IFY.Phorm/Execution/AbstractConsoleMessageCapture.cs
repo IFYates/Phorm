@@ -35,7 +35,9 @@ public abstract class AbstractConsoleMessageCapture : IDisposable
 
     public ConsoleMessage[] GetConsoleMessages() => _consoleEvents.ToArray();
 
+    /// <inheritdoc/>
     public abstract bool ProcessException(Exception ex);
 
+    /// <inheritdoc/>
     public abstract void Dispose();
 }
