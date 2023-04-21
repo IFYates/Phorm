@@ -19,21 +19,34 @@ public class TransactedSqlPhormSession : SqlPhormSession, ITransactedPhormSessio
         _transaction = transaction;
     }
 
+    /// <inheritdoc/>
     public override bool IsInTransaction => true;
 
+    /// <inheritdoc/>
+    protected override IAsyncDbCommand CreateCommand(IPhormDbConnection connection, string schema, string objectName, DbObjectType objectType)
+    {
+        var cmd = base.CreateCommand(connection, schema, objectName, objectType);
+        cmd.Transaction = _transaction;
+        return cmd;
+    }
+
+    /// <inheritdoc/>
     protected override IPhormDbConnection GetConnection()
         => _connection;
 
+    /// <inheritdoc/>
     public void Commit()
     {
         _transaction.Commit();
     }
 
+    /// <inheritdoc/>
     public void Rollback()
     {
         _transaction.Rollback();
     }
 
+    /// <inheritdoc/>
     public void Dispose()
     {
         if (!_isDisposed)

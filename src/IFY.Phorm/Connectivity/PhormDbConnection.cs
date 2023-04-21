@@ -30,18 +30,26 @@ public sealed class PhormDbConnection : IPhormDbConnection
 
     public void ChangeDatabase(string databaseName) => _db.ChangeDatabase(databaseName);
 
-    public void Open() => _db.Open();
-    public void Close() => _db.Close();
-
-    public IAsyncDbCommand CreateCommand()
-        => ((IDbConnection)this).CreateCommand().Shim<IAsyncDbCommand>()!;
-    IDbCommand IDbConnection.CreateCommand()
+    public void Open()
     {
         if (_db.State != ConnectionState.Open)
         {
             _db.Open();
         }
+    }
+    public void Close()
+    {
+        if (_db.State != ConnectionState.Closed)
+        {
+            _db.Close();
+        }
+    }
 
+    public IAsyncDbCommand CreateCommand()
+        => ((IDbConnection)this).CreateCommand().Shim<IAsyncDbCommand>()!;
+    IDbCommand IDbConnection.CreateCommand()
+    {
+        Open();
         return _db.CreateCommand();
     }
 

@@ -87,10 +87,29 @@ public class PhormDbConnectionTests
     }
 
     [TestMethod]
-    public void Open()
+    public void Open__Is_open__Noop()
     {
         // Arrange
         var dbMock = new Mock<IDbConnection>(MockBehavior.Strict);
+        dbMock.SetupGet(m => m.State)
+            .Returns(ConnectionState.Open).Verifiable();
+
+        var db = new PhormDbConnection("", dbMock.Object);
+
+        // Act
+        db.Open();
+
+        // Assert
+        dbMock.Verify();
+    }
+
+    [TestMethod]
+    public void Open__Not_open__Open()
+    {
+        // Arrange
+        var dbMock = new Mock<IDbConnection>(MockBehavior.Strict);
+        dbMock.SetupGet(m => m.State)
+            .Returns(ConnectionState.Closed).Verifiable();
         dbMock.Setup(m => m.Open())
             .Verifiable();
 
@@ -104,10 +123,29 @@ public class PhormDbConnectionTests
     }
 
     [TestMethod]
-    public void Close()
+    public void Close__Is_closed__Noop()
     {
         // Arrange
         var dbMock = new Mock<IDbConnection>(MockBehavior.Strict);
+        dbMock.SetupGet(m => m.State)
+            .Returns(ConnectionState.Closed).Verifiable();
+
+        var db = new PhormDbConnection("", dbMock.Object);
+
+        // Act
+        db.Close();
+
+        // Assert
+        dbMock.Verify();
+    }
+
+    [TestMethod]
+    public void Close__Not_closed__Close()
+    {
+        // Arrange
+        var dbMock = new Mock<IDbConnection>(MockBehavior.Strict);
+        dbMock.SetupGet(m => m.State)
+            .Returns(ConnectionState.Open).Verifiable();
         dbMock.Setup(m => m.Close())
             .Verifiable();
 

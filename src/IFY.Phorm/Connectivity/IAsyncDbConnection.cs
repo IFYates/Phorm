@@ -12,6 +12,7 @@ public interface IAsyncDbCommand : IDisposable
     CommandType CommandType { get; set; }
     [Shim(typeof(IDbCommand))] IDbConnection Connection { get; }
     [Shim(typeof(IDbCommand))] IDataParameterCollection Parameters { get; }
+    [Shim(typeof(IDbCommand))] IDbTransaction Transaction { get; set; }
 
     [Shim(typeof(IDbCommand))] IDbDataParameter CreateParameter();
     Task<DbDataReader> ExecuteReaderAsync(CancellationToken cancellationToken);

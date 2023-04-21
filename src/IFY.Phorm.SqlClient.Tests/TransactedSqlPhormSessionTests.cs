@@ -28,6 +28,29 @@ public class TransactedSqlPhormSessionTests
     }
 
     [TestMethod]
+    public void CreateCommand__Sets_transaction()
+    {
+        // Arrange
+        var cmdMock = new Mock<IAsyncDbCommand>(MockBehavior.Strict);
+        cmdMock.SetupAllProperties();
+
+        var connMock = new Mock<IPhormDbConnection>(MockBehavior.Strict);
+        connMock.SetupAllProperties();
+        connMock.Setup(m => m.CreateCommand())
+            .Returns(cmdMock.Object).Verifiable();
+
+        var transMock = new Mock<IDbTransaction>(MockBehavior.Strict);
+
+        var sess = new TransactedSqlPhormSession(connMock.Object, transMock.Object);
+
+        // Act
+        var res = sess.CreateCommand("schema", "objectNamee", DbObjectType.Table);
+
+        // Assert
+        Assert.AreSame(transMock.Object, res.Transaction);
+    }
+
+    [TestMethod]
     public void GetConnection()
     {
         // Arrange
