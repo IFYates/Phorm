@@ -2,13 +2,14 @@
 using IFY.Phorm.Data;
 using IFY.Phorm.EventArgs;
 using System.Data;
+using System.Diagnostics.CodeAnalysis;
 
 namespace IFY.Phorm.Execution;
 
 /// <summary>
 /// A wrapper for an <see cref="AbstractPhormSession"/> instance, adding standard transaction-handling logic.
 /// </summary>
-public class TransactedPhormSession : ITransactedPhormSession
+public partial class TransactedPhormSession : ITransactedPhormSession
 {
     private bool _isDisposed;
 
@@ -53,9 +54,12 @@ public class TransactedPhormSession : ITransactedPhormSession
             _isDisposed = true;
         }
     }
+}
 
-    ///--- Purely wrapped members below here
-
+///--- Purely wrapped members below here
+[ExcludeFromCodeCoverage]
+partial class TransactedPhormSession
+{
     /// <inheritdoc/>
     public event EventHandler<ConnectedEventArgs> Connected { add => _baseSession.Connected += value; remove => _baseSession.Connected -= value; }
     /// <inheritdoc/>

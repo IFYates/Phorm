@@ -1,9 +1,8 @@
 ﻿using IFY.Phorm.Connectivity;
+using IFY.Phorm.EventArgs;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
-using System;
 using System.Data;
-using System.Linq.Expressions;
 
 namespace IFY.Phorm.Execution.Tests;
 
@@ -103,33 +102,5 @@ public class TransactedPhormSessionTests
 
         // Assert
         _mocks.Verify();
-    }
-
-    //--- Below here are the purely wrapped member tests
-
-    [TestMethod]
-    public void GetConnection()
-    {
-        // Arrange
-        var connMock = _mocks.Create<IPhormDbConnection>();
-
-        var sessMock = _mocks.Create<AbstractPhormSession>(null!, null!);
-        sessMock.Setup(m => m.GetConnection())
-            .Returns(connMock.Object).Verifiable();
-
-        var sess = new TransactedPhormSession(sessMock.Object, null!);
-
-        // Act
-        var res = sess.GetConnection();
-
-        // Assert
-        _mocks.Verify();
-        Assert.AreSame(connMock.Object, res);
-    }
-
-    [TestMethod]
-    public void MyTestMethod()
-    {
-
     }
 }
