@@ -19,7 +19,7 @@
         <PackageProjectUrl>https://github.com/IFYates/Phorm</PackageProjectUrl>
         <RepositoryUrl>https://github.com/IFYates/Phorm</RepositoryUrl>
         <RepositoryType>GitHub</RepositoryType>
-        <Version>1.7.2</Version>
+        <Version>1.7.2.1</Version>
         <PackageReleaseNotes>$([System.IO.File]::ReadAllText("$(MSBuildProjectDirectory)/../RELEASE_NOTES.txt"))</PackageReleaseNotes>
         <Copyright>(c) IFYates</Copyright>
         <Description>SqlClient implementation of the Procedure-heavy object-relational mapping framework.</Description>
@@ -46,7 +46,7 @@
 
     <ItemGroup>
         <PackageReference Include="IFY.Shimr" Version="2.0.1" />
-        <PackageReference Include="Microsoft.Data.SqlClient" Version="5.0.1" />
+        <PackageReference Include="Microsoft.Data.SqlClient" Version="5.1.1" />
         <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
     </ItemGroup>
 
