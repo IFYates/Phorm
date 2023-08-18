@@ -107,11 +107,11 @@ public interface IPhormSession
 
     public IPhormContractRunner From(string contractName)
         => From(contractName, args: null);
-     IPhormContractRunner From(string contractName, object? args);
+    IPhormContractRunner From(string contractName, object? args);
 
-   public IPhormContractRunner<TActionContract> From<TActionContract>()
-        where TActionContract : IPhormContract
-        => From<TActionContract>(args: null);
+    public IPhormContractRunner<TActionContract> From<TActionContract>()
+         where TActionContract : IPhormContract
+         => From<TActionContract>(args: null);
     IPhormContractRunner<TActionContract> From<TActionContract>(object? args)
         where TActionContract : IPhormContract;
     public IPhormContractRunner<TActionContract> From<TActionContract>(TActionContract contract) // Same as "object? args = null", but allows better Intellisense

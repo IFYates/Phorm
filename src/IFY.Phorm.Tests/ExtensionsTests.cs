@@ -136,10 +136,8 @@ public class ExtensionsTests
     public void GetBytes__Unsupported_type__Exception()
     {
         // Act
-        Assert.ThrowsException<InvalidCastException>(() =>
-        {
-            _ = new ExtensionsTests().GetBytes();
-        });
+        Assert.ThrowsException<InvalidCastException>
+            (() => new ExtensionsTests().GetBytes());
     }
 
     #endregion GetBytes
@@ -329,10 +327,8 @@ public class ExtensionsTests
     public void FromBytes__Unsupported_type__Exception()
     {
         // Act
-        Assert.ThrowsException<InvalidCastException>(() =>
-        {
-            _ = Extensions.FromBytes(Array.Empty<byte>(), typeof(ExtensionsTests));
-        });
+        Assert.ThrowsException<InvalidCastException>
+            (() => Extensions.FromBytes(Array.Empty<byte>(), typeof(ExtensionsTests)));
     }
 
     #endregion FromBytes
