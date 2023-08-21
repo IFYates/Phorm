@@ -39,10 +39,8 @@ public class JsonValueAttributeTests
         var attr = new JsonValueAttribute();
 
         // Act
-        Assert.ThrowsException<JsonReaderException>(() =>
-        {
-            attr.FromDatasource(typeof(int), "invalid", null);
-        });
+        Assert.ThrowsException<JsonReaderException>
+            (() => attr.FromDatasource(typeof(int), "invalid", null));
     }
 
     [TestMethod]

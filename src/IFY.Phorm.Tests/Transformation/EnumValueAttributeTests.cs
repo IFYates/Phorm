@@ -34,10 +34,8 @@ public class EnumValueAttributeTests
         var attr = new EnumValueAttribute();
 
         // Act
-        Assert.ThrowsException<ArgumentNullException>(() =>
-        {
-            attr.FromDatasource(typeof(TestEnum), null, null);
-        });
+        Assert.ThrowsException<ArgumentNullException>
+            (() => attr.FromDatasource(typeof(TestEnum), null, null));
     }
 
     [TestMethod]
@@ -97,10 +95,8 @@ public class EnumValueAttributeTests
         var attr = new EnumValueAttribute();
 
         // Act
-        Assert.ThrowsException<ArgumentException>(() =>
-        {
-            attr.FromDatasource(typeof(TestEnum), input, null);
-        });
+        Assert.ThrowsException<ArgumentException>
+            (() => attr.FromDatasource(typeof(TestEnum), input, null));
     }
 
     [TestMethod]
@@ -123,10 +119,8 @@ public class EnumValueAttributeTests
         var attr = new EnumValueAttribute();
 
         // Act
-        Assert.ThrowsException<InvalidCastException>(() =>
-        {
-            attr.ToDatasource("str", null);
-        });
+        Assert.ThrowsException<InvalidCastException>
+            (() => attr.ToDatasource("str", null));
     }
 
     [TestMethod]

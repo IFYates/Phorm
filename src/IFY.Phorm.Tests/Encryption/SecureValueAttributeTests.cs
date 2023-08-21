@@ -33,10 +33,8 @@ public class SecureValueAttributeTests
         GlobalSettings.EncryptionProvider = null;
 
         // Act
-        Assert.ThrowsException<InvalidOperationException>(() =>
-        {
-            _ = attr.Decrypt(new byte[] { 1, 2, 3, 4 }, null);
-        });
+        Assert.ThrowsException<InvalidOperationException>
+            (() => attr.Decrypt(new byte[] { 1, 2, 3, 4 }, null));
     }
 
     [TestMethod]
@@ -137,10 +135,8 @@ public class SecureValueAttributeTests
         GlobalSettings.EncryptionProvider = null;
 
         // Act
-        Assert.ThrowsException<InvalidOperationException>(() =>
-        {
-            _ = attr.Encrypt(new byte[] { 1, 2, 3, 4 }, null);
-        });
+        Assert.ThrowsException<InvalidOperationException>
+            (() => attr.Encrypt(new byte[] { 1, 2, 3, 4 }, null));
     }
 
     [TestMethod]

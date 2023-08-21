@@ -672,10 +672,8 @@ public class ContractMemberTests
         };
 
         // Act
-        Assert.ThrowsException<ArgumentNullException>(() =>
-        {
-            memb.ToDataParameter(cmdMock.Object, null);
-        });
+        Assert.ThrowsException<ArgumentNullException>
+            (() => memb.ToDataParameter(cmdMock.Object, null));
 
         // Assert
         cmdMock.Verify();

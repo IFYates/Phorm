@@ -41,10 +41,8 @@ public class PhormContractRunnerTests_Errors
         };
 
         // Act
-        var ex = Assert.ThrowsException<InvalidOperationException>(() =>
-        {
-            _ = phorm.Call("Test", null);
-        });
+        var ex = Assert.ThrowsException<InvalidOperationException>
+            (() => phorm.Call("Test", null));
 
         // Assert
         Assert.AreSame(readException, ex);
@@ -98,10 +96,8 @@ public class PhormContractRunnerTests_Errors
         };
 
         // Act
-        var ex = Assert.ThrowsException<InvalidOperationException>(() =>
-        {
-            _ = phorm.From("Test", null).Get<object>();
-        });
+        var ex = Assert.ThrowsException<InvalidOperationException>
+            (() => phorm.From("Test", null).Get<object>());
 
         // Assert
         Assert.AreSame(readException, ex);

@@ -32,10 +32,8 @@ public class PhormContractRunnerTests_Resultsets
     [ExcludeFromCodeCoverage]
     class TestParentBadResultsetProperty
     {
-        [Resultset(0, nameof(TrueSelector))]
-        public TestChild[] Children { get; } = Array.Empty<TestChild>();
-        public static IRecordMatcher TrueSelector { get; }
-            = new RecordMatcher<TestParentBadResultsetProperty, TestChild>((p, c) => true);
+        [Resultset(0)]
+        public TestChild[] Children { get; /*set;*/ } = Array.Empty<TestChild>();
     }
 
     interface ITestContract : IPhormContract
@@ -63,10 +61,8 @@ public class PhormContractRunnerTests_Resultsets
         var runner = new PhormContractRunner<ITestContract>(phorm, "ContractName", DbObjectType.StoredProcedure, null);
 
         // Act
-        var ex = Assert.ThrowsException<MissingMethodException>(() =>
-        {
-            _ = runner.Get<TestBadEntity>();
-        });
+        var ex = Assert.ThrowsException<MissingMethodException>
+            (() => runner.Get<TestBadEntity>());
 
         // Assert
         Assert.AreEqual("Attempt to get type IFY.Phorm.Execution.Tests.PhormContractRunnerTests_Resultsets+TestBadEntity without empty constructor.", ex.Message);
@@ -81,10 +77,8 @@ public class PhormContractRunnerTests_Resultsets
         var runner = new PhormContractRunner<ITestContract>(phorm, "ContractName", DbObjectType.StoredProcedure, null);
 
         // Act
-        var ex = (MissingMethodException)Assert.ThrowsException<AggregateException>(() =>
-        {
-            _ = runner.GetAsync<TestBadEntity>(CancellationToken.None).Result;
-        }).InnerException!;
+        var ex = (MissingMethodException)Assert.ThrowsException<AggregateException>
+            (() => runner.GetAsync<TestBadEntity>(CancellationToken.None).Result).InnerException!;
 
         // Assert
         Assert.AreEqual("Attempt to get type IFY.Phorm.Execution.Tests.PhormContractRunnerTests_Resultsets+TestBadEntity without empty constructor.", ex.Message);
@@ -177,10 +171,8 @@ public class PhormContractRunnerTests_Resultsets
         var runner = new PhormContractRunner<ITestContract>(phorm, "ContractName", DbObjectType.StoredProcedure, null);
 
         // Act
-        var ex = (InvalidDataContractException)Assert.ThrowsException<AggregateException>(() =>
-        {
-            _ = runner.GetAsync<TestParentBadResultsetProperty[]>(CancellationToken.None).Result;
-        }).InnerException!;
+        var ex = (InvalidDataContractException)Assert.ThrowsException<AggregateException>
+            (() => runner.GetAsync<TestParentBadResultsetProperty[]>(CancellationToken.None).Result).InnerException!;
 
         // Assert
         Assert.AreEqual("Resultset property 'Children' is not writable.", ex.Message);
@@ -279,10 +271,8 @@ public class PhormContractRunnerTests_Resultsets
         var runner = new PhormContractRunner<ITestContract>(phorm, "ContractName", DbObjectType.StoredProcedure, null);
 
         // Act
-        var ex = (InvalidCastException)Assert.ThrowsException<AggregateException>(() =>
-        {
-            _ = runner.GetAsync<TestParent>(CancellationToken.None).Result;
-        }).InnerException!;
+        var ex = (InvalidCastException)Assert.ThrowsException<AggregateException>
+            (() => runner.GetAsync<TestParent>(CancellationToken.None).Result).InnerException!;
         Assert.IsTrue(ex.Message.Contains("not an array") == true);
     }
 

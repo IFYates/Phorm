@@ -289,7 +289,8 @@ public class PhormContractRunnerTests_Call
         var runner = new PhormContractRunner<IMemberTestContract>(phorm, null, DbObjectType.Default, new TestContract { Arg3 = null! });
 
         // Act
-        Assert.ThrowsException<AggregateException>(() => runner.CallAsync(CancellationToken.None).Result);
+        Assert.ThrowsException<AggregateException>
+            (() => runner.CallAsync(CancellationToken.None).Result);
     }
 
     [TestMethod]
@@ -365,10 +366,8 @@ public class PhormContractRunnerTests_Call
         var runner = new PhormContractRunner<IPhormContract>(phorm, "CallTest", DbObjectType.StoredProcedure, new { Arg = 1 });
 
         // Act
-        var ex = (InvalidOperationException)Assert.ThrowsException<AggregateException>(() =>
-        {
-            _ = runner.CallAsync(CancellationToken.None).Result;
-        }).InnerException!;
+        var ex = (InvalidOperationException)Assert.ThrowsException<AggregateException>
+            (() => runner.CallAsync(CancellationToken.None).Result).InnerException!;
 
         // Assert
         Assert.AreEqual("Non-result request returned a result.", ex.Message);

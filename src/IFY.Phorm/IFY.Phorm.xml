@@ -271,6 +271,21 @@
             The value of the "Generalised" type property to match with this "Specialised" type.
             </summary>
         </member>
+        <member name="T:IFY.Phorm.Data.ResultsetAttribute">
+            <summary>
+            Marks the property as being the target of an additional resultset.
+            </summary>
+        </member>
+        <member name="P:IFY.Phorm.Data.ResultsetAttribute.Order">
+            <summary>
+            The 0-based index of the additional resultset to match.
+            </summary>
+        </member>
+        <member name="P:IFY.Phorm.Data.ResultsetAttribute.SelectorPropertyName">
+            <summary>
+            The name of the sibling property that provides the <see cref="T:IFY.Phorm.Data.IRecordMatcher"/> implementation for matching the resultset records to the parent instances.
+            </summary>
+        </member>
         <member name="T:IFY.Phorm.Encryption.AbstractSecureValueAttribute">
             <summary>
             Attribute for marking a contract property as secure.
