@@ -4,7 +4,7 @@
         <TargetFrameworks>netstandard2.1;net6.0</TargetFrameworks>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
-        <LangVersion>10.0</LangVersion>
+        <LangVersion>11.0</LangVersion>
         <RootNamespace>IFY.Phorm</RootNamespace>
         <AssemblyName>IFY.Phorm</AssemblyName>
 

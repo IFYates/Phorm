@@ -736,33 +736,6 @@
             <inheritdoc/>
         </member>
         <member name="M:IFY.Phorm.Execution.TransactedPhormSession.Commit">
-           ame="M:IFY.Phorm.Execution.ITransactedPhormSession.Commit">
-            <summary>
-            Commit the transaction, making this runner unusable for further calls.
-            </summary>
-        </member>
-        <member name="M:IFY.Phorm.Execution.ITransactedPhormSession.Rollback">
-            <summary>
-            Rollback the transaction, making this runner unusable for further calls.
-            </summary>
-        </member>
-        <member name="T:IFY.Phorm.Execution.PhormContractRunner`1.FilteredContractRunner`2">
-            <summary>
-            Reads entities from the datasource and filters them using minimal resolution.
-            </summary>
-            <typeparam name="TEntity">The entity type that will be received and filtered OR the base type of the <see cref="T:IFY.Phorm.Data.GenSpecBase"/> <typeparamref name="TResult"/>. Must have a default constructor, unless this is the abstract base type of the GenSpec.</typeparam>
-            <typeparam name="TResult">Either the same as <typeparamref name="TEntity"/>, or any GenSpec&lt;TEntity, ...&gt;.</typeparam>
-        </member>
-        <member name="T:IFY.Phorm.Execution.TransactedPhormSession">
-            <summary>
-            A wrapper for an <see cref="T:IFY.Phorm.Execution.AbstractPhormSession"/> instance, adding standard transaction-handling logic.
-            </summary>
-            --- Purely wrapped members below here
-        </member>
-        <member name="P:IFY.Phorm.Execution.TransactedPhormSession.IsInTransaction">
-            <inheritdoc/>
-        </member>
-        <member name="M:IFY.Phorm.Execution.TransactedPhormSession.Commit">
             <inheritdoc/>
         </member>
         <member name="M:IFY.Phorm.Execution.TransactedPhormSession.Rollback">

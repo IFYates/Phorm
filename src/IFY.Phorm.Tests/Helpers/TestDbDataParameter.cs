@@ -17,8 +17,8 @@ internal class TestDbDataParameter : IDbDataParameter
 
     public virtual bool IsNullable { get; } = true;
 
-    public virtual string ParameterName { get; set; } = string.Empty;
-    public virtual string SourceColumn { get; set; } = string.Empty;
+    [AllowNull] public virtual string ParameterName { get; set; } = string.Empty;
+    [AllowNull] public virtual string SourceColumn { get; set; } = string.Empty;
     public virtual DataRowVersion SourceVersion { get; set; }
     public virtual object? Value { get; set; }
 }

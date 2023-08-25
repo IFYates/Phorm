@@ -219,7 +219,7 @@ RETURN @@ROWCOUNT");
         _ = phorm.Call("GetTest_Upsert", null);
         _ = phorm.Call("GetTest_Upsert", null);
 
-        var res = phorm.Get<DataItemWithoutText[]>(null)!;
+        var res = phorm.Get<DataItemWithoutText[]>(null!)!;
 
         Assert.AreEqual(3, res.Length);
     }

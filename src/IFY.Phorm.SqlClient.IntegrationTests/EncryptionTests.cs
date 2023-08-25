@@ -85,7 +85,7 @@ RETURN @@ROWCOUNT");
 
         // Act
         var res = phorm.CallAsync<IUpsert>(new { Num = randInt, Data = randStr }, CancellationToken.None).Result;
-        var obj = phorm.GetAsync<DataItem>(null, CancellationToken.None).Result!;
+        var obj = phorm.GetAsync<DataItem>(null!, CancellationToken.None).Result!;
 
         // Assert
         Assert.AreEqual(1, res);

@@ -885,7 +885,7 @@ public class PhormContractRunnerTests
             StrictResultSize = false
         };
 
-        var runner = new PhormContractRunner<IPhormContract>(phorm, "ContractName", DbObjectType.StoredProcedure, new { Arg = 1 });
+        var runner = new PhormContractRunner<IPhormContract>(phorm, "ContractName", DbObjectType.StoredProcedure, new { Arg = 1 }, null);
 
         // Act
         var res = runner.Get<TestDto>()!;

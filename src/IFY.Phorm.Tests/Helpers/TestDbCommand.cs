@@ -15,7 +15,7 @@ public partial class TestDbCommand : DbCommand, IAsyncDbCommand, IDbCommand
 
     public CancellationToken ExecutionCancellationToken { get; private set; } = CancellationToken.None;
 
-    public override string CommandText { get; set; } = string.Empty;
+    [AllowNull] public override string CommandText { get; set; } = string.Empty;
     public override int CommandTimeout { get; set; }
     public override CommandType CommandType { get; set; }
     public new virtual IDbConnection? Connection { get; set; }
