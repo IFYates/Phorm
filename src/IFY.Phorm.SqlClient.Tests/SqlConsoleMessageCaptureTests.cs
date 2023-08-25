@@ -178,6 +178,7 @@ public class SqlConsoleMessageCaptureTests
 
         var events = new List<ConsoleMessageEventArgs>();
         sessionMock.Object.ConsoleMessage += (_, e) => events.Add(e);
+        sessionMock.Object.OnConsoleMessage(null!); // Prove handler works
 
         var e = MicrosoftDataSqlClientHelpers.NewSqlInfoMessageEventArgs(ex);
 
@@ -186,7 +187,7 @@ public class SqlConsoleMessageCaptureTests
         MicrosoftDataSqlClientHelpers.FireInfoMessageEvent(conn, e);
 
         // Assert
-        Assert.AreEqual(0, events.Count);
+        Assert.IsNull(events.Single()); // Only event should be our fake one
         Assert.IsFalse(obj.HasError);
     }
 }

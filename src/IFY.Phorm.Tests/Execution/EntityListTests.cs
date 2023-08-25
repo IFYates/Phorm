@@ -47,9 +47,9 @@ public class EntityListTests
     {
         var lst = new EntityList<object>();
 
-        lst.AddResolver(() => new());
-        lst.AddResolver(() => new());
-        lst.AddResolver(() => new());
+        lst.AddResolver(null!);
+        lst.AddResolver(null!);
+        lst.AddResolver(null!);
 
         Assert.AreEqual(3, lst.Count);
         Assert.AreEqual(3, getUnresolvedEntitycount(lst));
@@ -63,8 +63,8 @@ public class EntityListTests
         var obj = new object();
 
         lst.AddResolver(() => obj);
-        lst.AddResolver(() => new());
-        lst.AddResolver(() => new());
+        lst.AddResolver(null!);
+        lst.AddResolver(null!);
 
         Assert.IsFalse(lst.Contains(obj));
 
@@ -83,7 +83,7 @@ public class EntityListTests
 
         lst.AddResolver(() => obj);
         lst.AddResolver(() => obj);
-        lst.AddResolver(() => new());
+        lst.AddResolver(null!);
 
         var arr = new object[3];
         lst.CopyTo(arr, 1);

@@ -215,10 +215,8 @@ RETURN 1");
         var arg = new ConsoleTest();
 
         // Act
-        var ex = Assert.ThrowsException<SqlException>(() =>
-        {
-            _ = phorm.Call<IConsoleTest>(arg);
-        });
+        var ex = Assert.ThrowsException<SqlException>
+            (() => phorm.Call<IConsoleTest>(arg));
 
         // Assert
         Assert.AreEqual("Divide by zero error encountered.", ex.Message);
@@ -266,10 +264,8 @@ RETURN 1");
         var arg = new ConsoleTest();
 
         // Act
-        var ex = Assert.ThrowsException<SqlException>(() =>
-        {
-            _ = phorm.From<IConsoleTest>(arg).Get<object>();
-        });
+        var ex = Assert.ThrowsException<SqlException>
+            (() => phorm.From<IConsoleTest>(arg).Get<object>());
 
         // Assert
         Assert.AreEqual("Divide by zero error encountered.", ex.Message);

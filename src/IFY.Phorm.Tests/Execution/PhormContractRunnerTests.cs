@@ -100,10 +100,8 @@ public class PhormContractRunnerTests
     public void PhormContractRunner__Anonymous_No_name__Exception()
     {
         // Act
-        Assert.ThrowsException<ArgumentNullException>(() =>
-        {
-            _ = new PhormContractRunner<IPhormContract>(null!, null, DbObjectType.StoredProcedure, null, null);
-        });
+        Assert.ThrowsException<ArgumentNullException>
+            (() => new PhormContractRunner<IPhormContract>(null!, null, DbObjectType.StoredProcedure, null, null));
     }
 
     [TestMethod]
@@ -853,7 +851,47 @@ public class PhormContractRunnerTests
         var runner = new PhormContractRunner<IPhormContract>(phorm, "ContractName", DbObjectType.StoredProcedure, new { Arg = 1 }, null);
 
         // Act
-        Assert.ThrowsException<InvalidOperationException>(() => runner.Get<TestDto>());
+        Assert.ThrowsException<InvalidOperationException>
+            (() => runner.Get<TestDto>());
+    }
+
+    [TestMethod]
+    public void One__Multiple_records__StrictResultSize_False__Ignored()
+    {
+        // Arrange
+        var conn = new TestPhormConnection("")
+        {
+            DefaultSchema = "schema"
+        };
+
+        var cmd = new TestDbCommand(new TestDbDataReader
+        {
+            Data = new List<Dictionary<string, object>>
+            {
+                new Dictionary<string, object>
+                {
+                    ["Value"] = "value1"
+                },
+                new Dictionary<string, object>
+                {
+                    ["Value"] = "value1"
+                }
+            }
+        });
+        conn.CommandQueue.Enqueue(cmd);
+
+        var phorm = new TestPhormSession(conn)
+        {
+            StrictResultSize = false
+        };
+
+        var runner = new PhormContractRunner<IPhormContract>(phorm, "ContractName", DbObjectType.StoredProcedure, new { Arg = 1 });
+
+        // Act
+        var res = runner.Get<TestDto>()!;
+
+        // Assert
+        Assert.AreEqual("value1", res.Value);
     }
 
     [TestMethod]

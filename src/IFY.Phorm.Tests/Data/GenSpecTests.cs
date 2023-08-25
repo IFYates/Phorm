@@ -146,10 +146,8 @@ public class GenSpecTests
         var runner = buildRunner();
 
         // Act
-        Exception ex = Assert.ThrowsException<AggregateException>(() =>
-        {
-            _ = runner.GetAsync<GenSpec<BaseGenType, TypeWithoutAttribute>>().Result!;
-        });
+        Exception ex = Assert.ThrowsException<AggregateException>
+            (() => runner.GetAsync<GenSpec<BaseGenType, TypeWithoutAttribute>>().Result!);
 
         // Assert
         while (ex.InnerException != null)
@@ -166,10 +164,8 @@ public class GenSpecTests
         var runner = buildRunner();
 
         // Act
-        Exception ex = Assert.ThrowsException<AggregateException>(() =>
-        {
-            _ = runner.GetAsync<GenSpec<BaseGenType, TypeWithBadAttribute>>().Result!;
-        });
+        Exception ex = Assert.ThrowsException<AggregateException>
+            (() => runner.GetAsync<GenSpec<BaseGenType, TypeWithBadAttribute>>().Result!);
 
         // Assert
         while (ex.InnerException != null)

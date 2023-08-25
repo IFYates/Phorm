@@ -91,10 +91,8 @@ public class PhormContractRunnerTests_Events
             new { Arg1 = 1, Arg2 = "2" }, null);
 
         // Act
-        _ = (NotImplementedException)Assert.ThrowsException<AggregateException>(() =>
-        {
-            _ = runner.CallAsync(CancellationToken.None).Result;
-        }).InnerException!;
+        _ = (NotImplementedException)Assert.ThrowsException<AggregateException>
+            (() => runner.CallAsync(CancellationToken.None).Result).InnerException!;
 
         // Assert
         Assert.AreEqual(0, _unwantedInvocations);
@@ -205,10 +203,8 @@ public class PhormContractRunnerTests_Events
             new { Arg1 = 1, Arg2 = "2" }, null);
 
         // Act
-        Assert.ThrowsException<NotImplementedException>(() =>
-        {
-            _ = runner.Get<object>();
-        });
+        Assert.ThrowsException<NotImplementedException>
+            (() => runner.Get<object>());
 
         // Assert
         Assert.AreEqual(0, _unwantedInvocations);
