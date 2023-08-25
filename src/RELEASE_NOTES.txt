@@ -1,9 +1,12 @@
+v1.7.3
+- #45: Fix regression of bug
+
 v1.7.2.1
 - ResultsetAttribute does not require selector to be specified
 - Updated all dependencies
 
 v1.7.2
-- Fix transaction commands not being attached
+- #45: Fix transaction commands not being attached
 
 v1.7.1
 - #43: Fix enum parsing not supporting non-int values
