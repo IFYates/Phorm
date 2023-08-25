@@ -240,7 +240,7 @@ public abstract class AbstractPhormSession : IPhormSession
     /// <inheritdoc/>
     public Task<int> CallAsync(string contractName, object? args, CancellationToken cancellationToken)
     {
-        var runner = new PhormContractRunner<IPhormContract>(this, contractName, DbObjectType.StoredProcedure, args);
+        var runner = new PhormContractRunner<IPhormContract>(this, contractName, DbObjectType.StoredProcedure, args, null);
         return runner.CallAsync(cancellationToken);
     }
 
@@ -252,7 +252,7 @@ public abstract class AbstractPhormSession : IPhormSession
     public Task<int> CallAsync<TActionContract>(object? args, CancellationToken cancellationToken)
         where TActionContract : IPhormContract
     {
-        var runner = new PhormContractRunner<TActionContract>(this, null, DbObjectType.StoredProcedure, args);
+        var runner = new PhormContractRunner<TActionContract>(this, null, DbObjectType.StoredProcedure, args, null);
         return runner.CallAsync(cancellationToken);
     }
 
@@ -263,14 +263,14 @@ public abstract class AbstractPhormSession : IPhormSession
     /// <inheritdoc/>
     public IPhormContractRunner From(string contractName, object? args)
     {
-        return new PhormContractRunner<IPhormContract>(this, contractName, DbObjectType.StoredProcedure, args);
+        return new PhormContractRunner<IPhormContract>(this, contractName, DbObjectType.StoredProcedure, args, null);
     }
 
     /// <inheritdoc/>
     public IPhormContractRunner<TActionContract> From<TActionContract>(object? args)
         where TActionContract : IPhormContract
     {
-        return new PhormContractRunner<TActionContract>(this, null, DbObjectType.StoredProcedure, args);
+        return new PhormContractRunner<TActionContract>(this, null, DbObjectType.StoredProcedure, args, null);
     }
 
     #endregion From
@@ -281,7 +281,7 @@ public abstract class AbstractPhormSession : IPhormSession
     public TResult? Get<TResult>(object? args)
         where TResult : class
     {
-        var runner = new PhormContractRunner<IPhormContract>(this, typeof(TResult), null, DbObjectType.View, args);
+        var runner = new PhormContractRunner<IPhormContract>(this, typeof(TResult), null, DbObjectType.View, args, null);
         return runner.Get<TResult>();
     }
 
@@ -289,7 +289,7 @@ public abstract class AbstractPhormSession : IPhormSession
     public Task<TResult?> GetAsync<TResult>(object? args, CancellationToken cancellationToken)
         where TResult : class
     {
-        var runner = new PhormContractRunner<IPhormContract>(this, typeof(TResult), null, DbObjectType.View, args);
+        var runner = new PhormContractRunner<IPhormContract>(this, typeof(TResult), null, DbObjectType.View, args, null);
         return runner.GetAsync<TResult>(cancellationToken);
     }
 

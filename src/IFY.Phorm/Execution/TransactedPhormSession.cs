@@ -26,14 +26,6 @@ public partial class TransactedPhormSession : ITransactedPhormSession
     }
 
     /// <inheritdoc/>
-    protected internal IAsyncDbCommand CreateCommand(IPhormDbConnection connection, string schema, string objectName, DbObjectType objectType)
-    {
-        var cmd = _baseSession.CreateCommand(connection, schema, objectName, objectType);
-        cmd.Transaction = _transaction;
-        return cmd;
-    }
-
-    /// <inheritdoc/>
     public void Commit()
     {
         _transaction.Commit();
@@ -54,6 +46,61 @@ public partial class TransactedPhormSession : ITransactedPhormSession
             _isDisposed = true;
         }
     }
+
+    #region Call
+
+    /// <inheritdoc/>
+    public Task<int> CallAsync(string contractName, object? args, CancellationToken cancellationToken)
+    {
+        var runner = new PhormContractRunner<IPhormContract>(_baseSession, contractName, DbObjectType.StoredProcedure, args, _transaction);
+        return runner.CallAsync(cancellationToken);
+    }
+    /// <inheritdoc/>
+    public Task<int> CallAsync<TActionContract>(object? args, CancellationToken cancellationToken)
+        where TActionContract : IPhormContract
+    {
+        var runner = new PhormContractRunner<TActionContract>(_baseSession, null, DbObjectType.StoredProcedure, args, _transaction);
+        return runner.CallAsync(cancellationToken);
+    }
+
+    #endregion Call
+
+    #region From
+
+    /// <inheritdoc/>
+    public IPhormContractRunner From(string contractName, object? args)
+    {
+        return new PhormContractRunner<IPhormContract>(_baseSession, contractName, DbObjectType.StoredProcedure, args, _transaction);
+    }
+
+    /// <inheritdoc/>
+    public IPhormContractRunner<TActionContract> From<TActionContract>(object? args)
+        where TActionContract : IPhormContract
+    {
+        return new PhormContractRunner<TActionContract>(_baseSession, null, DbObjectType.StoredProcedure, args, _transaction);
+    }
+
+    #endregion From
+
+    #region Get
+
+    /// <inheritdoc/>
+    public TResult? Get<TResult>(object? args)
+        where TResult : class
+    {
+        var runner = new PhormContractRunner<IPhormContract>(_baseSession, typeof(TResult), null, DbObjectType.View, args, _transaction);
+        return runner.Get<TResult>();
+    }
+
+    /// <inheritdoc/>
+    public Task<TResult?> GetAsync<TResult>(object? args, CancellationToken cancellationToken)
+        where TResult : class
+    {
+        var runner = new PhormContractRunner<IPhormContract>(_baseSession, typeof(TResult), null, DbObjectType.View, args, _transaction);
+        return runner.GetAsync<TResult>(cancellationToken);
+    }
+
+    #endregion Get
 }
 
 ///--- Purely wrapped members below here
@@ -93,42 +140,15 @@ partial class TransactedPhormSession
         => _baseSession.SetConnectionName(connectionName);
 
     /// <inheritdoc/>
+    public ITransactedPhormSession BeginTransaction()
+        => _baseSession.BeginTransaction();
+
+    /// <inheritdoc/>
     public int Call(string contractName, object? args)
-        => _baseSession.Call(contractName, args);
+        => CallAsync(contractName, args, CancellationToken.None).GetAwaiter().GetResult();
 
     /// <inheritdoc/>
     public int Call<TActionContract>(object? args)
         where TActionContract : IPhormContract
-        => _baseSession.Call<TActionContract>(args);
-
-    /// <inheritdoc/>
-    public Task<int> CallAsync(string contractName, object? args, CancellationToken cancellationToken)
-        => _baseSession.CallAsync(contractName, args, cancellationToken);
-
-    /// <inheritdoc/>
-    public Task<int> CallAsync<TActionContract>(object? args, CancellationToken cancellationToken) where TActionContract : IPhormContract
-        => _baseSession.CallAsync<TActionContract>(args, cancellationToken);
-
-    /// <inheritdoc/>
-    public IPhormContractRunner From(string contractName, object? args)
-        => _baseSession.From(contractName, args);
-
-    /// <inheritdoc/>
-    public IPhormContractRunner<TActionContract> From<TActionContract>(object? args)
-        where TActionContract : IPhormContract
-        => _baseSession.From<TActionContract>(args);
-
-    /// <inheritdoc/>
-    public TResult? Get<TResult>(object? args)
-        where TResult : class
-        => _baseSession.Get<TResult>(args);
-
-    /// <inheritdoc/>
-    public Task<TResult?> GetAsync<TResult>(object? args, CancellationToken cancellationToken)
-        where TResult : class
-        => _baseSession.GetAsync<TResult>(args, cancellationToken);
-
-    /// <inheritdoc/>
-    public ITransactedPhormSession BeginTransaction()
-        => _baseSession.BeginTransaction();
+        => CallAsync<TActionContract>(args, CancellationToken.None).GetAwaiter().GetResult();
 }

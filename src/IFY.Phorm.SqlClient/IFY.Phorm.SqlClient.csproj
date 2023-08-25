@@ -4,7 +4,7 @@
         <TargetFrameworks>netstandard2.1;net6.0</TargetFrameworks>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
-        <LangVersion>10.0</LangVersion>
+        <LangVersion>11.0</LangVersion>
 
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
@@ -19,7 +19,7 @@
         <PackageProjectUrl>https://github.com/IFYates/Phorm</PackageProjectUrl>
         <RepositoryUrl>https://github.com/IFYates/Phorm</RepositoryUrl>
         <RepositoryType>GitHub</RepositoryType>
-        <Version>1.7.2.1</Version>
+        <Version>1.7.3</Version>
         <PackageReleaseNotes>$([System.IO.File]::ReadAllText("$(MSBuildProjectDirectory)/../RELEASE_NOTES.txt"))</PackageReleaseNotes>
         <Copyright>(c) IFYates</Copyright>
         <Description>SqlClient implementation of the Procedure-heavy object-relational mapping framework.</Description>

@@ -265,7 +265,7 @@ public class SqlPhormSessionTests
         var cmdMock = new Mock<IDbCommand>(MockBehavior.Strict);
         cmdMock.SetupProperty(m => m.CommandText);
         cmdMock.Setup(m => m.ExecuteScalar())
-            .Returns(null); // Connection schema missing
+            .Returns(null!); // Connection schema missing
         cmdMock.Setup(m => m.Dispose());
         connMock.As<IDbConnection>()
             .Setup(m => m.CreateCommand())

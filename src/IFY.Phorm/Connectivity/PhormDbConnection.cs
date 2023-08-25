@@ -18,7 +18,7 @@ public sealed class PhormDbConnection : IPhormDbConnection
     public string DefaultSchema { get; set; } = string.Empty;
 
     /// <inheritdoc/>
-    public string ConnectionString { get => _db.ConnectionString; set => _db.ConnectionString = value; }
+    [System.Diagnostics.CodeAnalysis.AllowNull] public string ConnectionString { get => _db.ConnectionString; set => _db.ConnectionString = value; }
     /// <inheritdoc/>
     public int ConnectionTimeout => _db.ConnectionTimeout;
     /// <inheritdoc/>

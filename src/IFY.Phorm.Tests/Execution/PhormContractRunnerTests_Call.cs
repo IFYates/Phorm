@@ -92,7 +92,7 @@ public class PhormContractRunnerTests_Call
 
         var phorm = new TestPhormSession(conn);
 
-        var runner = new PhormContractRunner<IPhormContract>(phorm, "CallTest", DbObjectType.StoredProcedure, new { Arg = 1 });
+        var runner = new PhormContractRunner<IPhormContract>(phorm, "CallTest", DbObjectType.StoredProcedure, new { Arg = 1 }, null);
 
         // Act
         var res = runner.CallAsync(CancellationToken.None).Result;
@@ -123,7 +123,7 @@ public class PhormContractRunnerTests_Call
 
         var phorm = new TestPhormSession(conn);
 
-        var runner = new PhormContractRunner<TestContract>(phorm, null, DbObjectType.StoredProcedure, new TestContract { Arg = 1 });
+        var runner = new PhormContractRunner<TestContract>(phorm, null, DbObjectType.StoredProcedure, new TestContract { Arg = 1 }, null);
 
         // Act
         var res = runner.CallAsync(CancellationToken.None).Result;
@@ -157,7 +157,7 @@ public class PhormContractRunnerTests_Call
 
         TestTransphormAttribute.ToDatasourceReturnValue = value;
 
-        var runner = new PhormContractRunner<TestContractWithTransphormer>(phorm, null, DbObjectType.StoredProcedure, new TestContractWithTransphormer { Arg = 1 });
+        var runner = new PhormContractRunner<TestContractWithTransphormer>(phorm, null, DbObjectType.StoredProcedure, new TestContractWithTransphormer { Arg = 1 }, null);
 
         // Act
         var res = runner.CallAsync(CancellationToken.None).Result;
@@ -191,7 +191,7 @@ public class PhormContractRunnerTests_Call
 
         var phorm = new TestPhormSession(conn);
 
-        var runner = new PhormContractRunner<IMemberTestContract>(phorm, null, DbObjectType.Default, new TestContract { Arg = 1 });
+        var runner = new PhormContractRunner<IMemberTestContract>(phorm, null, DbObjectType.Default, new TestContract { Arg = 1 }, null);
 
         // Act
         var res = runner.CallAsync(CancellationToken.None).Result;
@@ -220,7 +220,7 @@ public class PhormContractRunnerTests_Call
 
         var phorm = new TestPhormSession(conn);
 
-        var runner = new PhormContractRunner<TestContract2>(phorm, null, DbObjectType.Default, new TestContract2());
+        var runner = new PhormContractRunner<TestContract2>(phorm, null, DbObjectType.Default, new TestContract2(), null);
 
         // Act
         var res = runner.CallAsync(CancellationToken.None).Result;
@@ -256,7 +256,7 @@ public class PhormContractRunnerTests_Call
         var args = new TestContract { Arg = 1 };
         var cm = args.Arg4;
 
-        var runner = new PhormContractRunner<IMemberTestContract>(phorm, null, DbObjectType.Default, args);
+        var runner = new PhormContractRunner<IMemberTestContract>(phorm, null, DbObjectType.Default, args, null);
 
         // Act
         var res = runner.CallAsync(CancellationToken.None).Result;
@@ -286,7 +286,7 @@ public class PhormContractRunnerTests_Call
 
         var phorm = new TestPhormSession(conn);
 
-        var runner = new PhormContractRunner<IMemberTestContract>(phorm, null, DbObjectType.Default, new TestContract { Arg3 = null! });
+        var runner = new PhormContractRunner<IMemberTestContract>(phorm, null, DbObjectType.Default, new TestContract { Arg3 = null! }, null);
 
         // Act
         Assert.ThrowsException<AggregateException>
@@ -329,7 +329,7 @@ public class PhormContractRunnerTests_Call
 
         var dto = new TestContract { Arg = 100, Arg3 = "secure_value" };
 
-        var runner = new PhormContractRunner<ISecureTestContract>(phorm, null, DbObjectType.Default, dto);
+        var runner = new PhormContractRunner<ISecureTestContract>(phorm, null, DbObjectType.Default, dto, null);
 
         // Act
         var res = runner.CallAsync(CancellationToken.None).Result;
@@ -363,7 +363,7 @@ public class PhormContractRunnerTests_Call
 
         var phorm = new TestPhormSession(conn);
 
-        var runner = new PhormContractRunner<IPhormContract>(phorm, "CallTest", DbObjectType.StoredProcedure, new { Arg = 1 });
+        var runner = new PhormContractRunner<IPhormContract>(phorm, "CallTest", DbObjectType.StoredProcedure, new { Arg = 1 }, null);
 
         // Act
         var ex = (InvalidOperationException)Assert.ThrowsException<AggregateException>
@@ -411,7 +411,7 @@ public class PhormContractRunnerTests_Call
 
         var arg = new ConsoleLogContract { Arg = 1 };
 
-        var runner = new PhormContractRunner<IConsoleLogContract>(phorm, null, DbObjectType.Default, arg);
+        var runner = new PhormContractRunner<IConsoleLogContract>(phorm, null, DbObjectType.Default, arg, null);
 
         // Act
         var res = runner.CallAsync(CancellationToken.None).Result;
@@ -452,7 +452,7 @@ public class PhormContractRunnerTests_Call
             ConsoleLogs = ContractMember.Console()
         };
 
-        var runner = new PhormContractRunner<IConsoleLogContract>(phorm, null, DbObjectType.Default, arg);
+        var runner = new PhormContractRunner<IConsoleLogContract>(phorm, null, DbObjectType.Default, arg, null);
 
         // Act
         var res = runner.CallAsync(CancellationToken.None).Result;

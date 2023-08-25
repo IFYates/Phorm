@@ -78,7 +78,7 @@ public class PhormContractRunnerTests
     public void PhormContractRunner__ContractType()
     {
         // Act
-        var runner = new PhormContractRunner<IPhormContract>(null!, "objectName", DbObjectType.Table, null);
+        var runner = new PhormContractRunner<IPhormContract>(null!, "objectName", DbObjectType.Table, null, null);
 
         // Assert
         Assert.AreEqual(typeof(IPhormContract), ((IPhormContractRunner<IPhormContract>)runner).ContractType);
@@ -88,7 +88,7 @@ public class PhormContractRunnerTests
     public void PhormContractRunner__Anonymous_Gets_contract_info()
     {
         // Act
-        var runner = new PhormContractRunner<IPhormContract>(null!, "objectName", DbObjectType.Table, null);
+        var runner = new PhormContractRunner<IPhormContract>(null!, "objectName", DbObjectType.Table, null, null);
 
         // Assert
         Assert.IsNull(getFieldValue<string>(runner, "_schema"));
@@ -101,14 +101,14 @@ public class PhormContractRunnerTests
     {
         // Act
         Assert.ThrowsException<ArgumentNullException>
-            (() => new PhormContractRunner<IPhormContract>(null!, null, DbObjectType.StoredProcedure, null));
+            (() => new PhormContractRunner<IPhormContract>(null!, null, DbObjectType.StoredProcedure, null, null));
     }
 
     [TestMethod]
     public void PhormContractRunner__Anonymous_Default_objectType_is_StoredProcedure()
     {
         // Act
-        var runner = new PhormContractRunner<IPhormContract>(null!, "objectName", DbObjectType.Default, null);
+        var runner = new PhormContractRunner<IPhormContract>(null!, "objectName", DbObjectType.Default, null, null);
 
         // Assert
         Assert.IsNull(getFieldValue<string>(runner, "_schema"));
@@ -120,7 +120,7 @@ public class PhormContractRunnerTests
     public void PhormContractRunner__Contract__Takes_value()
     {
         // Act
-        var runner = new PhormContractRunner<IContractDTO>(null!, null, DbObjectType.Default, null);
+        var runner = new PhormContractRunner<IContractDTO>(null!, null, DbObjectType.Default, null, null);
 
         // Assert
         Assert.IsNull(getFieldValue<string>(runner, "_schema"));
@@ -132,7 +132,7 @@ public class PhormContractRunnerTests
     public void PhormContractRunner__Contract__Ignores_name_override()
     {
         // Act
-        var runner = new PhormContractRunner<IContractDTO>(null!, "objectName", DbObjectType.Table, null);
+        var runner = new PhormContractRunner<IContractDTO>(null!, "objectName", DbObjectType.Table, null, null);
 
         // Assert
         Assert.IsNull(getFieldValue<string>(runner, "_schema"));
@@ -144,7 +144,7 @@ public class PhormContractRunnerTests
     public void PhormContractRunner__Contract_with_attribute__Takes_values()
     {
         // Act
-        var runner = new PhormContractRunner<IContractWithAttributeDTO>(null!, null, DbObjectType.Default, null);
+        var runner = new PhormContractRunner<IContractWithAttributeDTO>(null!, null, DbObjectType.Default, null, null);
 
         // Assert
         Assert.AreEqual("schema", getFieldValue<string>(runner, "_schema"));
@@ -156,7 +156,7 @@ public class PhormContractRunnerTests
     public void PhormContractRunner__Contract_with_attribute__Ignores_overrides()
     {
         // Act
-        var runner = new PhormContractRunner<IContractWithAttributeDTO>(null!, "objectName", DbObjectType.View, null);
+        var runner = new PhormContractRunner<IContractWithAttributeDTO>(null!, "objectName", DbObjectType.View, null, null);
 
         // Assert
         Assert.AreEqual("schema", getFieldValue<string>(runner, "_schema"));
@@ -168,7 +168,7 @@ public class PhormContractRunnerTests
     public void PhormContractRunner__DataContract__Takes_values()
     {
         // Act
-        var runner = new PhormContractRunner<DataContractDTO>(null!, null, DbObjectType.Default, null);
+        var runner = new PhormContractRunner<DataContractDTO>(null!, null, DbObjectType.Default, null, null);
 
         // Assert
         Assert.AreEqual("schema", getFieldValue<string>(runner, "_schema"));
@@ -180,7 +180,7 @@ public class PhormContractRunnerTests
     public void PhormContractRunner__DataContract__Ignores_name_override()
     {
         // Act
-        var runner = new PhormContractRunner<DataContractDTO>(null!, "objectName", DbObjectType.View, null);
+        var runner = new PhormContractRunner<DataContractDTO>(null!, "objectName", DbObjectType.View, null, null);
 
         // Assert
         Assert.AreEqual("schema", getFieldValue<string>(runner, "_schema"));
@@ -223,7 +223,7 @@ public class PhormContractRunnerTests
 
         var phorm = new TestPhormSession(conn);
 
-        var runner = new PhormContractRunner<IPhormContract>(phorm, "ContractName", DbObjectType.StoredProcedure, new { Arg = 1 });
+        var runner = new PhormContractRunner<IPhormContract>(phorm, "ContractName", DbObjectType.StoredProcedure, new { Arg = 1 }, null);
 
         // Act
         var res = runner.Get<TestDto[]>()!;
@@ -274,7 +274,7 @@ public class PhormContractRunnerTests
 
         var phorm = new TestPhormSession(conn);
 
-        var runner = new PhormContractRunner<IPhormContract>(phorm, "ContractName", DbObjectType.StoredProcedure, new { Arg = 1 });
+        var runner = new PhormContractRunner<IPhormContract>(phorm, "ContractName", DbObjectType.StoredProcedure, new { Arg = 1 }, null);
 
         // Act
         var res = runner.GetAsync<TestDto[]>(CancellationToken.None).Result!;
@@ -327,7 +327,7 @@ public class PhormContractRunnerTests
 
         var phorm = new TestPhormSession(conn);
 
-        var runner = new PhormContractRunner<IPhormContract>(phorm, "ContractName", objType, new { Arg1 = 1, Arg2 = 2 });
+        var runner = new PhormContractRunner<IPhormContract>(phorm, "ContractName", objType, new { Arg1 = 1, Arg2 = 2 }, null);
 
         // Act
         var res = runner.Get<TestDto[]>()!;
@@ -381,7 +381,7 @@ public class PhormContractRunnerTests
 
         var phorm = new TestPhormSession(conn);
 
-        var runner = new PhormContractRunner<IPhormContract>(phorm, "ContractName", objType, new { Arg1 = 1, Arg2 = 2 });
+        var runner = new PhormContractRunner<IPhormContract>(phorm, "ContractName", objType, new { Arg1 = 1, Arg2 = 2 }, null);
 
         // Act
         var res = runner.Get<TestDto[]>()!;
@@ -433,7 +433,7 @@ public class PhormContractRunnerTests
 
         var phorm = new TestPhormSession(conn);
 
-        var runner = new PhormContractRunner<TestContract>(phorm, "ContractName", DbObjectType.StoredProcedure, new TestContract { Arg = 1 });
+        var runner = new PhormContractRunner<TestContract>(phorm, "ContractName", DbObjectType.StoredProcedure, new TestContract { Arg = 1 }, null);
 
         // Act
         var res = runner.Get<TestDto[]>()!;
@@ -484,7 +484,7 @@ public class PhormContractRunnerTests
 
         var phorm = new TestPhormSession(conn);
 
-        var runner = new PhormContractRunner<TestContract>(phorm, "ContractName", DbObjectType.StoredProcedure, new TestContract { Arg = 1 });
+        var runner = new PhormContractRunner<TestContract>(phorm, "ContractName", DbObjectType.StoredProcedure, new TestContract { Arg = 1 }, null);
 
         // Act
         var res = runner.GetAsync<TestDto[]>(CancellationToken.None).Result!;
@@ -537,7 +537,7 @@ public class PhormContractRunnerTests
 
         var phorm = new TestPhormSession(conn);
 
-        var runner = new PhormContractRunner<TestContract>(phorm, "ContractName", objType, new TestContract { Arg = 1 });
+        var runner = new PhormContractRunner<TestContract>(phorm, "ContractName", objType, new TestContract { Arg = 1 }, null);
 
         // Act
         var res = runner.Get<TestDto[]>()!;
@@ -590,7 +590,7 @@ public class PhormContractRunnerTests
 
         var phorm = new TestPhormSession(conn);
 
-        var runner = new PhormContractRunner<TestContract>(phorm, "ContractName", objType, new TestContract { Arg = 1 });
+        var runner = new PhormContractRunner<TestContract>(phorm, "ContractName", objType, new TestContract { Arg = 1 }, null);
 
         // Act
         var res = runner.GetAsync<TestDto[]>(CancellationToken.None).Result!;
@@ -662,7 +662,7 @@ public class PhormContractRunnerTests
 
         var dto = new TestContract { Arg = 100, Arg3 = "secure_value" };
 
-        var runner = new PhormContractRunner<ISecureTestContract>(phorm, null, DbObjectType.Default, dto);
+        var runner = new PhormContractRunner<ISecureTestContract>(phorm, null, DbObjectType.Default, dto, null);
 
         // Act
         var res = runner.Get<TestSecureDto[]>()!;
@@ -711,7 +711,7 @@ public class PhormContractRunnerTests
 
         var phorm = new TestPhormSession(conn);
 
-        var runner = new PhormContractRunner<TestContract>(phorm, "ContractName", DbObjectType.StoredProcedure, new TestContract { Arg = 1 });
+        var runner = new PhormContractRunner<TestContract>(phorm, "ContractName", DbObjectType.StoredProcedure, new TestContract { Arg = 1 }, null);
 
         // Act
         var res = runner.GetAsync<IEnumerable<TestDto>>(CancellationToken.None).Result!;
@@ -767,13 +767,13 @@ public class PhormContractRunnerTests
 
         var phorm = new TestPhormSession(conn);
 
-        var runner = new PhormContractRunner<TestContract>(phorm, "ContractName", DbObjectType.StoredProcedure, new TestContract { Arg = 1 });
+        var runner = new PhormContractRunner<TestContract>(phorm, "ContractName", DbObjectType.StoredProcedure, new TestContract { Arg = 1 }, null);
 
         // Act
         var res = runner.GetAsync<ICollection<TestDto>>(CancellationToken.None).Result!;
 
         // Assert
-        Assert.AreEqual(3, res.Count());
+        Assert.AreEqual(3, res.Count);
         Assert.AreEqual(3, getUnresolvedEntityCount(res));
         Assert.AreEqual(CommandType.StoredProcedure, cmd.CommandType);
         Assert.AreEqual("[schema].[usp_TestContract]", cmd.CommandText);
@@ -812,7 +812,7 @@ public class PhormContractRunnerTests
 
         var phorm = new TestPhormSession(conn);
 
-        var runner = new PhormContractRunner<IPhormContract>(phorm, "ContractName", DbObjectType.StoredProcedure, new { Arg = 1 });
+        var runner = new PhormContractRunner<IPhormContract>(phorm, "ContractName", DbObjectType.StoredProcedure, new { Arg = 1 }, null);
 
         // Act
         var obj = runner.Get<TestDto>()!;
@@ -848,7 +848,7 @@ public class PhormContractRunnerTests
 
         var phorm = new TestPhormSession(conn);
 
-        var runner = new PhormContractRunner<IPhormContract>(phorm, "ContractName", DbObjectType.StoredProcedure, new { Arg = 1 });
+        var runner = new PhormContractRunner<IPhormContract>(phorm, "ContractName", DbObjectType.StoredProcedure, new { Arg = 1 }, null);
 
         // Act
         Assert.ThrowsException<InvalidOperationException>
@@ -885,7 +885,7 @@ public class PhormContractRunnerTests
             StrictResultSize = false
         };
 
-        var runner = new PhormContractRunner<IPhormContract>(phorm, "ContractName", DbObjectType.StoredProcedure, new { Arg = 1 });
+        var runner = new PhormContractRunner<IPhormContract>(phorm, "ContractName", DbObjectType.StoredProcedure, new { Arg = 1 }, null);
 
         // Act
         var res = runner.Get<TestDto>()!;
@@ -917,7 +917,7 @@ public class PhormContractRunnerTests
 
         var phorm = new TestPhormSession(conn);
 
-        var runner = new PhormContractRunner<IPhormContract>(phorm, "ContractName", DbObjectType.StoredProcedure, new { Arg = 1 });
+        var runner = new PhormContractRunner<IPhormContract>(phorm, "ContractName", DbObjectType.StoredProcedure, new { Arg = 1 }, null);
 
         // Act
         var res = runner.Get<TestDto>()!;
@@ -957,7 +957,7 @@ public class PhormContractRunnerTests
 
         var phorm = new TestPhormSession(conn);
 
-        var runner = new PhormContractRunner<IPhormContract>(phorm, "ContractName", DbObjectType.StoredProcedure, new { Arg = 1 });
+        var runner = new PhormContractRunner<IPhormContract>(phorm, "ContractName", DbObjectType.StoredProcedure, new { Arg = 1 }, null);
 
         // Act
         var res = runner.GetAsync<TestDto>(CancellationToken.None).Result!;
@@ -999,7 +999,7 @@ public class PhormContractRunnerTests
 
         var phorm = new TestPhormSession(conn);
 
-        var runner = new PhormContractRunner<IPhormContract>(phorm, "ContractName", objType, new { Arg1 = 1, Arg2 = 2 });
+        var runner = new PhormContractRunner<IPhormContract>(phorm, "ContractName", objType, new { Arg1 = 1, Arg2 = 2 }, null);
 
         // Act
         var res = runner.Get<TestDto>()!;
@@ -1042,7 +1042,7 @@ public class PhormContractRunnerTests
 
         var phorm = new TestPhormSession(conn);
 
-        var runner = new PhormContractRunner<IPhormContract>(phorm, "ContractName", objType, new { Arg1 = 1, Arg2 = 2 });
+        var runner = new PhormContractRunner<IPhormContract>(phorm, "ContractName", objType, new { Arg1 = 1, Arg2 = 2 }, null);
 
         // Act
         var res = runner.Get<TestDto>()!;
@@ -1083,7 +1083,7 @@ public class PhormContractRunnerTests
 
         var phorm = new TestPhormSession(conn);
 
-        var runner = new PhormContractRunner<TestContract>(phorm, "ContractName", DbObjectType.StoredProcedure, new TestContract { Arg = 1 });
+        var runner = new PhormContractRunner<TestContract>(phorm, "ContractName", DbObjectType.StoredProcedure, new TestContract { Arg = 1 }, null);
 
         // Act
         var res = runner.Get<TestDto>()!;
@@ -1123,7 +1123,7 @@ public class PhormContractRunnerTests
 
         var phorm = new TestPhormSession(conn);
 
-        var runner = new PhormContractRunner<TestContract>(phorm, "ContractName", DbObjectType.StoredProcedure, new TestContract { Arg = 1 });
+        var runner = new PhormContractRunner<TestContract>(phorm, "ContractName", DbObjectType.StoredProcedure, new TestContract { Arg = 1 }, null);
 
         // Act
         var res = runner.GetAsync<TestDto>(CancellationToken.None).Result!;
@@ -1165,7 +1165,7 @@ public class PhormContractRunnerTests
 
         var phorm = new TestPhormSession(conn);
 
-        var runner = new PhormContractRunner<TestContract>(phorm, "ContractName", objType, new TestContract { Arg = 1 });
+        var runner = new PhormContractRunner<TestContract>(phorm, "ContractName", objType, new TestContract { Arg = 1 }, null);
 
         // Act
         var res = runner.Get<TestDto>()!;
@@ -1207,7 +1207,7 @@ public class PhormContractRunnerTests
 
         var phorm = new TestPhormSession(conn);
 
-        var runner = new PhormContractRunner<TestContract>(phorm, "ContractName", objType, new TestContract { Arg = 1 });
+        var runner = new PhormContractRunner<TestContract>(phorm, "ContractName", objType, new TestContract { Arg = 1 }, null);
 
         // Act
         var res = runner.GetAsync<TestDto>(CancellationToken.None).Result!;
@@ -1271,7 +1271,7 @@ public class PhormContractRunnerTests
 
         var dto = new TestContract { Arg = 100, Arg3 = "secure_value" };
 
-        var runner = new PhormContractRunner<ISecureTestContract>(phorm, null, DbObjectType.Default, dto);
+        var runner = new PhormContractRunner<ISecureTestContract>(phorm, null, DbObjectType.Default, dto, null);
 
         // Act
         var res = runner.Get<TestSecureDto>()!;
@@ -1322,7 +1322,7 @@ public class PhormContractRunnerTests
 
         var arg = new ConsoleLogContract { Arg = 1 };
 
-        var runner = new PhormContractRunner<IConsoleLogContract>(phorm, null, DbObjectType.Default, arg);
+        var runner = new PhormContractRunner<IConsoleLogContract>(phorm, null, DbObjectType.Default, arg, null);
 
         // Act
         _ = runner.GetAsync<object>(CancellationToken.None).Result;
@@ -1361,7 +1361,7 @@ public class PhormContractRunnerTests
             ConsoleLogs = ContractMember.Console()
         };
 
-        var runner = new PhormContractRunner<IConsoleLogContract>(phorm, null, DbObjectType.Default, arg);
+        var runner = new PhormContractRunner<IConsoleLogContract>(phorm, null, DbObjectType.Default, arg, null);
 
         // Act
         _ = runner.GetAsync<object>(CancellationToken.None).Result;

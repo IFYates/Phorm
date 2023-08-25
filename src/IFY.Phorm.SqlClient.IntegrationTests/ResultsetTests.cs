@@ -10,16 +10,16 @@ public class ResultsetTests : SqlIntegrationTestBase
     public class ManyParentDTO
     {
         public long Id { get; set; }
-        public string Name { get; set; }
+        public string Name { get; set; } = null!;
 
         [Resultset(0, nameof(ChildrenMatcher))]
-        public ChildDTO[] Children { get; set; }
+        public ChildDTO[] Children { get; set; } = null!;
         public static RecordMatcher<ManyParentDTO, ChildDTO> ChildrenMatcher => new((p, c) => c.ParentId == p.Id);
     }
     public class OneParentDTO
     {
         public long Id { get; set; }
-        public string Name { get; set; }
+        public string Name { get; set; } = null!;
 
         [Resultset(0, nameof(ChildrenMatcher))]
         public ChildDTO? Child { get; set; }
@@ -28,16 +28,16 @@ public class ResultsetTests : SqlIntegrationTestBase
     public class EveryParentDTO
     {
         public long Id { get; set; }
-        public string Name { get; set; }
+        public string Name { get; set; } = null!;
 
         [Resultset(0)]
-        public ChildDTO[] Children { get; set; }
+        public ChildDTO[] Children { get; set; } = null!;
     }
     public class ChildDTO
     {
         public long Id { get; set; }
         public long ParentId { get; set; }
-        public string Name { get; set; }
+        public string Name { get; set; } = null!;
     }
 
     public interface IGetFamily : IPhormContract

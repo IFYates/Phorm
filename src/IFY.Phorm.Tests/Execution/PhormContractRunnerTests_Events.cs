@@ -88,7 +88,7 @@ public class PhormContractRunnerTests_Events
         _globalCommandExecuted = eventInvokeFail;
 
         var runner = new PhormContractRunner<IPhormContract>(phorm, "CallTest", DbObjectType.StoredProcedure,
-            new { Arg1 = 1, Arg2 = "2" });
+            new { Arg1 = 1, Arg2 = "2" }, null);
 
         // Act
         _ = (NotImplementedException)Assert.ThrowsException<AggregateException>
@@ -149,7 +149,7 @@ public class PhormContractRunnerTests_Events
         };
 
         var runner = new PhormContractRunner<IPhormContract>(phorm, "CallTest", DbObjectType.StoredProcedure,
-            new { Arg1 = 1, Arg2 = "2" });
+            new { Arg1 = 1, Arg2 = "2" }, null);
 
         // Act
         var res = runner.CallAsync(CancellationToken.None).Result;
@@ -200,7 +200,7 @@ public class PhormContractRunnerTests_Events
         _globalCommandExecuted = eventInvokeFail;
 
         var runner = new PhormContractRunner<IPhormContract>(phorm, "CallTest", DbObjectType.StoredProcedure,
-            new { Arg1 = 1, Arg2 = "2" });
+            new { Arg1 = 1, Arg2 = "2" }, null);
 
         // Act
         Assert.ThrowsException<NotImplementedException>
@@ -271,7 +271,7 @@ public class PhormContractRunnerTests_Events
         };
 
         var runner = new PhormContractRunner<IPhormContract>(phorm, "CallTest", DbObjectType.StoredProcedure,
-            new { Arg1 = 1, Arg2 = "2" });
+            new { Arg1 = 1, Arg2 = "2" }, null);
 
         // Act
         var res = runner.Get<object[]>()!;
@@ -342,7 +342,7 @@ public class PhormContractRunnerTests_Events
         };
 
         var runner = new PhormContractRunner<IPhormContract>(phorm, "CallTest", DbObjectType.StoredProcedure,
-            new { Arg1 = 1, Arg2 = "2" });
+            new { Arg1 = 1, Arg2 = "2" }, null);
 
         // Act
         var res = runner.Get<TestEntity[]>()!;
@@ -406,7 +406,7 @@ public class PhormContractRunnerTests_Events
         };
 
         var runner = new PhormContractRunner<IPhormContract>(phorm, "CallTest", DbObjectType.StoredProcedure,
-            new { Arg1 = 1, Arg2 = "2" });
+            new { Arg1 = 1, Arg2 = "2" }, null);
 
         // Act
         var res = runner.Get<TestEntity>()!;
@@ -455,7 +455,7 @@ public class PhormContractRunnerTests_Events
         phorm.ConsoleMessages.Add(new ConsoleMessage { Message = "Message2" });
         phorm.ConsoleMessages.Add(new ConsoleMessage { Message = "Message3" });
 
-        var runner = new PhormContractRunner<IPhormContract>(phorm, "Test", DbObjectType.Default, null);
+        var runner = new PhormContractRunner<IPhormContract>(phorm, "Test", DbObjectType.Default, null, null);
 
         // Act
         var res = runner.CallAsync(CancellationToken.None).Result;
@@ -502,7 +502,7 @@ public class PhormContractRunnerTests_Events
         phorm.ConsoleMessages.Add(new ConsoleMessage { Message = "Message2" });
         phorm.ConsoleMessages.Add(new ConsoleMessage { Message = "Message3" });
 
-        var runner = new PhormContractRunner<IPhormContract>(phorm, "Test", DbObjectType.Default, null);
+        var runner = new PhormContractRunner<IPhormContract>(phorm, "Test", DbObjectType.Default, null, null);
 
         // Act
         _ = runner.GetAsync<object>(CancellationToken.None).Result;

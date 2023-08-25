@@ -89,7 +89,7 @@ public class PhormContractRunner
 
         var phorm = new TestPhormSession(conn);
 
-        var parent = new PhormContractRunner<IPhormContract>(phorm, "ContractName", DbObjectType.StoredProcedure, new { Arg = 1 });
+        var parent = new PhormContractRunner<IPhormContract>(phorm, "ContractName", DbObjectType.StoredProcedure, new { Arg = 1 }, null);
         var runner = parent.Where<TestDto>(o => o.Value != "value3");
 
         // Act
@@ -148,7 +148,7 @@ public class PhormContractRunner
 
         var phorm = new TestPhormSession(conn);
 
-        var parent = new PhormContractRunner<IPhormContract>(phorm, "ContractName", DbObjectType.StoredProcedure, null);
+        var parent = new PhormContractRunner<IPhormContract>(phorm, "ContractName", DbObjectType.StoredProcedure, null, null);
         var runner = parent.Where<IDto, GenSpec<IDto, BaseDto, TestDto>>(o => o.Value != "valueX");
 
         // Act
@@ -184,7 +184,7 @@ public class PhormContractRunner
 
         var phorm = new TestPhormSession(conn);
 
-        var parent = new PhormContractRunner<IPhormContract>(phorm, "ContractName", DbObjectType.StoredProcedure, null);
+        var parent = new PhormContractRunner<IPhormContract>(phorm, "ContractName", DbObjectType.StoredProcedure, null, null);
         var runner = parent.Where<IDto, GenSpec<IDto, BaseDto>>(o => o.Value != "valueX");
 
         // Act
@@ -217,7 +217,7 @@ public class PhormContractRunner
 
         var phorm = new TestPhormSession(conn);
 
-        var parent = new PhormContractRunner<IPhormContract>(phorm, "ContractName", DbObjectType.StoredProcedure, null);
+        var parent = new PhormContractRunner<IPhormContract>(phorm, "ContractName", DbObjectType.StoredProcedure, null, null);
         var runner = parent.Where<BaseDto, GenSpec<BaseDto, TestDto>>(o => o.Value != "valueX");
 
         // Act
@@ -259,7 +259,7 @@ public class PhormContractRunner
 
         var phorm = new TestPhormSession(conn);
 
-        var parent = new PhormContractRunner<IPhormContract>(phorm, "ContractName", DbObjectType.StoredProcedure, new { Arg = 1 });
+        var parent = new PhormContractRunner<IPhormContract>(phorm, "ContractName", DbObjectType.StoredProcedure, new { Arg = 1 }, null);
         var runner = parent.Where<TestDto>(o => o.Value != "value3");
 
         var token = new CancellationToken(true);
