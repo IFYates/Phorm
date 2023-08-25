@@ -71,7 +71,7 @@ public class GenSpecTests
 
         var phorm = new TestPhormSession(conn);
 
-        return new PhormContractRunner<IPhormContract>(phorm, "ContractName", DbObjectType.StoredProcedure, null);
+        return new PhormContractRunner<IPhormContract>(phorm, "ContractName", DbObjectType.StoredProcedure, null, null);
     }
 
     [TestInitialize]

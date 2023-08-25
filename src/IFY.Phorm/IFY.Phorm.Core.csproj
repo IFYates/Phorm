@@ -44,14 +44,14 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+        <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
         <PackageReference Include="IFY.Shimr" Version="2.0.1" />
         <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
     </ItemGroup>
 
     <Target Name="PreparePackageReleaseNotesFromFile" BeforeTargets="GenerateNuspec">
-        <ReadLinesFromFile File="../RELEASE_NOTES.txt" >
-            <Output TaskParameter="Lines" ItemName="ReleaseNoteLines"/>
+        <ReadLinesFromFile File="../RELEASE_NOTES.txt">
+            <Output TaskParameter="Lines" ItemName="ReleaseNoteLines" />
         </ReadLinesFromFile>
         <PropertyGroup>
             <PackageReleaseNotes>@(ReleaseNoteLines, '%0a')</PackageReleaseNotes>

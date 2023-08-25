@@ -46,7 +46,7 @@
 
     <ItemGroup>
         <PackageReference Include="IFY.Shimr" Version="2.0.1" />
-        <PackageReference Include="Microsoft.Data.SqlClient" Version="5.0.1" />
+        <PackageReference Include="Microsoft.Data.SqlClient" Version="5.1.1" />
         <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
     </ItemGroup>
 

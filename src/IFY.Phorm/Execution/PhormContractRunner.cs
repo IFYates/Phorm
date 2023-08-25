@@ -12,18 +12,20 @@ internal sealed partial class PhormContractRunner<TActionContract> : IPhormContr
     where TActionContract : IPhormContract
 {
     private readonly AbstractPhormSession _session;
+    private readonly IDbTransaction? _transaction;
     private readonly string? _schema;
     private readonly string _objectName;
-    private readonly DbObjectType _objectType;
     private readonly object? _runArgs;
+    private readonly DbObjectType _objectType;
 
-    public PhormContractRunner(AbstractPhormSession session, string? objectName, DbObjectType objectType, object? args)
-        : this(session, typeof(TActionContract), objectName, objectType, args)
+    public PhormContractRunner(AbstractPhormSession session, string? objectName, DbObjectType objectType, object? args, IDbTransaction? transaction)
+        : this(session, typeof(TActionContract), objectName, objectType, args, transaction)
     {
     }
-    public PhormContractRunner(AbstractPhormSession session, Type contractType, string? objectName, DbObjectType objectType, object? args)
+    public PhormContractRunner(AbstractPhormSession session, Type contractType, string? objectName, DbObjectType objectType, object? args, IDbTransaction? transaction)
     {
         _session = session;
+        _transaction = transaction;
 
         contractType = contractType.IsArray ? contractType.GetElementType()! : contractType;
         var contractName = contractType.Name;
@@ -85,6 +87,7 @@ internal sealed partial class PhormContractRunner<TActionContract> : IPhormContr
     {
         members = ContractMember.GetMembersFromContract(_runArgs, typeof(TActionContract), true);
         var cmd = _session.CreateCommand(_schema, _objectName, _objectType);
+        cmd.Transaction = _transaction;
 
         // Build WHERE clause from members
         if (_objectType is DbObjectType.Table or DbObjectType.View)

@@ -60,7 +60,7 @@ public class PhormContractRunnerTests_Resultsets
         // Arrange
         var phorm = new TestPhormSession();
 
-        var runner = new PhormContractRunner<ITestContract>(phorm, "ContractName", DbObjectType.StoredProcedure, null);
+        var runner = new PhormContractRunner<ITestContract>(phorm, "ContractName", DbObjectType.StoredProcedure, null, null);
 
         // Act
         var ex = Assert.ThrowsException<MissingMethodException>(() =>
@@ -78,7 +78,7 @@ public class PhormContractRunnerTests_Resultsets
         // Arrange
         var phorm = new TestPhormSession();
 
-        var runner = new PhormContractRunner<ITestContract>(phorm, "ContractName", DbObjectType.StoredProcedure, null);
+        var runner = new PhormContractRunner<ITestContract>(phorm, "ContractName", DbObjectType.StoredProcedure, null, null);
 
         // Act
         var ex = (MissingMethodException)Assert.ThrowsException<AggregateException>(() =>
@@ -129,7 +129,7 @@ public class PhormContractRunnerTests_Resultsets
 
         var phorm = new TestPhormSession(conn);
 
-        var runner = new PhormContractRunner<ITestContract>(phorm, "ContractName", DbObjectType.StoredProcedure, null);
+        var runner = new PhormContractRunner<ITestContract>(phorm, "ContractName", DbObjectType.StoredProcedure, null, null);
 
         // Act
         var res = runner.GetAsync<TestParent[]>(CancellationToken.None).Result!;
@@ -174,7 +174,7 @@ public class PhormContractRunnerTests_Resultsets
 
         var phorm = new TestPhormSession(conn);
 
-        var runner = new PhormContractRunner<ITestContract>(phorm, "ContractName", DbObjectType.StoredProcedure, null);
+        var runner = new PhormContractRunner<ITestContract>(phorm, "ContractName", DbObjectType.StoredProcedure, null, null);
 
         // Act
         var ex = (InvalidDataContractException)Assert.ThrowsException<AggregateException>(() =>
@@ -225,7 +225,7 @@ public class PhormContractRunnerTests_Resultsets
 
         var phorm = new TestPhormSession(conn);
 
-        var runner = new PhormContractRunner<ITestContract>(phorm, "ContractName", DbObjectType.StoredProcedure, null);
+        var runner = new PhormContractRunner<ITestContract>(phorm, "ContractName", DbObjectType.StoredProcedure, null, null);
 
         // Act
         var res = runner.GetAsync<TestParent>(CancellationToken.None).Result;
@@ -276,7 +276,7 @@ public class PhormContractRunnerTests_Resultsets
 
         var phorm = new TestPhormSession(conn);
 
-        var runner = new PhormContractRunner<ITestContract>(phorm, "ContractName", DbObjectType.StoredProcedure, null);
+        var runner = new PhormContractRunner<ITestContract>(phorm, "ContractName", DbObjectType.StoredProcedure, null, null);
 
         // Act
         var ex = (InvalidCastException)Assert.ThrowsException<AggregateException>(() =>
@@ -322,7 +322,7 @@ public class PhormContractRunnerTests_Resultsets
 
         var phorm = new TestPhormSession(conn);
 
-        var runner = new PhormContractRunner<ITestContract>(phorm, "ContractName", DbObjectType.StoredProcedure, null);
+        var runner = new PhormContractRunner<ITestContract>(phorm, "ContractName", DbObjectType.StoredProcedure, null, null);
 
         // Act
         var res = runner.GetAsync<TestParent>(CancellationToken.None).Result;
