@@ -1,3 +1,7 @@
+v1.7.3.1
+- Update of dependencies
+- Dropped out-of-support frameworks
+
 v1.7.3
 - #45: Fix regression of bug
 

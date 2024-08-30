@@ -1,10 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFrameworks>netstandard2.1;net6.0</TargetFrameworks>
+        <TargetFrameworks>netstandard2.1;net8.0</TargetFrameworks>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
-        <LangVersion>11.0</LangVersion>
+        <LangVersion>latest</LangVersion>
         <RootNamespace>IFY.Phorm</RootNamespace>
         <AssemblyName>IFY.Phorm</AssemblyName>
 
@@ -21,7 +21,7 @@
         <PackageProjectUrl>https://github.com/IFYates/Phorm</PackageProjectUrl>
         <RepositoryUrl>https://github.com/IFYates/Phorm</RepositoryUrl>
         <RepositoryType>GitHub</RepositoryType>
-        <Version>1.7.3</Version>
+        <Version>1.7.3.1</Version>
         <Copyright>(c) IFYates</Copyright>
         <Description>
             The core "Procedure-heavy object-relational mapping" framework.
@@ -45,8 +45,8 @@
 
     <ItemGroup>
         <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-        <PackageReference Include="IFY.Shimr" Version="2.0.1" />
-        <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
+        <PackageReference Include="IFY.Shimr" Version="2.0.2" />
+        <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
     </ItemGroup>
 
     <Target Name="PreparePackageReleaseNotesFromFile" BeforeTargets="GenerateNuspec">
