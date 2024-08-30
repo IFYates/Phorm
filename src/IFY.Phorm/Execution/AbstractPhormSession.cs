@@ -5,12 +5,13 @@ using System.Data;
 
 namespace IFY.Phorm.Execution;
 
-public abstract class AbstractPhormSession : IPhormSession
+/// <inheritdoc/>
+public abstract class AbstractPhormSession(string databaseConnectionString, string? connectionName) : IPhormSession
 {
-    protected readonly string _databaseConnectionString;
+    protected readonly string _databaseConnectionString = databaseConnectionString;
 
     /// <inheritdoc/>
-    public string? ConnectionName { get; private set; }
+    public string? ConnectionName { get; private set; } = connectionName;
 
     public string ProcedurePrefix
     {
@@ -98,16 +99,9 @@ public abstract class AbstractPhormSession : IPhormSession
     /// <inheritdoc/>
     public bool StrictResultSize { get; set; } = GlobalSettings.StrictResultSize;
 
-    /// <inheritdoc/>
-    protected AbstractPhormSession(string databaseConnectionString, string? connectionName)
-    {
-        _databaseConnectionString = databaseConnectionString;
-        ConnectionName = connectionName;
-    }
-
     #region Connection
 
-    private static readonly Dictionary<string, IPhormDbConnection> _connectionPool = new();
+    private static readonly Dictionary<string, IPhormDbConnection> _connectionPool = [];
     internal static void ResetConnectionPool()
     {
         lock (_connectionPool)

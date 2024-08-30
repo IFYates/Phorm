@@ -23,7 +23,7 @@ partial class PhormContractRunner<TActionContract>
             // Runtime checks for type-safety
             if (typeof(TResult) == typeof(IEnumerable<TEntity>))
             {
-                if (typeof(TEntity).GetConstructor(Array.Empty<Type>()) == null)
+                if (typeof(TEntity).GetConstructor([]) == null)
                 {
                     throw new ArgumentException($"Type argument TResult for FilteredContractRunner must have a public default constructor.");
                 }

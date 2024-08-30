@@ -6,54 +6,48 @@ namespace IFY.Phorm.Connectivity;
 /// <summary>
 /// Wraps <see cref="IDbConnection"/> with additional Pho/rm values.
 /// </summary>
-public sealed class PhormDbConnection : IPhormDbConnection
+public sealed class PhormDbConnection(string? connectionName, IDbConnection dbConnection)
+    : IPhormDbConnection
 {
-    private readonly IDbConnection _db;
     /// <inheritdoc/>
-    public IDbConnection DbConnection => _db;
+    public IDbConnection DbConnection => dbConnection;
 
     /// <inheritdoc/>
-    public string? ConnectionName { get; }
+    public string? ConnectionName { get; } = connectionName;
     /// <inheritdoc/>
     public string DefaultSchema { get; set; } = string.Empty;
 
     /// <inheritdoc/>
-    [System.Diagnostics.CodeAnalysis.AllowNull] public string ConnectionString { get => _db.ConnectionString; set => _db.ConnectionString = value; }
+    [System.Diagnostics.CodeAnalysis.AllowNull] public string ConnectionString { get => dbConnection.ConnectionString; set => dbConnection.ConnectionString = value; }
     /// <inheritdoc/>
-    public int ConnectionTimeout => _db.ConnectionTimeout;
+    public int ConnectionTimeout => dbConnection.ConnectionTimeout;
     /// <inheritdoc/>
-    public string Database => _db.Database;
+    public string Database => dbConnection.Database;
     /// <inheritdoc/>
-    public ConnectionState State => _db.State;
-
-    public PhormDbConnection(string? connectionName, IDbConnection dbConnection)
-    {
-        ConnectionName = connectionName;
-        _db = dbConnection;
-    }
+    public ConnectionState State => dbConnection.State;
 
     /// <inheritdoc/>
-    public IDbTransaction BeginTransaction() => _db.BeginTransaction();
+    public IDbTransaction BeginTransaction() => dbConnection.BeginTransaction();
     /// <inheritdoc/>
-    public IDbTransaction BeginTransaction(IsolationLevel il) => _db.BeginTransaction(il);
+    public IDbTransaction BeginTransaction(IsolationLevel il) => dbConnection.BeginTransaction(il);
 
     /// <inheritdoc/>
-    public void ChangeDatabase(string databaseName) => _db.ChangeDatabase(databaseName);
+    public void ChangeDatabase(string databaseName) => dbConnection.ChangeDatabase(databaseName);
 
     /// <inheritdoc/>
     public void Open()
     {
-        if (_db.State != ConnectionState.Open)
+        if (dbConnection.State != ConnectionState.Open)
         {
-            _db.Open();
+            dbConnection.Open();
         }
     }
     /// <inheritdoc/>
     public void Close()
     {
-        if (_db.State != ConnectionState.Closed)
+        if (dbConnection.State != ConnectionState.Closed)
         {
-            _db.Close();
+            dbConnection.Close();
         }
     }
 
@@ -63,9 +57,9 @@ public sealed class PhormDbConnection : IPhormDbConnection
     IDbCommand IDbConnection.CreateCommand()
     {
         Open();
-        return _db.CreateCommand();
+        return dbConnection.CreateCommand();
     }
 
     /// <inheritdoc/>
-    public void Dispose() => _db.Dispose();
+    public void Dispose() => dbConnection.Dispose();
 }

@@ -19,7 +19,7 @@ public abstract class GenSpecBase
                 .ToDictionary(m => m.DbName.ToUpperInvariant());
             if (attr != null)
             {
-                GenProperty = Members.Values.FirstOrDefault(m => m.SourceMember!.Name.ToUpperInvariant() == attr.GenProperty.ToUpperInvariant());
+                GenProperty = Members.Values.FirstOrDefault(m => m.SourceMember!.Name.Equals(attr.GenProperty, StringComparison.InvariantCultureIgnoreCase));
                 SpecValue = attr.PropertyValue;
             }
             else
@@ -56,7 +56,7 @@ public class GenSpecBase<TBase> : GenSpecBase
 {
     public int Count() => _data.Count();
 
-    private IEnumerable<TBase> _data = Array.Empty<TBase>();
+    private IEnumerable<TBase> _data = [];
 
     protected GenSpecBase()
     { }

@@ -11,7 +11,7 @@ internal interface IEntityList : IEnumerable
 internal class EntityList<TEntity> : IEntityList, IEnumerable<TEntity>, ICollection<TEntity>
 {
     private readonly Queue<Func<TEntity>> _resolvers = new();
-    private readonly List<TEntity> _entities = new();
+    private readonly List<TEntity> _entities = [];
 
     public int Count => _entities.Count + _resolvers.Count;
 
@@ -50,7 +50,7 @@ internal class EntityList<TEntity> : IEntityList, IEnumerable<TEntity>, ICollect
         // Resolve unresolved entities
         while (_resolvers.Count > 0)
         {
-            var entity = (TEntity)_resolvers!.Dequeue().Invoke();
+            var entity = _resolvers!.Dequeue().Invoke();
             _entities.Add(entity);
             yield return entity;
         }

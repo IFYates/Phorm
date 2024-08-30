@@ -5,17 +5,10 @@ public interface IRecordMatcher
     bool IsMatch(object parent, object child);
 }
 
-public class RecordMatcher<TParent, TChild> : IRecordMatcher
+public class RecordMatcher<TParent, TChild>(Func<TParent, TChild, bool> matcher) : IRecordMatcher
     where TParent : class
     where TChild : class
 {
-    private readonly Func<TParent, TChild, bool> _matcher;
-
-    public RecordMatcher(Func<TParent, TChild, bool> matcher)
-    {
-        _matcher = matcher;
-    }
-
     bool IRecordMatcher.IsMatch(object parent, object child)
     {
         var typedParent = parent as TParent ?? throw new InvalidCastException($"Parent entity type '{parent.GetType().FullName}' could not be used for matcher expecting type '{typeof(TParent).FullName}'.");
@@ -24,6 +17,6 @@ public class RecordMatcher<TParent, TChild> : IRecordMatcher
     }
     public bool IsMatch(TParent parent, TChild child)
     {
-        return _matcher(parent, child);
+        return matcher(parent, child);
     }
 }

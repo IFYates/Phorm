@@ -66,6 +66,7 @@ public class ContractMemberTests
 
         [ContractMember]
         public string Value4() => "X"; // Ignored by default through interface
+        [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Test member")]
         public string Value5() => "Y"; // Ignored
     }
     interface IContractWithMethodMember
@@ -751,8 +752,10 @@ public class ContractMemberTests
 
     public class TestTransphormAttribute : AbstractTransphormAttribute
     {
-        public static object? FromDatasourceReturnValue = null;
-        public static object? ToDatasourceReturnValue = null;
+#pragma warning disable CA2211 // Non-constant fields should not be visible
+        public static object? FromDatasourceReturnValue;
+        public static object? ToDatasourceReturnValue;
+#pragma warning restore CA2211 // Non-constant fields should not be visible
 
         public override object? FromDatasource(Type type, object? data, object? context)
             => FromDatasourceReturnValue;
@@ -765,19 +768,13 @@ public class ContractMemberTests
 
     class TestSecureAttribute : AbstractSecureValueAttribute
     {
-        public override byte[] Decrypt(byte[]? value, object? context)
-        {
-            return new byte[] { 1 };
-        }
+        public override byte[] Decrypt(byte[]? value, object? context) => [1];
 
-        public override byte[] Encrypt(object? value, object? context)
-        {
-            return new byte[] { 2 };
-        }
+        public override byte[] Encrypt(object? value, object? context) => [2];
     }
 
     [TestSecure]
-    public byte[] SecureDataProperty { get; set; } = Array.Empty<byte>();
+    public byte[] SecureDataProperty { get; set; } = [];
 
     [TestMethod]
     public void TryFromDatasource__DBNull_is_null()

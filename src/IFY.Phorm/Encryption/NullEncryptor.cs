@@ -13,9 +13,9 @@ namespace IFY.Phorm.Encryption;
 public class NullEncryptor : IEncryptor
 {
     /// <inheritdoc/>
-    public byte[] Authenticator { get => Array.Empty<byte>(); set => _ = value; /* NOOP */  }
+    public byte[] Authenticator { get => []; set => _ = value; /* NOOP */  }
     /// <inheritdoc/>
-    public byte[] InitialVector { get => Array.Empty<byte>(); set => _ = value; /* NOOP */  }
+    public byte[] InitialVector { get => []; set => _ = value; /* NOOP */  }
 
     /// <inheritdoc/>
     public byte[] Encrypt(byte[] data) => data;

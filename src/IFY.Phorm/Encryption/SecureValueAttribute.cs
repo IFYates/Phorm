@@ -19,7 +19,7 @@ public class SecureValueAttribute : AbstractSecureValueAttribute
     private static readonly object _lock = 1;
     private static PropertyInfo? _lastProperty;
     private static object? _lastInstance;
-    private static byte[] _lastValue = Array.Empty<byte>();
+    private static byte[] _lastValue = [];
 
     /// <summary>
     /// This contract property represents a value that is stored encrypted.
@@ -44,7 +44,7 @@ public class SecureValueAttribute : AbstractSecureValueAttribute
     {
         if (context == null || propertyName == null)
         {
-            return Array.Empty<byte>();
+            return [];
         }
         if (_lastInstance != context)
         {
@@ -75,7 +75,7 @@ public class SecureValueAttribute : AbstractSecureValueAttribute
     {
         if (value == null)
         {
-            return Array.Empty<byte>();
+            return [];
         }
 
         if (GlobalSettings.EncryptionProvider == null)
@@ -99,7 +99,7 @@ public class SecureValueAttribute : AbstractSecureValueAttribute
     {
         if (value == null)
         {
-            return Array.Empty<byte>();
+            return [];
         }
         var bytes = value.GetBytes();
 

@@ -15,5 +15,5 @@ public sealed class UnresolvedContractMemberEventArgs : System.EventArgs
     /// <summary>
     /// The list of member names that were not matched to the records in the resultset.
     /// </summary>
-    public string[] MemberNames { get; internal set; } = Array.Empty<string>();
+    public string[] MemberNames { get; internal set; } = [];
 }

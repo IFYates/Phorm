@@ -47,7 +47,7 @@ public class ContractMemberDefinition
     /// <summary>
     /// Relevant attributes for this contract member.
     /// </summary>
-    public IContractMemberAttribute[] Attributes { get; } = Array.Empty<IContractMemberAttribute>();
+    public IContractMemberAttribute[] Attributes { get; } = [];
     /// <summary>
     /// Returns true if this property is transformed by a secure attribute.
     /// </summary>
@@ -134,7 +134,7 @@ public class ContractMemberDefinition
         foreach (var method in methods)
         {
             // Must not have any parameters
-            if (method.GetParameters().Any())
+            if (method.GetParameters().Length != 0)
             {
                 throw new InvalidDataContractException($"Cannot include method '{contractType.FullName}.{method.Name}' in contract: specifies parameters.");
             }
@@ -208,7 +208,7 @@ public class ContractMemberDefinition
                     // Otherwise, resolve property with same name on non-contract
                     mi ??= objType.GetProperty(SourceMember.Name, BindingFlags.Instance | BindingFlags.Public)?.GetMethod!;
                 }
-                value = mi?.Invoke(entity, Array.Empty<object>());
+                value = mi?.Invoke(entity, []);
             }
         }
 

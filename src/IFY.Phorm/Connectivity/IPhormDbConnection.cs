@@ -2,6 +2,9 @@
 
 namespace IFY.Phorm.Connectivity;
 
+/// <summary>
+/// Represents a connection to a data source, wrapped by Pho/rm functionality.
+/// </summary>
 public interface IPhormDbConnection : IDbConnection
 {
     /// <summary>

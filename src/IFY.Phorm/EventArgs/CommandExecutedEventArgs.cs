@@ -15,7 +15,7 @@ public sealed class CommandExecutedEventArgs : System.EventArgs
     /// <summary>
     /// The parameters of the command that was executed.
     /// </summary>
-    public Dictionary<string, object?> CommandParameters { get; internal set; } = new Dictionary<string, object?>();
+    public Dictionary<string, object?> CommandParameters { get; internal set; } = [];
 
     /// <summary>
     /// The number of entity results parsed from execution.

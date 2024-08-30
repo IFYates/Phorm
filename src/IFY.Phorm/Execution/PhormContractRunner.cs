@@ -125,7 +125,7 @@ internal sealed partial class PhormContractRunner<TActionContract> : IPhormContr
             CommandGuid = Guid.NewGuid(),
             CommandText = cmd.CommandText,
             CommandParameters = cmd.Parameters.Cast<IDbDataParameter>()
-                .ToDictionary(p => p.ParameterName, p => (object?)p.Value)
+                .ToDictionary(p => p.ParameterName, p => p.Value)
         };
         _session.OnCommandExecuting(eventArgs);
 
@@ -162,7 +162,7 @@ internal sealed partial class PhormContractRunner<TActionContract> : IPhormContr
             var matches = attr.FilterMatched(parent!, records);
             if (rsProp.PropertyType.IsArray)
             {
-                var arr = (Array?)Activator.CreateInstance(rsProp.PropertyType, new object[] { matches.Length }) ?? Array.Empty<object>();
+                var arr = (Array?)Activator.CreateInstance(rsProp.PropertyType, [matches.Length]) ?? Array.Empty<object>();
                 Array.Copy(matches, arr, matches.Length);
                 rsProp.SetValue(parent, arr);
             }
@@ -364,7 +364,7 @@ internal sealed partial class PhormContractRunner<TActionContract> : IPhormContr
                 entityType = entityType.GenericTypeArguments[0];
             }
         }
-        if (!isGenSpec && entityType.GetConstructor(Array.Empty<Type>()) == null)
+        if (!isGenSpec && entityType.GetConstructor([]) == null)
         {
             throw new MissingMethodException($"Attempt to get type {entityType.FullName} without empty constructor.");
         }
@@ -418,7 +418,7 @@ internal sealed partial class PhormContractRunner<TActionContract> : IPhormContr
         if (typeof(GenSpecBase).IsAssignableFrom(resultType))
         {
             genspec = (GenSpecBase)Activator.CreateInstance(resultType)!;
-            tempProps ??= new();
+            tempProps ??= [];
         }
         else
         {

@@ -27,7 +27,7 @@ public static class GlobalSettings
     public static JsonSerializerSettings? NewtonsoftJsonSerializerSettings { get; set; }
 
     /// <summary>
-    /// Whether to throw a <see cref="System.InvalidOperationException"/> if an invocation result includes more records than expected.
+    /// Whether to throw a <see cref="InvalidOperationException"/> if an invocation result includes more records than expected.
     /// Defaults to true.
     /// </summary>
     public static bool StrictResultSize { get; set; } = true;

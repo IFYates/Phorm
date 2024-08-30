@@ -5,22 +5,17 @@ namespace IFY.Phorm.Execution;
 /// <summary>
 /// Provides base logic for an object that captures console message events.
 /// </summary>
-public abstract class AbstractConsoleMessageCapture : IDisposable
+public abstract class AbstractConsoleMessageCapture(AbstractPhormSession session, Guid commandGuid)
+    : IDisposable
 {
-    private readonly List<ConsoleMessage> _consoleEvents = new List<ConsoleMessage>();
-    protected readonly AbstractPhormSession _session;
-    protected readonly Guid _commandGuid;
+    private readonly List<ConsoleMessage> _consoleEvents = [];
+    protected readonly AbstractPhormSession _session = session;
+    protected readonly Guid _commandGuid = commandGuid;
 
     /// <summary>
     /// Becomes true if this instance has captured at least one error.
     /// </summary>
     public bool HasError { get; protected set; }
-
-    protected AbstractConsoleMessageCapture(AbstractPhormSession session, Guid commandGuid)
-    {
-        _session = session;
-        _commandGuid = commandGuid;
-    }
 
     protected void OnConsoleMessage(ConsoleMessage ev)
     {

@@ -56,7 +56,7 @@ public class ContractMember : ContractMemberDefinition
         {
             contractType = obj?.GetType() ?? typeof(IPhormContract);
         }
-        var defs = ContractMemberDefinition.GetFromContract(contractType);
+        var defs = GetFromContract(contractType);
 
         // Resolve member values
         var members = new List<ContractMember>(defs.Length);
@@ -254,7 +254,7 @@ public class ContractMember : ContractMemberDefinition
             value = null;
         }
 
-        if (Attributes.Any())
+        if (Attributes.Length != 0)
         {
             // AbstractSecureValue
             var secvalAttr = Attributes

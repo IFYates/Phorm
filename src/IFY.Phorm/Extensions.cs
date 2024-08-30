@@ -14,7 +14,7 @@ internal static class Extensions
         return coll.Cast<IDataParameter>().ToArray();
     }
 
-    [return: NotNullIfNotNull("value")]
+    [return: NotNullIfNotNull(nameof(value))]
     public static object? ChangeType(this object? value, Type conversionType)
     {
         if (value == null)
@@ -46,7 +46,7 @@ internal static class Extensions
     {
         if (value == null)
         {
-            return Array.Empty<byte>();
+            return [];
         }
 
 #if NET6_0_OR_GREATER
@@ -73,7 +73,7 @@ internal static class Extensions
         return value switch
         {
             byte[] val => val,
-            byte val => new[] { val },
+            byte val => [val],
             char val => BitConverter.GetBytes(val),
             double val => BitConverter.GetBytes(val),
             float val => BitConverter.GetBytes(val),
