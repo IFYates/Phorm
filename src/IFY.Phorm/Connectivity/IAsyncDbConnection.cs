@@ -45,5 +45,5 @@ public interface IAsyncDbCommand : IDisposable
     /// Executes the <see cref="IDbCommand.CommandText"/> against the <see cref="IDbCommand.Connection"/> and builds an <see cref="IDataReader"/>.
     /// </summary>
     /// <returns>An <see cref="IDataReader"/> object.</returns>
-    Task<DbDataReader> ExecuteReaderAsync(CancellationToken cancellationToken);
+    [Shim(typeof(DbCommand))] Task<DbDataReader> ExecuteReaderAsync(CancellationToken cancellationToken);
 }

@@ -9,6 +9,52 @@
             Exposes the asynchronous parts of <see cref="T:System.Data.Common.DbCommand"/>
             </summary>
         </member>
+        <member name="P:System.Data.IAsyncDbCommand.CommandText">
+            <summary>
+            Gets or sets the text command to run against the data source.
+            </summary>
+            <value>The text command to execute. The default value is an empty string ("").</value>
+        </member>
+        <member name="P:System.Data.IAsyncDbCommand.CommandType">
+            <summary>
+            Indicates or specifies how the <see cref="P:System.Data.IDbCommand.CommandText"/> property is interpreted.
+            </summary>
+            <value>One of the <see cref="T:System.Data.CommandType"/> values. The default is <see cref="F:System.Data.CommandType.Text"/>.</value>
+        </member>
+        <member name="P:System.Data.IAsyncDbCommand.Connection">
+            <summary>
+            Gets or sets the <see cref="T:System.Data.IDbConnection"/> used by this instance of the <see cref="T:System.Data.IDbCommand"/>.
+            </summary>
+            <value>The connection to the data source.</value>
+        </member>
+        <member name="P:System.Data.IAsyncDbCommand.Parameters">
+            <summary>
+            Gets the <see cref="T:System.Data.IDataParameterCollection"/>.
+            </summary>
+        </member>
+        <member name="P:System.Data.IAsyncDbCommand.Transaction">
+            <summary>
+            Gets or sets the transaction within which the Command object of a .NET data provider executes.
+            </summary>
+            <value>the Command object of a .NET Framework data provider executes. The default value is null.</value>
+        </member>
+        <member name="M:System.Data.IAsyncDbCommand.CreateParameter">
+            <summary>
+            Creates a new instance of an <see cref="T:System.Data.IDbDataParameter"/> object.
+            </summary>
+            <value>An <see cref="T:System.Data.IDbDataParameter"/> object.</value>
+        </member>
+        <member name="M:System.Data.IAsyncDbCommand.ExecuteReaderAsync(System.Threading.CancellationToken)">
+            <summary>
+            Executes the <see cref="P:System.Data.IDbCommand.CommandText"/> against the <see cref="P:System.Data.IDbCommand.Connection"/> and builds an <see cref="T:System.Data.IDataReader"/>.
+            </summary>
+            <returns>An <see cref="T:System.Data.IDataReader"/> object.</returns>
+        </member>
+        <member name="T:IFY.Phorm.Connectivity.IPhormDbConnection">
+            <summary>
+            Represents a connection to a data source, wrapped by Pho/rm functionality.
+            </summary>
+        </member>
         <member name="P:IFY.Phorm.Connectivity.IPhormDbConnection.ConnectionName">
             <summary>
             The context name of this connection
@@ -25,6 +71,11 @@
             </summary>
         </member>
         <member name="T:IFY.Phorm.Connectivity.PhormDbConnection">
+            <summary>
+            Wraps <see cref="T:System.Data.IDbConnection"/> with additional Pho/rm values.
+            </summary>
+        </member>
+        <member name="M:IFY.Phorm.Connectivity.PhormDbConnection.#ctor(System.String,System.Data.IDbConnection)">
             <summary>
             Wraps <see cref="T:System.Data.IDbConnection"/> with additional Pho/rm values.
             </summary>
@@ -272,6 +323,11 @@
             </summary>
         </member>
         <member name="T:IFY.Phorm.Data.ResultsetAttribute">
+            <summary>
+            Marks the property as being the target of an additional resultset.
+            </summary>
+        </member>
+        <member name="M:IFY.Phorm.Data.ResultsetAttribute.#ctor(System.Int32,System.String)">
             <summary>
             Marks the property as being the target of an additional resultset.
             </summary>
@@ -533,6 +589,11 @@
             Provides base logic for an object that captures console message events.
             </summary>
         </member>
+        <member name="M:IFY.Phorm.Execution.AbstractConsoleMessageCapture.#ctor(IFY.Phorm.Execution.AbstractPhormSession,System.Guid)">
+            <summary>
+            Provides base logic for an object that captures console message events.
+            </summary>
+        </member>
         <member name="P:IFY.Phorm.Execution.AbstractConsoleMessageCapture.HasError">
             <summary>
             Becomes true if this instance has captured at least one error.
@@ -542,6 +603,12 @@
             <inheritdoc/>
         </member>
         <member name="M:IFY.Phorm.Execution.AbstractConsoleMessageCapture.Dispose">
+            <inheritdoc/>
+        </member>
+        <member name="T:IFY.Phorm.Execution.AbstractPhormSession">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.#ctor(System.String,System.String)">
             <inheritdoc/>
         </member>
         <member name="P:IFY.Phorm.Execution.AbstractPhormSession.ConnectionName">
@@ -569,9 +636,6 @@
             <inheritdoc/>
         </member>
         <member name="P:IFY.Phorm.Execution.AbstractPhormSession.StrictResultSize">
-            <inheritdoc/>
-        </member>
-        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.#ctor(System.String,System.String)">
             <inheritdoc/>
         </member>
         <member name="M:IFY.Phorm.Execution.AbstractPhormSession.GetConnection">
@@ -978,6 +1042,17 @@
         </member>
         <member name="M:IFY.Phorm.Transformation.JsonValueAttribute.ToDatasource(System.Object,System.Object)">
             <inheritdoc/>
+        </member>
+        <member name="M:IFY.Shimr.Extensions.ObjectExtensions.Shim``1(System.Object)">
+            <summary>
+            Shim an instance of an <cref name="object"/> to <typeparamref name="TInterface"/>.
+            </summary>
+        </member>
+        <member name="M:IFY.Shimr.Extensions.ObjectExtensions.Unshim``1(System.Collections.Generic.IEnumerable{System.Object})">
+            <summary>
+            Recast shims to original type.
+            No type-safety checks. Must already be <typeparamref name="T"/> or be <see cref="T:IFY.Shimr.IShim"/> of <typeparamref name="T"/>.
+            </summary>
         </member>
     </members>
 </doc>
