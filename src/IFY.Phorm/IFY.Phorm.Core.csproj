@@ -14,8 +14,9 @@
         <IncludeSymbols>true</IncludeSymbols>
         <SymbolPackageFormat>snupkg</SymbolPackageFormat>
         <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+		<EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
 
-        <PackageId>IFY.Phorm.Core</PackageId>
+		<PackageId>IFY.Phorm.Core</PackageId>
         <Authors>IFYates</Authors>
         <PackageLicenseExpression>MPL-2.0</PackageLicenseExpression>
         <PackageProjectUrl>https://github.com/IFYates/Phorm</PackageProjectUrl>
@@ -44,8 +45,8 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-        <PackageReference Include="IFY.Shimr" Version="2.0.2" />
+        <PackageReference Include="IFY.Shimr.SourceGen" Version="3.0.0-beta2" />
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
         <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
     </ItemGroup>
 
