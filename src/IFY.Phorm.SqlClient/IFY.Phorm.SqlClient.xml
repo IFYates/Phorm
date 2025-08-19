@@ -31,5 +31,16 @@
         <member name="M:IFY.Phorm.SqlClient.SqlPhormSession.BeginTransaction">
             <inheritdoc/>
         </member>
+        <member name="M:IFY.Shimr.Extensions.ObjectExtensions.Shim``1(System.Object)">
+            <summary>
+            Shim an instance of an <cref name="object"/> to <typeparamref name="TInterface"/>.
+            </summary>
+        </member>
+        <member name="M:IFY.Shimr.Extensions.ObjectExtensions.Unshim``1(System.Collections.Generic.IEnumerable{System.Object})">
+            <summary>
+            Recast shims to original type.
+            No type-safety checks. Must already be <typeparamref name="T"/> or be <see cref="T:IFY.Shimr.IShim"/> of <typeparamref name="T"/>.
+            </summary>
+        </member>
     </members>
 </doc>

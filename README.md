@@ -1,3 +1,9 @@
+<div align="center">
+
+![Cham](cham.png)
+
+</div>
+
 # Pho/rm - The **P**rocedure-**h**eavy **o**bject-**r**elational **m**apping framework
 
 [![Build & Test](https://github.com/IFYates/Phorm/actions/workflows/dotnet.yml/badge.svg)](https://github.com/IFYates/Phorm/actions/workflows/dotnet.yml)
@@ -37,21 +43,30 @@ Our goal is to have a strongly-typed data surface and allow for a mutable physic
 With this approach, the data management team can provide access contracts to meet the business logic requirements, which the implementing team can rely on without concern over the underlying structures and query efficiency.
 
 ```mermaid
-flowchart RL
-subgraph Database
-    D[(Data)]
+flowchart
+    I[/Interface/]
+    O[DTO]
+    T[Table]
     V((vw))
     SP((sp))
-end
-subgraph Application
-    O[DTO]
-    I[/Interface/]
-end
 
-D -->|Get| O;
-D --> V -->|Get| O;
-SP -->|From.Get| O;
-O -.->|Call/From| I --> SP --> D;
+    I --> SP
+    V -->|Get| O
+    SP -->|From.Get| O
+    T -->|Get| O
+    O -.->|Call/From| I
+    T --> V
+    T <--> SP
+
+    subgraph Application
+        O
+        I
+    end
+    subgraph Database
+        T
+        V
+        SP
+    end
 ```
 
 ## Common example
