@@ -1,7 +1,6 @@
 using IFY.Phorm.Data;
 using IFY.Phorm.Execution;
 using Microsoft.Data.SqlClient;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace IFY.Phorm.SqlClient.IntegrationTests;
 
@@ -158,7 +157,7 @@ RETURN 1");
 
         // Assert
         Assert.AreEqual(1, res);
-        Assert.AreEqual(4, events.Count);
+        Assert.HasCount(4, events);
         Assert.AreEqual("dbo.usp_ConsoleTest @ 5", events[0].Source);
         Assert.AreEqual("Before", events[0].Message);
         Assert.AreEqual(0, events[0].Level);
@@ -215,7 +214,7 @@ RETURN 1");
         var arg = new ConsoleTest();
 
         // Act
-        var ex = Assert.ThrowsException<SqlException>
+        var ex = Assert.ThrowsExactly<SqlException>
             (() => phorm.Call<IConsoleTest>(arg));
 
         // Assert
@@ -264,7 +263,7 @@ RETURN 1");
         var arg = new ConsoleTest();
 
         // Act
-        var ex = Assert.ThrowsException<SqlException>
+        var ex = Assert.ThrowsExactly<SqlException>
             (() => phorm.From<IConsoleTest>(arg).Get<object>());
 
         // Assert

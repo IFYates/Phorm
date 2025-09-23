@@ -3,6 +3,13 @@ using System.Linq.Expressions;
 
 namespace IFY.Phorm.Execution;
 
+/// <summary>
+/// Defines methods for retrieving and filtering entity instances from a contract-based data source.
+/// </summary>
+/// <remarks>Implementations of this interface allow querying for single or multiple entities, with support for
+/// synchronous and asynchronous operations. Filtering can be applied prior to entity parsing using predicates, enabling
+/// efficient resultset narrowing. The interface is typically used to construct queries that are executed via the Get or
+/// GetAsync methods. Thread safety and execution context depend on the specific implementation.</remarks>
 public interface IPhormContractRunner
 {
     /// <summary>
@@ -47,6 +54,10 @@ public interface IPhormContractRunner
     // TODO: OrderBy, Skip, Take?
 }
 
+/// <summary>
+/// Defines a contract runner that operates on a specific contract type implementing <see cref="IPhormContract"/>.
+/// </summary>
+/// <typeparam name="TActionContract">The contract type to be executed by the runner. Must implement <see cref="IPhormContract"/>.</typeparam>
 public interface IPhormContractRunner<TActionContract> : IPhormContractRunner
     where TActionContract : IPhormContract
 {

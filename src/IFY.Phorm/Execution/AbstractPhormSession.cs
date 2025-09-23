@@ -5,14 +5,28 @@ using System.Data;
 
 namespace IFY.Phorm.Execution;
 
-/// <inheritdoc/>
+/// <summary>
+/// Represents a session for executing Phorm contracts and database operations, providing methods for invoking actions,
+/// retrieving data, and managing transactions within a scoped database connection.
+/// </summary>
+/// <remarks>The session exposes events for monitoring connection lifecycle, command execution, and contract
+/// mapping issues. It supports both synchronous and asynchronous operations, as well as transaction management if
+/// supported by the underlying runner. Configuration properties allow control over error handling and result size
+/// strictness. Use this interface to interact with Phorm contracts and database entities in a scoped and configurable
+/// manner.</remarks>
 public abstract class AbstractPhormSession(string databaseConnectionString, string? connectionName) : IPhormSession
 {
+    /// <summary>
+    /// The connection string used to connect to the database.
+    /// </summary>
     protected readonly string _databaseConnectionString = databaseConnectionString;
 
     /// <inheritdoc/>
     public string? ConnectionName { get; private set; } = connectionName;
 
+    /// <summary>
+    /// Gets or sets the prefix used for accessing database stored procedures.
+    /// </summary>
     public string ProcedurePrefix
     {
         get;
@@ -22,6 +36,9 @@ public abstract class AbstractPhormSession(string databaseConnectionString, stri
         init;
 #endif
     } = GlobalSettings.ProcedurePrefix;
+    /// <summary>
+    /// Gets or sets the prefix used for accessing database tables.
+    /// </summary>
     public string TablePrefix
     {
         get;
@@ -31,6 +48,9 @@ public abstract class AbstractPhormSession(string databaseConnectionString, stri
         init;
 #endif
     } = GlobalSettings.TablePrefix;
+    /// <summary>
+    /// Gets or sets the prefix used for accessing database views.
+    /// </summary>
     public string ViewPrefix
     {
         get;
@@ -214,8 +234,15 @@ public abstract class AbstractPhormSession(string databaseConnectionString, stri
     protected internal virtual AbstractConsoleMessageCapture StartConsoleCapture(Guid commandGuid, IAsyncDbCommand cmd)
         => NullConsoleMessageCapture.Instance;
 
+    /// <summary>
+    /// Provides a no-op implementation of <see cref="AbstractConsoleMessageCapture"/> that does not capture or process
+    /// console messages or exceptions.
+    /// </summary>
     protected internal class NullConsoleMessageCapture : AbstractConsoleMessageCapture
     {
+        /// <summary>
+        /// Represents a singleton instance of a console message capture that performs no operations.
+        /// </summary>
         public static readonly NullConsoleMessageCapture Instance = new();
         private NullConsoleMessageCapture() : base(null!, Guid.Empty) { }
         /// <inheritdoc/>
@@ -300,6 +327,12 @@ public abstract class AbstractPhormSession(string databaseConnectionString, stri
     /// <inheritdoc/>
     public abstract ITransactedPhormSession BeginTransaction();
 
+    /// <summary>
+    /// Wraps the current session with transactional support using the specified database transaction.
+    /// </summary>
+    /// <param name="transaction">The database transaction to associate with the session. Cannot be null.</param>
+    /// <returns>An instance of <see cref="ITransactedPhormSession"/> that operates within the context of the provided
+    /// transaction.</returns>
     protected ITransactedPhormSession WrapSessionAsTransacted(IDbTransaction transaction)
     {
         return new TransactedPhormSession(this, transaction);

@@ -1,6 +1,5 @@
 using IFY.Phorm.Data;
 using IFY.Phorm.Execution;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace IFY.Phorm.SqlClient.IntegrationTests;
 
@@ -44,7 +43,7 @@ public class ResultsetTests : SqlIntegrationTestBase
     {
     }
 
-    private void setupGetTestSchema(AbstractPhormSession phorm)
+    private static void setupGetTestSchema(AbstractPhormSession phorm)
     {
         SqlTestHelpers.ApplySql(phorm, @"DROP PROCEDURE IF EXISTS [dbo].[usp_GetFamily]");
         SqlTestHelpers.ApplySql(phorm, @"DROP TABLE IF EXISTS [dbo].[Child]");
@@ -133,7 +132,7 @@ RETURN 1");
         SqlTestHelpers.ApplySql(phorm, "INSERT INTO [dbo].[Child] ([ParentId], [Name]) SELECT 1, 'One.Two'");
 
         // Act
-        var ex = Assert.ThrowsException<InvalidCastException>
+        var ex = Assert.ThrowsExactly<InvalidCastException>
             (() => phorm.From<IGetFamily>(null).Get<OneParentDTO[]>()!);
 
         // Assert

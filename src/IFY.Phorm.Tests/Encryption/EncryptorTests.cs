@@ -2,7 +2,6 @@
 using IFY.Phorm.Encryption;
 using IFY.Phorm.Execution;
 using IFY.Phorm.Transformation;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using System.Data;
 using System.Diagnostics.CodeAnalysis;
@@ -42,7 +41,7 @@ public class EncryptorTests
 
         public override object? ToDatasource(object? data, object? context)
         {
-            return string.Join("", ((string?)data ?? "").ToArray().Reverse());
+            return string.Join("", ((string?)data ?? "").AsEnumerable().Reverse());
         }
     }
 
@@ -97,7 +96,7 @@ public class EncryptorTests
         var encMock = new Mock<IEncryptor>();
         encMock.SetupProperty(m => m.Authenticator);
         encMock.Setup(m => m.Encrypt(objectData))
-            .Returns(Array.Empty<byte>());
+            .Returns([]);
 
         var encProcMock = new Mock<IEncryptionProvider>();
         encProcMock.Setup(m => m.GetEncryptor("Test"))

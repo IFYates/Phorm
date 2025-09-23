@@ -67,7 +67,7 @@ public class SqlConsoleMessageCaptureTests
         Assert.IsTrue(res);
         Assert.IsTrue(obj.HasError);
 
-        Assert.AreEqual(1, events.Count);
+        Assert.HasCount(1, events);
         Assert.AreEqual(cmdGuid, events[0].CommandGuid);
         Assert.AreEqual("err message", events[0].ConsoleMessage.Message);
         Assert.AreEqual("err procedure @ 7", events[0].ConsoleMessage.Source);
@@ -153,7 +153,7 @@ public class SqlConsoleMessageCaptureTests
         // Assert
         Assert.IsFalse(obj.HasError);
 
-        Assert.AreEqual(1, events.Count);
+        Assert.HasCount(1, events);
         Assert.AreEqual(cmdGuid, events[0].CommandGuid);
         Assert.AreEqual("err message", events[0].ConsoleMessage.Message);
         Assert.AreEqual("err procedure @ 7", events[0].ConsoleMessage.Source);

@@ -45,6 +45,7 @@ public partial class TransactedPhormSession : ITransactedPhormSession
             _transaction.Dispose();
             _isDisposed = true;
         }
+        GC.SuppressFinalize(this);
     }
 
     #region Call

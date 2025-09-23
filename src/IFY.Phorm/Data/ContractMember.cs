@@ -1,5 +1,4 @@
 ﻿using IFY.Phorm.Encryption;
-using IFY.Phorm.Execution;
 using IFY.Phorm.Transformation;
 using System.Data;
 using System.Data.SqlTypes;
@@ -41,9 +40,29 @@ public class ContractMember : ContractMemberDefinition
         HasChanged = false;
     }
 
+    /// <summary>
+    /// Wraps the specified value in a ContractOutMember to enable contract-based in/out semantics.
+    /// </summary>
+    /// <typeparam name="T">The type of the value to be wrapped.</typeparam>
+    /// <param name="value">The value to be wrapped in a ContractOutMember.</param>
+    /// <returns>A ContractOutMember containing the specified value.</returns>
     public static ContractOutMember<T> InOut<T>(T value) => new(value);
+    /// <summary>
+    /// Creates a new instance of a contract output member for the specified type.
+    /// </summary>
+    /// <typeparam name="T">The type of the value to be represented by the contract output member.</typeparam>
+    /// <returns>A new <see cref="ContractOutMember{T}"/> instance representing the output contract for type <typeparamref
+    /// name="T"/>.</returns>
     public static ContractOutMember<T> Out<T>() => new();
+    /// <summary>
+    /// Creates and returns a new instance of the <see cref="ReturnValueMember"/> type for accessing a stored procedure return value.
+    /// </summary>
+    /// <returns>A new <see cref="ReturnValueMember"/> instance.</returns>
     public static ReturnValueMember RetVal() => new();
+    /// <summary>
+    /// Provides access to console output logging.
+    /// </summary>
+    /// <returns>A <see cref="ConsoleLogMember"/> instance that enables logging messages to the console.</returns>
     public static ConsoleLogMember Console() => new();
 
     /// <summary>
@@ -303,37 +322,5 @@ public class ContractMember : ContractMemberDefinition
         }
         Value = value;
         HasChanged = true;
-    }
-}
-
-public sealed class ContractOutMember<T> : ContractMember
-{
-    public new T Value => (T)base.Value!;
-
-    internal ContractOutMember()
-        : base(null, default, ParameterType.Output, typeof(T))
-    { }
-    internal ContractOutMember(T value)
-        : base(null, value, ParameterType.InputOutput, typeof(T))
-    { }
-}
-
-public sealed class ReturnValueMember : ContractMember
-{
-    public new int Value => (int)base.Value!;
-
-    internal ReturnValueMember()
-        : base("return", 0, ParameterType.ReturnValue, typeof(int))
-    {
-    }
-}
-
-public sealed class ConsoleLogMember : ContractMember
-{
-    public new ConsoleMessage[] Value => (ConsoleMessage[])base.Value!;
-
-    internal ConsoleLogMember()
-        : base("console", Array.Empty<ConsoleMessage>(), ParameterType.Console, typeof(ConsoleMessage[]))
-    {
     }
 }

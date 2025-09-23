@@ -22,7 +22,7 @@
         <PackageProjectUrl>https://github.com/IFYates/Phorm</PackageProjectUrl>
         <RepositoryUrl>https://github.com/IFYates/Phorm</RepositoryUrl>
         <RepositoryType>GitHub</RepositoryType>
-        <Version>1.7.3.1</Version>
+        <Version>1.7.4.0</Version>
         <Copyright>(c) IFYates</Copyright>
         <Description>
             The core "Procedure-heavy object-relational mapping" framework.
@@ -45,9 +45,9 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="IFY.Shimr.SourceGen" Version="3.0.0-beta2" />
-		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-        <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
+		<PackageReference Include="IFY.Shimr" />
+		<PackageReference Include="Newtonsoft.Json" />
+        <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All" />
     </ItemGroup>
 
     <Target Name="PreparePackageReleaseNotesFromFile" BeforeTargets="GenerateNuspec">

@@ -52,13 +52,13 @@ partial class PhormContractRunner<TActionContract>
             var predicateProperties = _predicate.Body.GetExpressionParameterProperties(typeof(TEntity));
             var cond = _predicate.Compile();
 
-            return (TResult)await _parent.executeGetAll(typeof(TResult), typeof(TEntity), cancellationToken,
+            return (TResult)await _parent.executeGetAll(typeof(TResult), typeof(TEntity),
                 (inst, entityMembers, rowData, commandGuid, record) =>
                 {
                     var predicateMembers = entityMembers.Where(m => predicateProperties.Any(p => p.Name == m.SourceMember!.Name))
-                        .ToDictionary(k => k.DbName.ToUpperInvariant(), v => v);
+                        .ToDictionary(static k => k.DbName.ToUpperInvariant());
                     var otherMembers = entityMembers.Except(predicateMembers.Values)
-                        .ToDictionary(k => k.DbName.ToUpperInvariant(), v => v);
+                        .ToDictionary(static k => k.DbName.ToUpperInvariant());
 
                     // Resolve predicate properties for entity and filter
                     _ = _parent.fillEntity(inst, rowData, predicateMembers, commandGuid, false);
@@ -69,7 +69,7 @@ partial class PhormContractRunner<TActionContract>
 
                     // Resolver for remaining properties
                     return () => _parent.fillEntity(inst, rowData, otherMembers, commandGuid, true);
-                });
+                }, cancellationToken);
         }
     }
 }

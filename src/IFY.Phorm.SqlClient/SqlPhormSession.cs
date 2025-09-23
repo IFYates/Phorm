@@ -5,16 +5,19 @@ using System.Data;
 
 namespace IFY.Phorm.SqlClient;
 
-public class SqlPhormSession : AbstractPhormSession
+/// <summary>
+/// Provides a session for interacting with a SQL Server database using the Phorm data access framework.
+/// </summary>
+/// <remarks>This session enables SQL Server-specific features, such as transaction support and schema discovery.
+/// It is designed for use with the Phorm framework and should be disposed of properly to release database
+/// resources.</remarks>
+/// <param name="databaseConnectionString">The connection string used to establish a connection to the SQL Server database.</param>
+/// <param name="connectionName">An optional name for the connection, used to identify the session or set the application name in the connection
+/// string. If null, the default application name is used.</param>
+public class SqlPhormSession(string databaseConnectionString, string? connectionName = null)
+    : AbstractPhormSession(databaseConnectionString, connectionName)
 {
     internal Func<string, string?, IPhormDbConnection> _connectionBuilder = (sqlConnStr, connectionName) => new PhormDbConnection(connectionName, new SqlConnection(sqlConnStr));
-
-    public SqlPhormSession(string databaseConnectionString)
-        : base(databaseConnectionString, null)
-    { }
-    public SqlPhormSession(string databaseConnectionString, string? connectionName)
-        : base(databaseConnectionString, connectionName)
-    { }
 
     /// <inheritdoc/>
     public override IPhormSession SetConnectionName(string connectionName)

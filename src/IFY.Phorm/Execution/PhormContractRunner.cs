@@ -93,8 +93,8 @@ internal sealed partial class PhormContractRunner<TActionContract> : IPhormContr
         if (_objectType is DbObjectType.Table or DbObjectType.View)
         {
             var sb = new StringBuilder();
-            foreach (var memb in members.Where(m => (m.Direction & ParameterType.Input) > 0)
-                .Where(m => m.Value != null && m.Value != DBNull.Value))
+            foreach (var memb in members.Where(static m => (m.Direction & ParameterType.Input) > 0)
+                .Where(static m => m.Value != null && m.Value != DBNull.Value))
             {
                 // TODO: Ignore members without value
                 if (sb.Length > 0)
@@ -125,7 +125,7 @@ internal sealed partial class PhormContractRunner<TActionContract> : IPhormContr
             CommandGuid = Guid.NewGuid(),
             CommandText = cmd.CommandText,
             CommandParameters = cmd.Parameters.Cast<IDbDataParameter>()
-                .ToDictionary(p => p.ParameterName, p => p.Value)
+                .ToDictionary(static p => p.ParameterName, static p => (object?)p.Value)
         };
         _session.OnCommandExecuting(eventArgs);
 
@@ -149,7 +149,7 @@ internal sealed partial class PhormContractRunner<TActionContract> : IPhormContr
         while (safeRead(rdr, console))
         {
             var values = getRowValues(rdr);
-            var members = recordMembers.ToDictionary(m => m.DbName.ToUpperInvariant()); // Copy
+            var members = recordMembers.ToDictionary(static m => m.DbName.ToUpperInvariant()); // Copy
             var entity = Activator.CreateInstance(recordType)!;
             var res = fillEntity(entity, values, members, commandGuid, true);
             records.Add(res);
@@ -177,7 +177,7 @@ internal sealed partial class PhormContractRunner<TActionContract> : IPhormContr
         }
     }
 
-    private static IDictionary<string, object?> getRowValues(IDataReader rdr)
+    private static Dictionary<string, object?> getRowValues(IDataReader rdr)
     {
         var result = new Dictionary<string, object?>();
         for (var i = 0; i < rdr.FieldCount; ++i)
@@ -230,7 +230,7 @@ internal sealed partial class PhormContractRunner<TActionContract> : IPhormContr
         }
 
         // Apply deferred values
-        foreach (var kvp in deferredMembers.OrderBy(m => m.Key.HasSecureAttribute))
+        foreach (var kvp in deferredMembers.OrderBy(static m => m.Key.HasSecureAttribute))
         {
             if (kvp.Key.TryFromDatasource(kvp.Value, entity, out var member))
             {
@@ -245,8 +245,8 @@ internal sealed partial class PhormContractRunner<TActionContract> : IPhormContr
             {
                 CommandGuid = commandGuid,
                 EntityType = entity.GetType(),
-                MemberNames = members.Values.Where(m => (m.Direction & ParameterType.Output) > 0 && m.Direction != ParameterType.ReturnValue)
-                    .Select(m => m.SourceMember?.Name ?? m.DbName).ToArray()
+                MemberNames = members.Values.Where(static m => (m.Direction & ParameterType.Output) > 0 && m.Direction != ParameterType.ReturnValue)
+                    .Select(static m => m.SourceMember?.Name ?? m.DbName).ToArray()
             });
         }
 
@@ -266,9 +266,9 @@ internal sealed partial class PhormContractRunner<TActionContract> : IPhormContr
         if (consoleEvents?.Any() == true)
         {
             var consoleProp = contract?.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public)
-                .Where(p => typeof(ConsoleLogMember).IsAssignableFrom(p.PropertyType))
+                .Where(static p => typeof(ConsoleLogMember).IsAssignableFrom(p.PropertyType))
                 .Select(p => p.GetValue(contract) as ConsoleLogMember)
-                .FirstOrDefault(v => v?.Direction == ParameterType.Console);
+                .FirstOrDefault(static v => v?.Direction == ParameterType.Console);
             consoleProp?.SetValue(consoleEvents.ToArray());
         }
 
@@ -287,7 +287,7 @@ internal sealed partial class PhormContractRunner<TActionContract> : IPhormContr
         if (param.Direction == ParameterDirection.ReturnValue)
         {
             returnValue = (int?)param.Value ?? 0;
-            foreach (var memb in members.Where(a => a.Direction == ParameterType.ReturnValue))
+            foreach (var memb in members.Where(static a => a.Direction == ParameterType.ReturnValue))
             {
                 memb.SetValue(returnValue);
             }
@@ -370,7 +370,7 @@ internal sealed partial class PhormContractRunner<TActionContract> : IPhormContr
         }
 
         // Execute method as either IEnumerable<TEntity> or GenSpec<...>
-        var result = await executeGetAll(resultType, entityType, cancellationToken,
+        var result = await executeGetAll(resultType, entityType,
             (inst, entityMembers, rowData, commandGuid, record) =>
             {
                 // Single result
@@ -383,9 +383,9 @@ internal sealed partial class PhormContractRunner<TActionContract> : IPhormContr
                     return null;
                 }
 
-                var members = entityMembers.ToDictionary(k => k.DbName.ToUpperInvariant(), v => v);
+                var members = entityMembers.ToDictionary(static k => k.DbName.ToUpperInvariant());
                 return () => fillEntity(inst, rowData, members, commandGuid, true);
-            });
+            }, cancellationToken);
 
         if (result is IEnumerable<object> coll)
         {
@@ -404,7 +404,7 @@ internal sealed partial class PhormContractRunner<TActionContract> : IPhormContr
         return (TResult)result;
     }
 
-    private async Task<object> executeGetAll(Type resultType, Type entityType, CancellationToken cancellationToken, Func<object, ContractMemberDefinition[], IDictionary<string, object?>, Guid, int, Func<object>?> entityProcessor)
+    private async Task<object> executeGetAll(Type resultType, Type entityType, Func<object, ContractMemberDefinition[], IDictionary<string, object?>, Guid, int, Func<object>?> entityProcessor, CancellationToken cancellationToken)
     {
         // Prepare and execute
         using var cmd = startCommand(out var pars, out var eventArgs);
@@ -475,7 +475,7 @@ internal sealed partial class PhormContractRunner<TActionContract> : IPhormContr
         if (!console.HasError)
         {
             var rsOrder = 0;
-            while (!cancellationToken.IsCancellationRequested && await rdr.NextResultAsync())
+            while (!cancellationToken.IsCancellationRequested && await rdr.NextResultAsync(CancellationToken.None))
             {
                 matchResultset(entityType, rsOrder++, rdr, (IEnumerable<object>)resolverList, eventArgs.CommandGuid, console);
             }

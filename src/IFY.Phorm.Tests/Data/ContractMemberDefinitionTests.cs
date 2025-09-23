@@ -1,8 +1,6 @@
 ﻿using IFY.Phorm.Encryption;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.Serialization;
-using System.Text;
 
 namespace IFY.Phorm.Data.Tests;
 
@@ -14,17 +12,17 @@ public class ContractMemberDefinitionTests
     {
         public override byte[] Decrypt(byte[]? value, object? context)
         {
-            return new byte[] { 1 };
+            return [1];
         }
 
         public override byte[] Encrypt(object? value, object? context)
         {
-            return new byte[] { 2 };
+            return [2];
         }
     }
 
     [TestSecure]
-    public byte[] SecureDataProperty { get; set; } = Array.Empty<byte>();
+    public byte[] SecureDataProperty { get; set; } = [];
 
     public string StringProperty { get; set; } = string.Empty;
 
@@ -124,7 +122,7 @@ public class ContractMemberDefinitionTests
         memb.SetValue(123);
 
         // Act
-        var ex = Assert.ThrowsException<InvalidOperationException>
+        var ex = Assert.ThrowsExactly<InvalidOperationException>
             (() => memb.ApplyToEntity(arg));
 
         // Assert
@@ -132,14 +130,9 @@ public class ContractMemberDefinitionTests
         Assert.IsNotNull(ex.InnerException);
     }
 
-    class UnsettableDTO
+    class UnsettableDTO(long prop1)
     {
-        public long Prop1 { get; }
-
-        public UnsettableDTO(long prop1)
-        {
-            Prop1 = prop1;
-        }
+        public long Prop1 { get; } = prop1;
     }
 
     [TestMethod]
