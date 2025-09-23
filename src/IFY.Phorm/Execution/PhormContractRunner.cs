@@ -137,9 +137,14 @@ internal sealed partial class PhormContractRunner<TActionContract> : IPhormContr
         // Find resultset target
         var rsProp = entityType.GetProperties()
             .SingleOrDefault(p => p.GetCustomAttribute<ResultsetAttribute>()?.Order == order);
+        if (rsProp == null)
+        {
+            // TODO: Warn if child resultset is being discarded
+            return;
+        }
         if (rsProp?.CanWrite != true)
         {
-            throw new InvalidDataContractException($"Resultset property '{rsProp?.Name}' is not writable.");
+            throw new InvalidDataContractException($"Phorm Resultset property '{rsProp?.Name}' is not writable.");
         }
 
         // Get data
@@ -168,7 +173,7 @@ internal sealed partial class PhormContractRunner<TActionContract> : IPhormContr
             }
             else if (matches.Length > 1)
             {
-                throw new InvalidCastException($"Resultset property {rsProp.Name} is not an array but matched {matches.Length} records.");
+                throw new InvalidCastException($"Phorm Resultset property {rsProp.Name} is not an array but matched {matches.Length} records.");
             }
             else
             {
@@ -324,7 +329,7 @@ internal sealed partial class PhormContractRunner<TActionContract> : IPhormContr
 
         if (safeRead(rdr, console) && _session.StrictResultSize)
         {
-            throw new InvalidOperationException("Non-result request returned a result.");
+            throw new InvalidOperationException("Phorm non-result request returned a result.");
         }
 
         return parseCommandResult(cmd, _runArgs, pars, console.GetConsoleMessages(), eventArgs, null);
