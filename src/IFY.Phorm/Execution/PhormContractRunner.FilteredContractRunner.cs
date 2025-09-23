@@ -44,8 +44,6 @@ partial class PhormContractRunner<TActionContract>
             _predicate = predicate;
         }
 
-        public TResult GetAll()
-            => GetAllAsync(CancellationToken.None).GetAwaiter().GetResult();
         public async Task<TResult> GetAllAsync(CancellationToken cancellationToken)
         {
             // Discover minimum properties required from expression

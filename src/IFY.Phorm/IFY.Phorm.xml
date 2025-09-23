@@ -807,13 +807,7 @@
         <member name="M:IFY.Phorm.Execution.AbstractPhormSession.NullConsoleMessageCapture.Dispose">
             <inheritdoc/>
         </member>
-        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.Call(System.String,System.Object)">
-            <inheritdoc/>
-        </member>
         <member name="M:IFY.Phorm.Execution.AbstractPhormSession.CallAsync(System.String,System.Object,System.Threading.CancellationToken)">
-            <inheritdoc/>
-        </member>
-        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.Call``1(System.Object)">
             <inheritdoc/>
         </member>
         <member name="M:IFY.Phorm.Execution.AbstractPhormSession.CallAsync``1(System.Object,System.Threading.CancellationToken)">
@@ -823,9 +817,6 @@
             <inheritdoc/>
         </member>
         <member name="M:IFY.Phorm.Execution.AbstractPhormSession.From``1(System.Object)">
-            <inheritdoc/>
-        </member>
-        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.Get``1(System.Object)">
             <inheritdoc/>
         </member>
         <member name="M:IFY.Phorm.Execution.AbstractPhormSession.GetAsync``1(System.Object,System.Threading.CancellationToken)">
@@ -878,13 +869,6 @@
             efficient resultset narrowing. The interface is typically used to construct queries that are executed via the Get or
             GetAsync methods. Thread safety and execution context depend on the specific implementation.</remarks>
         </member>
-        <member name="M:IFY.Phorm.Execution.IPhormContractRunner.Get``1">
-            <summary>
-            Get one or more entity instances.
-            </summary>
-            <typeparam name="TResult">The type of entity to map result data to.</typeparam>
-            <returns>When <typeparamref name="TResult"/> is the entity type, will return the single result instance or null. When <typeparamref name="TResult"/> is an array of the entity type, will return an array of all types from the result (never null).</returns>
-        </member>
         <member name="M:IFY.Phorm.Execution.IPhormContractRunner.GetAsync``1">
             <summary>
             Get one or more entity instances.
@@ -930,13 +914,6 @@
             asynchronous operations.
             </summary>
             <typeparam name="TResult">The type of the result returned by the contract runner. Must be a reference type.</typeparam>
-        </member>
-        <member name="M:IFY.Phorm.Execution.IPhormFilteredContractRunner`1.GetAll">
-            <summary>
-            Retrieves all items of the specified result type.
-            </summary>
-            <returns>A collection containing all items of type <typeparamref name="TResult"/>. The collection will be empty if no
-            items are available.</returns>
         </member>
         <member name="M:IFY.Phorm.Execution.IPhormFilteredContractRunner`1.GetAllAsync">
             <summary>
@@ -1005,9 +982,6 @@
         <member name="M:IFY.Phorm.Execution.TransactedPhormSession.From``1(System.Object)">
             <inheritdoc/>
         </member>
-        <member name="M:IFY.Phorm.Execution.TransactedPhormSession.Get``1(System.Object)">
-            <inheritdoc/>
-        </member>
         <member name="M:IFY.Phorm.Execution.TransactedPhormSession.GetAsync``1(System.Object,System.Threading.CancellationToken)">
             <inheritdoc/>
         </member>
@@ -1048,12 +1022,6 @@
             <inheritdoc/>
         </member>
         <member name="M:IFY.Phorm.Execution.TransactedPhormSession.BeginTransaction">
-            <inheritdoc/>
-        </member>
-        <member name="M:IFY.Phorm.Execution.TransactedPhormSession.Call(System.String,System.Object)">
-            <inheritdoc/>
-        </member>
-        <member name="M:IFY.Phorm.Execution.TransactedPhormSession.Call``1(System.Object)">
             <inheritdoc/>
         </member>
         <member name="M:IFY.Phorm.Extensions.GetExpressionParameterProperties(System.Linq.Expressions.Expression,System.Type)">
@@ -1182,48 +1150,6 @@
             </summary>
             <param name="connectionName">The connection name to use when scoping the new session instance.</param>
             <returns>A new instance of this session with a different connection name.</returns>
-        </member>
-        <member name="M:IFY.Phorm.IPhormSession.Call(System.String)">
-            <summary>
-            Invokes the specified action contract and returns the result as an integer.
-            </summary>
-            <param name="contractName">The name of the action contract to call. Cannot be null or empty.</param>
-            <returns>An integer value returned by the action contract.</returns>
-        </member>
-        <member name="M:IFY.Phorm.IPhormSession.Call(System.String,System.Object)">
-            <summary>
-            Invokes the specified contract with the provided arguments and returns the result as an integer.
-            </summary>
-            <param name="contractName">The name of the contract to invoke. Cannot be null or empty.</param>
-            <param name="args">An object containing the arguments to pass to the contract. Can be null if the contract does not require
-            arguments.</param>
-            <returns>An integer representing the result of the contract invocation. The meaning of the result depends on the contract
-            implementation.</returns>
-        </member>
-        <member name="M:IFY.Phorm.IPhormSession.Call``1">
-            <summary>
-            Invokes the specified action contract without any arguments and returns the result code.
-            </summary>
-            <typeparam name="TActionContract">The type of the action contract to invoke. Must implement <see cref="T:IFY.Phorm.Data.IPhormContract"/>.</typeparam>
-            <returns>An integer representing the result code of the invoked action contract.</returns>
-        </member>
-        <member name="M:IFY.Phorm.IPhormSession.Call``1(``0)">
-            <summary>
-            Invokes the specified action contract and returns the result as an integer.
-            </summary>
-            <typeparam name="TActionContract">The type of the action contract to invoke. Must implement <see cref="T:IFY.Phorm.Data.IPhormContract"/>.</typeparam>
-            <param name="contract">The action contract instance to be executed. Cannot be null.</param>
-            <returns>An integer representing the result of the invoked action contract.</returns>
-        </member>
-        <member name="M:IFY.Phorm.IPhormSession.Call``1(System.Object)">
-            <summary>
-            Invokes the specified action contract with the provided arguments and returns an integer result.
-            </summary>
-            <typeparam name="TActionContract">The type of action contract to invoke. Must implement <see cref="T:IFY.Phorm.Data.IPhormContract"/>.</typeparam>
-            <param name="args">An object containing the arguments to pass to the action contract. Can be <see langword="null"/> if the contract
-            does not require arguments.</param>
-            <returns>An integer value representing the result of the contract invocation. The meaning of the result depends on the
-            specific contract implementation.</returns>
         </member>
         <member name="M:IFY.Phorm.IPhormSession.CallAsync(System.String)">
             <summary>
@@ -1359,30 +1285,6 @@
             <typeparam name="TActionContract">The type of the action contract to be executed. Must implement <see cref="T:IFY.Phorm.Data.IPhormContract"/>.</typeparam>
             <param name="contract">The action contract instance to be used for execution. Cannot be null.</param>
             <returns>An <see cref="T:IFY.Phorm.Execution.IPhormContractRunner`1"/> that can execute the specified contract.</returns>
-        </member>
-        <member name="M:IFY.Phorm.IPhormSession.Get``1">
-            <summary>
-            Retrieves a single result of the specified type from the underlying data source.
-            </summary>
-            <typeparam name="TResult">The type of the result to retrieve. Must be a reference type.</typeparam>
-            <returns>An instance of <typeparamref name="TResult"/> if a matching result is found; otherwise, <see langword="null"/>.</returns>
-        </member>
-        <member name="M:IFY.Phorm.IPhormSession.Get``1(``0)">
-            <summary>
-            Retrieves an instance of the specified contract type using the provided contract object as input.
-            </summary>
-            <typeparam name="TResult">The type of the contract to retrieve. Must be a reference type.</typeparam>
-            <param name="contract">An object representing the contract to use for retrieval. Cannot be null.</param>
-            <returns>An instance of <typeparamref name="TResult"/> if found; otherwise, <see langword="null"/>.</returns>
-        </member>
-        <member name="M:IFY.Phorm.IPhormSession.Get``1(System.Object)">
-            <summary>
-            Retrieves an instance of the specified result type using the provided arguments.
-            </summary>
-            <typeparam name="TResult">The type of object to retrieve. Must be a reference type.</typeparam>
-            <param name="args">An optional argument object used to influence the retrieval process. The interpretation of this parameter
-            depends on the implementation.</param>
-            <returns>An instance of <typeparamref name="TResult"/> if found; otherwise, <see langword="null"/>.</returns>
         </member>
         <member name="M:IFY.Phorm.IPhormSession.GetAsync``1">
             <summary>

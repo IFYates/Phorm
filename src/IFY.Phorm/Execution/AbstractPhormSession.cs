@@ -256,19 +256,12 @@ public abstract class AbstractPhormSession(string databaseConnectionString, stri
     #region Call
 
     /// <inheritdoc/>
-    public int Call(string contractName, object? args)
-        => CallAsync(contractName, args, CancellationToken.None).GetAwaiter().GetResult();
-    /// <inheritdoc/>
     public Task<int> CallAsync(string contractName, object? args, CancellationToken cancellationToken)
     {
         var runner = new PhormContractRunner<IPhormContract>(this, contractName, DbObjectType.StoredProcedure, args, null);
         return runner.CallAsync(cancellationToken);
     }
 
-    /// <inheritdoc/>
-    public int Call<TActionContract>(object? args)
-        where TActionContract : IPhormContract
-        => CallAsync<TActionContract>(args, CancellationToken.None).GetAwaiter().GetResult();
     /// <inheritdoc/>
     public Task<int> CallAsync<TActionContract>(object? args, CancellationToken cancellationToken)
         where TActionContract : IPhormContract
@@ -297,14 +290,6 @@ public abstract class AbstractPhormSession(string databaseConnectionString, stri
     #endregion From
 
     #region Get
-
-    /// <inheritdoc/>
-    public TResult? Get<TResult>(object? args)
-        where TResult : class
-    {
-        var runner = new PhormContractRunner<IPhormContract>(this, typeof(TResult), null, DbObjectType.View, args, null);
-        return runner.Get<TResult>();
-    }
 
     /// <inheritdoc/>
     public Task<TResult?> GetAsync<TResult>(object? args, CancellationToken cancellationToken)
@@ -344,11 +329,6 @@ public abstract class AbstractPhormSession(string databaseConnectionString, stri
     // These should not be necessary, but .NET Core 3.1 is failing at runtime without them
 
     /// <inheritdoc/>
-    public int Call<TActionContract>(TActionContract contract)
-        where TActionContract : IPhormContract
-        => CallAsync<TActionContract>(args: contract, CancellationToken.None).GetAwaiter().GetResult();
-
-    /// <inheritdoc/>
     public Task<int> CallAsync<TActionContract>()
         where TActionContract : IPhormContract
         => CallAsync<TActionContract>(args: null, CancellationToken.None);
@@ -364,15 +344,6 @@ public abstract class AbstractPhormSession(string databaseConnectionString, stri
     public Task<int> CallAsync<TActionContract>(TActionContract contract, CancellationToken cancellationToken) // Same as "object? args = null", but allows better Intellisense
         where TActionContract : IPhormContract
         => CallAsync<TActionContract>(args: contract, cancellationToken);
-
-    /// <inheritdoc/>
-    public TResult? Get<TResult>()
-        where TResult : class
-        => Get<TResult>(args: null);
-    /// <inheritdoc/>
-    public TResult? Get<TResult>(TResult contract)
-        where TResult : class
-        => Get<TResult>(args: contract);
 
     /// <inheritdoc/>
     public Task<TResult?> GetAsync<TResult>()

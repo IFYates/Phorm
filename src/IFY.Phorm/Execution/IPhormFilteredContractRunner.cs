@@ -9,12 +9,6 @@ public interface IPhormFilteredContractRunner<TResult>
     where TResult : class
 {
     /// <summary>
-    /// Retrieves all items of the specified result type.
-    /// </summary>
-    /// <returns>A collection containing all items of type <typeparamref name="TResult"/>. The collection will be empty if no
-    /// items are available.</returns>
-    TResult GetAll();
-    /// <summary>
     /// Asynchronously retrieves all results of the operation.
     /// </summary>
     /// <returns>A task that represents the asynchronous operation. The task result contains all retrieved results.</returns>

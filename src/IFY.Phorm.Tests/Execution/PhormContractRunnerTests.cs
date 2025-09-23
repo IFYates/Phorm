@@ -1,7 +1,6 @@
 ﻿using IFY.Phorm.Data;
 using IFY.Phorm.Encryption;
 using IFY.Phorm.Tests;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using System.Collections;
 using System.Data;
@@ -13,6 +12,8 @@ namespace IFY.Phorm.Execution.Tests;
 [TestClass]
 public class PhormContractRunnerTests
 {
+    public TestContext TestContext { get; set; }
+
     interface IContractDTO : IPhormContract
     {
     }
@@ -100,7 +101,7 @@ public class PhormContractRunnerTests
     public void PhormContractRunner__Anonymous_No_name__Exception()
     {
         // Act
-        Assert.ThrowsException<ArgumentNullException>
+        Assert.ThrowsExactly<ArgumentNullException>
             (() => new PhormContractRunner<IPhormContract>(null!, null, DbObjectType.StoredProcedure, null, null));
     }
 
@@ -193,7 +194,7 @@ public class PhormContractRunnerTests
     #region Many
 
     [TestMethod]
-    public void Many__Procedure_by_anon_object()
+    public async Task ManyAsync__Procedure_by_anon_contract()
     {
         // Arrange
         var conn = new TestPhormConnection("")
@@ -203,21 +204,21 @@ public class PhormContractRunnerTests
 
         var cmd = new TestDbCommand(new TestDbDataReader
         {
-            Data = new List<Dictionary<string, object>>
-            {
-                new Dictionary<string, object>
+            Data =
+            [
+                new()
                 {
                     ["Value"] = "value1"
                 },
-                new Dictionary<string, object>
+                new()
                 {
                     ["Value"] = "value2"
                 },
-                new Dictionary<string, object>
+                new()
                 {
                     ["Value"] = "value3"
                 }
-            }
+            ]
         });
         conn.CommandQueue.Enqueue(cmd);
 
@@ -226,61 +227,10 @@ public class PhormContractRunnerTests
         var runner = new PhormContractRunner<IPhormContract>(phorm, "ContractName", DbObjectType.StoredProcedure, new { Arg = 1 }, null);
 
         // Act
-        var res = runner.Get<TestDto[]>()!;
+        var res = await runner.GetAsync<TestDto[]>(TestContext.CancellationTokenSource.Token);
 
         // Assert
-        Assert.AreEqual(3, res.Length);
-        Assert.AreEqual(CommandType.StoredProcedure, cmd.CommandType);
-        Assert.AreEqual("[schema].[usp_ContractName]", cmd.CommandText);
-        Assert.AreEqual("value1", res[0].Value);
-        Assert.AreEqual("value2", res[1].Value);
-        Assert.AreEqual("value3", res[2].Value);
-
-        var pars = cmd.Parameters.AsParameters();
-        Assert.AreEqual(2, pars.Length);
-        Assert.AreEqual("@Arg", pars[0].ParameterName);
-        Assert.AreEqual(ParameterDirection.ReturnValue, pars[1].Direction);
-        Assert.AreEqual(1, pars[1].Value);
-    }
-
-    [TestMethod]
-    public void ManyAsync__Procedure_by_anon_contract()
-    {
-        // Arrange
-        var conn = new TestPhormConnection("")
-        {
-            DefaultSchema = "schema"
-        };
-
-        var cmd = new TestDbCommand(new TestDbDataReader
-        {
-            Data = new List<Dictionary<string, object>>
-            {
-                new Dictionary<string, object>
-                {
-                    ["Value"] = "value1"
-                },
-                new Dictionary<string, object>
-                {
-                    ["Value"] = "value2"
-                },
-                new Dictionary<string, object>
-                {
-                    ["Value"] = "value3"
-                }
-            }
-        });
-        conn.CommandQueue.Enqueue(cmd);
-
-        var phorm = new TestPhormSession(conn);
-
-        var runner = new PhormContractRunner<IPhormContract>(phorm, "ContractName", DbObjectType.StoredProcedure, new { Arg = 1 }, null);
-
-        // Act
-        var res = runner.GetAsync<TestDto[]>(CancellationToken.None).Result!;
-
-        // Assert
-        Assert.AreEqual(3, res.Length);
+        Assert.AreEqual(3, res!.Length);
         Assert.AreEqual(CommandType.StoredProcedure, cmd.CommandType);
         Assert.AreEqual("[schema].[usp_ContractName]", cmd.CommandText);
         Assert.AreEqual("value1", res[0].Value);
@@ -297,7 +247,7 @@ public class PhormContractRunnerTests
     [TestMethod]
     [DataRow(DbObjectType.Table, "ContractName")]
     [DataRow(DbObjectType.View, "vw_ContractName")]
-    public void Many__NonProcedure_by_anon_object(DbObjectType objType, string actName)
+    public async Task ManyAsync__NonProcedure_by_anon_object(DbObjectType objType, string actName)
     {
         // Arrange
         var conn = new TestPhormConnection("")
@@ -307,21 +257,21 @@ public class PhormContractRunnerTests
 
         var cmd = new TestDbCommand(new TestDbDataReader
         {
-            Data = new List<Dictionary<string, object>>
-            {
-                new Dictionary<string, object>
+            Data =
+            [
+                new()
                 {
                     ["Value"] = "value1"
                 },
-                new Dictionary<string, object>
+                new()
                 {
                     ["Value"] = "value2"
                 },
-                new Dictionary<string, object>
+                new()
                 {
                     ["Value"] = "value3"
                 }
-            }
+            ]
         });
         conn.CommandQueue.Enqueue(cmd);
 
@@ -330,10 +280,10 @@ public class PhormContractRunnerTests
         var runner = new PhormContractRunner<IPhormContract>(phorm, "ContractName", objType, new { Arg1 = 1, Arg2 = 2 }, null);
 
         // Act
-        var res = runner.Get<TestDto[]>()!;
+        var res = await runner.GetAsync<TestDto[]>(TestContext.CancellationTokenSource.Token);
 
         // Assert
-        Assert.AreEqual(3, res.Length);
+        Assert.AreEqual(3, res!.Length);
         Assert.AreEqual(CommandType.Text, cmd.CommandType);
         Assert.AreEqual("SELECT * FROM [schema].[" + actName + "] WHERE [Arg1] = @Arg1 AND [Arg2] = @Arg2", cmd.CommandText);
         Assert.AreEqual("value1", res[0].Value);
@@ -349,9 +299,7 @@ public class PhormContractRunnerTests
     }
 
     [TestMethod]
-    [DataRow(DbObjectType.Table, "ContractName")]
-    [DataRow(DbObjectType.View, "vw_ContractName")]
-    public void ManyAsync__NonProcedure_by_anon_object(DbObjectType objType, string actName)
+    public async Task ManyAsync__Procedure_by_contract()
     {
         // Arrange
         var conn = new TestPhormConnection("")
@@ -361,73 +309,21 @@ public class PhormContractRunnerTests
 
         var cmd = new TestDbCommand(new TestDbDataReader
         {
-            Data = new List<Dictionary<string, object>>
-            {
-                new Dictionary<string, object>
+            Data =
+            [
+                new()
                 {
                     ["Value"] = "value1"
                 },
-                new Dictionary<string, object>
+                new()
                 {
                     ["Value"] = "value2"
                 },
-                new Dictionary<string, object>
+                new()
                 {
                     ["Value"] = "value3"
                 }
-            }
-        });
-        conn.CommandQueue.Enqueue(cmd);
-
-        var phorm = new TestPhormSession(conn);
-
-        var runner = new PhormContractRunner<IPhormContract>(phorm, "ContractName", objType, new { Arg1 = 1, Arg2 = 2 }, null);
-
-        // Act
-        var res = runner.Get<TestDto[]>()!;
-
-        // Assert
-        Assert.AreEqual(3, res.Length);
-        Assert.AreEqual(CommandType.Text, cmd.CommandType);
-        Assert.AreEqual("SELECT * FROM [schema].[" + actName + "] WHERE [Arg1] = @Arg1 AND [Arg2] = @Arg2", cmd.CommandText);
-        Assert.AreEqual("value1", res[0].Value);
-        Assert.AreEqual("value2", res[1].Value);
-        Assert.AreEqual("value3", res[2].Value);
-
-        var pars = cmd.Parameters.AsParameters();
-        Assert.AreEqual(3, pars.Length);
-        Assert.AreEqual("@Arg1", pars[0].ParameterName);
-        Assert.AreEqual("@Arg2", pars[1].ParameterName);
-        Assert.AreEqual(ParameterDirection.ReturnValue, pars[2].Direction);
-        Assert.AreEqual(1, pars[2].Value);
-    }
-
-    [TestMethod]
-    public void Many__Procedure_by_contract()
-    {
-        // Arrange
-        var conn = new TestPhormConnection("")
-        {
-            DefaultSchema = "schema"
-        };
-
-        var cmd = new TestDbCommand(new TestDbDataReader
-        {
-            Data = new List<Dictionary<string, object>>
-            {
-                new Dictionary<string, object>
-                {
-                    ["Value"] = "value1"
-                },
-                new Dictionary<string, object>
-                {
-                    ["Value"] = "value2"
-                },
-                new Dictionary<string, object>
-                {
-                    ["Value"] = "value3"
-                }
-            }
+            ]
         });
         conn.CommandQueue.Enqueue(cmd);
 
@@ -436,61 +332,10 @@ public class PhormContractRunnerTests
         var runner = new PhormContractRunner<TestContract>(phorm, "ContractName", DbObjectType.StoredProcedure, new TestContract { Arg = 1 }, null);
 
         // Act
-        var res = runner.Get<TestDto[]>()!;
+        var res = await runner.GetAsync<TestDto[]>(TestContext.CancellationTokenSource.Token);
 
         // Assert
-        Assert.AreEqual(3, res.Length);
-        Assert.AreEqual(CommandType.StoredProcedure, cmd.CommandType);
-        Assert.AreEqual("[schema].[usp_TestContract]", cmd.CommandText);
-        Assert.AreEqual("value1", res[0].Value);
-        Assert.AreEqual("value2", res[1].Value);
-        Assert.AreEqual("value3", res[2].Value);
-
-        var pars = cmd.Parameters.AsParameters();
-        Assert.AreEqual(2, pars.Length);
-        Assert.AreEqual("@Arg", pars[0].ParameterName);
-        Assert.AreEqual(ParameterDirection.ReturnValue, pars[1].Direction);
-        Assert.AreEqual(1, pars[1].Value);
-    }
-
-    [TestMethod]
-    public void ManyAsync__Procedure_by_contract()
-    {
-        // Arrange
-        var conn = new TestPhormConnection("")
-        {
-            DefaultSchema = "schema"
-        };
-
-        var cmd = new TestDbCommand(new TestDbDataReader
-        {
-            Data = new List<Dictionary<string, object>>
-            {
-                new Dictionary<string, object>
-                {
-                    ["Value"] = "value1"
-                },
-                new Dictionary<string, object>
-                {
-                    ["Value"] = "value2"
-                },
-                new Dictionary<string, object>
-                {
-                    ["Value"] = "value3"
-                }
-            }
-        });
-        conn.CommandQueue.Enqueue(cmd);
-
-        var phorm = new TestPhormSession(conn);
-
-        var runner = new PhormContractRunner<TestContract>(phorm, "ContractName", DbObjectType.StoredProcedure, new TestContract { Arg = 1 }, null);
-
-        // Act
-        var res = runner.GetAsync<TestDto[]>(CancellationToken.None).Result!;
-
-        // Assert
-        Assert.AreEqual(3, res.Length);
+        Assert.AreEqual(3, res!.Length);
         Assert.AreEqual(CommandType.StoredProcedure, cmd.CommandType);
         Assert.AreEqual("[schema].[usp_TestContract]", cmd.CommandText);
         Assert.AreEqual("value1", res[0].Value);
@@ -507,7 +352,7 @@ public class PhormContractRunnerTests
     [TestMethod]
     [DataRow(DbObjectType.Table, "TestContract")]
     [DataRow(DbObjectType.View, "vw_TestContract")]
-    public void Many__NonProcedure_by_contract(DbObjectType objType, string actName)
+    public async Task ManyAsync__NonProcedure_by_contract(DbObjectType objType, string actName)
     {
         // Arrange
         var conn = new TestPhormConnection("")
@@ -517,21 +362,21 @@ public class PhormContractRunnerTests
 
         var cmd = new TestDbCommand(new TestDbDataReader
         {
-            Data = new List<Dictionary<string, object>>
-            {
-                new Dictionary<string, object>
+            Data =
+            [
+                new()
                 {
                     ["Value"] = "value1"
                 },
-                new Dictionary<string, object>
+                new()
                 {
                     ["Value"] = "value2"
                 },
-                new Dictionary<string, object>
+                new()
                 {
                     ["Value"] = "value3"
                 }
-            }
+            ]
         });
         conn.CommandQueue.Enqueue(cmd);
 
@@ -540,63 +385,10 @@ public class PhormContractRunnerTests
         var runner = new PhormContractRunner<TestContract>(phorm, "ContractName", objType, new TestContract { Arg = 1 }, null);
 
         // Act
-        var res = runner.Get<TestDto[]>()!;
+        var res = await runner.GetAsync<TestDto[]>(TestContext.CancellationTokenSource.Token);
 
         // Assert
-        Assert.AreEqual(3, res.Length);
-        Assert.AreEqual(CommandType.Text, cmd.CommandType);
-        Assert.AreEqual("SELECT * FROM [schema].[" + actName + "] WHERE [Arg] = @Arg", cmd.CommandText);
-        Assert.AreEqual("value1", res[0].Value);
-        Assert.AreEqual("value2", res[1].Value);
-        Assert.AreEqual("value3", res[2].Value);
-
-        var pars = cmd.Parameters.AsParameters();
-        Assert.AreEqual(2, pars.Length);
-        Assert.AreEqual("@Arg", pars[0].ParameterName);
-        Assert.AreEqual(ParameterDirection.ReturnValue, pars[1].Direction);
-        Assert.AreEqual(1, pars[1].Value);
-    }
-
-    [TestMethod]
-    [DataRow(DbObjectType.Table, "TestContract")]
-    [DataRow(DbObjectType.View, "vw_TestContract")]
-    public void ManyAsync__NonProcedure_by_contract(DbObjectType objType, string actName)
-    {
-        // Arrange
-        var conn = new TestPhormConnection("")
-        {
-            DefaultSchema = "schema"
-        };
-
-        var cmd = new TestDbCommand(new TestDbDataReader
-        {
-            Data = new List<Dictionary<string, object>>
-            {
-                new Dictionary<string, object>
-                {
-                    ["Value"] = "value1"
-                },
-                new Dictionary<string, object>
-                {
-                    ["Value"] = "value2"
-                },
-                new Dictionary<string, object>
-                {
-                    ["Value"] = "value3"
-                }
-            }
-        });
-        conn.CommandQueue.Enqueue(cmd);
-
-        var phorm = new TestPhormSession(conn);
-
-        var runner = new PhormContractRunner<TestContract>(phorm, "ContractName", objType, new TestContract { Arg = 1 }, null);
-
-        // Act
-        var res = runner.GetAsync<TestDto[]>(CancellationToken.None).Result!;
-
-        // Assert
-        Assert.AreEqual(3, res.Length);
+        Assert.AreEqual(3, res!.Length);
         Assert.AreEqual(CommandType.Text, cmd.CommandType);
         Assert.AreEqual("SELECT * FROM [schema].[" + actName + "] WHERE [Arg] = @Arg", cmd.CommandText);
         Assert.AreEqual("value1", res[0].Value);
@@ -618,7 +410,7 @@ public class PhormContractRunnerTests
     }
 
     [TestMethod]
-    public void Many__SecureValue_sent_encrypted_received_decrypted_by_authenticator()
+    public async Task ManyAsync__SecureValue_sent_encrypted_received_decrypted_by_authenticator()
     {
         // Arrange
         var conn = new TestPhormConnection("")
@@ -647,7 +439,7 @@ public class PhormContractRunnerTests
         GlobalSettings.EncryptionProvider = provMock.Object;
 
         var rdr = new TestDbDataReader();
-        rdr.Data.Add(new Dictionary<string, object>()
+        rdr.Data.Add(new()
         {
             ["Arg"] = 100,
             ["Arg3"] = encdata
@@ -665,16 +457,16 @@ public class PhormContractRunnerTests
         var runner = new PhormContractRunner<ISecureTestContract>(phorm, null, DbObjectType.Default, dto, null);
 
         // Act
-        var res = runner.Get<TestSecureDto[]>()!;
+        var res = await runner.GetAsync<TestSecureDto[]>(TestContext.CancellationTokenSource.Token);
 
         // Assert
-        Assert.AreEqual(1, res.Length);
+        Assert.AreEqual(1, res!.Length);
         Assert.AreEqual("secure_value", res[0].Arg3);
         CollectionAssert.AreEqual(100.GetBytes(), encrMock.Object.Authenticator);
     }
 
     [TestMethod]
-    public void ManyAsync_IEnumerable__Result_not_resolved()
+    public async Task ManyAsync_IEnumerable__Result_not_resolved()
     {
         static int getUnresolvedEntityCount<T>(IEnumerable<T> l)
         {
@@ -691,21 +483,21 @@ public class PhormContractRunnerTests
 
         var cmd = new TestDbCommand(new TestDbDataReader
         {
-            Data = new List<Dictionary<string, object>>
-            {
-                new Dictionary<string, object>
+            Data =
+            [
+                new()
                 {
                     ["Value"] = "value1"
                 },
-                new Dictionary<string, object>
+                new()
                 {
                     ["Value"] = "value2"
                 },
-                new Dictionary<string, object>
+                new()
                 {
                     ["Value"] = "value3"
                 }
-            }
+            ]
         });
         conn.CommandQueue.Enqueue(cmd);
 
@@ -714,23 +506,23 @@ public class PhormContractRunnerTests
         var runner = new PhormContractRunner<TestContract>(phorm, "ContractName", DbObjectType.StoredProcedure, new TestContract { Arg = 1 }, null);
 
         // Act
-        var res = runner.GetAsync<IEnumerable<TestDto>>(CancellationToken.None).Result!;
+        var res = await runner.GetAsync<IEnumerable<TestDto>>(TestContext.CancellationTokenSource.Token);
 
         // Assert
-        Assert.AreEqual(3, res.Count());
-        Assert.AreEqual(3, getUnresolvedEntityCount(res));
+        Assert.AreEqual(3, res!.Count());
+        Assert.AreEqual(3, getUnresolvedEntityCount(res!));
         Assert.AreEqual(CommandType.StoredProcedure, cmd.CommandType);
         Assert.AreEqual("[schema].[usp_TestContract]", cmd.CommandText);
 
-        var arr = res.ToArray();
+        var arr = res!.ToArray();
         Assert.AreEqual("value1", arr[0].Value);
         Assert.AreEqual("value2", arr[1].Value);
         Assert.AreEqual("value3", arr[2].Value);
-        Assert.AreEqual(0, getUnresolvedEntityCount(res));
+        Assert.AreEqual(0, getUnresolvedEntityCount(res!));
     }
 
     [TestMethod]
-    public void ManyAsync_ICollection__Result_not_resolved()
+    public async Task ManyAsync_ICollection__Result_not_resolved()
     {
         static int getUnresolvedEntityCount<T>(IEnumerable<T> l)
         {
@@ -747,21 +539,21 @@ public class PhormContractRunnerTests
 
         var cmd = new TestDbCommand(new TestDbDataReader
         {
-            Data = new List<Dictionary<string, object>>
-            {
-                new Dictionary<string, object>
+            Data =
+            [
+                new()
                 {
                     ["Value"] = "value1"
                 },
-                new Dictionary<string, object>
+                new()
                 {
                     ["Value"] = "value2"
                 },
-                new Dictionary<string, object>
+                new()
                 {
                     ["Value"] = "value3"
                 }
-            }
+            ]
         });
         conn.CommandQueue.Enqueue(cmd);
 
@@ -770,19 +562,19 @@ public class PhormContractRunnerTests
         var runner = new PhormContractRunner<TestContract>(phorm, "ContractName", DbObjectType.StoredProcedure, new TestContract { Arg = 1 }, null);
 
         // Act
-        var res = runner.GetAsync<ICollection<TestDto>>(CancellationToken.None).Result!;
+        var res = await runner.GetAsync<ICollection<TestDto>>(TestContext.CancellationTokenSource.Token);
 
         // Assert
-        Assert.AreEqual(3, res.Count);
-        Assert.AreEqual(3, getUnresolvedEntityCount(res));
+        Assert.HasCount(3, res!);
+        Assert.AreEqual(3, getUnresolvedEntityCount(res!));
         Assert.AreEqual(CommandType.StoredProcedure, cmd.CommandType);
         Assert.AreEqual("[schema].[usp_TestContract]", cmd.CommandText);
 
-        var arr = res.ToArray();
+        var arr = res!.ToArray();
         Assert.AreEqual("value1", arr[0].Value);
         Assert.AreEqual("value2", arr[1].Value);
         Assert.AreEqual("value3", arr[2].Value);
-        Assert.AreEqual(0, getUnresolvedEntityCount(res));
+        Assert.AreEqual(0, getUnresolvedEntityCount(res!));
     }
 
     #endregion Many
@@ -790,7 +582,7 @@ public class PhormContractRunnerTests
     #region One
 
     [TestMethod]
-    public void One__Supports_DBNull()
+    public async Task OneAsync__Supports_DBNull()
     {
         // Arrange
         var conn = new TestPhormConnection("")
@@ -800,13 +592,13 @@ public class PhormContractRunnerTests
 
         var cmd = new TestDbCommand(new TestDbDataReader
         {
-            Data = new List<Dictionary<string, object>>
-            {
-                new Dictionary<string, object>
+            Data =
+            [
+                new()
                 {
                     ["Value"] = DBNull.Value
                 }
-            }
+            ]
         });
         conn.CommandQueue.Enqueue(cmd);
 
@@ -815,14 +607,14 @@ public class PhormContractRunnerTests
         var runner = new PhormContractRunner<IPhormContract>(phorm, "ContractName", DbObjectType.StoredProcedure, new { Arg = 1 }, null);
 
         // Act
-        var obj = runner.Get<TestDto>()!;
+        var obj = await runner.GetAsync<TestDto>(TestContext.CancellationTokenSource.Token);
 
         // Assert
-        Assert.IsNull(obj.Value);
+        Assert.IsNull(obj!.Value);
     }
 
     [TestMethod]
-    public void One__Multiple_records__Exception()
+    public async Task One__Multiple_records__Exception()
     {
         // Arrange
         var conn = new TestPhormConnection("")
@@ -832,17 +624,17 @@ public class PhormContractRunnerTests
 
         var cmd = new TestDbCommand(new TestDbDataReader
         {
-            Data = new List<Dictionary<string, object>>
-            {
-                new Dictionary<string, object>
+            Data =
+            [
+                new()
                 {
                     ["Value"] = "value1"
                 },
-                new Dictionary<string, object>
+                new()
                 {
                     ["Value"] = "value1"
                 }
-            }
+            ]
         });
         conn.CommandQueue.Enqueue(cmd);
 
@@ -851,12 +643,12 @@ public class PhormContractRunnerTests
         var runner = new PhormContractRunner<IPhormContract>(phorm, "ContractName", DbObjectType.StoredProcedure, new { Arg = 1 }, null);
 
         // Act
-        Assert.ThrowsException<InvalidOperationException>
-            (() => runner.Get<TestDto>());
+        await Assert.ThrowsExactlyAsync<InvalidOperationException>
+            (async () => await runner.GetAsync<TestDto>(TestContext.CancellationTokenSource.Token));
     }
 
     [TestMethod]
-    public void One__Multiple_records__StrictResultSize_False__Ignored()
+    public async Task OneAsync__Multiple_records__StrictResultSize_False__Ignored()
     {
         // Arrange
         var conn = new TestPhormConnection("")
@@ -866,17 +658,17 @@ public class PhormContractRunnerTests
 
         var cmd = new TestDbCommand(new TestDbDataReader
         {
-            Data = new List<Dictionary<string, object>>
-            {
-                new Dictionary<string, object>
+            Data =
+            [
+                new()
                 {
                     ["Value"] = "value1"
                 },
-                new Dictionary<string, object>
+                new()
                 {
                     ["Value"] = "value1"
                 }
-            }
+            ]
         });
         conn.CommandQueue.Enqueue(cmd);
 
@@ -888,14 +680,14 @@ public class PhormContractRunnerTests
         var runner = new PhormContractRunner<IPhormContract>(phorm, "ContractName", DbObjectType.StoredProcedure, new { Arg = 1 }, null);
 
         // Act
-        var res = runner.Get<TestDto>()!;
+        var res = await runner.GetAsync<TestDto>(TestContext.CancellationTokenSource.Token);
 
         // Assert
-        Assert.AreEqual("value1", res.Value);
+        Assert.AreEqual("value1", res!.Value);
     }
 
     [TestMethod]
-    public void One__Procedure_by_anon_object()
+    public async Task OneAsync__Procedure_by_anon_contract()
     {
         // Arrange
         var conn = new TestPhormConnection("")
@@ -905,53 +697,13 @@ public class PhormContractRunnerTests
 
         var cmd = new TestDbCommand(new TestDbDataReader
         {
-            Data = new List<Dictionary<string, object>>
-            {
-                new Dictionary<string, object>
+            Data =
+            [
+                new()
                 {
                     ["Value"] = "value1"
                 }
-            }
-        });
-        conn.CommandQueue.Enqueue(cmd);
-
-        var phorm = new TestPhormSession(conn);
-
-        var runner = new PhormContractRunner<IPhormContract>(phorm, "ContractName", DbObjectType.StoredProcedure, new { Arg = 1 }, null);
-
-        // Act
-        var res = runner.Get<TestDto>()!;
-
-        // Assert
-        Assert.AreEqual(CommandType.StoredProcedure, cmd.CommandType);
-        Assert.AreEqual("[schema].[usp_ContractName]", cmd.CommandText);
-        Assert.AreEqual("value1", res.Value);
-
-        var pars = cmd.Parameters.AsParameters();
-        Assert.AreEqual(2, pars.Length);
-        Assert.AreEqual("@Arg", pars[0].ParameterName);
-        Assert.AreEqual(ParameterDirection.ReturnValue, pars[1].Direction);
-        Assert.AreEqual(1, pars[1].Value);
-    }
-
-    [TestMethod]
-    public void OneAsync__Procedure_by_anon_contract()
-    {
-        // Arrange
-        var conn = new TestPhormConnection("")
-        {
-            DefaultSchema = "schema"
-        };
-
-        var cmd = new TestDbCommand(new TestDbDataReader
-        {
-            Data = new List<Dictionary<string, object>>
-            {
-                new Dictionary<string, object>
-                {
-                    ["Value"] = "value1"
-                }
-            }
+            ]
         });
         conn.CommandQueue.Enqueue(cmd);
 
@@ -977,7 +729,7 @@ public class PhormContractRunnerTests
     [TestMethod]
     [DataRow(DbObjectType.Table, "ContractName")]
     [DataRow(DbObjectType.View, "vw_ContractName")]
-    public void One__NonProcedure_by_anon_object(DbObjectType objType, string actName)
+    public async Task OneAsync__NonProcedure_by_anon_object(DbObjectType objType, string actName)
     {
         // Arrange
         var conn = new TestPhormConnection("")
@@ -987,13 +739,13 @@ public class PhormContractRunnerTests
 
         var cmd = new TestDbCommand(new TestDbDataReader
         {
-            Data = new List<Dictionary<string, object>>
-            {
-                new Dictionary<string, object>
+            Data =
+            [
+                new()
                 {
                     ["Value"] = "value1"
                 }
-            }
+            ]
         });
         conn.CommandQueue.Enqueue(cmd);
 
@@ -1002,12 +754,12 @@ public class PhormContractRunnerTests
         var runner = new PhormContractRunner<IPhormContract>(phorm, "ContractName", objType, new { Arg1 = 1, Arg2 = 2 }, null);
 
         // Act
-        var res = runner.Get<TestDto>()!;
+        var res = await runner.GetAsync<TestDto>(TestContext.CancellationTokenSource.Token);
 
         // Assert
         Assert.AreEqual(CommandType.Text, cmd.CommandType);
         Assert.AreEqual("SELECT * FROM [schema].[" + actName + "] WHERE [Arg1] = @Arg1 AND [Arg2] = @Arg2", cmd.CommandText);
-        Assert.AreEqual("value1", res.Value);
+        Assert.AreEqual("value1", res!.Value);
 
         var pars = cmd.Parameters.AsParameters();
         Assert.AreEqual(3, pars.Length);
@@ -1018,9 +770,7 @@ public class PhormContractRunnerTests
     }
 
     [TestMethod]
-    [DataRow(DbObjectType.Table, "ContractName")]
-    [DataRow(DbObjectType.View, "vw_ContractName")]
-    public void OneAsync__NonProcedure_by_anon_object(DbObjectType objType, string actName)
+    public async Task OneAsync__Procedure_by_contract()
     {
         // Arrange
         var conn = new TestPhormConnection("")
@@ -1030,94 +780,13 @@ public class PhormContractRunnerTests
 
         var cmd = new TestDbCommand(new TestDbDataReader
         {
-            Data = new List<Dictionary<string, object>>
-            {
-                new Dictionary<string, object>
+            Data =
+            [
+                new()
                 {
                     ["Value"] = "value1"
                 }
-            }
-        });
-        conn.CommandQueue.Enqueue(cmd);
-
-        var phorm = new TestPhormSession(conn);
-
-        var runner = new PhormContractRunner<IPhormContract>(phorm, "ContractName", objType, new { Arg1 = 1, Arg2 = 2 }, null);
-
-        // Act
-        var res = runner.Get<TestDto>()!;
-
-        // Assert
-        Assert.AreEqual(CommandType.Text, cmd.CommandType);
-        Assert.AreEqual("SELECT * FROM [schema].[" + actName + "] WHERE [Arg1] = @Arg1 AND [Arg2] = @Arg2", cmd.CommandText);
-        Assert.AreEqual("value1", res.Value);
-
-        var pars = cmd.Parameters.AsParameters();
-        Assert.AreEqual(3, pars.Length);
-        Assert.AreEqual("@Arg1", pars[0].ParameterName);
-        Assert.AreEqual("@Arg2", pars[1].ParameterName);
-        Assert.AreEqual(ParameterDirection.ReturnValue, pars[2].Direction);
-        Assert.AreEqual(1, pars[2].Value);
-    }
-
-    [TestMethod]
-    public void One__Procedure_by_contract()
-    {
-        // Arrange
-        var conn = new TestPhormConnection("")
-        {
-            DefaultSchema = "schema"
-        };
-
-        var cmd = new TestDbCommand(new TestDbDataReader
-        {
-            Data = new List<Dictionary<string, object>>
-            {
-                new Dictionary<string, object>
-                {
-                    ["Value"] = "value1"
-                }
-            }
-        });
-        conn.CommandQueue.Enqueue(cmd);
-
-        var phorm = new TestPhormSession(conn);
-
-        var runner = new PhormContractRunner<TestContract>(phorm, "ContractName", DbObjectType.StoredProcedure, new TestContract { Arg = 1 }, null);
-
-        // Act
-        var res = runner.Get<TestDto>()!;
-
-        // Assert
-        Assert.AreEqual(CommandType.StoredProcedure, cmd.CommandType);
-        Assert.AreEqual("[schema].[usp_TestContract]", cmd.CommandText);
-        Assert.AreEqual("value1", res.Value);
-
-        var pars = cmd.Parameters.AsParameters();
-        Assert.AreEqual(2, pars.Length);
-        Assert.AreEqual("@Arg", pars[0].ParameterName);
-        Assert.AreEqual(ParameterDirection.ReturnValue, pars[1].Direction);
-        Assert.AreEqual(1, pars[1].Value);
-    }
-
-    [TestMethod]
-    public void OneAsync__Procedure_by_contract()
-    {
-        // Arrange
-        var conn = new TestPhormConnection("")
-        {
-            DefaultSchema = "schema"
-        };
-
-        var cmd = new TestDbCommand(new TestDbDataReader
-        {
-            Data = new List<Dictionary<string, object>>
-            {
-                new Dictionary<string, object>
-                {
-                    ["Value"] = "value1"
-                }
-            }
+            ]
         });
         conn.CommandQueue.Enqueue(cmd);
 
@@ -1143,7 +812,7 @@ public class PhormContractRunnerTests
     [TestMethod]
     [DataRow(DbObjectType.Table, "TestContract")]
     [DataRow(DbObjectType.View, "vw_TestContract")]
-    public void One__NonProcedure_by_contract(DbObjectType objType, string actName)
+    public async Task OneAsync__NonProcedure_by_contract(DbObjectType objType, string actName)
     {
         // Arrange
         var conn = new TestPhormConnection("")
@@ -1153,55 +822,13 @@ public class PhormContractRunnerTests
 
         var cmd = new TestDbCommand(new TestDbDataReader
         {
-            Data = new List<Dictionary<string, object>>
-            {
-                new Dictionary<string, object>
+            Data =
+            [
+                new()
                 {
                     ["Value"] = "value1"
                 }
-            }
-        });
-        conn.CommandQueue.Enqueue(cmd);
-
-        var phorm = new TestPhormSession(conn);
-
-        var runner = new PhormContractRunner<TestContract>(phorm, "ContractName", objType, new TestContract { Arg = 1 }, null);
-
-        // Act
-        var res = runner.Get<TestDto>()!;
-
-        // Assert
-        Assert.AreEqual(CommandType.Text, cmd.CommandType);
-        Assert.AreEqual("SELECT * FROM [schema].[" + actName + "] WHERE [Arg] = @Arg", cmd.CommandText);
-        Assert.AreEqual("value1", res.Value);
-
-        var pars = cmd.Parameters.AsParameters();
-        Assert.AreEqual(2, pars.Length);
-        Assert.AreEqual("@Arg", pars[0].ParameterName);
-        Assert.AreEqual(ParameterDirection.ReturnValue, pars[1].Direction);
-        Assert.AreEqual(1, pars[1].Value);
-    }
-
-    [TestMethod]
-    [DataRow(DbObjectType.Table, "TestContract")]
-    [DataRow(DbObjectType.View, "vw_TestContract")]
-    public void OneAsync__NonProcedure_by_contract(DbObjectType objType, string actName)
-    {
-        // Arrange
-        var conn = new TestPhormConnection("")
-        {
-            DefaultSchema = "schema"
-        };
-
-        var cmd = new TestDbCommand(new TestDbDataReader
-        {
-            Data = new List<Dictionary<string, object>>
-            {
-                new Dictionary<string, object>
-                {
-                    ["Value"] = "value1"
-                }
-            }
+            ]
         });
         conn.CommandQueue.Enqueue(cmd);
 
@@ -1225,7 +852,7 @@ public class PhormContractRunnerTests
     }
 
     [TestMethod]
-    public void One__SecureValue_sent_encrypted_received_decrypted_by_authenticator()
+    public async Task OneAsync__SecureValue_sent_encrypted_received_decrypted_by_authenticator()
     {
         // Arrange
         var conn = new TestPhormConnection("")
@@ -1256,7 +883,7 @@ public class PhormContractRunnerTests
         GlobalSettings.EncryptionProvider = provMock.Object;
 
         var rdr = new TestDbDataReader();
-        rdr.Data.Add(new Dictionary<string, object>()
+        rdr.Data.Add(new()
         {
             ["Arg"] = 100,
             ["Arg3"] = encdata
@@ -1274,11 +901,11 @@ public class PhormContractRunnerTests
         var runner = new PhormContractRunner<ISecureTestContract>(phorm, null, DbObjectType.Default, dto, null);
 
         // Act
-        var res = runner.Get<TestSecureDto>()!;
+        var res = await runner.GetAsync<TestSecureDto>(TestContext.CancellationTokenSource.Token);
 
         // Assert
         mocks.Verify();
-        Assert.AreEqual("secure_value", res.Arg3);
+        Assert.AreEqual("secure_value", res!.Arg3);
         CollectionAssert.AreEqual(100.GetBytes(), encrMock.Object.Authenticator);
     }
 
@@ -1300,7 +927,7 @@ public class PhormContractRunnerTests
     }
 
     [TestMethod]
-    public void Get__Contract_can_receive_console_messages()
+    public async Task GetAsync__Contract_can_receive_console_messages()
     {
         // Arrange
         var conn = new TestPhormConnection("")
@@ -1335,7 +962,7 @@ public class PhormContractRunnerTests
     }
 
     [TestMethod]
-    public void Get__Anonymous_contract_can_receive_console_messages()
+    public async Task GetAsync__Anonymous_contract_can_receive_console_messages()
     {
         // Arrange
         var conn = new TestPhormConnection("")

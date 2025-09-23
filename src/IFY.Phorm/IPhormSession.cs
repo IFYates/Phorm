@@ -76,51 +76,6 @@ public interface IPhormSession
     #region Call/get from action contract
 
     /// <summary>
-    /// Invokes the specified action contract and returns the result as an integer.
-    /// </summary>
-    /// <param name="contractName">The name of the action contract to call. Cannot be null or empty.</param>
-    /// <returns>An integer value returned by the action contract.</returns>
-    public int Call(string contractName)
-        => Call(contractName, args: null);
-    /// <summary>
-    /// Invokes the specified contract with the provided arguments and returns the result as an integer.
-    /// </summary>
-    /// <param name="contractName">The name of the contract to invoke. Cannot be null or empty.</param>
-    /// <param name="args">An object containing the arguments to pass to the contract. Can be null if the contract does not require
-    /// arguments.</param>
-    /// <returns>An integer representing the result of the contract invocation. The meaning of the result depends on the contract
-    /// implementation.</returns>
-    int Call(string contractName, object? args);
-
-    /// <summary>
-    /// Invokes the specified action contract without any arguments and returns the result code.
-    /// </summary>
-    /// <typeparam name="TActionContract">The type of the action contract to invoke. Must implement <see cref="IPhormContract"/>.</typeparam>
-    /// <returns>An integer representing the result code of the invoked action contract.</returns>
-    public int Call<TActionContract>()
-        where TActionContract : IPhormContract
-        => Call<TActionContract>(args: null);
-    /// <summary>
-    /// Invokes the specified action contract and returns the result as an integer.
-    /// </summary>
-    /// <typeparam name="TActionContract">The type of the action contract to invoke. Must implement <see cref="IPhormContract"/>.</typeparam>
-    /// <param name="contract">The action contract instance to be executed. Cannot be null.</param>
-    /// <returns>An integer representing the result of the invoked action contract.</returns>
-    public int Call<TActionContract>(TActionContract contract) // Same as "object? args = null", but allows better Intellisense
-        where TActionContract : IPhormContract
-        => Call<TActionContract>(args: contract);
-    /// <summary>
-    /// Invokes the specified action contract with the provided arguments and returns an integer result.
-    /// </summary>
-    /// <typeparam name="TActionContract">The type of action contract to invoke. Must implement <see cref="IPhormContract"/>.</typeparam>
-    /// <param name="args">An object containing the arguments to pass to the action contract. Can be <see langword="null"/> if the contract
-    /// does not require arguments.</param>
-    /// <returns>An integer value representing the result of the contract invocation. The meaning of the result depends on the
-    /// specific contract implementation.</returns>
-    int Call<TActionContract>(object? args)
-        where TActionContract : IPhormContract;
-
-    /// <summary>
     /// Invokes the specified contract asynchronously and returns the result as an integer.
     /// </summary>
     /// <param name="contractName">The name of the contract to invoke. Cannot be null or empty.</param>
@@ -267,33 +222,6 @@ public interface IPhormSession
     #endregion Call/get from action contract
 
     #region Get from Table/View
-
-    /// <summary>
-    /// Retrieves a single result of the specified type from the underlying data source.
-    /// </summary>
-    /// <typeparam name="TResult">The type of the result to retrieve. Must be a reference type.</typeparam>
-    /// <returns>An instance of <typeparamref name="TResult"/> if a matching result is found; otherwise, <see langword="null"/>.</returns>
-    public TResult? Get<TResult>()
-        where TResult : class
-        => Get<TResult>(args: null);
-    /// <summary>
-    /// Retrieves an instance of the specified contract type using the provided contract object as input.
-    /// </summary>
-    /// <typeparam name="TResult">The type of the contract to retrieve. Must be a reference type.</typeparam>
-    /// <param name="contract">An object representing the contract to use for retrieval. Cannot be null.</param>
-    /// <returns>An instance of <typeparamref name="TResult"/> if found; otherwise, <see langword="null"/>.</returns>
-    public TResult? Get<TResult>(TResult contract) // Same as "object? args = null", but allows better Intellisense
-        where TResult : class
-        => Get<TResult>(args: contract);
-    /// <summary>
-    /// Retrieves an instance of the specified result type using the provided arguments.
-    /// </summary>
-    /// <typeparam name="TResult">The type of object to retrieve. Must be a reference type.</typeparam>
-    /// <param name="args">An optional argument object used to influence the retrieval process. The interpretation of this parameter
-    /// depends on the implementation.</param>
-    /// <returns>An instance of <typeparamref name="TResult"/> if found; otherwise, <see langword="null"/>.</returns>
-    TResult? Get<TResult>(object? args)
-        where TResult : class;
 
     /// <summary>
     /// Asynchronously retrieves a result of the specified reference type, or null if no result is available.

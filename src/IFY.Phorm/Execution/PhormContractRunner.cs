@@ -335,9 +335,6 @@ internal sealed partial class PhormContractRunner<TActionContract> : IPhormContr
         return parseCommandResult(cmd, _runArgs, pars, console.GetConsoleMessages(), eventArgs, null);
     }
 
-    public TResult? Get<TResult>()
-        where TResult : class
-        => GetAsync<TResult>(CancellationToken.None).GetAwaiter().GetResult();
     public async Task<TResult?> GetAsync<TResult>(CancellationToken cancellationToken)
         where TResult : class
     {

@@ -52,7 +52,7 @@ public class EncryptorTests
     }
 
     [TestMethod]
-    public void Can_encrypt_string_value_out_to_database()
+    public async Task Can_encrypt_string_value_out_to_database()
     {
         // Arrange
         var runner = new TestPhormSession();
@@ -73,7 +73,7 @@ public class EncryptorTests
         GlobalSettings.EncryptionProvider = encProcMock.Object;
 
         // Act
-        var res = runner.Call<ISaveDataObject>(args);
+        var res = await runner.CallAsync<ISaveDataObject>(args, CancellationToken.None);
 
         // Assert
         Assert.AreEqual(1, res);
@@ -84,7 +84,7 @@ public class EncryptorTests
     }
 
     [TestMethod]
-    public void Can_encrypt_with_authenticator()
+    public async Task Can_encrypt_with_authenticator()
     {
         // Arrange
         var runner = new TestPhormSession();
@@ -105,7 +105,7 @@ public class EncryptorTests
         GlobalSettings.EncryptionProvider = encProcMock.Object;
 
         // Act
-        var res = runner.Call<ISaveDataObjectWithAuthenticator>(args);
+        var res = await runner.CallAsync<ISaveDataObjectWithAuthenticator>(args, CancellationToken.None);
 
         // Assert
         Assert.AreEqual(1, res);
@@ -113,7 +113,7 @@ public class EncryptorTests
     }
 
     [TestMethod]
-    public void Can_encrypt_transformed_value()
+    public async Task Can_encrypt_transformed_value()
     {
         // Arrange
         var runner = new TestPhormSession();
@@ -133,7 +133,7 @@ public class EncryptorTests
         GlobalSettings.EncryptionProvider = encProcMock.Object;
 
         // Act
-        var res = runner.Call<ISaveDataObjectWithTransformation>(args);
+        var res = await runner.CallAsync<ISaveDataObjectWithTransformation>(args, CancellationToken.None);
 
         // Assert
         Assert.AreEqual(1, res);
