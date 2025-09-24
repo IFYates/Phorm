@@ -1,6 +1,5 @@
 using IFY.Phorm.Data;
 using IFY.Phorm.Execution;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Runtime.Serialization;
 using System.Text;
 
@@ -10,23 +9,15 @@ namespace IFY.Phorm.SqlClient.IntegrationTests;
 public class CallTests : SqlIntegrationTestBase
 {
     [PhormContract(Name = "CallTestTable", Target = DbObjectType.Table)]
-    class DataItem : IUpsert, IUpsertOnlyIntWithId
+    class DataItem(long id, int? num, string? text, byte[]? data, DateTime? dateTime) : IUpsert, IUpsertOnlyIntWithId
     {
-        public long Id { get; set; } = 0;
+        public long Id { get; set; } = id;
         [DataMember(Name = "Int")]
-        public int? Num { get; set; } = null;
-        public string? Text { get; set; } = null;
-        public byte[]? Data { get; set; } = null;
-        public DateTime? DateTime { get; set; } = null;
+        public int? Num { get; set; } = num;
+        public string? Text { get; set; } = text;
+        public byte[]? Data { get; set; } = data;
+        public DateTime? DateTime { get; set; } = dateTime;
 
-        public DataItem(long id, int? num, string? text, byte[]? data, DateTime? dateTime)
-        {
-            Id = id;
-            Num = num;
-            Text = text;
-            Data = data;
-            DateTime = dateTime;
-        }
         public DataItem() : this(default, default, default, default, default)
         { }
     }
@@ -49,19 +40,19 @@ public class CallTests : SqlIntegrationTestBase
         int? Num { get; }
     }
 
-    private void setupCallTestSchema(AbstractPhormSession phorm)
+    private async Task setupCallTestSchema(AbstractPhormSession phorm)
     {
-        SqlTestHelpers.ApplySql(phorm, @"DROP TABLE IF EXISTS [dbo].[CallTestTable]");
-        SqlTestHelpers.ApplySql(phorm, @"CREATE TABLE [dbo].[CallTestTable] (
+        await SqlTestHelpers.ApplySql(phorm, TestContext.CancellationTokenSource.Token, [
+            @"DROP TABLE IF EXISTS [dbo].[CallTestTable]",
+            @"CREATE TABLE [dbo].[CallTestTable] (
 	[Id] BIGINT NOT NULL IDENTITY(1,1) PRIMARY KEY,
 	[Int] INT NULL,
 	[Text] VARCHAR(256) NULL,
 	[Data] VARBINARY(MAX) NULL,
 	[DateTime] DATETIME2 NULL,
 	[IsInView] BIT NOT NULL DEFAULT (1)
-)");
-
-        SqlTestHelpers.ApplySql(phorm, @"CREATE OR ALTER PROC [dbo].[usp_CallTest_Upsert]
+)",
+            @"CREATE OR ALTER PROC [dbo].[usp_CallTest_Upsert]
 	@Id BIGINT = NULL OUTPUT,
 	@Int INT = NULL,
 	@Text VARCHAR(256) = NULL,
@@ -84,15 +75,16 @@ AS
 		[DateTime] = @DateTime,
 		[IsInView] = ISNULL(@IsInView, [IsInView])
 		WHERE [Id] = @Id
-RETURN @@ROWCOUNT");
+RETURN @@ROWCOUNT"
+        ]);
     }
 
     [TestMethod]
-    public void Call__By_anon_Insert_various_types()
+    public async Task Call__By_anon_Insert_various_types()
     {
         // Arrange
         var phorm = getPhormSession();
-        setupCallTestSchema(phorm);
+        await setupCallTestSchema(phorm);
 
         var randNum = DateTime.UtcNow.Millisecond;
         var randStr = Guid.NewGuid().ToString();
@@ -100,23 +92,23 @@ RETURN @@ROWCOUNT");
         var randDT = DateTime.UtcNow;
 
         // Act
-        var res = phorm.Call("CallTest_Upsert", new { Int = randNum, Text = randStr, Data = randData, DateTime = randDT });
-        var obj = phorm.Get<DataItem>(null!)!;
+        var res = await phorm.CallAsync("CallTest_Upsert", new { Int = randNum, Text = randStr, Data = randData, DateTime = randDT }, TestContext.CancellationTokenSource.Token);
+        var obj = await phorm.GetAsync<DataItem>(null!, TestContext.CancellationTokenSource.Token);
 
         // Assert
         Assert.AreEqual(1, res);
-        Assert.AreEqual(randNum, obj.Num);
+        Assert.AreEqual(randNum, obj!.Num);
         Assert.AreEqual(randStr, obj.Text);
         CollectionAssert.AreEqual(randData, obj.Data);
         Assert.AreEqual(randDT, obj.DateTime);
     }
 
     [TestMethod]
-    public void Call__By_contract_and_anon_arg_Insert_various_types()
+    public async Task Call__By_contract_and_anon_arg_Insert_various_types()
     {
         // Arrange
         var phorm = getPhormSession();
-        setupCallTestSchema(phorm);
+        await setupCallTestSchema(phorm);
 
         var randNum = DateTime.UtcNow.Millisecond;
         var randStr = Guid.NewGuid().ToString();
@@ -124,23 +116,23 @@ RETURN @@ROWCOUNT");
         var randDT = DateTime.UtcNow;
 
         // Act
-        var res = phorm.Call<IUpsert>(new { Num = randNum, Text = randStr, Data = randData, DateTime = randDT });
-        var obj = phorm.Get<DataItem>(null!)!;
+        var res = await phorm.CallAsync<IUpsert>(new { Num = randNum, Text = randStr, Data = randData, DateTime = randDT }, TestContext.CancellationTokenSource.Token);
+        var obj = await phorm.GetAsync<DataItem>(null!, TestContext.CancellationTokenSource.Token);
 
         // Assert
         Assert.AreEqual(1, res);
-        Assert.AreEqual(randNum, obj.Num);
+        Assert.AreEqual(randNum, obj!.Num);
         Assert.AreEqual(randStr, obj.Text);
         CollectionAssert.AreEqual(randData, obj.Data);
         Assert.AreEqual(randDT, obj.DateTime);
     }
 
     [TestMethod]
-    public void Call__By_contract_arg_Insert_various_types()
+    public async Task Call__By_contract_arg_Insert_various_types()
     {
         // Arrange
         var phorm = getPhormSession();
-        setupCallTestSchema(phorm);
+        await setupCallTestSchema(phorm);
 
         var arg = new DataItem(0,
             DateTime.UtcNow.Millisecond,
@@ -150,23 +142,23 @@ RETURN @@ROWCOUNT");
         );
 
         // Act
-        var res = phorm.Call<IUpsert>(arg);
-        var obj = phorm.Get<DataItem>(null!)!;
+        var res = await phorm.CallAsync<IUpsert>(arg, TestContext.CancellationTokenSource.Token);
+        var obj = await phorm.GetAsync<DataItem>(null!, TestContext.CancellationTokenSource.Token);
 
         // Assert
         Assert.AreEqual(1, res);
-        Assert.AreEqual(arg.Num, obj.Num);
+        Assert.AreEqual(arg.Num, obj!.Num);
         Assert.AreEqual(arg.Text, obj.Text);
         CollectionAssert.AreEqual(arg.Data, obj.Data);
         Assert.AreEqual(arg.DateTime, obj.DateTime);
     }
 
     [TestMethod]
-    public void Call__Get_by_anon_output()
+    public async Task Call__Get_by_anon_output()
     {
         // Arrange
         var phorm = getPhormSession();
-        setupCallTestSchema(phorm);
+        await setupCallTestSchema(phorm);
 
         var arg = new
         {
@@ -174,29 +166,29 @@ RETURN @@ROWCOUNT");
         };
 
         // Act
-        var res = phorm.Call("CallTest_Upsert", arg);
-        var obj = phorm.Get<DataItem>(null!)!;
+        var res = await phorm.CallAsync("CallTest_Upsert", arg, TestContext.CancellationTokenSource.Token);
+        var obj = await phorm.GetAsync<DataItem>(null!, TestContext.CancellationTokenSource.Token);
 
         // Assert
         Assert.AreEqual(1, res);
-        Assert.AreEqual(obj.Id, arg.Id.Value);
+        Assert.AreEqual(obj!.Id, arg.Id.Value);
     }
 
     [TestMethod]
-    public void Call__Get_by_contract_output()
+    public async Task Call__Get_by_contract_output()
     {
         // Arrange
         var phorm = getPhormSession();
-        setupCallTestSchema(phorm);
+        await setupCallTestSchema(phorm);
 
         var arg = new DataItem();
 
         // Act
-        var res = phorm.Call<IUpsertOnlyIntWithId>(arg);
-        var obj = phorm.Get<DataItem>(null!)!;
+        var res = await phorm.CallAsync<IUpsertOnlyIntWithId>(arg, TestContext.CancellationTokenSource.Token);
+        var obj = await phorm.GetAsync<DataItem>(null!, TestContext.CancellationTokenSource.Token);
 
         // Assert
         Assert.AreEqual(1, res);
-        Assert.AreEqual(obj.Id, arg.Id);
+        Assert.AreEqual(obj!.Id, arg.Id);
     }
 }

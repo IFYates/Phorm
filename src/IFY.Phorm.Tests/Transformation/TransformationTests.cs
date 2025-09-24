@@ -1,7 +1,6 @@
 ﻿using IFY.Phorm.Data;
 using IFY.Phorm.Execution;
 using IFY.Phorm.Transformation;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Data;
 using System.Diagnostics.CodeAnalysis;
 
@@ -10,6 +9,8 @@ namespace IFY.Phorm.Tests.Encryption;
 [TestClass]
 public class TransformationTests
 {
+    public TestContext TestContext { get; set; }
+
     class DataObject
     {
         [TransformFromSource]
@@ -47,7 +48,7 @@ public class TransformationTests
     }
 
     [TestMethod]
-    public void Can_transform_value_to_datasource()
+    public async Task Can_transform_value_to_datasource()
     {
         // Arrange
         var runner = new TestPhormSession();
@@ -55,7 +56,7 @@ public class TransformationTests
         var args = new { Value = "value" };
 
         // Act
-        var res = runner.Call<IWithTransformation>(args);
+        var res = await runner.CallAsync<IWithTransformation>(args, TestContext.CancellationTokenSource.Token);
 
         // Assert
         Assert.AreEqual(1, res);
@@ -65,25 +66,25 @@ public class TransformationTests
     }
 
     [TestMethod]
-    public void Can_transform_value_from_datasource()
+    public async Task Can_transform_value_from_datasource()
     {
         // Arrange
         var cmd = new TestDbCommand(new TestDbDataReader
         {
-            Data = new()
-            {
+            Data =
+            [
                 new()
                 {
                     ["Value"] = "value"
                 }
-            }
+            ]
         });
 
         var runner = new TestPhormSession();
         runner.TestConnection!.CommandQueue.Enqueue(cmd);
 
         // Act
-        var res = runner.From("Get", null).Get<DataObject>()!;
+        var res = await runner.From("Get", null).GetAsync<DataObject>(TestContext.CancellationTokenSource.Token);
 
         // Assert
         Assert.IsNotNull(res);
@@ -109,27 +110,27 @@ public class TransformationTests
             => throw new NotImplementedException();
     }
     [TestMethod]
-    public void Transformed_values_happen_last()
+    public async Task Transformed_values_happen_last()
     {
         // Arrange
         var cmd = new TestDbCommand(new TestDbDataReader
         {
-            Data = new()
-            {
+            Data =
+            [
                 new()
                 {
                     ["A"] = "AAA",
                     ["Value"] = "Value",
                     ["Z"] = "ZZZ"
                 }
-            }
+            ]
         });
 
         var runner = new TestPhormSession();
         runner.TestConnection!.CommandQueue.Enqueue(cmd);
 
         // Act
-        var res = runner.From("Get", null).Get<DataObject2>()!;
+        var res = await runner.From("Get", null).GetAsync<DataObject2>(TestContext.CancellationTokenSource.Token);
 
         // Assert
         Assert.IsNotNull(res);

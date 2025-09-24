@@ -1,5 +1,5 @@
 ﻿using IFY.Phorm.Data;
-using IFY.Phorm.Execution;
+using IFY.Phorm.Tests;
 using System.Data;
 
 namespace IFY.Phorm.Execution.Tests;
@@ -226,7 +226,7 @@ public class PhormContractRunner
     }
 
     [TestMethod]
-    public void GetAll__Cancelled__Does_not_parse_results()
+    public async Task GetAll__Cancelled__Does_not_parse_results()
     {
         // Arrange
         var conn = new TestPhormConnection("")
@@ -262,7 +262,7 @@ public class PhormContractRunner
         var token = new CancellationToken(true);
 
         // Act
-        var res = runner.GetAllAsync(token).Result;
+        var res = await runner.GetAllAsync(token);
 
         // Assert
         Assert.AreEqual(0, res.Count());

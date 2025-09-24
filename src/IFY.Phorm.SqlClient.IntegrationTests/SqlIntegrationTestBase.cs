@@ -1,6 +1,5 @@
 using IFY.Phorm.EventArgs;
 using IFY.Phorm.Execution;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Diagnostics.CodeAnalysis;
 
 namespace IFY.Phorm.SqlClient.IntegrationTests;
@@ -9,6 +8,8 @@ namespace IFY.Phorm.SqlClient.IntegrationTests;
 [DoNotParallelize]
 public abstract class SqlIntegrationTestBase
 {
+    public required TestContext TestContext { get; set; }
+
     protected Action<object?, CommandExecutingEventArgs>? _globalCommandExecuting = null;
     private void invokeHandler(object? sender, CommandExecutingEventArgs args) => _globalCommandExecuting?.Invoke(sender, args);
     protected Action<object?, CommandExecutedEventArgs>? _globalCommandExecuted = null;

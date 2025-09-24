@@ -245,7 +245,7 @@ public class AbstractPhormSessionTests
         var token = new CancellationToken(true);
 
         // Act
-        int res = await ((IPhormSession)phorm).CallAsync<ITestContract>(token, TestContext.CancellationTokenSource.Token);
+        int res = await ((IPhormSession)phorm).CallAsync<ITestContract>(token);
 
         // Assert
         Assert.AreEqual(1, res);
@@ -371,7 +371,7 @@ public class AbstractPhormSessionTests
         var arg = new { };
 
         // Act
-        ITestContract? result = await ((IPhormSession)phorm).GetAsync<TestEntityView>(arg);
+        ITestContract? result = await ((IPhormSession)phorm).GetAsync<TestEntityView>(arg, TestContext.CancellationTokenSource.Token);
 
         // Assert
         Assert.IsNull(result);

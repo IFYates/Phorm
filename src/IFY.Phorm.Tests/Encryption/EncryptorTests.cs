@@ -12,6 +12,8 @@ namespace IFY.Phorm.Tests.Encryption;
 [TestClass]
 public class EncryptorTests
 {
+    public TestContext TestContext { get; set; }
+
     interface ISaveDataObject : IPhormContract
     {
         [SecureValue("Test")]
@@ -73,7 +75,7 @@ public class EncryptorTests
         GlobalSettings.EncryptionProvider = encProcMock.Object;
 
         // Act
-        var res = await runner.CallAsync<ISaveDataObject>(args, CancellationToken.None);
+        var res = await runner.CallAsync<ISaveDataObject>(args, TestContext.CancellationTokenSource.Token);
 
         // Assert
         Assert.AreEqual(1, res);
@@ -105,7 +107,7 @@ public class EncryptorTests
         GlobalSettings.EncryptionProvider = encProcMock.Object;
 
         // Act
-        var res = await runner.CallAsync<ISaveDataObjectWithAuthenticator>(args, CancellationToken.None);
+        var res = await runner.CallAsync<ISaveDataObjectWithAuthenticator>(args, TestContext.CancellationTokenSource.Token);
 
         // Assert
         Assert.AreEqual(1, res);
@@ -133,7 +135,7 @@ public class EncryptorTests
         GlobalSettings.EncryptionProvider = encProcMock.Object;
 
         // Act
-        var res = await runner.CallAsync<ISaveDataObjectWithTransformation>(args, CancellationToken.None);
+        var res = await runner.CallAsync<ISaveDataObjectWithTransformation>(args, TestContext.CancellationTokenSource.Token);
 
         // Assert
         Assert.AreEqual(1, res);

@@ -43,49 +43,49 @@ public class ResultsetTests : SqlIntegrationTestBase
     {
     }
 
-    private static void setupGetTestSchema(AbstractPhormSession phorm)
+    private async Task setupGetTestSchema(AbstractPhormSession phorm)
     {
-        SqlTestHelpers.ApplySql(phorm, @"DROP PROCEDURE IF EXISTS [dbo].[usp_GetFamily]");
-        SqlTestHelpers.ApplySql(phorm, @"DROP TABLE IF EXISTS [dbo].[Child]");
-        SqlTestHelpers.ApplySql(phorm, @"DROP TABLE IF EXISTS [dbo].[Parent]");
-
-        SqlTestHelpers.ApplySql(phorm, @"CREATE TABLE [dbo].[Parent] (
+        await SqlTestHelpers.ApplySql(phorm, TestContext.CancellationTokenSource.Token, [
+            @"DROP PROCEDURE IF EXISTS [dbo].[usp_GetFamily]",
+            @"DROP TABLE IF EXISTS [dbo].[Child]",
+            @"DROP TABLE IF EXISTS [dbo].[Parent]",
+            @"CREATE TABLE [dbo].[Parent] (
 	[Id] BIGINT NOT NULL PRIMARY KEY,
     [Name] VARCHAR(50) NOT NULL UNIQUE
-)");
-
-        SqlTestHelpers.ApplySql(phorm, @"CREATE TABLE [dbo].[Child] (
+)",
+            @"CREATE TABLE [dbo].[Child] (
 	[Id] BIGINT NOT NULL IDENTITY(1,1) PRIMARY KEY,
     [ParentId] BIGINT NOT NULL REFERENCES [dbo].[Parent]([Id]),
     [Name] VARCHAR(50) NOT NULL UNIQUE
-)");
-
-        SqlTestHelpers.ApplySql(phorm, @"CREATE PROCEDURE [dbo].[usp_GetFamily] AS
+)",
+            @"CREATE PROCEDURE [dbo].[usp_GetFamily] AS
 	SELECT * FROM [dbo].[Parent]
 	SELECT * FROM [dbo].[Child]
-RETURN 1");
+RETURN 1"
+        ]);
     }
 
     [TestMethod]
-    public void Parents_match_multiple_children_from_resultset()
+    public async Task Parents_match_multiple_children_from_resultset()
     {
         // Arrange
         var phorm = getPhormSession();
-        setupGetTestSchema(phorm);
+        await setupGetTestSchema(phorm);
 
-        SqlTestHelpers.ApplySql(phorm, "INSERT INTO [dbo].[Parent] ([Id], [Name]) SELECT 1, 'One'");
-        SqlTestHelpers.ApplySql(phorm, "INSERT INTO [dbo].[Parent] ([Id], [Name]) SELECT 2, 'Two'");
-        
-        SqlTestHelpers.ApplySql(phorm, "INSERT INTO [dbo].[Child] ([ParentId], [Name]) SELECT 1, 'One.One'");
-        SqlTestHelpers.ApplySql(phorm, "INSERT INTO [dbo].[Child] ([ParentId], [Name]) SELECT 1, 'One.Two'");
-        SqlTestHelpers.ApplySql(phorm, "INSERT INTO [dbo].[Child] ([ParentId], [Name]) SELECT 2, 'Two.One'");
+        await SqlTestHelpers.ApplySql(phorm, TestContext.CancellationTokenSource.Token, [
+            "INSERT INTO [dbo].[Parent] ([Id], [Name]) SELECT 1, 'One'",
+            "INSERT INTO [dbo].[Parent] ([Id], [Name]) SELECT 2, 'Two'",
+            "INSERT INTO [dbo].[Child] ([ParentId], [Name]) SELECT 1, 'One.One'",
+            "INSERT INTO [dbo].[Child] ([ParentId], [Name]) SELECT 1, 'One.Two'",
+            "INSERT INTO [dbo].[Child] ([ParentId], [Name]) SELECT 2, 'Two.One'"
+        ]);
 
         // Act
-        var res = phorm.From<IGetFamily>(null)
-            .Get<ManyParentDTO[]>()!;
+        var res = await phorm.From<IGetFamily>(null)
+            .GetAsync<ManyParentDTO[]>(TestContext.CancellationTokenSource.Token);
 
         // Assert
-        Assert.AreEqual(2, res.Length);
+        Assert.AreEqual(2, res!.Length);
         Assert.AreEqual("One", res[0].Name);
         Assert.AreEqual(2, res[0].Children.Length);
         Assert.AreEqual("One.One", res[0].Children[0].Name);
@@ -96,23 +96,24 @@ RETURN 1");
     }
 
     [TestMethod]
-    public void Parents_expect_none_or_one_child()
+    public async Task Parents_expect_none_or_one_child()
     {
         // Arrange
         var phorm = getPhormSession();
-        setupGetTestSchema(phorm);
+        await setupGetTestSchema(phorm);
 
-        SqlTestHelpers.ApplySql(phorm, "INSERT INTO [dbo].[Parent] ([Id], [Name]) SELECT 1, 'One'");
-        SqlTestHelpers.ApplySql(phorm, "INSERT INTO [dbo].[Parent] ([Id], [Name]) SELECT 2, 'Two'");
-
-        SqlTestHelpers.ApplySql(phorm, "INSERT INTO [dbo].[Child] ([ParentId], [Name]) SELECT 1, 'One.One'");
+        await SqlTestHelpers.ApplySql(phorm, TestContext.CancellationTokenSource.Token, [
+            "INSERT INTO [dbo].[Parent] ([Id], [Name]) SELECT 1, 'One'",
+            "INSERT INTO [dbo].[Parent] ([Id], [Name]) SELECT 2, 'Two'",
+            "INSERT INTO [dbo].[Child] ([ParentId], [Name]) SELECT 1, 'One.One'"
+        ]);
 
         // Act
-        var res = phorm.From<IGetFamily>(null)
-            .Get<OneParentDTO[]>()!;
+        var res = await phorm.From<IGetFamily>(null)
+            .GetAsync<OneParentDTO[]>(TestContext.CancellationTokenSource.Token);
 
         // Assert
-        Assert.AreEqual(2, res.Length);
+        Assert.AreEqual(2, res!.Length);
         Assert.AreEqual("One", res[0].Name);
         Assert.AreEqual("One.One", res[0].Child!.Name);
         Assert.AreEqual("Two", res[1].Name);
@@ -120,45 +121,47 @@ RETURN 1");
     }
 
     [TestMethod]
-    public void Parents_expect_none_or_one_child__Receives_many__Exception()
+    public async Task Parents_expect_none_or_one_child__Receives_many__Exception()
     {
         // Arrange
         var phorm = getPhormSession();
-        setupGetTestSchema(phorm);
+        await setupGetTestSchema(phorm);
 
-        SqlTestHelpers.ApplySql(phorm, "INSERT INTO [dbo].[Parent] ([Id], [Name]) SELECT 1, 'One'");
-
-        SqlTestHelpers.ApplySql(phorm, "INSERT INTO [dbo].[Child] ([ParentId], [Name]) SELECT 1, 'One.One'");
-        SqlTestHelpers.ApplySql(phorm, "INSERT INTO [dbo].[Child] ([ParentId], [Name]) SELECT 1, 'One.Two'");
+        await SqlTestHelpers.ApplySql(phorm, TestContext.CancellationTokenSource.Token, [
+            "INSERT INTO [dbo].[Parent] ([Id], [Name]) SELECT 1, 'One'",
+            "INSERT INTO [dbo].[Child] ([ParentId], [Name]) SELECT 1, 'One.One'",
+            "INSERT INTO [dbo].[Child] ([ParentId], [Name]) SELECT 1, 'One.Two'"
+        ]);
 
         // Act
-        var ex = Assert.ThrowsExactly<InvalidCastException>
-            (() => phorm.From<IGetFamily>(null).Get<OneParentDTO[]>()!);
+        var ex = await Assert.ThrowsExactlyAsync<InvalidCastException>
+            (async () => await phorm.From<IGetFamily>(null).GetAsync<OneParentDTO[]>(TestContext.CancellationTokenSource.Token));
 
         // Assert
         Assert.AreEqual("Resultset property Child is not an array but matched 2 records.", ex.Message);
     }
 
     [TestMethod]
-    public void Parents_can_match_every_child_from_resultset()
+    public async Task Parents_can_match_every_child_from_resultset()
     {
         // Arrange
         var phorm = getPhormSession();
-        setupGetTestSchema(phorm);
+        await setupGetTestSchema(phorm);
 
-        SqlTestHelpers.ApplySql(phorm, "INSERT INTO [dbo].[Parent] ([Id], [Name]) SELECT 1, 'One'");
-        SqlTestHelpers.ApplySql(phorm, "INSERT INTO [dbo].[Parent] ([Id], [Name]) SELECT 2, 'Two'");
-
-        SqlTestHelpers.ApplySql(phorm, "INSERT INTO [dbo].[Child] ([ParentId], [Name]) SELECT 1, 'One.One'");
-        SqlTestHelpers.ApplySql(phorm, "INSERT INTO [dbo].[Child] ([ParentId], [Name]) SELECT 1, 'One.Two'");
-        SqlTestHelpers.ApplySql(phorm, "INSERT INTO [dbo].[Child] ([ParentId], [Name]) SELECT 2, 'Two.One'");
+        await SqlTestHelpers.ApplySql(phorm, TestContext.CancellationTokenSource.Token, [
+            "INSERT INTO [dbo].[Parent] ([Id], [Name]) SELECT 1, 'One'",
+            "INSERT INTO [dbo].[Parent] ([Id], [Name]) SELECT 2, 'Two'",
+            "INSERT INTO [dbo].[Child] ([ParentId], [Name]) SELECT 1, 'One.One'",
+            "INSERT INTO [dbo].[Child] ([ParentId], [Name]) SELECT 1, 'One.Two'",
+            "INSERT INTO [dbo].[Child] ([ParentId], [Name]) SELECT 2, 'Two.One'"
+        ]);
 
         // Act
-        var res = phorm.From<IGetFamily>(null)
-            .Get<EveryParentDTO[]>()!;
+        var res = await phorm.From<IGetFamily>(null)
+            .GetAsync<EveryParentDTO[]>(TestContext.CancellationTokenSource.Token);
 
         // Assert
-        Assert.AreEqual(2, res.Length);
+        Assert.AreEqual(2, res!.Length);
         Assert.AreEqual("One", res[0].Name);
         Assert.AreEqual(3, res[0].Children.Length);
         Assert.AreEqual("One.One", res[0].Children[0].Name);
