@@ -1,6 +1,5 @@
 ﻿using IFY.Phorm.Encryption;
 using IFY.Phorm.Transformation;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using System.Data;
 using System.Data.SqlTypes;
@@ -168,11 +167,11 @@ public class ContractMemberTests
     public void GetMembersFromContract__Decorated_method_has_parameter__Fail()
     {
         // Act
-        var ex = Assert.ThrowsException<InvalidDataContractException>
+        var ex = Assert.ThrowsExactly<InvalidDataContractException>
             (() => ContractMember.GetMembersFromContract(null, typeof(ObjectWithBadMethodMember1), false));
 
         // Assert
-        Assert.IsTrue(ex.Message.Contains("'IFY.Phorm.Data.Tests.ContractMemberTests+ObjectWithBadMethodMember1.Value2'"), "Actual: " + ex.Message);
+        Assert.Contains("'IFY.Phorm.Data.Tests.ContractMemberTests+ObjectWithBadMethodMember1.Value2'", ex.Message, "Actual: " + ex.Message);
     }
 
     [ExcludeFromCodeCoverage]
@@ -189,11 +188,11 @@ public class ContractMemberTests
     public void GetMembersFromContract__Decorated_method_has_return_type_Fail()
     {
         // Act
-        var ex = Assert.ThrowsException<InvalidDataContractException>
+        var ex = Assert.ThrowsExactly<InvalidDataContractException>
             (() => ContractMember.GetMembersFromContract(null, typeof(ObjectWithBadMethodMember2), false));
 
         // Assert
-        Assert.IsTrue(ex.Message.Contains("'IFY.Phorm.Data.Tests.ContractMemberTests+ObjectWithBadMethodMember2.Value2'"), "Actual: " + ex.Message);
+        Assert.Contains("'IFY.Phorm.Data.Tests.ContractMemberTests+ObjectWithBadMethodMember2.Value2'", ex.Message, "Actual: " + ex.Message);
     }
 
     class ObjectWithoutReturnValueProperty
@@ -673,7 +672,7 @@ public class ContractMemberTests
         };
 
         // Act
-        Assert.ThrowsException<ArgumentNullException>
+        Assert.ThrowsExactly<ArgumentNullException>
             (() => memb.ToDataParameter(cmdMock.Object, null));
 
         // Assert

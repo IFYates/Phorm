@@ -64,7 +64,7 @@ public abstract class AbstractPhormSession(string databaseConnectionString, stri
     #region Events
 
     /// <inheritdoc/>
-    public event EventHandler<ConnectedEventArgs> Connected = null!;
+    public event EventHandler<ConnectedEventArgs>? Connected;
     internal void OnConnected(ConnectedEventArgs args)
     {
         try { Connected?.Invoke(this, args); } catch { /* Consume handler errors */ }
@@ -72,7 +72,7 @@ public abstract class AbstractPhormSession(string databaseConnectionString, stri
     }
 
     /// <inheritdoc/>
-    public event EventHandler<CommandExecutingEventArgs> CommandExecuting = null!;
+    public event EventHandler<CommandExecutingEventArgs>? CommandExecuting;
     internal void OnCommandExecuting(CommandExecutingEventArgs args)
     {
         try { CommandExecuting?.Invoke(this, args); } catch { /* Consume handler errors */ }
@@ -80,7 +80,7 @@ public abstract class AbstractPhormSession(string databaseConnectionString, stri
     }
 
     /// <inheritdoc/>
-    public event EventHandler<CommandExecutedEventArgs> CommandExecuted = null!;
+    public event EventHandler<CommandExecutedEventArgs>? CommandExecuted;
     internal void OnCommandExecuted(CommandExecutedEventArgs args)
     {
         try { CommandExecuted?.Invoke(this, args); } catch { /* Consume handler errors */ }
@@ -88,7 +88,7 @@ public abstract class AbstractPhormSession(string databaseConnectionString, stri
     }
 
     /// <inheritdoc/>
-    public event EventHandler<UnexpectedRecordColumnEventArgs> UnexpectedRecordColumn = null!;
+    public event EventHandler<UnexpectedRecordColumnEventArgs>? UnexpectedRecordColumn;
     internal void OnUnexpectedRecordColumn(UnexpectedRecordColumnEventArgs args)
     {
         try { UnexpectedRecordColumn?.Invoke(this, args); } catch { /* Consume handler errors */ }
@@ -96,7 +96,7 @@ public abstract class AbstractPhormSession(string databaseConnectionString, stri
     }
 
     /// <inheritdoc/>
-    public event EventHandler<UnresolvedContractMemberEventArgs> UnresolvedContractMember = null!;
+    public event EventHandler<UnresolvedContractMemberEventArgs>? UnresolvedContractMember;
     internal void OnUnresolvedContractMember(UnresolvedContractMemberEventArgs args)
     {
         try { UnresolvedContractMember?.Invoke(this, args); } catch { /* Consume handler errors */ }
@@ -104,7 +104,7 @@ public abstract class AbstractPhormSession(string databaseConnectionString, stri
     }
 
     /// <inheritdoc/>
-    public event EventHandler<ConsoleMessageEventArgs> ConsoleMessage = null!;
+    public event EventHandler<ConsoleMessageEventArgs>? ConsoleMessage;
     internal void OnConsoleMessage(ConsoleMessageEventArgs args)
     {
         try { ConsoleMessage?.Invoke(this, args); } catch { /* Consume handler errors */ }

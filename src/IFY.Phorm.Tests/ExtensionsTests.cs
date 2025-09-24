@@ -1,5 +1,4 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Moq;
+﻿using Moq;
 using System.Collections;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
@@ -136,7 +135,7 @@ public class ExtensionsTests
     public void GetBytes__Unsupported_type__Exception()
     {
         // Act
-        Assert.ThrowsException<InvalidCastException>
+        Assert.ThrowsExactly<InvalidCastException>
             (() => new ExtensionsTests().GetBytes());
     }
 
@@ -250,7 +249,7 @@ public class ExtensionsTests
     {
         // Unknown expression type
         var exprMock = new Mock<Expression>();
-        Assert.ThrowsException<NotImplementedException>
+        Assert.ThrowsExactly<NotImplementedException>
             (() => exprMock.Object.GetExpressionParameterProperties(typeof(TestObject)));
     }
 
@@ -327,8 +326,8 @@ public class ExtensionsTests
     public void FromBytes__Unsupported_type__Exception()
     {
         // Act
-        Assert.ThrowsException<InvalidCastException>
-            (() => Extensions.FromBytes(Array.Empty<byte>(), typeof(ExtensionsTests)));
+        Assert.ThrowsExactly<InvalidCastException>
+            (() => Extensions.FromBytes([], typeof(ExtensionsTests)));
     }
 
     #endregion FromBytes

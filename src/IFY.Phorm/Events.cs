@@ -12,7 +12,7 @@ public static class Events
     /// <summary>
     /// The event invoked when a new database connection is created.
     /// </summary>
-    public static event EventHandler<ConnectedEventArgs> Connected = null!;
+    public static event EventHandler<ConnectedEventArgs>? Connected;
 
     internal static void OnConnected(object sender, ConnectedEventArgs args)
     {
@@ -26,7 +26,7 @@ public static class Events
     /// <summary>
     /// The event invoked when a command is about to be executed.
     /// </summary>
-    public static event EventHandler<CommandExecutingEventArgs> CommandExecuting = null!;
+    public static event EventHandler<CommandExecutingEventArgs>? CommandExecuting;
 
     internal static void OnCommandExecuting(object sender, CommandExecutingEventArgs args)
     {
@@ -40,7 +40,7 @@ public static class Events
     /// <summary>
     /// The event invoked when a command has finished executing.
     /// </summary>
-    public static event EventHandler<CommandExecutedEventArgs> CommandExecuted = null!;
+    public static event EventHandler<CommandExecutedEventArgs>? CommandExecuted;
 
     internal static void OnCommandExecuted(object sender, CommandExecutedEventArgs args)
     {
@@ -54,7 +54,7 @@ public static class Events
     /// <summary>
     /// A result record contained a column not specified in the target entity type.
     /// </summary>
-    public static event EventHandler<UnexpectedRecordColumnEventArgs> UnexpectedRecordColumn = null!;
+    public static event EventHandler<UnexpectedRecordColumnEventArgs>? UnexpectedRecordColumn;
 
     internal static void OnUnexpectedRecordColumn(object sender, UnexpectedRecordColumnEventArgs args)
     {
@@ -68,7 +68,7 @@ public static class Events
     /// <summary>
     /// A result record did not contain a column specified in the target entity type.
     /// </summary>
-    public static event EventHandler<UnresolvedContractMemberEventArgs> UnresolvedContractMember = null!;
+    public static event EventHandler<UnresolvedContractMemberEventArgs>? UnresolvedContractMember;
 
     internal static void OnUnresolvedContractMember(object sender, UnresolvedContractMemberEventArgs args)
     {
@@ -82,7 +82,7 @@ public static class Events
     /// <summary>
     /// A log message was received during execution.
     /// </summary>
-    public static event EventHandler<ConsoleMessageEventArgs> ConsoleMessage = null!;
+    public static event EventHandler<ConsoleMessageEventArgs>? ConsoleMessage;
 
     internal static void OnConsoleMessage(object sender, ConsoleMessageEventArgs args)
     {

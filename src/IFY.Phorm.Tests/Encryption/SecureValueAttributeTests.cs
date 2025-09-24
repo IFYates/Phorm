@@ -1,5 +1,4 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Moq;
+﻿using Moq;
 
 namespace IFY.Phorm.Encryption.Tests;
 
@@ -33,8 +32,8 @@ public class SecureValueAttributeTests
         GlobalSettings.EncryptionProvider = null;
 
         // Act
-        Assert.ThrowsException<InvalidOperationException>
-            (() => attr.Decrypt(new byte[] { 1, 2, 3, 4 }, null));
+        Assert.ThrowsExactly<InvalidOperationException>
+            (() => attr.Decrypt([1, 2, 3, 4], null));
     }
 
     [TestMethod]
@@ -135,7 +134,7 @@ public class SecureValueAttributeTests
         GlobalSettings.EncryptionProvider = null;
 
         // Act
-        Assert.ThrowsException<InvalidOperationException>
+        Assert.ThrowsExactly<InvalidOperationException>
             (() => attr.Encrypt(new byte[] { 1, 2, 3, 4 }, null));
     }
 

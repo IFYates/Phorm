@@ -1,5 +1,4 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System.Runtime.Serialization;
+﻿using System.Runtime.Serialization;
 
 namespace IFY.Phorm.Transformation.Tests;
 
@@ -34,7 +33,7 @@ public class EnumValueAttributeTests
         var attr = new EnumValueAttribute();
 
         // Act
-        Assert.ThrowsException<ArgumentNullException>
+        Assert.ThrowsExactly<ArgumentNullException>
             (() => attr.FromDatasource(typeof(TestEnum), null, null));
     }
 
@@ -95,7 +94,7 @@ public class EnumValueAttributeTests
         var attr = new EnumValueAttribute();
 
         // Act
-        Assert.ThrowsException<ArgumentException>
+        Assert.ThrowsExactly<ArgumentException>
             (() => attr.FromDatasource(typeof(TestEnum), input, null));
     }
 
@@ -119,7 +118,7 @@ public class EnumValueAttributeTests
         var attr = new EnumValueAttribute();
 
         // Act
-        Assert.ThrowsException<InvalidCastException>
+        Assert.ThrowsExactly<InvalidCastException>
             (() => attr.ToDatasource("str", null));
     }
 
