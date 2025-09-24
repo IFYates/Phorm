@@ -1,6 +1,5 @@
 ﻿using IFY.Phorm.Data;
 using IFY.Phorm.Tests;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using System.Data;
 
@@ -9,6 +8,8 @@ namespace IFY.Phorm.Execution.Tests;
 [TestClass]
 public class TransactedPhormSessionTests
 {
+    public TestContext TestContext { get; set; }
+
     private readonly MockRepository _mocks = new(MockBehavior.Strict);
 
     [TestInitialize]
@@ -84,7 +85,7 @@ public class TransactedPhormSessionTests
     }
 
     [TestMethod]
-    public void CallAsync__Has_transaction_set()
+    public async Task CallAsync__Has_transaction_set()
     {
         // Arrange
         var baseSession = new TestPhormSession();
@@ -94,7 +95,7 @@ public class TransactedPhormSessionTests
         var sess = new TransactedPhormSession(baseSession, dbtranMock.Object);
 
         // Act
-        _ = sess.CallAsync("contract", null, CancellationToken.None).Result;
+        await sess.CallAsync("contract", null, TestContext.CancellationTokenSource.Token);
 
         // Assert
         var cmd = baseSession.Commands.Single();
@@ -102,7 +103,7 @@ public class TransactedPhormSessionTests
     }
 
     [TestMethod]
-    public void CallAsync_T__Has_transaction_set()
+    public async Task CallAsync_T__Has_transaction_set()
     {
         // Arrange
         var baseSession = new TestPhormSession();
@@ -112,7 +113,7 @@ public class TransactedPhormSessionTests
         var sess = new TransactedPhormSession(baseSession, dbtranMock.Object);
 
         // Act
-        _ = sess.CallAsync<ITestAction>(null, CancellationToken.None).Result;
+        await sess.CallAsync<ITestAction>(null, TestContext.CancellationTokenSource.Token);
 
         // Assert
         var cmd = baseSession.Commands.Single();
@@ -120,7 +121,7 @@ public class TransactedPhormSessionTests
     }
 
     [TestMethod]
-    public void From__Has_transaction_set()
+    public async Task From__Has_transaction_set()
     {
         // Arrange
         var baseSession = new TestPhormSession();
@@ -131,7 +132,7 @@ public class TransactedPhormSessionTests
 
         // Act
         var runner = sess.From("contract", null);
-        _ = runner.Get<object>();
+        await runner.GetAsync<object>(TestContext.CancellationTokenSource.Token);
 
         // Assert
         var cmd = baseSession.Commands.Single();
@@ -139,7 +140,7 @@ public class TransactedPhormSessionTests
     }
 
     [TestMethod]
-    public void From_T__Has_transaction_set()
+    public async Task From_T__Has_transaction_set()
     {
         // Arrange
         var baseSession = new TestPhormSession();
@@ -150,7 +151,7 @@ public class TransactedPhormSessionTests
 
         // Act
         var runner = sess.From<ITestAction>(null);
-        _ = runner.Get<object>();
+        await runner.GetAsync<object>(TestContext.CancellationTokenSource.Token);
 
         // Assert
         var cmd = baseSession.Commands.Single();
@@ -158,7 +159,7 @@ public class TransactedPhormSessionTests
     }
 
     [TestMethod]
-    public void Get_T__Has_transaction_set()
+    public async Task GetAsync_T__Has_transaction_set()
     {
         // Arrange
         var baseSession = new TestPhormSession();
@@ -168,25 +169,7 @@ public class TransactedPhormSessionTests
         var sess = new TransactedPhormSession(baseSession, dbtranMock.Object);
 
         // Act
-        _ = sess.Get<object>(null);
-
-        // Assert
-        var cmd = baseSession.Commands.Single();
-        Assert.AreSame(dbtranMock.Object, cmd.Transaction);
-    }
-
-    [TestMethod]
-    public void GetAsync_T__Has_transaction_set()
-    {
-        // Arrange
-        var baseSession = new TestPhormSession();
-
-        var dbtranMock = _mocks.Create<IDbTransaction>();
-
-        var sess = new TransactedPhormSession(baseSession, dbtranMock.Object);
-
-        // Act
-        _ = sess.GetAsync<object>(null, CancellationToken.None).Result;
+        await sess.GetAsync<object>(null, TestContext.CancellationTokenSource.Token);
 
         // Assert
         var cmd = baseSession.Commands.Single();

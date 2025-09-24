@@ -1,5 +1,4 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System.Collections;
+﻿using System.Collections;
 using System.Reflection;
 
 namespace IFY.Phorm.Execution.Tests;
@@ -179,7 +178,7 @@ public class EntityListTests
     public void Add__NotImplementedException()
     {
         var lst = new EntityList<object>();
-        Assert.ThrowsException<NotImplementedException>
+        Assert.ThrowsExactly<NotImplementedException>
             (() => lst.Add(new()));
     }
 
@@ -187,15 +186,15 @@ public class EntityListTests
     public void Clear__NotImplementedException()
     {
         var lst = new EntityList<object>();
-        Assert.ThrowsException<NotImplementedException>
-            (() => lst.Clear());
+        Assert.ThrowsExactly<NotImplementedException>
+            (lst.Clear);
     }
 
     [TestMethod]
     public void Remove__NotImplementedException()
     {
         var lst = new EntityList<object>();
-        Assert.ThrowsException<NotImplementedException>
+        Assert.ThrowsExactly<NotImplementedException>
             (() => lst.Remove(new()));
     }
 }

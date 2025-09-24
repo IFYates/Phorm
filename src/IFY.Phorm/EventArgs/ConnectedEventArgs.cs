@@ -2,6 +2,9 @@
 
 namespace IFY.Phorm.EventArgs;
 
+/// <summary>
+/// Provides data for events that are raised when a new database connection is established.
+/// </summary>
 public sealed class ConnectedEventArgs : System.EventArgs
 {
     /// <summary>

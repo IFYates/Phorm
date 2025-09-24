@@ -86,14 +86,6 @@ public partial class TransactedPhormSession : ITransactedPhormSession
     #region Get
 
     /// <inheritdoc/>
-    public TResult? Get<TResult>(object? args)
-        where TResult : class
-    {
-        var runner = new PhormContractRunner<IPhormContract>(_baseSession, typeof(TResult), null, DbObjectType.View, args, _transaction);
-        return runner.Get<TResult>();
-    }
-
-    /// <inheritdoc/>
     public Task<TResult?> GetAsync<TResult>(object? args, CancellationToken cancellationToken)
         where TResult : class
     {
@@ -143,13 +135,4 @@ partial class TransactedPhormSession
     /// <inheritdoc/>
     public ITransactedPhormSession BeginTransaction()
         => _baseSession.BeginTransaction();
-
-    /// <inheritdoc/>
-    public int Call(string contractName, object? args)
-        => CallAsync(contractName, args, CancellationToken.None).GetAwaiter().GetResult();
-
-    /// <inheritdoc/>
-    public int Call<TActionContract>(object? args)
-        where TActionContract : IPhormContract
-        => CallAsync<TActionContract>(args, CancellationToken.None).GetAwaiter().GetResult();
 }

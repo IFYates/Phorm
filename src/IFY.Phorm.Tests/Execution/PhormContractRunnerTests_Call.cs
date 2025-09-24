@@ -2,16 +2,18 @@
 using IFY.Phorm.Encryption;
 using IFY.Phorm.Tests;
 using IFY.Phorm.Transformation;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using System.Data;
 using System.Runtime.Serialization;
+using System.Threading.Tasks;
 
 namespace IFY.Phorm.Execution.Tests;
 
 [TestClass]
 public class PhormContractRunnerTests_Call
 {
+    public TestContext TestContext { get; set; }
+
     public class TestContract : IMemberTestContract
     {
         public int Arg { get; set; }
@@ -79,7 +81,7 @@ public class PhormContractRunnerTests_Call
     }
 
     [TestMethod]
-    public void Call_by_anon_object()
+    public async Task Call_by_anon_object()
     {
         // Arrange
         var conn = new TestPhormConnection("")
@@ -95,7 +97,7 @@ public class PhormContractRunnerTests_Call
         var runner = new PhormContractRunner<IPhormContract>(phorm, "CallTest", DbObjectType.StoredProcedure, new { Arg = 1 }, null);
 
         // Act
-        var res = runner.CallAsync(CancellationToken.None).Result;
+        var res = await runner.CallAsync(TestContext.CancellationTokenSource.Token);
 
         // Assert
         Assert.AreEqual(1, res);
@@ -110,7 +112,7 @@ public class PhormContractRunnerTests_Call
     }
 
     [TestMethod]
-    public void Call_by_contract()
+    public async Task Call_by_contract()
     {
         // Arrange
         var conn = new TestPhormConnection("")
@@ -126,7 +128,7 @@ public class PhormContractRunnerTests_Call
         var runner = new PhormContractRunner<TestContract>(phorm, null, DbObjectType.StoredProcedure, new TestContract { Arg = 1 }, null);
 
         // Act
-        var res = runner.CallAsync(CancellationToken.None).Result;
+        var res = await runner.CallAsync(TestContext.CancellationTokenSource.Token);
 
         // Assert
         Assert.AreEqual(1, res);
@@ -142,7 +144,7 @@ public class PhormContractRunnerTests_Call
 
     [TestMethod]
     [DynamicData(nameof(IgnoreDataMemberAttributeProvider), DynamicDataSourceType.Method)]
-    public void Call__Transphormer_removes_parameter(object value)
+    public async Task Call__Transphormer_removes_parameter(object value)
     {
         // Arrange
         var conn = new TestPhormConnection("")
@@ -160,7 +162,7 @@ public class PhormContractRunnerTests_Call
         var runner = new PhormContractRunner<TestContractWithTransphormer>(phorm, null, DbObjectType.StoredProcedure, new TestContractWithTransphormer { Arg = 1 }, null);
 
         // Act
-        var res = runner.CallAsync(CancellationToken.None).Result;
+        var res = await runner.CallAsync(TestContext.CancellationTokenSource.Token);
 
         // Assert
         Assert.AreEqual(1, res);
@@ -178,7 +180,7 @@ public class PhormContractRunnerTests_Call
     }
 
     [TestMethod]
-    public void Call__Contract_and_arg_rename()
+    public async Task Call__Contract_and_arg_rename()
     {
         // Arrange
         var conn = new TestPhormConnection("")
@@ -194,7 +196,7 @@ public class PhormContractRunnerTests_Call
         var runner = new PhormContractRunner<IMemberTestContract>(phorm, null, DbObjectType.Default, new TestContract { Arg = 1 }, null);
 
         // Act
-        var res = runner.CallAsync(CancellationToken.None).Result;
+        var res = await runner.CallAsync(TestContext.CancellationTokenSource.Token);
 
         // Assert
         Assert.AreEqual(1, res);
@@ -207,7 +209,7 @@ public class PhormContractRunnerTests_Call
     }
 
     [TestMethod]
-    public void Call__Concrete_contract_with_input_and_output()
+    public async Task Call__Concrete_contract_with_input_and_output()
     {
         // Arrange
         var conn = new TestPhormConnection("")
@@ -223,7 +225,7 @@ public class PhormContractRunnerTests_Call
         var runner = new PhormContractRunner<TestContract2>(phorm, null, DbObjectType.Default, new TestContract2(), null);
 
         // Act
-        var res = runner.CallAsync(CancellationToken.None).Result;
+        var res = await runner.CallAsync(TestContext.CancellationTokenSource.Token);
 
         // Assert
         Assert.AreEqual(1, res);
@@ -240,7 +242,7 @@ public class PhormContractRunnerTests_Call
     }
 
     [TestMethod]
-    public void Call__Out_arg()
+    public async Task Call__Out_arg()
     {
         // Arrange
         var conn = new TestPhormConnection("")
@@ -259,7 +261,7 @@ public class PhormContractRunnerTests_Call
         var runner = new PhormContractRunner<IMemberTestContract>(phorm, null, DbObjectType.Default, args, null);
 
         // Act
-        var res = runner.CallAsync(CancellationToken.None).Result;
+        var res = await runner.CallAsync(TestContext.CancellationTokenSource.Token);
 
         // Assert
         Assert.AreEqual(1, res);
@@ -273,7 +275,7 @@ public class PhormContractRunnerTests_Call
     }
 
     [TestMethod]
-    public void Call__Required_arg_null__Exception()
+    public async Task Call__Required_arg_null__Exception()
     {
         // Arrange
         var conn = new TestPhormConnection("")
@@ -289,12 +291,12 @@ public class PhormContractRunnerTests_Call
         var runner = new PhormContractRunner<IMemberTestContract>(phorm, null, DbObjectType.Default, new TestContract { Arg3 = null! }, null);
 
         // Act
-        Assert.ThrowsException<AggregateException>
-            (() => runner.CallAsync(CancellationToken.None).Result);
+        await Assert.ThrowsExactlyAsync<ArgumentNullException>
+            (async () => await runner.CallAsync(TestContext.CancellationTokenSource.Token));
     }
 
     [TestMethod]
-    public void Call__SecureValue_sent_encrypted_received_decrypted_by_authenticator()
+    public async Task Call__SecureValue_sent_encrypted_received_decrypted_by_authenticator()
     {
         // Arrange
         var conn = new TestPhormConnection("")
@@ -332,7 +334,7 @@ public class PhormContractRunnerTests_Call
         var runner = new PhormContractRunner<ISecureTestContract>(phorm, null, DbObjectType.Default, dto, null);
 
         // Act
-        var res = runner.CallAsync(CancellationToken.None).Result;
+        var res = await runner.CallAsync(TestContext.CancellationTokenSource.Token);
 
         // Assert
         Assert.AreEqual(1, res);
@@ -341,7 +343,7 @@ public class PhormContractRunnerTests_Call
     }
 
     [TestMethod]
-    public void Call__Returns_result__Exception()
+    public async Task Call__Returns_result__Exception()
     {
         // Arrange
         var conn = new TestPhormConnection("")
@@ -351,13 +353,13 @@ public class PhormContractRunnerTests_Call
 
         var cmd = new TestDbCommand(new TestDbDataReader
         {
-            Data = new List<Dictionary<string, object>>
-            {
-                new Dictionary<string, object>
+            Data =
+            [
+                new()
                 {
                     ["Value"] = "value1"
                 }
-            }
+            ]
         });
         conn.CommandQueue.Enqueue(cmd);
 
@@ -366,8 +368,8 @@ public class PhormContractRunnerTests_Call
         var runner = new PhormContractRunner<IPhormContract>(phorm, "CallTest", DbObjectType.StoredProcedure, new { Arg = 1 }, null);
 
         // Act
-        var ex = (InvalidOperationException)Assert.ThrowsException<AggregateException>
-            (() => runner.CallAsync(CancellationToken.None).Result).InnerException!;
+        var ex = await Assert.ThrowsExactlyAsync<InvalidOperationException>
+            (async () => await runner.CallAsync(TestContext.CancellationTokenSource.Token));
 
         // Assert
         Assert.AreEqual("Non-result request returned a result.", ex.Message);
@@ -389,7 +391,7 @@ public class PhormContractRunnerTests_Call
     }
 
     [TestMethod]
-    public void Call__Contract_can_receive_console_messages()
+    public async Task Call__Contract_can_receive_console_messages()
     {
         // Arrange
         var conn = new TestPhormConnection("")
@@ -414,7 +416,7 @@ public class PhormContractRunnerTests_Call
         var runner = new PhormContractRunner<IConsoleLogContract>(phorm, null, DbObjectType.Default, arg, null);
 
         // Act
-        var res = runner.CallAsync(CancellationToken.None).Result;
+        var res = await runner.CallAsync(TestContext.CancellationTokenSource.Token);
 
         // Assert
         Assert.AreEqual(1, res);
@@ -426,7 +428,7 @@ public class PhormContractRunnerTests_Call
     }
 
     [TestMethod]
-    public void Call__Anonymous_contract_can_receive_console_messages()
+    public async Task Call__Anonymous_contract_can_receive_console_messages()
     {
         // Arrange
         var conn = new TestPhormConnection("")
@@ -455,7 +457,7 @@ public class PhormContractRunnerTests_Call
         var runner = new PhormContractRunner<IConsoleLogContract>(phorm, null, DbObjectType.Default, arg, null);
 
         // Act
-        var res = runner.CallAsync(CancellationToken.None).Result;
+        var res = await runner.CallAsync(TestContext.CancellationTokenSource.Token);
 
         // Assert
         Assert.AreEqual(1, res);

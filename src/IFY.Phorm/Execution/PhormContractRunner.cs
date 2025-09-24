@@ -202,14 +202,9 @@ internal sealed partial class PhormContractRunner<TActionContract> : IPhormContr
         {
             if (members.Remove(fieldName.ToUpperInvariant(), out var memb))
             {
-                if (memb.HasSecureAttribute)
+                if (memb.HasSecureAttribute // Defer secure members until after non-secure, to allow for authenticator properties
+                    || memb.HasTransphormation) // Defer transformation members until after non-transformed
                 {
-                    // Defer secure members until after non-secure, to allow for authenticator properties
-                    deferredMembers[memb] = value;
-                }
-                else if (memb.HasTransphormation)
-                {
-                    // Defer transformation members until after non-transformed
                     deferredMembers[memb] = value;
                 }
                 else if (memb.TryFromDatasource(value, entity, out var member))
@@ -335,9 +330,6 @@ internal sealed partial class PhormContractRunner<TActionContract> : IPhormContr
         return parseCommandResult(cmd, _runArgs, pars, console.GetConsoleMessages(), eventArgs, null);
     }
 
-    public TResult? Get<TResult>()
-        where TResult : class
-        => GetAsync<TResult>(CancellationToken.None).GetAwaiter().GetResult();
     public async Task<TResult?> GetAsync<TResult>(CancellationToken cancellationToken)
         where TResult : class
     {

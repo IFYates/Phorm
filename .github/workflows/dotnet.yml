@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - src
+      - src/**
   pull_request:
     types: [opened, synchronize, reopened, closed]
     branches:
@@ -15,26 +15,20 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
     # Setup
     - uses: actions/checkout@v2
 
-    - name: Setup .NET Core 3.1
+    - name: Setup .NET 8
       uses: actions/setup-dotnet@v1.7.2
       with:
-        dotnet-version: 3.1.x
-    - name: Setup .NET 6
-      uses: actions/setup-dotnet@v1.7.2
-      with:
-        dotnet-version: 6.0.x
-    - name: Setup .NET 7
-      uses: actions/setup-dotnet@v1.7.2
-      with:
-        dotnet-version: 7.0.x
+        dotnet-version: 8.0.x
 
     - name: Restore dependencies
-      run: dotnet restore src
+      run: dotnet restore src/IFY.Phorm.sln
     - name: Restore tools
       run: dotnet tool restore
       
@@ -50,15 +44,15 @@ jobs:
       run: dotnet build src --configuration $BUILD_CONFIG --no-restore
 
     - name: Publish package
-      uses: nanoufo/action-upload-artifacts-and-release-assets@v1.4
+      uses: nanoufo/action-upload-artifacts-and-release-assets@v2
       with:
         path: ./src/**/IFY.Phorm.*.*nupkg
 
     # Test & coverage
     - name: Test and coverage - IFY.Phorm
-      run: dotnet coverlet ./src/IFY.Phorm.Tests/bin/$BUILD_CONFIG/net6.0/IFY.Phorm.Tests.dll --target "dotnet" --targetargs "test ./src/IFY.Phorm.Tests/IFY.Phorm.Tests.csproj --configuration $BUILD_CONFIG --no-build" --include-test-assembly --exclude-by-file "**/.nuget/**" --format lcov -o ify_phorm.lcov
+      run: dotnet coverlet ./src/IFY.Phorm.Tests/bin/$BUILD_CONFIG/net8.0/IFY.Phorm.Tests.dll --target "dotnet" --targetargs "test ./src/IFY.Phorm.Tests/IFY.Phorm.Tests.csproj --configuration $BUILD_CONFIG --no-build" --include-test-assembly --exclude-by-file "**/.nuget/**" --format lcov -o ify_phorm.lcov
     - name: Test and coverage - IFY.Phorm.SqlClient
-      run: dotnet coverlet ./src/IFY.Phorm.SqlClient.Tests/bin/$BUILD_CONFIG/net6.0/IFY.Phorm.SqlClient.Tests.dll --target "dotnet" --targetargs "test ./src/IFY.Phorm.SqlClient.Tests/IFY.Phorm.SqlClient.Tests.csproj --configuration $BUILD_CONFIG --no-build" --include-test-assembly --exclude "[IFY.Phorm]*" --format lcov -o ify_phorm_sqlclient.lcov       
+      run: dotnet coverlet ./src/IFY.Phorm.SqlClient.Tests/bin/$BUILD_CONFIG/net8.0/IFY.Phorm.SqlClient.Tests.dll --target "dotnet" --targetargs "test ./src/IFY.Phorm.SqlClient.Tests/IFY.Phorm.SqlClient.Tests.csproj --configuration $BUILD_CONFIG --no-build" --include-test-assembly --exclude "[IFY.Phorm]*" --format lcov -o ify_phorm_sqlclient.lcov       
     - name: Report coverage to Codacy
       uses: codacy/codacy-coverage-reporter-action@v1.3.0
       with:
@@ -86,6 +80,7 @@ jobs:
           }
     - name: Run Stryker.NET
       run: dotnet stryker --dashboard-api-key ${{ secrets.STRYKER_DASHBOARD }}
+      continue-on-error: true
     - name: Configure Stryker.NET for IFY.Phorm.SqlClient
       uses: DamianReeves/write-file-action@v1.0
       with:
@@ -106,8 +101,9 @@ jobs:
           }
     - name: Run Stryker.NET
       run: dotnet stryker --dashboard-api-key ${{ secrets.STRYKER_DASHBOARD }}
+      continue-on-error: true
     - name: Upload mutation reports
-      uses: actions/upload-artifact@v2.2.2
+      uses: actions/upload-artifact@v4
       with:
         name: mutation-report.html
         path: ./**/mutation-report.html

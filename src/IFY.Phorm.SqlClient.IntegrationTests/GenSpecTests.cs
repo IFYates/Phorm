@@ -1,7 +1,6 @@
 using IFY.Phorm.Data;
 using IFY.Phorm.Execution;
 using IFY.Phorm.Transformation;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Runtime.Serialization;
 
 namespace IFY.Phorm.SqlClient.IntegrationTests;
@@ -31,9 +30,9 @@ public class GenSpecTests : SqlIntegrationTestBase
         public string String { get; set; } = string.Empty;
     }
 
-    private static void setupGenSpecContract(AbstractPhormSession phorm)
+    private async Task setupGenSpecContract(AbstractPhormSession phorm)
     {
-        SqlTestHelpers.ApplySql(phorm, @"CREATE OR ALTER PROC [dbo].[usp_GetAllDataItems]
+        await SqlTestHelpers.ApplySql(phorm, TestContext.CancellationTokenSource.Token, @"CREATE OR ALTER PROC [dbo].[usp_GetAllDataItems]
 AS
 	SELECT 1 [Id], 'Aaa' [Key], 1 [TypeId], 12.34 [Number], CONVERT(VARCHAR(50), NULL) [String]
 	UNION ALL
@@ -42,17 +41,17 @@ RETURN 1");
     }
 
     [TestMethod]
-    public void GenSpec__Can_retrieve_and_handle_many_types()
+    public async Task GenSpec__Can_retrieve_and_handle_many_types()
     {
         // Arrange
         var phorm = getPhormSession();
-        setupGenSpecContract(phorm);
+        await setupGenSpecContract(phorm);
 
         // Act
-        var res = phorm.From("GetAllDataItems", null)
-            .Get<GenSpec<BaseDataItem, NumericDataItem, TextDataItem>>()!;
+        var res = await phorm.From("GetAllDataItems", null)
+            .GetAsync<GenSpec<BaseDataItem, NumericDataItem, TextDataItem>>(TestContext.CancellationTokenSource.Token);
 
-        var all = res.All();
+        var all = res!.All();
         var nums = res.OfType<NumericDataItem>().ToArray();
         var strs = res.OfType<TextDataItem>().ToArray();
 
@@ -63,16 +62,16 @@ RETURN 1");
     }
 
     [TestMethod]
-    public void GenSpec__Can_retrieve_and_handle_many_types_filtered()
+    public async Task GenSpec__Can_retrieve_and_handle_many_types_filtered()
     {
         // Arrange
         var phorm = getPhormSession();
-        setupGenSpecContract(phorm);
+        await setupGenSpecContract(phorm);
 
         // Act
-        var res = ((IPhormSession)phorm).From("GetAllDataItems", null)
+        var res = await ((IPhormSession)phorm).From("GetAllDataItems", null)
             .Where<BaseDataItem, GenSpec<BaseDataItem, NumericDataItem, TextDataItem>>(o => o.Id == 1)
-            .GetAll();
+            .GetAllAsync(TestContext.CancellationTokenSource.Token);
 
         var nums = res.OfType<NumericDataItem>().ToArray();
         var strs = res.OfType<TextDataItem>().ToArray();
@@ -85,17 +84,17 @@ RETURN 1");
     }
 
     [TestMethod]
-    public void GenSpec__Unknown_type_Abstract_base__Returns_only_shaped_items()
+    public async Task GenSpec__Unknown_type_Abstract_base__Returns_only_shaped_items()
     {
         // Arrange
         var phorm = getPhormSession();
-        setupGenSpecContract(phorm);
+        await setupGenSpecContract(phorm);
 
         // Act
-        var res = phorm.From("GetAllDataItems", null)
-            .Get<GenSpec<BaseDataItem, TextDataItem>>()!;
+        var res = await phorm.From("GetAllDataItems", null)
+            .GetAsync<GenSpec<BaseDataItem, TextDataItem>>(TestContext.CancellationTokenSource.Token);
 
-        var all = res.All();
+        var all = res!.All();
         var strs = res.OfType<TextDataItem>().ToArray();
 
         // Assert
@@ -118,17 +117,17 @@ RETURN 1");
     }
 
     [TestMethod]
-    public void GenSpec__Unknown_type_Nonabstract_base__Returns_item_as_base()
+    public async Task GenSpec__Unknown_type_Nonabstract_base__Returns_item_as_base()
     {
         // Arrange
         var phorm = getPhormSession();
-        setupGenSpecContract(phorm);
+        await setupGenSpecContract(phorm);
 
         // Act
-        var res = phorm.From("GetAllDataItems", null)
-            .Get<GenSpec<BaseDataItemNonabstract, NumericDataItem2>>()!;
+        var res = await phorm.From("GetAllDataItems", null)
+            .GetAsync<GenSpec<BaseDataItemNonabstract, NumericDataItem2>>(TestContext.CancellationTokenSource.Token);
 
-        var all = res.All();
+        var all = res!.All();
         var asBase = all.Where(r => r.GetType() == typeof(BaseDataItemNonabstract)).ToArray();
         var nums = res.OfType<NumericDataItem2>().ToArray();
 

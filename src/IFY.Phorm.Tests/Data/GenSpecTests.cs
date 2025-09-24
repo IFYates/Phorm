@@ -1,12 +1,14 @@
 ﻿using IFY.Phorm.Execution;
 using IFY.Phorm.Tests;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Reflection;
 
 namespace IFY.Phorm.Data.Tests;
 
 [TestClass]
 public class GenSpecTests
 {
+    public TestContext TestContext { get; set; }
+
     // Gen
     abstract class AbstractBaseGenType
     {
@@ -49,23 +51,23 @@ public class GenSpecTests
 
         var cmd = new TestDbCommand(new TestDbDataReader
         {
-            Data = new List<Dictionary<string, object>>
-            {
-                new Dictionary<string, object>
+            Data =
+            [
+                new()
                 {
                     ["Id"] = 1,
                     ["Name"] = "Row1",
                     ["TypeId"] = 1, // Int
                     ["IntSpecProperty"] = 12345
                 },
-                new Dictionary<string, object>
+                new()
                 {
                     ["Id"] = 2,
                     ["Name"] = "Row2",
                     ["TypeId"] = 2, // String
                     ["StringSpecProperty"] = "Value"
                 }
-            }
+            ]
         });
         conn.CommandQueue.Enqueue(cmd);
 
@@ -81,15 +83,15 @@ public class GenSpecTests
     }
 
     [TestMethod]
-    public void GetAsync__GenSpec__Shapes_records_by_selector()
+    public async Task GetAsync__GenSpec__Shapes_records_by_selector()
     {
         // Arrange
         var runner = buildRunner();
 
         // Act
-        var result = runner.GetAsync<GenSpec<BaseGenType, SpecType1, SpecType2>>().Result!;
+        var result = await runner.GetAsync<GenSpec<BaseGenType, SpecType1, SpecType2>>(TestContext.CancellationTokenSource.Token);
 
-        var all = result.All();
+        var all = result!.All();
         var spec1 = result.OfType<SpecType1>().ToArray();
         var spec2 = result.OfType<SpecType2>().ToArray();
 
@@ -100,15 +102,15 @@ public class GenSpecTests
     }
 
     [TestMethod]
-    public void GetAsync__GenSpec__Unmapped_type_returned_as_nonabstract_base()
+    public async Task GetAsync__GenSpec__Unmapped_type_returned_as_nonabstract_base()
     {
         // Arrange
         var runner = buildRunner();
 
         // Act
-        var result = runner.GetAsync<GenSpec<BaseGenType, SpecType1>>().Result!;
+        var result = await runner.GetAsync<GenSpec<BaseGenType, SpecType1>>(TestContext.CancellationTokenSource.Token);
 
-        var all = result.All();
+        var all = result!.All();
         var asBase = all.Where(r => r.GetType() == typeof(BaseGenType)).ToArray();
         var spec1 = result.OfType<SpecType1>().ToArray();
         var spec2 = result.OfType<SpecType2>().ToArray();
@@ -121,15 +123,15 @@ public class GenSpecTests
     }
 
     [TestMethod]
-    public void GetAsync__GenSpec__Unmapped_type_ignored_for_abstract_base()
+    public async Task GetAsync__GenSpec__Unmapped_type_ignored_for_abstract_base()
     {
         // Arrange
         var runner = buildRunner();
 
         // Act
-        var result = runner.GetAsync<GenSpec<AbstractBaseGenType, SpecType1>>().Result!;
+        var result = await runner.GetAsync<GenSpec<AbstractBaseGenType, SpecType1>>(TestContext.CancellationTokenSource.Token);
 
-        var all = result.All();
+        var all = result!.All();
         var spec1 = result.OfType<SpecType1>().ToArray();
         var spec2 = result.OfType<SpecType2>().ToArray();
 
@@ -140,38 +142,32 @@ public class GenSpecTests
     }
 
     [TestMethod]
-    public void GetAsync__GenSpec__Type_without_attribute__Fail()
+    public async Task GetAsync__GenSpec__Type_without_attribute__Fail()
     {
         // Arrange
         var runner = buildRunner();
 
         // Act
-        Exception ex = Assert.ThrowsException<AggregateException>
-            (() => runner.GetAsync<GenSpec<BaseGenType, TypeWithoutAttribute>>().Result!);
+        var ex = await Assert.ThrowsExactlyAsync<TargetInvocationException>
+            (async () => await runner.GetAsync<GenSpec<BaseGenType, TypeWithoutAttribute>>(TestContext.CancellationTokenSource.Token));
 
         // Assert
-        while (ex.InnerException != null)
-        {
-            ex = ex.InnerException;
-        }
-        Assert.AreEqual("Invalid GenSpec usage. Provided type was not decorated with a PhormSpecOfAttribute referencing a valid property: " + typeof(TypeWithoutAttribute).FullName, ex.Message);
+        Assert.IsInstanceOfType<InvalidOperationException>(ex.InnerException);
+        Assert.AreEqual("Invalid GenSpec usage. Provided type was not decorated with a PhormSpecOfAttribute referencing a valid property: " + typeof(TypeWithoutAttribute).FullName, ex.InnerException.Message);
     }
 
     [TestMethod]
-    public void GetAsync__GenSpec__Type_referencing_bad_property__Fail()
+    public async Task GetAsync__GenSpec__Type_referencing_bad_property__Fail()
     {
         // Arrange
         var runner = buildRunner();
 
         // Act
-        Exception ex = Assert.ThrowsException<AggregateException>
-            (() => runner.GetAsync<GenSpec<BaseGenType, TypeWithBadAttribute>>().Result!);
+        var ex = await Assert.ThrowsExactlyAsync<TargetInvocationException>
+            (async () => await runner.GetAsync<GenSpec<BaseGenType, TypeWithBadAttribute>>(TestContext.CancellationTokenSource.Token));
 
         // Assert
-        while (ex.InnerException != null)
-        {
-            ex = ex.InnerException;
-        }
-        Assert.AreEqual("Invalid GenSpec usage. Provided type was not decorated with a PhormSpecOfAttribute referencing a valid property: " + typeof(TypeWithBadAttribute).FullName, ex.Message);
+        Assert.IsInstanceOfType<InvalidOperationException>(ex.InnerException);
+        Assert.AreEqual("Invalid GenSpec usage. Provided type was not decorated with a PhormSpecOfAttribute referencing a valid property: " + typeof(TypeWithBadAttribute).FullName, ex.InnerException.Message);
     }
 }

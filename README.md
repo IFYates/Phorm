@@ -115,44 +115,37 @@ interface ISaveData : IPhormContract
 IPhormSession session = new SqlPhormSession(connectionString);
 
 // Get all existing records from the table
-DataItem[] allData = session.Get<DataItem[]>()!; // Table dbo.Data
+DataItem[] allData = await session.GetAsync<DataItem[]>()!; // Table dbo.Data
 
 // Add a new record to the table, getting back the new id
 var newItem = new { Id = ContractMember.Out<long>(), Key = "Name", Value = "T Ester" };
-int result = session.Call<ISaveData>(newItem); // Procedure dbo.usp_SaveData
+int result = await session.CallAsync<ISaveData>(newItem); // Procedure dbo.usp_SaveData
 
-DataItem? itemById = session.Get<DataItem>(new { Id = newItem.Id }); // Table dbo.Data
-DataItem? itemByKey = session.Get<DataItem>(new { Key = "Name" }); // Table dbo.Data
+DataItem? itemById = await session.GetAsync<DataItem>(new { Id = newItem.Id }); // Table dbo.Data
+DataItem? itemByKey = await session.GetAsync<DataItem>(new { Key = "Name" }); // Table dbo.Data
 ```
 
 ## Syntax overview
 ```CSharp
 IPhormSession
     // Calling a contract
-    int Call(string contractName, object? args = null);
-    int Call<TActionContract>(object? args = null);
     Task<int> CallAsync(string contractName, object? args = null, CancellationToken cancellationToken = CancellationToken.None);
     Task<int> CallAsync<TActionContract>(object? args = null, CancellationToken cancellationToken = CancellationToken.None);
 
     // Fetching from a DTO definition (table, view)
-    TResult? Get<TResult>(object? args = null);
     Task<TResult?> GetAsync<TResult>(object? args = null, CancellationToken cancellationToken = CancellationToken.None);
 
     // Fetching from a named procedure
     From(string contractName, object? args = null)
-        TResult? Get<TResult>();
         Task<TResult?> GetAsync<TResult>(CancellationToken cancellationToken = CancellationToken.None);
         // Resultset filtering
         Where<TEntity>(Expression<Func<TEntity, bool>> predicate)
-            IEnumerable<TEntity> GetAll();
             Task<IEnumerable<TEntity>> GetAllAsync(CancellationToken cancellationToken = CancellationToken.None);
     
     // Fetching from a contract definition (procedure, table, view)
     From<TActionContract>(object? args = null)
-        TResult? Get<TResult>();
         Task<TResult?> GetAsync<TResult>(CancellationToken cancellationToken = CancellationToken.None);
         // Resultset filtering
         Where<TEntity>(Expression<Func<TEntity, bool>> predicate)
-            IEnumerable<TEntity> GetAll();
             Task<IEnumerable<TEntity>> GetAllAsync(CancellationToken cancellationToken = CancellationToken.None);
 ```

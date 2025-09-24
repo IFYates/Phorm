@@ -1,13 +1,14 @@
 ﻿using IFY.Phorm.Data;
-using IFY.Phorm.Execution;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using IFY.Phorm.Tests;
 using System.Data;
 
-namespace IFY.Phorm.Tests.Execution;
+namespace IFY.Phorm.Execution.Tests;
 
 [TestClass]
 public class PhormContractRunner
 {
+    public TestContext TestContext { get; set; }
+
     interface IDto
     {
         string? Value { get; }
@@ -36,30 +37,29 @@ public class PhormContractRunner
     [TestMethod]
     public void Constructor__TEntity_without_constructor__Fail()
     {
-        var ex = Assert.ThrowsException<ArgumentException>
+        var ex = Assert.ThrowsExactly<ArgumentException>
             (() => new PhormContractRunner<IPhormContract>.FilteredContractRunner<Assert, IEnumerable<Assert>>(null!, null!));
-        Assert.IsTrue(ex.Message.Contains("must have a public default constructor"), ex.Message);
+        Assert.Contains("must have a public default constructor", ex.Message, ex.Message);
     }
 
     [TestMethod]
     public void Constructor__Invalid_TResult_GenSpec__Fail()
     {
-        var ex = Assert.ThrowsException<ArgumentException>
+        var ex = Assert.ThrowsExactly<ArgumentException>
             (() => new PhormContractRunner<IPhormContract>.FilteredContractRunner<string, GenSpecBase<object>>(null!, null!));
-        Assert.IsTrue(ex.Message.Contains("must use TResult as the GenSpec TBase"), ex.Message);
+        Assert.Contains("must use TResult as the GenSpec TBase", ex.Message, ex.Message);
     }
 
     [TestMethod]
     public void Constructor__Invalid_TResult__Fail()
     {
-        var ex = Assert.ThrowsException<ArgumentException>
+        var ex = Assert.ThrowsExactly<ArgumentException>
             (() => new PhormContractRunner<IPhormContract>.FilteredContractRunner<string, object>(null!, null!));
-        Assert.IsTrue(ex.Message.Contains("must match TResult or be GenSpec"), ex.Message);
+        Assert.Contains("must match TResult or be GenSpec", ex.Message, ex.Message);
     }
 
     [TestMethod]
-    [DataRow(false), DataRow(true)]
-    public void GetAll__Can_filter_entities(bool byAsync)
+    public async Task GetAll__Can_filter_entities()
     {
         // Arrange
         var conn = new TestPhormConnection("")
@@ -69,21 +69,21 @@ public class PhormContractRunner
 
         var cmd = new TestDbCommand(new TestDbDataReader
         {
-            Data = new List<Dictionary<string, object>>
-            {
-                new Dictionary<string, object>
+            Data =
+            [
+                new()
                 {
                     ["Value"] = "value1"
                 },
-                new Dictionary<string, object>
+                new()
                 {
                     ["Value"] = "value2"
                 },
-                new Dictionary<string, object>
+                new()
                 {
                     ["Value"] = "value3"
                 }
-            }
+            ]
         });
         conn.CommandQueue.Enqueue(cmd);
 
@@ -93,7 +93,7 @@ public class PhormContractRunner
         var runner = parent.Where<TestDto>(o => o.Value != "value3");
 
         // Act
-        var res = byAsync ? runner.GetAllAsync().Result : runner.GetAll();
+        var res = await runner.GetAllAsync(TestContext.CancellationTokenSource.Token);
 
         // Assert
         Assert.AreEqual(2, res.Count());
@@ -112,8 +112,7 @@ public class PhormContractRunner
     }
 
     [TestMethod]
-    [DataRow(false), DataRow(true)]
-    public void GetAll__Can_filter_GenSpec_entities(bool byAsync)
+    public async Task GetAll__Can_filter_GenSpec_entities()
     {
         // Arrange
         var conn = new TestPhormConnection("")
@@ -123,26 +122,26 @@ public class PhormContractRunner
 
         var cmd = new TestDbCommand(new TestDbDataReader
         {
-            Data = new List<Dictionary<string, object>>
-            {
-                new Dictionary<string, object>
+            Data =
+            [
+                new()
                 {
                     ["TypeId"] = 1, // BaseDto
                     ["Value"] = "valueB1",
                     ["Value2"] = "valueB2"
                 },
-                new Dictionary<string, object>
+                new()
                 {
                     ["TypeId"] = 2, // TestDto
                     ["Value"] = "valueC1",
                     ["Value2"] = "valueC2"
                 },
-                new Dictionary<string, object>
+                new()
                 {
                     ["TypeId"] = 1, // BaseDto
                     ["Value"] = "valueX" // Filtered out
                 }
-            }
+            ]
         });
         conn.CommandQueue.Enqueue(cmd);
 
@@ -152,7 +151,7 @@ public class PhormContractRunner
         var runner = parent.Where<IDto, GenSpec<IDto, BaseDto, TestDto>>(o => o.Value != "valueX");
 
         // Act
-        var res = byAsync ? runner.GetAllAsync().Result : runner.GetAll();
+        var res = await runner.GetAllAsync(TestContext.CancellationTokenSource.Token);
 
         // Assert
         var arr = res.All();
@@ -162,23 +161,22 @@ public class PhormContractRunner
     }
 
     [TestMethod]
-    [DataRow(false), DataRow(true)]
-    public void GetAll__GenSpec__Unmatched_ignored_for_abstract_base(bool byAsync)
+    public async Task GetAll__GenSpec__Unmatched_ignored_for_abstract_base()
     {
         // Arrange
         var conn = new TestPhormConnection("");
 
         var cmd = new TestDbCommand(new TestDbDataReader
         {
-            Data = new List<Dictionary<string, object>>
-            {
-                new Dictionary<string, object>
+            Data =
+            [
+                new()
                 {
                     ["TypeId"] = 0, // Unknown (ignored)
                     ["Value"] = "valueA",
                     ["Value2"] = "valueA2"
                 }
-            }
+            ]
         });
         conn.CommandQueue.Enqueue(cmd);
 
@@ -188,30 +186,29 @@ public class PhormContractRunner
         var runner = parent.Where<IDto, GenSpec<IDto, BaseDto>>(o => o.Value != "valueX");
 
         // Act
-        var res = byAsync ? runner.GetAllAsync().Result : runner.GetAll();
+        var res = await runner.GetAllAsync(TestContext.CancellationTokenSource.Token);
 
         // Assert
         Assert.AreEqual(0, res.Count());
     }
 
     [TestMethod]
-    [DataRow(false), DataRow(true)]
-    public void GetAll__GenSpec__Unmatched_as_concrete_base(bool byAsync)
+    public async Task GetAll__GenSpec__Unmatched_as_concrete_base()
     {
         // Arrange
         var conn = new TestPhormConnection("");
 
         var cmd = new TestDbCommand(new TestDbDataReader
         {
-            Data = new List<Dictionary<string, object>>
-            {
-                new Dictionary<string, object>
+            Data =
+            [
+                new()
                 {
                     ["TypeId"] = 0, // Unmatched
                     ["Value"] = "valueA",
                     ["Value2"] = "valueA2"
                 }
-            }
+            ]
         });
         conn.CommandQueue.Enqueue(cmd);
 
@@ -221,7 +218,7 @@ public class PhormContractRunner
         var runner = parent.Where<BaseDto, GenSpec<BaseDto, TestDto>>(o => o.Value != "valueX");
 
         // Act
-        var res = byAsync ? runner.GetAllAsync().Result : runner.GetAll();
+        var res = await runner.GetAllAsync(TestContext.CancellationTokenSource.Token);
 
         // Assert
         var arr = res.All();
@@ -229,7 +226,7 @@ public class PhormContractRunner
     }
 
     [TestMethod]
-    public void GetAll__Cancelled__Does_not_parse_results()
+    public async Task GetAll__Cancelled__Does_not_parse_results()
     {
         // Arrange
         var conn = new TestPhormConnection("")
@@ -239,21 +236,21 @@ public class PhormContractRunner
 
         var cmd = new TestDbCommand(new TestDbDataReader
         {
-            Data = new List<Dictionary<string, object>>
-            {
-                new Dictionary<string, object>
+            Data =
+            [
+                new()
                 {
                     ["Value"] = "value1"
                 },
-                new Dictionary<string, object>
+                new()
                 {
                     ["Value"] = "value2"
                 },
-                new Dictionary<string, object>
+                new()
                 {
                     ["Value"] = "value3"
                 }
-            }
+            ]
         });
         conn.CommandQueue.Enqueue(cmd);
 
@@ -265,7 +262,7 @@ public class PhormContractRunner
         var token = new CancellationToken(true);
 
         // Act
-        var res = runner.GetAllAsync(token).Result;
+        var res = await runner.GetAllAsync(token);
 
         // Assert
         Assert.AreEqual(0, res.Count());

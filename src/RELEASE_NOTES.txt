@@ -1,3 +1,10 @@
+v2.0.0
+- #52: Removed non-async methods
+
+v1.7.4
+- Updated Microsoft.Data.SqlClient to v6.1.1 to resolve security vulnerability
+- Improved documentation
+
 v1.7.3.1
 - Update of dependencies
 - Dropped out-of-support frameworks
@@ -18,23 +25,3 @@ v1.7.1
 v1.7.0
 - #38: Lazy resolution of results
 - #38: Pre-resolution filtering of entity resultsets
-
-v1.6.1
-- #39: Fix transformations occuring before literal properties
-
-v1.6.0
-- Breaking change to IEncryptor
-- #34: Allow decryptor to be chosen using encrypted data
-
-v1.5.3
-- #32: Contract out parameter fails if anon object doesn't define it
-
-v1.5.2
-- #29: Interface implemented properties not resolving on call contract
-
-v1.5.1
-- #24: Support DateOnly
-- #19: Dynamic removal of members
-
-v1.5.0.1
-- Minor internal changes

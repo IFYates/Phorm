@@ -1,5 +1,4 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
 
 namespace IFY.Phorm.Data.Tests;
 
@@ -52,8 +51,8 @@ public class ResultsetAttributeTests
         var attr = new ResultsetAttribute(0, "BadSelectorProperty");
 
         // Act
-        var ex = Assert.ThrowsException<InvalidCastException>
-            (() => attr.FilterMatched(parent, new[] { child }));
+        var ex = Assert.ThrowsExactly<InvalidCastException>
+            (() => attr.FilterMatched(parent, [child]));
 
         // Assert
         Assert.AreEqual("Selector property 'BadSelectorProperty' does not return IRecordMatcher.", ex.Message);
@@ -69,8 +68,8 @@ public class ResultsetAttributeTests
         var attr = new ResultsetAttribute(0, nameof(ParentObject.InvalidSelectProperty));
 
         // Act
-        var ex = Assert.ThrowsException<InvalidCastException>
-            (() => attr.FilterMatched(parent, new[] { child }));
+        var ex = Assert.ThrowsExactly<InvalidCastException>
+            (() => attr.FilterMatched(parent, [child]));
 
         // Assert
         Assert.AreEqual("Selector property 'InvalidSelectProperty' does not return IRecordMatcher.", ex.Message);
@@ -86,8 +85,8 @@ public class ResultsetAttributeTests
         var attr = new ResultsetAttribute(0, nameof(ParentObject.WrongParentType));
 
         // Act
-        var ex = Assert.ThrowsException<InvalidCastException>
-            (() => attr.FilterMatched(parent, new[] { child }));
+        var ex = Assert.ThrowsExactly<InvalidCastException>
+            (() => attr.FilterMatched(parent, [child]));
 
         // Assert
         Assert.AreEqual("Parent entity type 'IFY.Phorm.Data.Tests.ResultsetAttributeTests+ParentObject' could not be used for matcher expecting type 'IFY.Phorm.Data.Tests.ResultsetAttributeTests+ChildObject'.", ex.Message);
@@ -103,8 +102,8 @@ public class ResultsetAttributeTests
         var attr = new ResultsetAttribute(0, nameof(ParentObject.MatchByParentId));
 
         // Act
-        var ex = Assert.ThrowsException<InvalidCastException>
-            (() => attr.FilterMatched(parent, new[] { child }));
+        var ex = Assert.ThrowsExactly<InvalidCastException>
+            (() => attr.FilterMatched(parent, [child]));
 
         // Assert
         Assert.AreEqual("Child entity type 'IFY.Phorm.Data.Tests.ResultsetAttributeTests+ParentObject' could not be used for matcher expecting type 'IFY.Phorm.Data.Tests.ResultsetAttributeTests+ChildObject'.", ex.Message);
