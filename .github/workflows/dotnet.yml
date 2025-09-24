@@ -7,7 +7,7 @@ on:
     paths:
       - src/**
   pull_request:
-    types: [opened, synchronize, reopened, closed]
+    types: [opened, synchronize, reopened]
     branches:
       - main
   workflow_dispatch:
@@ -44,6 +44,7 @@ jobs:
       run: dotnet build src --configuration $BUILD_CONFIG --no-restore
 
     - name: Publish package
+      if: github.ref == 'refs/heads/main'
       uses: nanoufo/action-upload-artifacts-and-release-assets@v2
       with:
         path: ./src/**/IFY.Phorm.*.*nupkg
