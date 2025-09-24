@@ -192,6 +192,15 @@
             <param name="value">The value from the datasource.</param>
             <param name="source">The DTO that is being built from the datasource.</param>
         </member>
+        <member name="T:IFY.Phorm.Data.ContractMemberAttribute">
+            <summary>
+            Specifies contract-related metadata for a property or method, indicating whether it should be considered for input
+            or output in data source operations.
+            </summary>
+            <remarks>Apply this attribute to properties or methods to control their participation in contract-based data
+            exchange. Setting the relevant properties allows fine-grained control over which members are used for input or
+            output when interacting with a data source.</remarks>
+        </member>
         <member name="P:IFY.Phorm.Data.ContractMemberAttribute.DisableInput">
             <summary>
             Set to true to ensure that this member is never used as input to the data source.
@@ -289,6 +298,36 @@
             Value being passed to or returned from stored procedure.
             </summary>
         </member>
+        <member name="T:IFY.Phorm.Data.GenSpecBase">
+            <summary>
+            Provides a base class for defining generic specification types used in contract member generation scenarios.
+            </summary>
+            <remarks>This abstract class is intended for advanced scenarios involving dynamic contract member mapping and
+            specification resolution. It is typically used as a foundation for derived types that implement custom logic for
+            handling specification data and member definitions. The class is not intended for direct instantiation and is
+            designed for internal use within the specification framework.</remarks>
+        </member>
+        <member name="T:IFY.Phorm.Data.GenSpecBase`1">
+            <summary>
+            Provides a generic base class for working with collections of records, allowing access to all items as the base type
+            and filtering by specialized types.
+            </summary>
+            <remarks>This class enables retrieval of all records as the specified base type and supports filtering records
+            by derived or specialized types. It is intended to be used as a foundation for more specific collection types that
+            require generalized access and type-based filtering.</remarks>
+            <typeparam name="TBase">The base type of the records contained in the collection.</typeparam>
+        </member>
+        <member name="M:IFY.Phorm.Data.GenSpecBase`1.Count">
+            <summary>
+            Returns the number of elements contained in the collection.
+            </summary>
+            <returns>The total number of elements in the collection.</returns>
+        </member>
+        <member name="M:IFY.Phorm.Data.GenSpecBase`1.#ctor">
+            <summary>
+            Initializes a new instance of the GenSpecBase class.
+            </summary>
+        </member>
         <member name="M:IFY.Phorm.Data.GenSpecBase`1.All">
             <summary>
             Get all records from the resultset, as the "Generalised" base type.
@@ -354,12 +393,47 @@
             Tags this class/interface as being usable as a Pho/rm action contract.
             </summary>
         </member>
+        <member name="T:IFY.Phorm.Data.ParameterType">
+            <summary>
+            Specifies the type of a parameter used in data operations, indicating its direction or purpose within a command or
+            procedure.
+            </summary>
+            <remarks>This enumeration is commonly used to define whether a parameter is intended for input, output, both
+            input and output, as a return value, or to represent concatenated console output. The values for Input, Output,
+            InputOutput, and ReturnValue correspond to those in <see cref="T:System.Data.ParameterDirection"/> and can be used for
+            interoperability with data access APIs.</remarks>
+        </member>
+        <member name="F:IFY.Phorm.Data.ParameterType.Input">
+            <summary>
+            Indicates that the item represents an input value to a procedure.
+            </summary>
+        </member>
+        <member name="F:IFY.Phorm.Data.ParameterType.Output">
+            <summary>
+            Indicates that the item represents an output parameter from a procedure.
+            </summary>
+        </member>
+        <member name="F:IFY.Phorm.Data.ParameterType.InputOutput">
+            <summary>
+            Indicates that the item represents a procedure parameter that can be used for both input and output.
+            </summary>
+        </member>
+        <member name="F:IFY.Phorm.Data.ParameterType.ReturnValue">
+            <summary>
+            Indicates that the item models the return value of a procedure.
+            </summary>
+        </member>
         <member name="F:IFY.Phorm.Data.ParameterType.Console">
             <summary>
             Concatenated output of any printed data
             </summary>
         </member>
         <member name="T:IFY.Phorm.Data.PhormSpecOfAttribute">
+            <summary>
+            Mark this "Specialised" type with the details on how to differentiate it within the "Generalised" data.
+            </summary>
+        </member>
+        <member name="M:IFY.Phorm.Data.PhormSpecOfAttribute.#ctor(System.String,System.Object)">
             <summary>
             Mark this "Specialised" type with the details on how to differentiate it within the "Generalised" data.
             </summary>
@@ -373,6 +447,53 @@
             <summary>
             The value of the "Generalised" type property to match with this "Specialised" type.
             </summary>
+        </member>
+        <member name="T:IFY.Phorm.Data.IRecordMatcher">
+            <summary>
+            Defines a method for determining whether a child record matches a parent record according to custom criteria.
+            </summary>
+            <remarks>Implementations of this interface can be used to compare records in scenarios such as data
+            synchronization, merging, or filtering. The matching logic is defined by the implementer and may vary depending on
+            the application's requirements.</remarks>
+        </member>
+        <member name="M:IFY.Phorm.Data.IRecordMatcher.IsMatch(System.Object,System.Object)">
+            <summary>
+            Determines whether the specified child object matches the criteria defined by the parent object.
+            </summary>
+            <param name="parent">The object that defines the criteria or context against which the child object is evaluated. Cannot be null.</param>
+            <param name="child">The object to be tested for a match against the parent criteria. Cannot be null.</param>
+            <returns>true if the child object matches the criteria of the parent object; otherwise, false.</returns>
+        </member>
+        <member name="T:IFY.Phorm.Data.RecordMatcher`2">
+            <summary>
+            Provides a generic mechanism for determining whether a parent and child record match according to a user-defined
+            predicate.
+            </summary>
+            <typeparam name="TParent">The type of the parent record to be compared. Must be a reference type.</typeparam>
+            <typeparam name="TChild">The type of the child record to be compared. Must be a reference type.</typeparam>
+            <param name="matcher">A function that defines the matching logic between a parent and child record. The function should return <see
+            langword="true"/> if the records match; otherwise, <see langword="false"/>.</param>
+        </member>
+        <member name="M:IFY.Phorm.Data.RecordMatcher`2.#ctor(System.Func{`0,`1,System.Boolean})">
+            <summary>
+            Provides a generic mechanism for determining whether a parent and child record match according to a user-defined
+            predicate.
+            </summary>
+            <typeparam name="TParent">The type of the parent record to be compared. Must be a reference type.</typeparam>
+            <typeparam name="TChild">The type of the child record to be compared. Must be a reference type.</typeparam>
+            <param name="matcher">A function that defines the matching logic between a parent and child record. The function should return <see
+            langword="true"/> if the records match; otherwise, <see langword="false"/>.</param>
+        </member>
+        <member name="M:IFY.Phorm.Data.RecordMatcher`2.IFY#Phorm#Data#IRecordMatcher#IsMatch(System.Object,System.Object)">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Data.RecordMatcher`2.IsMatch(`0,`1)">
+            <summary>
+            Determines whether the specified parent and child objects satisfy the matching criteria defined by the matcher.
+            </summary>
+            <param name="parent">The parent object to evaluate against the matching criteria.</param>
+            <param name="child">The child object to evaluate against the matching criteria.</param>
+            <returns>true if the parent and child objects match according to the criteria; otherwise, false.</returns>
         </member>
         <member name="T:IFY.Phorm.Data.ResultsetAttribute">
             <summary>
@@ -838,6 +959,33 @@
             <param name="transaction">The database transaction to associate with the session. Cannot be null.</param>
             <returns>An instance of <see cref="T:IFY.Phorm.Execution.ITransactedPhormSession"/> that operates within the context of the provided
             transaction.</returns>
+        </member>
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.CallAsync``1">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.CallAsync``1(System.Object)">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.CallAsync``1(``0)">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.CallAsync``1(``0,System.Threading.CancellationToken)">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.GetAsync``1">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.GetAsync``1(System.Object)">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.GetAsync``1(System.Threading.CancellationToken)">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.GetAsync``1(``0)">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.GetAsync``1(``0,System.Threading.CancellationToken)">
+            <inheritdoc/>
         </member>
         <member name="P:IFY.Phorm.Execution.ConsoleMessage.IsError">
             <summary>
