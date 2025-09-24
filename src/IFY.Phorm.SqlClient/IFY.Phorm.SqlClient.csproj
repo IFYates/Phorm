@@ -21,7 +21,7 @@
         <PackageProjectUrl>https://github.com/IFYates/Phorm</PackageProjectUrl>
         <RepositoryUrl>https://github.com/IFYates/Phorm</RepositoryUrl>
         <RepositoryType>GitHub</RepositoryType>
-        <Version>1.7.4.0</Version>
+		<Version>2.0.0.0</Version>
         <PackageReleaseNotes>$([System.IO.File]::ReadAllText("$(MSBuildProjectDirectory)/../RELEASE_NOTES.txt"))</PackageReleaseNotes>
         <Copyright>(c) IFYates</Copyright>
         <Description>SqlClient implementation of the Procedure-heavy object-relational mapping framework.</Description>
