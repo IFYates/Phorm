@@ -712,6 +712,11 @@
             The parameters of the command being executed.
             </summary>
         </member>
+        <member name="T:IFY.Phorm.EventArgs.ConnectedEventArgs">
+            <summary>
+            Provides data for events that are raised when a new database connection is established.
+            </summary>
+        </member>
         <member name="P:IFY.Phorm.EventArgs.ConnectedEventArgs.Connection">
             <summary>
             The connection that has been created.
@@ -726,6 +731,15 @@
             <summary>
             The console message that was raised.
             </summary>
+        </member>
+        <member name="T:IFY.Phorm.EventArgs.UnexpectedRecordColumnEventArgs">
+            <summary>
+            Provides data for an event that is raised when a record column cannot be mapped to a property of the target entity
+            type during data processing.
+            </summary>
+            <remarks>This event argument supplies information about the command instance, the entity type being
+            constructed, and the name of the unmapped column. It can be used to log, handle, or inspect unexpected columns
+            encountered during record-to-entity mapping operations.</remarks>
         </member>
         <member name="P:IFY.Phorm.EventArgs.UnexpectedRecordColumnEventArgs.CommandGuid">
             <summary>

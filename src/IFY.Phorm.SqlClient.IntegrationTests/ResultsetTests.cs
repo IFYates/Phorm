@@ -138,7 +138,7 @@ RETURN 1"
             (async () => await phorm.From<IGetFamily>(null).GetAsync<OneParentDTO[]>(TestContext.CancellationTokenSource.Token));
 
         // Assert
-        Assert.AreEqual("Resultset property Child is not an array but matched 2 records.", ex.Message);
+        Assert.AreEqual("Phorm Resultset property Child is not an array but matched 2 records.", ex.Message);
     }
 
     [TestMethod]

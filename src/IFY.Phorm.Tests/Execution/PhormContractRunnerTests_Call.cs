@@ -372,7 +372,7 @@ public class PhormContractRunnerTests_Call
             (async () => await runner.CallAsync(TestContext.CancellationTokenSource.Token));
 
         // Assert
-        Assert.AreEqual("Non-result request returned a result.", ex.Message);
+        Assert.AreEqual("Phorm non-result request returned a result.", ex.Message);
     }
 
     #region Console messages

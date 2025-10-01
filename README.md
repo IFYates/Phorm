@@ -27,10 +27,10 @@ Pho/rm supports:
 * [Your DI framework](https://github.com/IFYates/Phorm/wiki/howto-di)
 * And more!
 
-Packages|||
--|-|-
-IFY.Phorm.Core|[![NuGet Version](https://img.shields.io/nuget/v/IFY.Phorm.Core)](https://www.nuget.org/packages/IFY.Phorm.Core/)|[![NuGet Downloads](https://img.shields.io/nuget/dt/IFY.Phorm.Core)](https://www.nuget.org/packages/IFY.Phorm.Core/)
-IFY.Phorm.SqlClient|[![NuGet Version](https://img.shields.io/nuget/v/IFY.Phorm.SqlClient)](https://www.nuget.org/packages/IFY.Phorm.SqlClient/)|[![NuGet Downloads](https://img.shields.io/nuget/dt/IFY.Phorm.SqlClient)](https://www.nuget.org/packages/IFY.Phorm.SqlClient/)
+| Packages | | |
+| - | - | -
+| IFY.Phorm.Core | [![NuGet Version](https://img.shields.io/nuget/v/IFY.Phorm.Core)](https://www.nuget.org/packages/IFY.Phorm.Core/) | [![NuGet Downloads](https://img.shields.io/nuget/dt/IFY.Phorm.Core)](https://www.nuget.org/packages/IFY.Phorm.Core/)
+| IFY.Phorm.SqlClient | [![NuGet Version](https://img.shields.io/nuget/v/IFY.Phorm.SqlClient)](https://www.nuget.org/packages/IFY.Phorm.SqlClient/) | [![NuGet Downloads](https://img.shields.io/nuget/dt/IFY.Phorm.SqlClient)](https://www.nuget.org/packages/IFY.Phorm.SqlClient/)
 
 ## Driving principals
 The are many, brilliant O/RM frameworks available using different paradigms for database interaction.  
@@ -149,3 +149,7 @@ IPhormSession
         Where<TEntity>(Expression<Func<TEntity, bool>> predicate)
             Task<IEnumerable<TEntity>> GetAllAsync(CancellationToken cancellationToken = CancellationToken.None);
 ```
+
+# Versioning
+Pho/rm uses [Semantic Versioning](https://semver.org/) where provider implementations (e.g. SQL Server) will use the same major and minor versions as the core package, but may have a different patch version.  
+For example, the provider package patch version will be incremented when there is a fix or change in the provider implementation (or core), but the core package remains unchanged.

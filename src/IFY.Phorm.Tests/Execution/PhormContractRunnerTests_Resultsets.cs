@@ -175,7 +175,7 @@ public class PhormContractRunnerTests_Resultsets
             (async () => await runner.GetAsync<TestParentBadResultsetProperty[]>(TestContext.CancellationTokenSource.Token));
 
         // Assert
-        Assert.AreEqual("Resultset property 'Children' is not writable.", ex.Message);
+        Assert.AreEqual("Phorm Resultset property 'Children' is not writable.", ex.Message);
     }
 
     [TestMethod]
