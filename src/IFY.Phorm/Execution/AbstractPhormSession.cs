@@ -156,11 +156,7 @@ public abstract class AbstractPhormSession(string databaseConnectionString, stri
                     // Resolve default schema
                     if (phormConn.DefaultSchema.Length == 0)
                     {
-                        var dbSchema = GetDefaultSchema(phormConn);
-                        if (dbSchema?.Length > 0)
-                        {
-                            phormConn.DefaultSchema = dbSchema;
-                        }
+                        SetDefaultSchema(phormConn);
                     }
                     _connectionPool[key] = phormConn;
 
@@ -182,7 +178,7 @@ public abstract class AbstractPhormSession(string databaseConnectionString, stri
     /// Implementations to provide logic for resolving the default schema of the connection.
     /// </summary>
     /// <returns>The default schema name, if known.</returns>
-    protected abstract string? GetDefaultSchema(IPhormDbConnection phormConn);
+    protected virtual void SetDefaultSchema(IPhormDbConnection phormConn) { }
 
     /// <inheritdoc/>
     public abstract IPhormSession SetConnectionName(string connectionName);

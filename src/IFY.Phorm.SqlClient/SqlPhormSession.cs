@@ -40,20 +40,16 @@ public class SqlPhormSession(string databaseConnectionString, string? connection
         }
 
         // Create connection
-        var conn = _connectionBuilder(connectionString.ToString(), ConnectionName);
-        if (conn.DefaultSchema.Length == 0)
-        {
-            conn.DefaultSchema = connectionString.UserID;
-        }
-        return conn;
+        return _connectionBuilder(connectionString.ToString(), ConnectionName);
     }
 
     /// <inheritdoc/>
-    protected override string? GetDefaultSchema(IPhormDbConnection phormConn)
+    protected override void SetDefaultSchema(IPhormDbConnection phormConn)
     {
         using var cmd = ((IDbConnection)phormConn).CreateCommand();
         cmd.CommandText = "SELECT schema_name()";
-        return cmd.ExecuteScalar()?.ToString();
+        phormConn.DefaultSchema = cmd.ExecuteScalar()?.ToString()
+            ?? new SqlConnectionStringBuilder(_databaseConnectionString).UserID;
     }
 
     #region Console capture

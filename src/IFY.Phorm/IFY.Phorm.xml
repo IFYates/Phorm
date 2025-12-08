@@ -906,7 +906,7 @@
             <param name="readOnly">true to create a connection with read-only access; false to create a connection with read-write access.</param>
             <returns>An <see cref="T:IFY.Phorm.Connectivity.IPhormDbConnection"/> instance representing the newly created database connection.</returns>
         </member>
-        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.GetDefaultSchema(IFY.Phorm.Connectivity.IPhormDbConnection)">
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.SetDefaultSchema(IFY.Phorm.Connectivity.IPhormDbConnection)">
             <summary>
             Implementations to provide logic for resolving the default schema of the connection.
             </summary>

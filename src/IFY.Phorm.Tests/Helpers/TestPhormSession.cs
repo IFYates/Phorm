@@ -45,8 +45,6 @@ internal partial class TestPhormSession : AbstractPhormSession
 
     protected override IPhormDbConnection CreateConnection(bool readOnly) => TestConnection;
 
-    protected override string? GetDefaultSchema(IPhormDbConnection phormConn) => null;
-
     [ExcludeFromCodeCoverage]
     public override IPhormSession SetConnectionName(string connectionName)
     {
