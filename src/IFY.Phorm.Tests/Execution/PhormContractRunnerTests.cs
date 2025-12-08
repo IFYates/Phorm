@@ -25,6 +25,10 @@ public class PhormContractRunnerTests
     class DataContractDTO : IPhormContract
     {
     }
+    [PhormContract(ReadOnly = true)]
+    class ReadContractDTO : IPhormContract
+    {
+    }
 
     private static T? getFieldValue<T>(object obj, string fieldName)
     {
@@ -191,10 +195,30 @@ public class PhormContractRunnerTests
 
     #endregion Constructor
 
+    [TestMethod]
+    public async Task Contract_can_be_marked_with_ReadOnly_intent()
+    {
+        // Arrange
+        var conn = new TestPhormConnection("")
+        {
+            DefaultSchema = "schema"
+        };
+
+        var phorm = new TestPhormSession(conn);
+
+        var runner = new PhormContractRunner<ReadContractDTO>(phorm, "ContractName", DbObjectType.StoredProcedure, new { Arg = 1 }, null);
+
+        // Act
+        await runner.CallAsync(CancellationToken.None);
+
+        // Assert
+        Assert.IsTrue(phorm.IsReadOnly);
+    }
+
     #region Many
 
     [TestMethod]
-    public async Task ManyAsync__Procedure_by_anon_contract()
+    public async Task GetAsync_Many__Procedure_by_anon_contract()
     {
         // Arrange
         var conn = new TestPhormConnection("")
@@ -247,7 +271,7 @@ public class PhormContractRunnerTests
     [TestMethod]
     [DataRow(DbObjectType.Table, "ContractName")]
     [DataRow(DbObjectType.View, "vw_ContractName")]
-    public async Task ManyAsync__NonProcedure_by_anon_object(DbObjectType objType, string actName)
+    public async Task GetAsync_Many__NonProcedure_by_anon_object(DbObjectType objType, string actName)
     {
         // Arrange
         var conn = new TestPhormConnection("")
@@ -299,7 +323,7 @@ public class PhormContractRunnerTests
     }
 
     [TestMethod]
-    public async Task ManyAsync__Procedure_by_contract()
+    public async Task GetAsync_Many__Procedure_by_contract()
     {
         // Arrange
         var conn = new TestPhormConnection("")
@@ -352,7 +376,7 @@ public class PhormContractRunnerTests
     [TestMethod]
     [DataRow(DbObjectType.Table, "TestContract")]
     [DataRow(DbObjectType.View, "vw_TestContract")]
-    public async Task ManyAsync__NonProcedure_by_contract(DbObjectType objType, string actName)
+    public async Task GetAsync_Many__NonProcedure_by_contract(DbObjectType objType, string actName)
     {
         // Arrange
         var conn = new TestPhormConnection("")
@@ -410,7 +434,7 @@ public class PhormContractRunnerTests
     }
 
     [TestMethod]
-    public async Task ManyAsync__SecureValue_sent_encrypted_received_decrypted_by_authenticator()
+    public async Task GetAsync_Many__SecureValue_sent_encrypted_received_decrypted_by_authenticator()
     {
         // Arrange
         var conn = new TestPhormConnection("")
@@ -466,7 +490,7 @@ public class PhormContractRunnerTests
     }
 
     [TestMethod]
-    public async Task ManyAsync_IEnumerable__Result_not_resolved()
+    public async Task GetAsync_Many_IEnumerable__Result_not_resolved()
     {
         static int getUnresolvedEntityCount<T>(IEnumerable<T> l)
         {
@@ -522,7 +546,7 @@ public class PhormContractRunnerTests
     }
 
     [TestMethod]
-    public async Task ManyAsync_ICollection__Result_not_resolved()
+    public async Task GetAsync_Many_ICollection__Result_not_resolved()
     {
         static int getUnresolvedEntityCount<T>(IEnumerable<T> l)
         {
@@ -582,7 +606,7 @@ public class PhormContractRunnerTests
     #region One
 
     [TestMethod]
-    public async Task OneAsync__Supports_DBNull()
+    public async Task GetAsync__Supports_DBNull()
     {
         // Arrange
         var conn = new TestPhormConnection("")
@@ -614,7 +638,7 @@ public class PhormContractRunnerTests
     }
 
     [TestMethod]
-    public async Task One__Multiple_records__Exception()
+    public async Task GetAsync__Multiple_records__Exception()
     {
         // Arrange
         var conn = new TestPhormConnection("")
@@ -648,7 +672,7 @@ public class PhormContractRunnerTests
     }
 
     [TestMethod]
-    public async Task OneAsync__Multiple_records__StrictResultSize_False__Ignored()
+    public async Task GetAsync__Multiple_records__StrictResultSize_False__Ignored()
     {
         // Arrange
         var conn = new TestPhormConnection("")
@@ -687,7 +711,7 @@ public class PhormContractRunnerTests
     }
 
     [TestMethod]
-    public async Task OneAsync__Procedure_by_anon_contract()
+    public async Task GetAsync__Procedure_by_anon_contract()
     {
         // Arrange
         var conn = new TestPhormConnection("")
@@ -729,7 +753,7 @@ public class PhormContractRunnerTests
     [TestMethod]
     [DataRow(DbObjectType.Table, "ContractName")]
     [DataRow(DbObjectType.View, "vw_ContractName")]
-    public async Task OneAsync__NonProcedure_by_anon_object(DbObjectType objType, string actName)
+    public async Task GetAsync__NonProcedure_by_anon_object(DbObjectType objType, string actName)
     {
         // Arrange
         var conn = new TestPhormConnection("")
@@ -770,7 +794,7 @@ public class PhormContractRunnerTests
     }
 
     [TestMethod]
-    public async Task OneAsync__Procedure_by_contract()
+    public async Task GetAsync__Procedure_by_contract()
     {
         // Arrange
         var conn = new TestPhormConnection("")
@@ -812,7 +836,7 @@ public class PhormContractRunnerTests
     [TestMethod]
     [DataRow(DbObjectType.Table, "TestContract")]
     [DataRow(DbObjectType.View, "vw_TestContract")]
-    public async Task OneAsync__NonProcedure_by_contract(DbObjectType objType, string actName)
+    public async Task GetAsync__NonProcedure_by_contract(DbObjectType objType, string actName)
     {
         // Arrange
         var conn = new TestPhormConnection("")
@@ -852,7 +876,7 @@ public class PhormContractRunnerTests
     }
 
     [TestMethod]
-    public async Task OneAsync__SecureValue_sent_encrypted_received_decrypted_by_authenticator()
+    public async Task GetAsync__SecureValue_sent_encrypted_received_decrypted_by_authenticator()
     {
         // Arrange
         var conn = new TestPhormConnection("")

@@ -88,11 +88,16 @@ public class SqlPhormSessionTests
         // Arrange
         var connMock = new Mock<IPhormDbConnection>();
         connMock.Setup(m => m.Dispose());
-        connMock.SetupProperty(m => m.DefaultSchema).Object.DefaultSchema = "dbo";
+        connMock.SetupProperty(m => m.DefaultSchema, "dbo");
 
+        var connStrUsed = string.Empty;
         var sess = new SqlPhormSession(CONN_STR)
         {
-            _connectionBuilder = (cs, cn) => connMock.Object
+            _connectionBuilder = (cs, cn) =>
+            {
+                connStrUsed = cs;
+                return connMock.Object;
+            }
         };
 
         // Act
@@ -100,6 +105,33 @@ public class SqlPhormSessionTests
 
         // Assert
         Assert.AreSame(connMock.Object, res);
+        Assert.DoesNotContain("Application Intent=ReadOnly", connStrUsed);
+    }
+
+    [TestMethod]
+    public void GetConnection__Can_add_ReadOnly_intent()
+    {
+        // Arrange
+        var connMock = new Mock<IPhormDbConnection>();
+        connMock.Setup(m => m.Dispose());
+        connMock.SetupProperty(m => m.DefaultSchema, "dbo");
+
+        var connStrUsed = string.Empty;
+        var sess = new SqlPhormSession(CONN_STR)
+        {
+            _connectionBuilder = (cs, cn) =>
+            {
+                connStrUsed = cs;
+                return connMock.Object;
+            }
+        };
+
+        // Act
+        var res = sess.GetConnection(true);
+
+        // Assert
+        Assert.AreSame(connMock.Object, res);
+        Assert.Contains("Application Intent=ReadOnly", connStrUsed);
     }
 
     [TestMethod]

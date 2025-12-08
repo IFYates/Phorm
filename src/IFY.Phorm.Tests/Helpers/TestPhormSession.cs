@@ -20,6 +20,8 @@ internal partial class TestPhormSession : AbstractPhormSession
 
     public override bool IsInTransaction => false;
 
+    public bool IsReadOnly { get; private set; }
+
     public TestPhormSession(string? connectionName = null)
         : base(null!, connectionName)
     {
@@ -43,7 +45,11 @@ internal partial class TestPhormSession : AbstractPhormSession
         return cmd;
     }
 
-    protected override IPhormDbConnection CreateConnection(bool readOnly) => TestConnection;
+    protected override IPhormDbConnection CreateConnection(bool readOnly)
+    {
+        IsReadOnly = readOnly;
+        return TestConnection;
+    }
 
     [ExcludeFromCodeCoverage]
     public override IPhormSession SetConnectionName(string connectionName)

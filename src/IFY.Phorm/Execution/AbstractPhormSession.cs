@@ -22,7 +22,7 @@ public abstract class AbstractPhormSession(string databaseConnectionString, stri
     protected readonly string _databaseConnectionString = databaseConnectionString;
 
     /// <inheritdoc/>
-    public string? ConnectionName { get; private set; } = connectionName;
+    public string? ConnectionName { get; } = connectionName;
 
     /// <summary>
     /// Gets or sets the prefix used for accessing database stored procedures.
