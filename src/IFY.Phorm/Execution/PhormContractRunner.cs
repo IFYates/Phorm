@@ -17,6 +17,7 @@ internal sealed partial class PhormContractRunner<TActionContract> : IPhormContr
     private readonly string _objectName;
     private readonly object? _runArgs;
     private readonly DbObjectType _objectType;
+    private readonly bool _readOnly;
 
     public PhormContractRunner(AbstractPhormSession session, string? objectName, DbObjectType objectType, object? args, IDbTransaction? transaction)
         : this(session, typeof(TActionContract), objectName, objectType, args, transaction)
@@ -50,6 +51,7 @@ internal sealed partial class PhormContractRunner<TActionContract> : IPhormContr
             _schema = pcAttr.Namespace;
             _objectName = objectName ?? pcAttr.Name ?? contractName;
             _objectType = pcAttr.Target;
+            _readOnly = pcAttr.ReadOnly;
         }
         else
         {
@@ -86,7 +88,7 @@ internal sealed partial class PhormContractRunner<TActionContract> : IPhormContr
     private IAsyncDbCommand startCommand(out ContractMember[] members, out CommandExecutingEventArgs eventArgs)
     {
         members = ContractMember.GetMembersFromContract(_runArgs, typeof(TActionContract), true);
-        var cmd = _session.CreateCommand(_schema, _objectName, _objectType);
+        var cmd = _session.CreateCommand(_schema, _objectName, _objectType, _readOnly);
         cmd.Transaction = _transaction;
 
         // Build WHERE clause from members

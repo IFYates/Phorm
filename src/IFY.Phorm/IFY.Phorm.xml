@@ -896,11 +896,15 @@
         <member name="P:IFY.Phorm.Execution.AbstractPhormSession.StrictResultSize">
             <inheritdoc/>
         </member>
-        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.GetConnection">
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.GetConnection(System.Boolean)">
             <inheritdoc/>
         </member>
-        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.CreateConnection">
-            <inheritdoc/>
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.CreateConnection(System.Boolean)">
+            <summary>
+            Creates and returns a new database connection configured for either read-only or read-write access.
+            </summary>
+            <param name="readOnly">true to create a connection with read-only access; false to create a connection with read-write access.</param>
+            <returns>An <see cref="T:IFY.Phorm.Connectivity.IPhormDbConnection"/> instance representing the newly created database connection.</returns>
         </member>
         <member name="M:IFY.Phorm.Execution.AbstractPhormSession.GetDefaultSchema(IFY.Phorm.Connectivity.IPhormDbConnection)">
             <summary>
@@ -909,9 +913,7 @@
             <returns>The default schema name, if known.</returns>
         </member>
         <member name="M:IFY.Phorm.Execution.AbstractPhormSession.SetConnectionName(System.String)">
-            <summary>
-            Request a session with a different connection name.
-            </summary>
+            <inheritdoc/>
         </member>
         <member name="M:IFY.Phorm.Execution.AbstractPhormSession.CreateCommand(IFY.Phorm.Connectivity.IPhormDbConnection,System.String,System.String,IFY.Phorm.DbObjectType)">
             <inheritdoc/>
@@ -1516,6 +1518,11 @@
         <member name="P:IFY.Phorm.PhormContractAttribute.Namespace">
             <summary>
             The database schema to use for this contract, if not the default schema of the connection.
+            </summary>
+        </member>
+        <member name="P:IFY.Phorm.PhormContractAttribute.ReadOnly">
+            <summary>
+            Hint that this contract is read-only and can use a read-only connection.
             </summary>
         </member>
         <member name="T:IFY.Phorm.Transformation.AbstractTransphormAttribute">

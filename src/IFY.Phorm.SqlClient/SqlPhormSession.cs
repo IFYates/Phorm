@@ -29,15 +29,18 @@ public class SqlPhormSession(string databaseConnectionString, string? connection
     }
 
     /// <inheritdoc/>
-    protected override IPhormDbConnection CreateConnection()
+    protected override IPhormDbConnection CreateConnection(bool readOnly)
     {
         // Ensure application name is known user
         var connectionString = new SqlConnectionStringBuilder(_databaseConnectionString);
         connectionString.ApplicationName = ConnectionName ?? connectionString.ApplicationName;
-        var sqlConnStr = connectionString.ToString();
+        if (readOnly)
+        {
+            connectionString.ApplicationIntent = ApplicationIntent.ReadOnly;
+        }
 
         // Create connection
-        var conn = _connectionBuilder(sqlConnStr, ConnectionName);
+        var conn = _connectionBuilder(connectionString.ToString(), ConnectionName);
         if (conn.DefaultSchema.Length == 0)
         {
             conn.DefaultSchema = connectionString.UserID;

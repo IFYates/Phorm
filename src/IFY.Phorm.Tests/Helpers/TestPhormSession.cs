@@ -11,10 +11,10 @@ internal partial class TestPhormSession : AbstractPhormSession
     public TestPhormConnection TestConnection { get; }
 
     public IReadOnlyList<IAsyncDbCommand> Commands => _commands.AsReadOnly();
-    private readonly List<IAsyncDbCommand> _commands = new List<IAsyncDbCommand>();
+    private readonly List<IAsyncDbCommand> _commands = [];
 
     public Func<TestPhormSession, Guid, AbstractConsoleMessageCapture>? ConsoleMessageCaptureProvider { get; set; }
-    public List<ConsoleMessage> ConsoleMessages { get; } = new List<ConsoleMessage>();
+    public List<ConsoleMessage> ConsoleMessages { get; } = [];
 
     public override bool SupportsTransactions => false;
 
@@ -43,7 +43,7 @@ internal partial class TestPhormSession : AbstractPhormSession
         return cmd;
     }
 
-    protected override IPhormDbConnection CreateConnection() => TestConnection;
+    protected override IPhormDbConnection CreateConnection(bool readOnly) => TestConnection;
 
     protected override string? GetDefaultSchema(IPhormDbConnection phormConn) => null;
 

@@ -135,22 +135,23 @@ public abstract class AbstractPhormSession(string databaseConnectionString, stri
     }
 
     /// <inheritdoc/>
-    protected internal virtual IPhormDbConnection GetConnection()
+    protected internal virtual IPhormDbConnection GetConnection(bool readOnly = false)
     {
         // Reuse existing connections, where possible
-        if (!_connectionPool.TryGetValue(ConnectionName ?? string.Empty, out var phormConn)
+        var key = $"{ConnectionName ?? string.Empty}:{readOnly}";
+        if (!_connectionPool.TryGetValue(key, out var phormConn)
             || phormConn.State != ConnectionState.Open)
         {
             lock (_connectionPool)
             {
-                if (!_connectionPool.TryGetValue(ConnectionName ?? string.Empty, out phormConn)
+                if (!_connectionPool.TryGetValue(key, out phormConn)
                     || phormConn.State != ConnectionState.Open)
                 {
                     // Create new connection
                     phormConn?.Dispose();
 
                     // Create connection
-                    phormConn = CreateConnection();
+                    phormConn = CreateConnection(readOnly);
 
                     // Resolve default schema
                     if (phormConn.DefaultSchema.Length == 0)
@@ -161,7 +162,7 @@ public abstract class AbstractPhormSession(string databaseConnectionString, stri
                             phormConn.DefaultSchema = dbSchema;
                         }
                     }
-                    _connectionPool[ConnectionName ?? string.Empty] = phormConn;
+                    _connectionPool[key] = phormConn;
 
                     OnConnected(new ConnectedEventArgs { Connection = phormConn });
                 }
@@ -170,8 +171,12 @@ public abstract class AbstractPhormSession(string databaseConnectionString, stri
         return phormConn;
     }
 
-    /// <inheritdoc/>
-    protected abstract IPhormDbConnection CreateConnection();
+    /// <summary>
+    /// Creates and returns a new database connection configured for either read-only or read-write access.
+    /// </summary>
+    /// <param name="readOnly">true to create a connection with read-only access; false to create a connection with read-write access.</param>
+    /// <returns>An <see cref="IPhormDbConnection"/> instance representing the newly created database connection.</returns>
+    protected abstract IPhormDbConnection CreateConnection(bool readOnly);
 
     /// <summary>
     /// Implementations to provide logic for resolving the default schema of the connection.
@@ -179,16 +184,14 @@ public abstract class AbstractPhormSession(string databaseConnectionString, stri
     /// <returns>The default schema name, if known.</returns>
     protected abstract string? GetDefaultSchema(IPhormDbConnection phormConn);
 
-    /// <summary>
-    /// Request a session with a different connection name.
-    /// </summary>
+    /// <inheritdoc/>
     public abstract IPhormSession SetConnectionName(string connectionName);
 
     #endregion Connection
 
-    internal IAsyncDbCommand CreateCommand(string? schema, string objectName, DbObjectType objectType)
+    internal IAsyncDbCommand CreateCommand(string? schema, string objectName, DbObjectType objectType, bool readOnly)
     {
-        var conn = GetConnection();
+        var conn = GetConnection(readOnly);
         schema = schema?.Length > 0 ? schema : conn.DefaultSchema;
         return CreateCommand(conn, schema, objectName, objectType);
     }

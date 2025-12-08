@@ -447,6 +447,6 @@ public class AbstractPhormSessionTests
     {
         var phorm = new TestPhormSession();
         Assert.ThrowsExactly<NotSupportedException>
-            (() => phorm.CreateCommand("schema", "Object", (DbObjectType)255));
+            (() => phorm.CreateCommand("schema", "Object", (DbObjectType)255, false));
     }
 }

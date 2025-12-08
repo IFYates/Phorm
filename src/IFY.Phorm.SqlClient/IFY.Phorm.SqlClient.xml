@@ -57,7 +57,7 @@
         <member name="M:IFY.Phorm.SqlClient.SqlPhormSession.SetConnectionName(System.String)">
             <inheritdoc/>
         </member>
-        <member name="M:IFY.Phorm.SqlClient.SqlPhormSession.CreateConnection">
+        <member name="M:IFY.Phorm.SqlClient.SqlPhormSession.CreateConnection(System.Boolean)">
             <inheritdoc/>
         </member>
         <member name="M:IFY.Phorm.SqlClient.SqlPhormSession.GetDefaultSchema(IFY.Phorm.Connectivity.IPhormDbConnection)">

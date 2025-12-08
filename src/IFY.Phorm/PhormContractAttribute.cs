@@ -26,4 +26,9 @@ public class PhormContractAttribute : Attribute
     /// The database schema to use for this contract, if not the default schema of the connection.
     /// </summary>
     public string? Namespace { get; set; }
+
+    /// <summary>
+    /// Hint that this contract is read-only and can use a read-only connection.
+    /// </summary>
+    public bool ReadOnly { get; set; } = false;
 }
