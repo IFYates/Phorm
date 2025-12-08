@@ -2,7 +2,6 @@
 using IFY.Phorm.Tests;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.Serialization;
-using System.Threading.Tasks;
 
 namespace IFY.Phorm.Execution.Tests;
 
@@ -64,7 +63,7 @@ public class PhormContractRunnerTests_Resultsets
 
         // Act
         var ex = await Assert.ThrowsExactlyAsync<MissingMethodException>
-            (async () => await runner.GetAsync<TestBadEntity>(TestContext.CancellationTokenSource.Token));
+            (async () => await runner.GetAsync<TestBadEntity>(TestContext.CancellationToken));
 
         // Assert
         Assert.AreEqual("Attempt to get type IFY.Phorm.Execution.Tests.PhormContractRunnerTests_Resultsets+TestBadEntity without empty constructor.", ex.Message);
@@ -80,7 +79,7 @@ public class PhormContractRunnerTests_Resultsets
 
         // Act
         var ex = await Assert.ThrowsExactlyAsync<MissingMethodException>
-            (async () => await runner.GetAsync<TestBadEntity>(TestContext.CancellationTokenSource.Token));
+            (async () => await runner.GetAsync<TestBadEntity>(TestContext.CancellationToken));
 
         // Assert
         Assert.AreEqual("Attempt to get type IFY.Phorm.Execution.Tests.PhormContractRunnerTests_Resultsets+TestBadEntity without empty constructor.", ex.Message);
@@ -127,10 +126,10 @@ public class PhormContractRunnerTests_Resultsets
         var runner = new PhormContractRunner<ITestContract>(phorm, "ContractName", DbObjectType.StoredProcedure, null, null);
 
         // Act
-        var res = await runner.GetAsync<TestParent[]>(TestContext.CancellationTokenSource.Token);
+        var res = await runner.GetAsync<TestParent[]>(TestContext.CancellationToken);
 
         // Assert
-        Assert.AreEqual(1, res![0].Children.Length);
+        Assert.HasCount(1, res![0].Children);
         Assert.AreEqual("value1", res[0].Children[0].Value);
     }
 
@@ -172,7 +171,7 @@ public class PhormContractRunnerTests_Resultsets
 
         // Act
         var ex = await Assert.ThrowsExactlyAsync<InvalidDataContractException>
-            (async () => await runner.GetAsync<TestParentBadResultsetProperty[]>(TestContext.CancellationTokenSource.Token));
+            (async () => await runner.GetAsync<TestParentBadResultsetProperty[]>(TestContext.CancellationToken));
 
         // Assert
         Assert.AreEqual("Phorm Resultset property 'Children' is not writable.", ex.Message);
@@ -219,10 +218,10 @@ public class PhormContractRunnerTests_Resultsets
         var runner = new PhormContractRunner<ITestContract>(phorm, "ContractName", DbObjectType.StoredProcedure, null, null);
 
         // Act
-        var res = await runner.GetAsync<TestParent>(TestContext.CancellationTokenSource.Token);
+        var res = await runner.GetAsync<TestParent>(TestContext.CancellationToken);
 
         // Assert
-        Assert.AreEqual(1, res!.Children.Length);
+        Assert.HasCount(1, res!.Children);
         Assert.AreEqual("value1", res.Children[0].Value);
     }
 
@@ -270,7 +269,7 @@ public class PhormContractRunnerTests_Resultsets
 
         // Act
         var ex = await Assert.ThrowsExactlyAsync<InvalidCastException>
-            (async () => await runner.GetAsync<TestParent>(TestContext.CancellationTokenSource.Token));
+            (async () => await runner.GetAsync<TestParent>(TestContext.CancellationToken));
 
         // Assert
         Assert.Contains("not an array", ex.Message);
@@ -314,7 +313,7 @@ public class PhormContractRunnerTests_Resultsets
         var runner = new PhormContractRunner<ITestContract>(phorm, "ContractName", DbObjectType.StoredProcedure, null, null);
 
         // Act
-        var res = await runner.GetAsync<TestParent>(TestContext.CancellationTokenSource.Token);
+        var res = await runner.GetAsync<TestParent>(TestContext.CancellationToken);
 
         // Assert
         Assert.AreEqual("value1", res!.Child?.Value);

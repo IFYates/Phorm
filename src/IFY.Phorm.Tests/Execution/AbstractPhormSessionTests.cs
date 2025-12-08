@@ -118,7 +118,7 @@ public class AbstractPhormSessionTests
         var phorm = new TestPhormSession();
 
         // Act
-        int res = await ((IPhormSession)phorm).CallAsync("TestContract", TestContext.CancellationTokenSource.Token);
+        int res = await ((IPhormSession)phorm).CallAsync("TestContract", TestContext.CancellationToken);
 
         // Assert
         Assert.AreEqual(1, res);
@@ -135,7 +135,7 @@ public class AbstractPhormSessionTests
         var args = new { Arg = 1 };
 
         // Act
-        int res = await ((IPhormSession)phorm).CallAsync("TestContract", args, TestContext.CancellationTokenSource.Token);
+        int res = await ((IPhormSession)phorm).CallAsync("TestContract", args, TestContext.CancellationToken);
 
         // Assert
         Assert.AreEqual(1, res);
@@ -153,7 +153,7 @@ public class AbstractPhormSessionTests
         var objMock = new Mock<ITestContract>();
 
         // Act
-        int res = await ((IPhormSession)phorm).CallAsync(objMock.Object, TestContext.CancellationTokenSource.Token);
+        int res = await ((IPhormSession)phorm).CallAsync(objMock.Object, TestContext.CancellationToken);
 
         // Assert
         Assert.AreEqual(1, res);
@@ -173,7 +173,7 @@ public class AbstractPhormSessionTests
         var objMock = new Mock<ITestContract>();
 
         // Act
-        int res = await ((IPhormSession)phorm).CallAsync(objMock.Object, TestContext.CancellationTokenSource.Token);
+        int res = await ((IPhormSession)phorm).CallAsync(objMock.Object, TestContext.CancellationToken);
 
         // Assert
         Assert.AreEqual(1, res);
@@ -190,7 +190,7 @@ public class AbstractPhormSessionTests
         var objMock = new Mock<ITempContract>();
 
         // Act
-        int res = await ((IPhormSession)phorm).CallAsync(objMock.Object, TestContext.CancellationTokenSource.Token);
+        int res = await ((IPhormSession)phorm).CallAsync(objMock.Object, TestContext.CancellationToken);
 
         // Assert
         Assert.AreEqual(1, res);
@@ -205,7 +205,7 @@ public class AbstractPhormSessionTests
         var phorm = new TestPhormSession();
 
         // Act
-        int res = await ((IPhormSession)phorm).CallAsync<ITestContract>(TestContext.CancellationTokenSource.Token);
+        int res = await ((IPhormSession)phorm).CallAsync<ITestContract>(TestContext.CancellationToken);
 
         // Assert
         Assert.AreEqual(1, res);
@@ -227,7 +227,7 @@ public class AbstractPhormSessionTests
         var args = new { Arg = 1 };
 
         // Act
-        int res = await ((IPhormSession)phorm).CallAsync<ITestContractArg>(args, TestContext.CancellationTokenSource.Token);
+        int res = await ((IPhormSession)phorm).CallAsync<ITestContractArg>(args, TestContext.CancellationToken);
 
         // Assert
         Assert.AreEqual(1, res);
@@ -299,7 +299,7 @@ public class AbstractPhormSessionTests
         var phorm = new TestPhormSession();
 
         // Act
-        ITestContract? result = await ((IPhormSession)phorm).GetAsync<TestEntityView>(TestContext.CancellationTokenSource.Token);
+        ITestContract? result = await ((IPhormSession)phorm).GetAsync<TestEntityView>(TestContext.CancellationToken);
 
         // Assert
         Assert.IsNull(result);
@@ -371,7 +371,7 @@ public class AbstractPhormSessionTests
         var arg = new { };
 
         // Act
-        ITestContract? result = await ((IPhormSession)phorm).GetAsync<TestEntityView>(arg, TestContext.CancellationTokenSource.Token);
+        ITestContract? result = await ((IPhormSession)phorm).GetAsync<TestEntityView>(arg, TestContext.CancellationToken);
 
         // Assert
         Assert.IsNull(result);

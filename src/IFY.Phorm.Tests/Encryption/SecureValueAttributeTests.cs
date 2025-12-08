@@ -20,7 +20,7 @@ public class SecureValueAttributeTests
         var res = attr.Decrypt(null, null);
 
         // Assert
-        Assert.AreEqual(0, res!.Length);
+        Assert.IsEmpty(res);
     }
 
     [TestMethod]
@@ -80,7 +80,7 @@ public class SecureValueAttributeTests
 
         // Assert
         Assert.AreSame(result, res);
-        Assert.AreEqual(0, encrMock.Object.Authenticator.Length);
+        Assert.IsEmpty(encrMock.Object.Authenticator);
     }
 
     [TestMethod]
@@ -122,7 +122,7 @@ public class SecureValueAttributeTests
         var res = attr.Encrypt(null, null);
 
         // Assert
-        Assert.AreEqual(0, res.Length);
+        Assert.IsEmpty(res);
     }
 
     [TestMethod]
@@ -182,7 +182,7 @@ public class SecureValueAttributeTests
 
         // Assert
         Assert.AreSame(result, res);
-        Assert.AreEqual(0, encrMock.Object.Authenticator.Length);
+        Assert.IsEmpty(encrMock.Object.Authenticator);
     }
 
     [TestMethod]

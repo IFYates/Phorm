@@ -95,7 +95,7 @@ public class TransactedPhormSessionTests
         var sess = new TransactedPhormSession(baseSession, dbtranMock.Object);
 
         // Act
-        await sess.CallAsync("contract", null, TestContext.CancellationTokenSource.Token);
+        await sess.CallAsync("contract", null, TestContext.CancellationToken);
 
         // Assert
         var cmd = baseSession.Commands.Single();
@@ -113,7 +113,7 @@ public class TransactedPhormSessionTests
         var sess = new TransactedPhormSession(baseSession, dbtranMock.Object);
 
         // Act
-        await sess.CallAsync<ITestAction>(null, TestContext.CancellationTokenSource.Token);
+        await sess.CallAsync<ITestAction>(null, TestContext.CancellationToken);
 
         // Assert
         var cmd = baseSession.Commands.Single();
@@ -132,7 +132,7 @@ public class TransactedPhormSessionTests
 
         // Act
         var runner = sess.From("contract", null);
-        await runner.GetAsync<object>(TestContext.CancellationTokenSource.Token);
+        await runner.GetAsync<object>(TestContext.CancellationToken);
 
         // Assert
         var cmd = baseSession.Commands.Single();
@@ -151,7 +151,7 @@ public class TransactedPhormSessionTests
 
         // Act
         var runner = sess.From<ITestAction>(null);
-        await runner.GetAsync<object>(TestContext.CancellationTokenSource.Token);
+        await runner.GetAsync<object>(TestContext.CancellationToken);
 
         // Assert
         var cmd = baseSession.Commands.Single();
@@ -169,7 +169,7 @@ public class TransactedPhormSessionTests
         var sess = new TransactedPhormSession(baseSession, dbtranMock.Object);
 
         // Act
-        await sess.GetAsync<object>(null, TestContext.CancellationTokenSource.Token);
+        await sess.GetAsync<object>(null, TestContext.CancellationToken);
 
         // Assert
         var cmd = baseSession.Commands.Single();

@@ -77,7 +77,7 @@ public class ExtensionsTests
         var res = ((object?)null).GetBytes();
 
         // Assert
-        Assert.AreEqual(0, res.Length);
+        Assert.IsEmpty(res);
     }
 
     [TestMethod]
@@ -172,7 +172,7 @@ public class ExtensionsTests
         _ = expr.Compile(); // Must compile
         var props = expr.Body.GetExpressionParameterProperties(typeof(TestObject));
 
-        Assert.AreEqual(0, props.Length);
+        Assert.IsEmpty(props);
     }
 
     [TestMethod]

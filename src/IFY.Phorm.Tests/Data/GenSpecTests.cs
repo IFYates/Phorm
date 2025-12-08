@@ -89,14 +89,14 @@ public class GenSpecTests
         var runner = buildRunner();
 
         // Act
-        var result = await runner.GetAsync<GenSpec<BaseGenType, SpecType1, SpecType2>>(TestContext.CancellationTokenSource.Token);
+        var result = await runner.GetAsync<GenSpec<BaseGenType, SpecType1, SpecType2>>(TestContext.CancellationToken);
 
         var all = result!.All();
         var spec1 = result.OfType<SpecType1>().ToArray();
         var spec2 = result.OfType<SpecType2>().ToArray();
 
         // Assert
-        Assert.AreEqual(2, all.Length);
+        Assert.HasCount(2, all);
         Assert.AreEqual(12345, spec1.Single().IntSpecProperty);
         Assert.AreEqual("Value", spec2.Single().StringSpecProperty);
     }
@@ -108,7 +108,7 @@ public class GenSpecTests
         var runner = buildRunner();
 
         // Act
-        var result = await runner.GetAsync<GenSpec<BaseGenType, SpecType1>>(TestContext.CancellationTokenSource.Token);
+        var result = await runner.GetAsync<GenSpec<BaseGenType, SpecType1>>(TestContext.CancellationToken);
 
         var all = result!.All();
         var asBase = all.Where(r => r.GetType() == typeof(BaseGenType)).ToArray();
@@ -116,10 +116,10 @@ public class GenSpecTests
         var spec2 = result.OfType<SpecType2>().ToArray();
 
         // Assert
-        Assert.AreEqual(2, all.Length);
-        Assert.AreEqual(1, asBase.Length);
-        Assert.AreEqual(1, spec1.Length);
-        Assert.AreEqual(0, spec2.Length);
+        Assert.HasCount(2, all);
+        Assert.HasCount(1, asBase);
+        Assert.HasCount(1, spec1);
+        Assert.IsEmpty(spec2);
     }
 
     [TestMethod]
@@ -129,16 +129,16 @@ public class GenSpecTests
         var runner = buildRunner();
 
         // Act
-        var result = await runner.GetAsync<GenSpec<AbstractBaseGenType, SpecType1>>(TestContext.CancellationTokenSource.Token);
+        var result = await runner.GetAsync<GenSpec<AbstractBaseGenType, SpecType1>>(TestContext.CancellationToken);
 
         var all = result!.All();
         var spec1 = result.OfType<SpecType1>().ToArray();
         var spec2 = result.OfType<SpecType2>().ToArray();
 
         // Assert
-        Assert.AreEqual(1, all.Length);
-        Assert.AreEqual(1, spec1.Length);
-        Assert.AreEqual(0, spec2.Length);
+        Assert.HasCount(1, all);
+        Assert.HasCount(1, spec1);
+        Assert.IsEmpty(spec2);
     }
 
     [TestMethod]
@@ -149,7 +149,7 @@ public class GenSpecTests
 
         // Act
         var ex = await Assert.ThrowsExactlyAsync<TargetInvocationException>
-            (async () => await runner.GetAsync<GenSpec<BaseGenType, TypeWithoutAttribute>>(TestContext.CancellationTokenSource.Token));
+            (async () => await runner.GetAsync<GenSpec<BaseGenType, TypeWithoutAttribute>>(TestContext.CancellationToken));
 
         // Assert
         Assert.IsInstanceOfType<InvalidOperationException>(ex.InnerException);
@@ -164,7 +164,7 @@ public class GenSpecTests
 
         // Act
         var ex = await Assert.ThrowsExactlyAsync<TargetInvocationException>
-            (async () => await runner.GetAsync<GenSpec<BaseGenType, TypeWithBadAttribute>>(TestContext.CancellationTokenSource.Token));
+            (async () => await runner.GetAsync<GenSpec<BaseGenType, TypeWithBadAttribute>>(TestContext.CancellationToken));
 
         // Assert
         Assert.IsInstanceOfType<InvalidOperationException>(ex.InnerException);

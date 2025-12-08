@@ -1,13 +1,13 @@
 ﻿using IFY.Phorm.Data;
-using IFY.Phorm.Encryption;
 using IFY.Phorm.Execution;
+using IFY.Phorm.Tests;
 using IFY.Phorm.Transformation;
 using Moq;
 using System.Data;
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
 
-namespace IFY.Phorm.Tests.Encryption;
+namespace IFY.Phorm.Encryption.Tests;
 
 [TestClass]
 public class EncryptorTests
@@ -75,11 +75,11 @@ public class EncryptorTests
         GlobalSettings.EncryptionProvider = encProcMock.Object;
 
         // Act
-        var res = await runner.CallAsync<ISaveDataObject>(args, TestContext.CancellationTokenSource.Token);
+        var res = await runner.CallAsync<ISaveDataObject>(args, TestContext.CancellationToken);
 
         // Assert
         Assert.AreEqual(1, res);
-        Assert.AreEqual(0, encMock.Object.Authenticator.Length);
+        Assert.IsEmpty(encMock.Object.Authenticator);
 
         var testCmd = runner.Commands.Single();
         Assert.AreSame(secureData, ((IDataParameter)testCmd.Parameters["@Value"]).Value);
@@ -107,7 +107,7 @@ public class EncryptorTests
         GlobalSettings.EncryptionProvider = encProcMock.Object;
 
         // Act
-        var res = await runner.CallAsync<ISaveDataObjectWithAuthenticator>(args, TestContext.CancellationTokenSource.Token);
+        var res = await runner.CallAsync<ISaveDataObjectWithAuthenticator>(args, TestContext.CancellationToken);
 
         // Assert
         Assert.AreEqual(1, res);
@@ -135,7 +135,7 @@ public class EncryptorTests
         GlobalSettings.EncryptionProvider = encProcMock.Object;
 
         // Act
-        var res = await runner.CallAsync<ISaveDataObjectWithTransformation>(args, TestContext.CancellationTokenSource.Token);
+        var res = await runner.CallAsync<ISaveDataObjectWithTransformation>(args, TestContext.CancellationToken);
 
         // Assert
         Assert.AreEqual(1, res);

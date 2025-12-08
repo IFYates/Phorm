@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.0.31919.166
+# Visual Studio Version 18
+VisualStudioVersion = 18.3.11218.70 d18.3
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IFY.Phorm.Core", "IFY.Phorm\IFY.Phorm.Core.csproj", "{3D21066F-63A2-4B25-AEE7-79983A991A31}"
 EndProject
@@ -12,6 +12,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.editorconfig = .editorconfig
 		Directory.Packages.props = Directory.Packages.props
 		..\.github\workflows\dotnet.yml = ..\.github\workflows\dotnet.yml
+		nuget.config = nuget.config
 		..\README.md = ..\README.md
 		RELEASE_NOTES.txt = RELEASE_NOTES.txt
 	EndProjectSection

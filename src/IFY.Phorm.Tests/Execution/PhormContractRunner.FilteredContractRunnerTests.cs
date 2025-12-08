@@ -93,7 +93,7 @@ public class PhormContractRunner
         var runner = parent.Where<TestDto>(o => o.Value != "value3");
 
         // Act
-        var res = await runner.GetAllAsync(TestContext.CancellationTokenSource.Token);
+        var res = await runner.GetAllAsync(TestContext.CancellationToken);
 
         // Assert
         Assert.AreEqual(2, res.Count());
@@ -105,7 +105,7 @@ public class PhormContractRunner
         Assert.AreEqual("value2", arr[1].Value);
 
         var pars = cmd.Parameters.AsParameters();
-        Assert.AreEqual(2, pars.Length);
+        Assert.HasCount(2, pars);
         Assert.AreEqual("@Arg", pars[0].ParameterName);
         Assert.AreEqual(ParameterDirection.ReturnValue, pars[1].Direction);
         Assert.AreEqual(1, pars[1].Value);
@@ -151,11 +151,11 @@ public class PhormContractRunner
         var runner = parent.Where<IDto, GenSpec<IDto, BaseDto, TestDto>>(o => o.Value != "valueX");
 
         // Act
-        var res = await runner.GetAllAsync(TestContext.CancellationTokenSource.Token);
+        var res = await runner.GetAllAsync(TestContext.CancellationToken);
 
         // Assert
         var arr = res.All();
-        Assert.AreEqual(2, arr.Length);
+        Assert.HasCount(2, arr);
         Assert.IsInstanceOfType(arr[0], typeof(BaseDto));
         Assert.IsInstanceOfType(arr[1], typeof(TestDto));
     }
@@ -186,7 +186,7 @@ public class PhormContractRunner
         var runner = parent.Where<IDto, GenSpec<IDto, BaseDto>>(o => o.Value != "valueX");
 
         // Act
-        var res = await runner.GetAllAsync(TestContext.CancellationTokenSource.Token);
+        var res = await runner.GetAllAsync(TestContext.CancellationToken);
 
         // Assert
         Assert.AreEqual(0, res.Count());
@@ -218,7 +218,7 @@ public class PhormContractRunner
         var runner = parent.Where<BaseDto, GenSpec<BaseDto, TestDto>>(o => o.Value != "valueX");
 
         // Act
-        var res = await runner.GetAllAsync(TestContext.CancellationTokenSource.Token);
+        var res = await runner.GetAllAsync(TestContext.CancellationToken);
 
         // Assert
         var arr = res.All();
@@ -270,7 +270,7 @@ public class PhormContractRunner
         Assert.AreEqual("[schema].[usp_ContractName]", cmd.CommandText);
 
         var pars = cmd.Parameters.AsParameters();
-        Assert.AreEqual(2, pars.Length);
+        Assert.HasCount(2, pars);
         Assert.AreEqual("@Arg", pars[0].ParameterName);
         Assert.AreEqual(ParameterDirection.ReturnValue, pars[1].Direction);
         Assert.AreEqual(1, pars[1].Value);

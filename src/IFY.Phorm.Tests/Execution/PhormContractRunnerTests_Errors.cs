@@ -43,7 +43,7 @@ public class PhormContractRunnerTests_Errors
 
         // Act
         var ex = await Assert.ThrowsExactlyAsync<InvalidOperationException>
-            (async () => await phorm.CallAsync("Test", null, TestContext.CancellationTokenSource.Token));
+            (async () => await phorm.CallAsync("Test", null, TestContext.CancellationToken));
 
         // Assert
         Assert.AreSame(readException, ex);
@@ -72,7 +72,7 @@ public class PhormContractRunnerTests_Errors
         };
 
         // Act
-        var res = await phorm.CallAsync("Test", null, TestContext.CancellationTokenSource.Token);
+        var res = await phorm.CallAsync("Test", null, TestContext.CancellationToken);
 
         // Assert
         Assert.AreEqual(1, res);
@@ -98,7 +98,7 @@ public class PhormContractRunnerTests_Errors
 
         // Act
         var ex = await Assert.ThrowsExactlyAsync<InvalidOperationException>
-            (async () => await phorm.From("Test", null).GetAsync<object>(TestContext.CancellationTokenSource.Token));
+            (async () => await phorm.From("Test", null).GetAsync<object>(TestContext.CancellationToken));
 
         // Assert
         Assert.AreSame(readException, ex);
@@ -127,7 +127,7 @@ public class PhormContractRunnerTests_Errors
         };
 
         // Act
-        var res = await phorm.From("Test", null).GetAsync<object>(TestContext.CancellationTokenSource.Token);
+        var res = await phorm.From("Test", null).GetAsync<object>(TestContext.CancellationToken);
 
         // Assert
         Assert.IsNull(res);

@@ -101,7 +101,7 @@ public class ContractMemberTests
         var res = ContractMember.GetMembersFromContract(new ObjectWithMethodMember(), typeof(IContractWithMethodMember), false);
 
         // Assert
-        Assert.AreEqual(2, res.Length);
+        Assert.HasCount(2, res);
         Assert.AreEqual("Value1", res[0].DbName);
         Assert.AreEqual("A", res[0].Value);
         Assert.AreEqual("Value2", res[1].DbName);
@@ -122,7 +122,7 @@ public class ContractMemberTests
         var res = ContractMember.GetMembersFromContract(arg, typeof(IContractWithMethodMember), false);
 
         // Assert
-        Assert.AreEqual(2, res.Length);
+        Assert.HasCount(2, res);
         Assert.AreEqual("Value1", res[0].DbName);
         Assert.AreEqual("C", res[0].Value);
         Assert.AreEqual("Value2", res[1].DbName);
@@ -136,7 +136,7 @@ public class ContractMemberTests
         var res = ContractMember.GetMembersFromContract(new ObjectWithMethodMember(), typeof(IContractWithParentMethodMember), false);
 
         // Assert
-        Assert.AreEqual(1, res.Length);
+        Assert.HasCount(1, res);
         Assert.AreEqual("Value4", res[0].DbName);
         Assert.AreEqual("X", res[0].Value);
     }
@@ -148,7 +148,7 @@ public class ContractMemberTests
         var res = ContractMember.GetMembersFromContract(new ObjectWithMethodMember(), typeof(IContractWithAnonMethodMember), false);
 
         // Assert
-        Assert.AreEqual(1, res.Length);
+        Assert.HasCount(1, res);
         Assert.AreEqual("Value5", res[0].DbName);
         Assert.AreEqual("Y", res[0].Value);
     }
@@ -217,7 +217,7 @@ public class ContractMemberTests
         var res = ContractMember.GetMembersFromContract(obj, typeof(IPhormContract), false);
 
         // Assert
-        Assert.AreEqual(1, res.Length);
+        Assert.HasCount(1, res);
         Assert.AreEqual("Text", res[0].DbName);
     }
 
@@ -231,7 +231,7 @@ public class ContractMemberTests
         var res = ContractMember.GetMembersFromContract(obj, typeof(IPhormContract), true);
 
         // Assert
-        Assert.AreEqual(1, res.Length);
+        Assert.HasCount(1, res);
         Assert.AreEqual(ParameterType.ReturnValue, res[0].Direction);
     }
 
@@ -245,7 +245,7 @@ public class ContractMemberTests
         var res = ContractMember.GetMembersFromContract(obj, typeof(IPhormContract), false);
 
         // Assert
-        Assert.AreEqual(0, res.Length);
+        Assert.IsEmpty(res);
     }
 
     [TestMethod]
@@ -258,7 +258,7 @@ public class ContractMemberTests
         var res = ContractMember.GetMembersFromContract(obj, typeof(IPhormContract), true);
 
         // Assert
-        Assert.AreEqual(1, res.Length);
+        Assert.HasCount(1, res);
         Assert.AreEqual(ParameterType.ReturnValue, res[0].Direction);
         Assert.AreSame(obj.ReturnValue, res[0]);
     }
@@ -273,7 +273,7 @@ public class ContractMemberTests
         var res = ContractMember.GetMembersFromContract(obj, typeof(IPhormContract), false);
 
         // Assert
-        Assert.AreEqual(1, res.Length);
+        Assert.HasCount(1, res);
         Assert.AreEqual(ParameterType.ReturnValue, res[0].Direction);
         Assert.AreSame(obj.ReturnValue, res[0]);
     }
@@ -453,7 +453,7 @@ public class ContractMemberTests
     }
 
     [TestMethod]
-    [DynamicData(nameof(IgnoreDataMemberAttributeProvider), DynamicDataSourceType.Method)]
+    [DynamicData(nameof(IgnoreDataMemberAttributeProvider))]
     public void ToDataParameter__Transphormer_ignores_property(object value)
     {
         // Arrange
@@ -843,7 +843,7 @@ public class ContractMemberTests
     }
 
     [TestMethod]
-    [DynamicData(nameof(IgnoreDataMemberAttributeProvider), DynamicDataSourceType.Method)]
+    [DynamicData(nameof(IgnoreDataMemberAttributeProvider))]
     public void TryFromDatasource__Transphormer_ignores_property(object value)
     {
         // Arrange

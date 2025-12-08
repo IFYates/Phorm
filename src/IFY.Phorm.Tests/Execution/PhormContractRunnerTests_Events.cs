@@ -93,7 +93,7 @@ public class PhormContractRunnerTests_Events
 
         // Act
         var ex = await Assert.ThrowsExactlyAsync<NotImplementedException>
-            (async () => await runner.CallAsync(TestContext.CancellationTokenSource.Token));
+            (async () => await runner.CallAsync(TestContext.CancellationToken));
 
         // Assert
         Assert.AreEqual(0, _unwantedInvocations);
@@ -153,7 +153,7 @@ public class PhormContractRunnerTests_Events
             new { Arg1 = 1, Arg2 = "2" }, null);
 
         // Act
-        var res = await runner.CallAsync(TestContext.CancellationTokenSource.Token);
+        var res = await runner.CallAsync(TestContext.CancellationToken);
 
         // Assert
         Assert.AreSame(phorm, instanceEvent!.Value.sender);
@@ -205,7 +205,7 @@ public class PhormContractRunnerTests_Events
 
         // Act
         await Assert.ThrowsExactlyAsync<NotImplementedException>
-            (async () => await runner.GetAsync<object>(TestContext.CancellationTokenSource.Token));
+            (async () => await runner.GetAsync<object>(TestContext.CancellationToken));
 
         // Assert
         Assert.AreEqual(0, _unwantedInvocations);
@@ -275,7 +275,7 @@ public class PhormContractRunnerTests_Events
             new { Arg1 = 1, Arg2 = "2" }, null);
 
         // Act
-        var res = await runner.GetAsync<object[]>(TestContext.CancellationTokenSource.Token);
+        var res = await runner.GetAsync<object[]>(TestContext.CancellationToken);
 
         // Assert
         Assert.AreSame(phorm, instanceEvent!.Value.sender);
@@ -346,7 +346,7 @@ public class PhormContractRunnerTests_Events
             new { Arg1 = 1, Arg2 = "2" }, null);
 
         // Act
-        await runner.GetAsync<TestEntity[]>(TestContext.CancellationTokenSource.Token);
+        await runner.GetAsync<TestEntity[]>(TestContext.CancellationToken);
 
         // Assert
         Assert.AreSame(phorm, instanceEvent!.Value.sender);
@@ -410,13 +410,13 @@ public class PhormContractRunnerTests_Events
             new { Arg1 = 1, Arg2 = "2" }, null);
 
         // Act
-        await runner.GetAsync<TestEntity>(TestContext.CancellationTokenSource.Token);
+        await runner.GetAsync<TestEntity>(TestContext.CancellationToken);
 
         // Assert
         Assert.AreSame(phorm, instanceEvent!.Value.sender);
         Assert.AreEqual(commandGuid, instanceEvent.Value.args.CommandGuid);
         Assert.AreEqual(typeof(TestEntity), instanceEvent.Value.args.EntityType);
-        Assert.AreEqual(2, instanceEvent.Value.args.MemberNames.Length);
+        Assert.HasCount(2, instanceEvent.Value.args.MemberNames);
         Assert.AreEqual("GetterSetter", instanceEvent.Value.args.MemberNames[0]);
         Assert.AreEqual("Setter", instanceEvent.Value.args.MemberNames[1]);
         Assert.AreSame(phorm, globalEvent!.Value.sender);
@@ -459,7 +459,7 @@ public class PhormContractRunnerTests_Events
         var runner = new PhormContractRunner<IPhormContract>(phorm, "Test", DbObjectType.Default, null, null);
 
         // Act
-        var res = await runner.CallAsync(TestContext.CancellationTokenSource.Token);
+        var res = await runner.CallAsync(TestContext.CancellationToken);
 
         // Assert
         Assert.AreEqual(1, res);
@@ -505,7 +505,7 @@ public class PhormContractRunnerTests_Events
         var runner = new PhormContractRunner<IPhormContract>(phorm, "Test", DbObjectType.Default, null, null);
 
         // Act
-        await runner.GetAsync<object>(TestContext.CancellationTokenSource.Token);
+        await runner.GetAsync<object>(TestContext.CancellationToken);
 
         // Assert
         Assert.HasCount(3, consoleMessages);

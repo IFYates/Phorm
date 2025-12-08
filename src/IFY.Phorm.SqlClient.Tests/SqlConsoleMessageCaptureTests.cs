@@ -2,7 +2,6 @@
 using IFY.Phorm.Execution;
 using IFY.Phorm.SqlClient.Tests.Helpers;
 using Microsoft.Data.SqlClient;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 
 namespace IFY.Phorm.SqlClient.Tests;
@@ -33,7 +32,7 @@ public class SqlConsoleMessageCaptureTests
         Assert.IsTrue(obj.HasError);
 
         var msgs = obj.GetConsoleMessages();
-        Assert.AreEqual(1, msgs.Length);
+        Assert.HasCount(1, msgs);
         Assert.AreEqual("err message", msgs[0].Message);
         Assert.AreEqual("err procedure @ 7", msgs[0].Source);
         Assert.AreEqual(3, msgs[0].Level);
@@ -91,7 +90,7 @@ public class SqlConsoleMessageCaptureTests
         Assert.IsFalse(res);
 
         var msgs = obj.GetConsoleMessages();
-        Assert.AreEqual(0, msgs.Length);
+        Assert.IsEmpty(msgs);
     }
 
     [TestMethod]
@@ -118,7 +117,7 @@ public class SqlConsoleMessageCaptureTests
         Assert.IsFalse(obj.HasError);
 
         var msgs = obj.GetConsoleMessages();
-        Assert.AreEqual(1, msgs.Length);
+        Assert.HasCount(1, msgs);
         Assert.AreEqual("err message", msgs[0].Message);
         Assert.AreEqual("err procedure @ 7", msgs[0].Source);
         Assert.AreEqual(3, msgs[0].Level);

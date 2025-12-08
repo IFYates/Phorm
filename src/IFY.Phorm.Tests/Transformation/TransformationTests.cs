@@ -1,10 +1,11 @@
 ﻿using IFY.Phorm.Data;
 using IFY.Phorm.Execution;
+using IFY.Phorm.Tests;
 using IFY.Phorm.Transformation;
 using System.Data;
 using System.Diagnostics.CodeAnalysis;
 
-namespace IFY.Phorm.Tests.Encryption;
+namespace IFY.Phorm.Encryption.Tests;
 
 [TestClass]
 public class TransformationTests
@@ -56,7 +57,7 @@ public class TransformationTests
         var args = new { Value = "value" };
 
         // Act
-        var res = await runner.CallAsync<IWithTransformation>(args, TestContext.CancellationTokenSource.Token);
+        var res = await runner.CallAsync<IWithTransformation>(args, TestContext.CancellationToken);
 
         // Assert
         Assert.AreEqual(1, res);
@@ -84,7 +85,7 @@ public class TransformationTests
         runner.TestConnection!.CommandQueue.Enqueue(cmd);
 
         // Act
-        var res = await runner.From("Get", null).GetAsync<DataObject>(TestContext.CancellationTokenSource.Token);
+        var res = await runner.From("Get", null).GetAsync<DataObject>(TestContext.CancellationToken);
 
         // Assert
         Assert.IsNotNull(res);
@@ -130,7 +131,7 @@ public class TransformationTests
         runner.TestConnection!.CommandQueue.Enqueue(cmd);
 
         // Act
-        var res = await runner.From("Get", null).GetAsync<DataObject2>(TestContext.CancellationTokenSource.Token);
+        var res = await runner.From("Get", null).GetAsync<DataObject2>(TestContext.CancellationToken);
 
         // Assert
         Assert.IsNotNull(res);
