@@ -2,7 +2,7 @@ using IFY.Phorm.EventArgs;
 using IFY.Phorm.Execution;
 using System.Diagnostics.CodeAnalysis;
 
-namespace IFY.Phorm.SqlClient.IntegrationTests;
+namespace IFY.Phorm.SqlClient.IntegrationTests.Helpers;
 
 [ExcludeFromCodeCoverage]
 [DoNotParallelize]

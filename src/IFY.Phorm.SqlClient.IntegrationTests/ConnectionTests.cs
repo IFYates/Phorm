@@ -1,4 +1,5 @@
 using IFY.Phorm.Execution;
+using IFY.Phorm.SqlClient.IntegrationTests.Helpers;
 using System.Collections.Concurrent;
 
 namespace IFY.Phorm.SqlClient.IntegrationTests;
@@ -14,7 +15,7 @@ public class ConnectionTests : SqlIntegrationTestBase
 
     private async Task setContextTestContract(AbstractPhormSession connProv)
     {
-        await SqlTestHelpers.ApplySql(connProv, TestContext.CancellationTokenSource.Token, @"CREATE OR ALTER PROC [dbo].[usp_ContextTest]
+        await SqlTestHelpers.ApplySql(connProv, TestContext.CancellationToken, @"CREATE OR ALTER PROC [dbo].[usp_ContextTest]
 AS
 	SET NOCOUNT ON
     SELECT APP_NAME() [Context], @@SPID [SPID]
@@ -29,7 +30,7 @@ RETURN 1");
         await setContextTestContract(phorm);
 
         // Act
-        var res = await phorm.From("ContextTest", null).GetAsync<ContextTest>(TestContext.CancellationTokenSource.Token);
+        var res = await phorm.From("ContextTest", null).GetAsync<ContextTest>(TestContext.CancellationToken);
 
         // Assert
         Assert.AreEqual("TestContext", res!.Context);
@@ -51,20 +52,20 @@ RETURN 1");
         {
             for (var i = 0; i < 5; ++i)
             {
-                var res = await phorm1.From("ContextTest", null).GetAsync<ContextTest>(TestContext.CancellationTokenSource.Token);
+                var res = await phorm1.From("ContextTest", null).GetAsync<ContextTest>(TestContext.CancellationToken);
                 results.Add("1:" + res!.Context);
                 Thread.Sleep(i * 10);
             }
-        }, TestContext.CancellationTokenSource.Token);
+        }, TestContext.CancellationToken);
         var t2 = Task.Run(async () =>
         {
             for (var i = 0; i < 5; ++i)
             {
-                var res = await phorm2.From("ContextTest", null).GetAsync<ContextTest>(TestContext.CancellationTokenSource.Token);
+                var res = await phorm2.From("ContextTest", null).GetAsync<ContextTest>(TestContext.CancellationToken);
                 results.Add("2:" + res!.Context);
                 Thread.Sleep((5 - i) * 10);
             }
-        }, TestContext.CancellationTokenSource.Token);
+        }, TestContext.CancellationToken);
         await Task.WhenAll(t1, t2);
 
         // Assert
@@ -81,13 +82,13 @@ RETURN 1");
         await setContextTestContract(phorm1);
 
         // Act
-        var res1 = await phorm1.From("ContextTest", null).GetAsync<ContextTest>(TestContext.CancellationTokenSource.Token);
+        var res1 = await phorm1.From("ContextTest", null).GetAsync<ContextTest>(TestContext.CancellationToken);
 
         var phorm2 = getPhormSession("TestContext1");
-        var res2 = await phorm2.From("ContextTest", null).GetAsync<ContextTest>(TestContext.CancellationTokenSource.Token);
+        var res2 = await phorm2.From("ContextTest", null).GetAsync<ContextTest>(TestContext.CancellationToken);
 
         var phorm3 = getPhormSession("TestContext2");
-        var res3 = await phorm3.From("ContextTest", null).GetAsync<ContextTest>(TestContext.CancellationTokenSource.Token);
+        var res3 = await phorm3.From("ContextTest", null).GetAsync<ContextTest>(TestContext.CancellationToken);
 
         // Assert
         Assert.AreEqual("TestContext1", res1!.Context);
@@ -125,25 +126,25 @@ RETURN 1");
         // Arrange
         var phorm = getPhormSession("TestContext");
 
-        await SqlTestHelpers.ApplySql(phorm, TestContext.CancellationTokenSource.Token, @"CREATE OR ALTER PROC [dbo].[usp_GetConnectionCount]
+        await SqlTestHelpers.ApplySql(phorm, TestContext.CancellationToken, @"CREATE OR ALTER PROC [dbo].[usp_GetConnectionCount]
 AS
 	SET NOCOUNT ON
     DECLARE @Count INT = (SELECT COUNT(1) FROM sys.sysprocesses WHERE DB_NAME([dbid]) = DB_NAME())
 RETURN @Count");
 
         // Act
-        var res1 = await phorm.CallAsync("GetConnectionCount", null, TestContext.CancellationTokenSource.Token);
+        var res1 = await phorm.CallAsync("GetConnectionCount", null, TestContext.CancellationToken);
         var threads = new List<Thread>();
         for (var i = 0; i < 100; ++i)
         {
             var t = new Thread(async () =>
             {
-                await getPhormSession("TestContext").CallAsync("GetConnectionCount", null, TestContext.CancellationTokenSource.Token);
+                await getPhormSession("TestContext").CallAsync("GetConnectionCount", null, TestContext.CancellationToken);
             });
             threads.Add(t);
             t.Start();
         }
-        var res2 = await phorm.CallAsync("GetConnectionCount", null, TestContext.CancellationTokenSource.Token);
+        var res2 = await phorm.CallAsync("GetConnectionCount", null, TestContext.CancellationToken);
 
         // Assert
         Assert.IsLessThan(10, res2 - res1, $"First:{res1}, Last:{res2}");

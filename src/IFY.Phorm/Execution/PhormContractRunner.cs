@@ -1,6 +1,8 @@
 ﻿using IFY.Phorm.Data;
 using IFY.Phorm.EventArgs;
+using IFY.Phorm.Telemetry;
 using System.Data;
+using System.Diagnostics;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.Serialization;
@@ -322,85 +324,131 @@ internal sealed partial class PhormContractRunner<TActionContract> : IPhormContr
 
     public async Task<int> CallAsync(CancellationToken cancellationToken)
     {
-        // Prepare execution
-        using var cmd = startCommand(out var pars, out var eventArgs);
-        using var console = _session.StartConsoleCapture(eventArgs.CommandGuid, cmd);
-
-        // Execution
-        using var rdr = await cmd.ExecuteReaderAsync(cancellationToken);
-
-        if (safeRead(rdr, console) && _session.StrictResultSize)
+        var sw = Stopwatch.StartNew();
+        using var activity = PhormActivitySource.Source.StartActivity(
+            "phorm.call", 
+            ActivityKind.Client);
+        
+        try
         {
-            throw new InvalidOperationException("Phorm non-result request returned a result.");
-        }
+            // Prepare execution
+            using var cmd = startCommand(out var pars, out var eventArgs);
+            
+            activity?.SetTag("db.statement", cmd.CommandText);
+            activity?.SetTag("phorm.contract", typeof(TActionContract).Name);
+            
+            using var console = _session.StartConsoleCapture(eventArgs.CommandGuid, cmd);
 
-        return parseCommandResult(cmd, _runArgs, pars, console.GetConsoleMessages(), eventArgs, null);
+            // Execution
+            using var rdr = await cmd.ExecuteReaderAsync(cancellationToken);
+
+            if (safeRead(rdr, console) && _session.StrictResultSize)
+            {
+                throw new InvalidOperationException("Phorm non-result request returned a result.");
+            }
+
+            var returnValue = parseCommandResult(cmd, _runArgs, pars, console.GetConsoleMessages(), eventArgs, null);
+            activity?.SetTag("phorm.return_value", returnValue);
+
+            PhormMetrics.CallCounter.Add(1, 
+                new KeyValuePair<string, object?>("contract", typeof(TActionContract).Name),
+                new KeyValuePair<string, object?>("object", _objectName));
+            PhormMetrics.CallDuration.Record(sw.ElapsedMilliseconds,
+                new KeyValuePair<string, object?>("contract", typeof(TActionContract).Name));
+            
+            activity?.SetStatus(ActivityStatusCode.Ok);
+            return returnValue;
+        }
+        catch (Exception ex)
+        {
+            PhormMetrics.ErrorCounter.Add(1,
+                new KeyValuePair<string, object?>("operation", "call"),
+                new KeyValuePair<string, object?>("error_type", ex.GetType().Name));
+            activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
+            activity?.AddException(ex);
+            throw;
+        }
     }
 
     public async Task<TResult?> GetAsync<TResult>(CancellationToken cancellationToken)
         where TResult : class
     {
-        // Check whether this is One or Many
-        var entityType = typeof(TResult);
-        var resultType = typeof(TResult);
-        bool isArray = entityType.IsArray, isEnumerable = isArray;
-        var isGenSpec = typeof(GenSpecBase).IsAssignableFrom(resultType);
-        if (isArray)
+        var sw = Stopwatch.StartNew();
+        using var activity = PhormActivitySource.Source.StartActivity(
+            "phorm.get", 
+            ActivityKind.Client);
+        activity?.SetTag("phorm.result_type", typeof(TResult).Name);
+        
+        try
         {
-            entityType = entityType.GetElementType()!;
-            resultType = typeof(IEnumerable<>).MakeGenericType(entityType);
-        }
-        else if (isGenSpec)
-        {
-            entityType = entityType.GenericTypeArguments[0];
-        }
-        else if (entityType.IsGenericType)
-        {
-            var genTypeDef = entityType.GetGenericTypeDefinition();
-            isEnumerable = genTypeDef == typeof(IEnumerable<>) || genTypeDef == typeof(ICollection<>);
-            if (isEnumerable)
+            // Check whether this is One or Many
+            var entityType = typeof(TResult);
+            var resultType = typeof(TResult);
+            bool isArray = entityType.IsArray, isEnumerable = isArray;
+            var isGenSpec = typeof(GenSpecBase).IsAssignableFrom(resultType);
+            if (isArray)
+            {
+                entityType = entityType.GetElementType()!;
+                resultType = typeof(IEnumerable<>).MakeGenericType(entityType);
+            }
+            else if (isGenSpec)
             {
                 entityType = entityType.GenericTypeArguments[0];
             }
-        }
-        if (!isGenSpec && entityType.GetConstructor([]) == null)
-        {
-            throw new MissingMethodException($"Attempt to get type {entityType.FullName} without empty constructor.");
-        }
-
-        // Execute method as either IEnumerable<TEntity> or GenSpec<...>
-        var result = await executeGetAll(resultType, entityType,
-            (inst, entityMembers, rowData, commandGuid, record) =>
+            else if (entityType.IsGenericType)
             {
-                // Single result
-                if (!isEnumerable && !isGenSpec && record > 1)
+                var genTypeDef = entityType.GetGenericTypeDefinition();
+                isEnumerable = genTypeDef == typeof(IEnumerable<>) || genTypeDef == typeof(ICollection<>);
+                if (isEnumerable)
                 {
-                    if (_session.StrictResultSize)
-                    {
-                        throw new InvalidOperationException("Expected a single-record result, but more than one found.");
-                    }
-                    return null;
+                    entityType = entityType.GenericTypeArguments[0];
                 }
-
-                var members = entityMembers.ToDictionary(static k => k.DbName.ToUpperInvariant());
-                return () => fillEntity(inst, rowData, members, commandGuid, true);
-            }, cancellationToken);
-
-        if (result is IEnumerable<object> coll)
-        {
-            if (isArray)
-            {
-                var arr = Array.CreateInstance(entityType, coll.Count());
-                coll.ToArray().CopyTo(arr, 0);
-                return (TResult)(object)arr;
             }
-            else if (!isEnumerable)
+            if (!isGenSpec && entityType.GetConstructor([]) == null)
             {
-                return (TResult?)coll.SingleOrDefault();
+                throw new MissingMethodException($"Attempt to get type {entityType.FullName} without empty constructor.");
             }
+
+            // Execute method as either IEnumerable<TEntity> or GenSpec<...>
+            var result = await executeGetAll(resultType, entityType,
+                (inst, entityMembers, rowData, commandGuid, record) =>
+                {
+                    // Single result
+                    if (!isEnumerable && !isGenSpec && record > 1)
+                    {
+                        if (_session.StrictResultSize)
+                        {
+                            throw new InvalidOperationException("Expected a single-record result, but more than one found.");
+                        }
+                        return null;
+                    }
+
+                    var members = entityMembers.ToDictionary(static k => k.DbName.ToUpperInvariant());
+                    return () => fillEntity(inst, rowData, members, commandGuid, true);
+                }, cancellationToken);
+            if (result is IEnumerable<object> coll)
+            {
+                activity?.SetTag("phorm.result_count", coll.Count());
+            }
+
+            PhormMetrics.GetCounter.Add(1,
+                new KeyValuePair<string, object?>("contract", typeof(TActionContract).Name),
+                new KeyValuePair<string, object?>("object", _objectName));
+            PhormMetrics.GetDuration.Record(sw.ElapsedMilliseconds,
+                new KeyValuePair<string, object?>("contract", typeof(TActionContract).Name));
+
+            activity?.SetStatus(ActivityStatusCode.Ok);
+            return (TResult)result;
         }
-
-        return (TResult)result;
+        catch (Exception ex)
+        {
+            PhormMetrics.ErrorCounter.Add(1,
+                new KeyValuePair<string, object?>("operation", "get"),
+                new KeyValuePair<string, object?>("error_type", ex.GetType().Name));
+            activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
+            activity?.AddException(ex);
+            throw;
+        }
     }
 
     private async Task<object> executeGetAll(Type resultType, Type entityType, Func<object, ContractMemberDefinition[], IDictionary<string, object?>, Guid, int, Func<object>?> entityProcessor, CancellationToken cancellationToken)

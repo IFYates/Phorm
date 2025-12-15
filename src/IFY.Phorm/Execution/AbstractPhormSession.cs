@@ -1,7 +1,9 @@
 ﻿using IFY.Phorm.Connectivity;
 using IFY.Phorm.Data;
 using IFY.Phorm.EventArgs;
+using IFY.Phorm.Telemetry;
 using System.Data;
+using System.Diagnostics;
 
 namespace IFY.Phorm.Execution;
 
@@ -137,6 +139,12 @@ public abstract class AbstractPhormSession(string databaseConnectionString, stri
     /// <inheritdoc/>
     protected internal virtual IPhormDbConnection GetConnection(bool readOnly = false)
     {
+        using var activity = PhormActivitySource.Source.StartActivity(
+            "phorm.connection.get",
+            ActivityKind.Internal);
+        activity?.SetTag("phorm.connection.readonly", readOnly);
+        activity?.SetTag("phorm.connection.name", ConnectionName ?? "default");
+
         // Reuse existing connections, where possible
         var key = $"{ConnectionName ?? string.Empty}:{readOnly}";
         if (!_connectionPool.TryGetValue(key, out var phormConn)
@@ -147,6 +155,8 @@ public abstract class AbstractPhormSession(string databaseConnectionString, stri
                 if (!_connectionPool.TryGetValue(key, out phormConn)
                     || phormConn.State != ConnectionState.Open)
                 {
+                    activity?.AddBaggage("phorm.connection.reused", "false");
+
                     // Create new connection
                     phormConn?.Dispose();
 

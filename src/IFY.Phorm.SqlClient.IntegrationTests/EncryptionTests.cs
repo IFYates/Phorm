@@ -1,6 +1,7 @@
 ﻿using IFY.Phorm.Data;
 using IFY.Phorm.Encryption;
 using IFY.Phorm.Execution;
+using IFY.Phorm.SqlClient.IntegrationTests.Helpers;
 using Moq;
 using System.Runtime.Serialization;
 
@@ -26,7 +27,7 @@ public class EncryptionTests : SqlIntegrationTestBase
 
     private async Task setupEncryptionSchema(AbstractPhormSession phorm)
     {
-        await SqlTestHelpers.ApplySql(phorm, TestContext.CancellationTokenSource.Token, [
+        await SqlTestHelpers.ApplySql(phorm, TestContext.CancellationToken, [
             @"DROP TABLE IF EXISTS [dbo].[EncryptionTable]",
             @"CREATE TABLE [dbo].[EncryptionTable] (
 	[Id] BIGINT NOT NULL IDENTITY(1,1) PRIMARY KEY,
@@ -84,8 +85,8 @@ RETURN @@ROWCOUNT"
         GlobalSettings.EncryptionProvider = provider.Object;
 
         // Act
-        var res = await phorm.CallAsync<IUpsert>(new { Num = randInt, Data = randStr }, TestContext.CancellationTokenSource.Token);
-        var obj = await phorm.GetAsync<DataItem>(null!, TestContext.CancellationTokenSource.Token);
+        var res = await phorm.CallAsync<IUpsert>(new { Num = randInt, Data = randStr }, TestContext.CancellationToken);
+        var obj = await phorm.GetAsync<DataItem>(null!, TestContext.CancellationToken);
 
         // Assert
         Assert.AreEqual(1, res);

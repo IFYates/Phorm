@@ -1,5 +1,6 @@
 using IFY.Phorm.Data;
 using IFY.Phorm.Execution;
+using IFY.Phorm.SqlClient.IntegrationTests.Helpers;
 using System.Runtime.Serialization;
 using System.Text;
 
@@ -42,7 +43,7 @@ public class CallTests : SqlIntegrationTestBase
 
     private async Task setupCallTestSchema(AbstractPhormSession phorm)
     {
-        await SqlTestHelpers.ApplySql(phorm, TestContext.CancellationTokenSource.Token, [
+        await SqlTestHelpers.ApplySql(phorm, TestContext.CancellationToken, [
             @"DROP TABLE IF EXISTS [dbo].[CallTestTable]",
             @"CREATE TABLE [dbo].[CallTestTable] (
 	[Id] BIGINT NOT NULL IDENTITY(1,1) PRIMARY KEY,
@@ -92,8 +93,8 @@ RETURN @@ROWCOUNT"
         var randDT = DateTime.UtcNow;
 
         // Act
-        var res = await phorm.CallAsync("CallTest_Upsert", new { Int = randNum, Text = randStr, Data = randData, DateTime = randDT }, TestContext.CancellationTokenSource.Token);
-        var obj = await phorm.GetAsync<DataItem>(null!, TestContext.CancellationTokenSource.Token);
+        var res = await phorm.CallAsync("CallTest_Upsert", new { Int = randNum, Text = randStr, Data = randData, DateTime = randDT }, TestContext.CancellationToken);
+        var obj = await phorm.GetAsync<DataItem>(null!, TestContext.CancellationToken);
 
         // Assert
         Assert.AreEqual(1, res);
@@ -116,8 +117,8 @@ RETURN @@ROWCOUNT"
         var randDT = DateTime.UtcNow;
 
         // Act
-        var res = await phorm.CallAsync<IUpsert>(new { Num = randNum, Text = randStr, Data = randData, DateTime = randDT }, TestContext.CancellationTokenSource.Token);
-        var obj = await phorm.GetAsync<DataItem>(null!, TestContext.CancellationTokenSource.Token);
+        var res = await phorm.CallAsync<IUpsert>(new { Num = randNum, Text = randStr, Data = randData, DateTime = randDT }, TestContext.CancellationToken);
+        var obj = await phorm.GetAsync<DataItem>(null!, TestContext.CancellationToken);
 
         // Assert
         Assert.AreEqual(1, res);
@@ -142,8 +143,8 @@ RETURN @@ROWCOUNT"
         );
 
         // Act
-        var res = await phorm.CallAsync<IUpsert>(arg, TestContext.CancellationTokenSource.Token);
-        var obj = await phorm.GetAsync<DataItem>(null!, TestContext.CancellationTokenSource.Token);
+        var res = await phorm.CallAsync<IUpsert>(arg, TestContext.CancellationToken);
+        var obj = await phorm.GetAsync<DataItem>(null!, TestContext.CancellationToken);
 
         // Assert
         Assert.AreEqual(1, res);
@@ -166,8 +167,8 @@ RETURN @@ROWCOUNT"
         };
 
         // Act
-        var res = await phorm.CallAsync("CallTest_Upsert", arg, TestContext.CancellationTokenSource.Token);
-        var obj = await phorm.GetAsync<DataItem>(null!, TestContext.CancellationTokenSource.Token);
+        var res = await phorm.CallAsync("CallTest_Upsert", arg, TestContext.CancellationToken);
+        var obj = await phorm.GetAsync<DataItem>(null!, TestContext.CancellationToken);
 
         // Assert
         Assert.AreEqual(1, res);
@@ -184,8 +185,8 @@ RETURN @@ROWCOUNT"
         var arg = new DataItem();
 
         // Act
-        var res = await phorm.CallAsync<IUpsertOnlyIntWithId>(arg, TestContext.CancellationTokenSource.Token);
-        var obj = await phorm.GetAsync<DataItem>(null!, TestContext.CancellationTokenSource.Token);
+        var res = await phorm.CallAsync<IUpsertOnlyIntWithId>(arg, TestContext.CancellationToken);
+        var obj = await phorm.GetAsync<DataItem>(null!, TestContext.CancellationToken);
 
         // Assert
         Assert.AreEqual(1, res);

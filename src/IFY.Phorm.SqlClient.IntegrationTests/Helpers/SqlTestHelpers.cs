@@ -1,7 +1,7 @@
 ﻿using IFY.Phorm.Execution;
 using System.Data;
 
-namespace IFY.Phorm.SqlClient.IntegrationTests;
+namespace IFY.Phorm.SqlClient.IntegrationTests.Helpers;
 
 internal class SqlTestHelpers
 {

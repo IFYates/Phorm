@@ -1,7 +1,7 @@
 using IFY.Phorm.Data;
 using IFY.Phorm.Execution;
+using IFY.Phorm.SqlClient.IntegrationTests.Helpers;
 using Microsoft.Data.SqlClient;
-using System.Threading.Tasks;
 
 namespace IFY.Phorm.SqlClient.IntegrationTests;
 
@@ -32,7 +32,7 @@ public class ConsoleOutputTests : SqlIntegrationTestBase
 
     private async Task setConsoleOutputContract(AbstractPhormSession phorm)
     {
-        await SqlTestHelpers.ApplySql(phorm, TestContext.CancellationTokenSource.Token, @"CREATE OR ALTER PROC [dbo].[usp_ConsoleTest]
+        await SqlTestHelpers.ApplySql(phorm, TestContext.CancellationToken, @"CREATE OR ALTER PROC [dbo].[usp_ConsoleTest]
 	@Text VARCHAR(256) = NULL
 AS
 	SET NOCOUNT ON
@@ -44,7 +44,7 @@ RETURN 1");
     }
     private async Task setConsoleOutputErrorContract(AbstractPhormSession phorm)
     {
-        await SqlTestHelpers.ApplySql(phorm, TestContext.CancellationTokenSource.Token, @"CREATE OR ALTER PROC [dbo].[usp_ConsoleTest]
+        await SqlTestHelpers.ApplySql(phorm, TestContext.CancellationToken, @"CREATE OR ALTER PROC [dbo].[usp_ConsoleTest]
 AS
 	SET NOCOUNT ON
 	RAISERROR ('Before', 1, 1) WITH NOWAIT;
@@ -67,12 +67,12 @@ RETURN 1");
         };
 
         // Act
-        var res = await phorm.CallAsync<IConsoleTest>(arg, TestContext.CancellationTokenSource.Token);
+        var res = await phorm.CallAsync<IConsoleTest>(arg, TestContext.CancellationToken);
 
         // Assert
         Assert.AreEqual(1, res);
         var events = arg.ConsoleEvents.Value.ToArray();
-        Assert.AreEqual(4, events.Length);
+        Assert.HasCount(4, events);
         Assert.AreEqual("dbo.usp_ConsoleTest @ 5", events[0].Source);
         Assert.AreEqual("Before", events[0].Message);
         Assert.AreEqual(0, events[0].Level);
@@ -105,12 +105,12 @@ RETURN 1");
         };
 
         // Act
-        var res = await phorm.CallAsync<IConsoleTest>(arg, TestContext.CancellationTokenSource.Token);
+        var res = await phorm.CallAsync<IConsoleTest>(arg, TestContext.CancellationToken);
 
         // Assert
         Assert.AreEqual(1, res);
         var events = arg.ConsoleEvents.Value.ToArray();
-        Assert.AreEqual(4, events.Length);
+        Assert.HasCount(4, events);
         Assert.AreEqual("dbo.usp_ConsoleTest @ 5", events[0].Source);
         Assert.AreEqual("Before", events[0].Message);
         Assert.AreEqual(0, events[0].Level);
@@ -154,7 +154,7 @@ RETURN 1");
         };
 
         // Act
-        var res = await phorm.CallAsync<IConsoleTest>(arg, TestContext.CancellationTokenSource.Token);
+        var res = await phorm.CallAsync<IConsoleTest>(arg, TestContext.CancellationToken);
 
         // Assert
         Assert.AreEqual(1, res);
@@ -188,12 +188,12 @@ RETURN 1");
         var arg = new ConsoleTest();
 
         // Act
-        var res = await phorm.CallAsync<IConsoleTest>(arg, TestContext.CancellationTokenSource.Token);
+        var res = await phorm.CallAsync<IConsoleTest>(arg, TestContext.CancellationToken);
 
         // Assert
         Assert.AreEqual(0, res);
         var events = arg.ConsoleEvents.Value;
-        Assert.AreEqual(2, events.Length);
+        Assert.HasCount(2, events);
         Assert.AreEqual("dbo.usp_ConsoleTest @ 4", events[0].Source);
         Assert.AreEqual("Before", events[0].Message);
         Assert.AreEqual(1, events[0].Level);
@@ -216,7 +216,7 @@ RETURN 1");
 
         // Act
         var ex = await Assert.ThrowsExactlyAsync<SqlException>
-            (async () => await phorm.CallAsync<IConsoleTest>(arg, TestContext.CancellationTokenSource.Token));
+            (async () => await phorm.CallAsync<IConsoleTest>(arg, TestContext.CancellationToken));
 
         // Assert
         Assert.AreEqual("Divide by zero error encountered.", ex.Message);
@@ -237,12 +237,12 @@ RETURN 1");
         };
 
         // Act
-        await phorm.From<IConsoleTest>(arg).GetAsync<object>(TestContext.CancellationTokenSource.Token);
+        await phorm.From<IConsoleTest>(arg).GetAsync<object>(TestContext.CancellationToken);
 
         // Assert
         Assert.AreEqual(0, arg.ReturnValue.Value);
         var events = arg.ConsoleEvents.Value;
-        Assert.AreEqual(2, events.Length);
+        Assert.HasCount(2, events);
         Assert.AreEqual("dbo.usp_ConsoleTest @ 4", events[0].Source);
         Assert.AreEqual("Before", events[0].Message);
         Assert.AreEqual(1, events[0].Level);
@@ -265,7 +265,7 @@ RETURN 1");
 
         // Act
         var ex = await Assert.ThrowsExactlyAsync<SqlException>
-            (async () => await phorm.From<IConsoleTest>(arg).GetAsync<object>(TestContext.CancellationTokenSource.Token));
+            (async () => await phorm.From<IConsoleTest>(arg).GetAsync<object>(TestContext.CancellationToken));
 
         // Assert
         Assert.AreEqual("Divide by zero error encountered.", ex.Message);
