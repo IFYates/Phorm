@@ -60,7 +60,7 @@ public class PhormContractRunnerTests_Events
     public async Task Call__Invokes_both_CommandExecuting_events_before_executing()
     {
         // Arrange
-        var conn = new TestPhormConnection("")
+        var conn = new TestPhormConnection()
         {
             DefaultSchema = "schema"
         };
@@ -110,7 +110,7 @@ public class PhormContractRunnerTests_Events
     public async Task Call__Invokes_both_CommandExecuted_events_after_execution()
     {
         // Arrange
-        var conn = new TestPhormConnection("")
+        var conn = new TestPhormConnection()
         {
             DefaultSchema = "schema"
         };
@@ -172,7 +172,7 @@ public class PhormContractRunnerTests_Events
     public async Task Get__Invokes_both_CommandExecuting_events_before_executing()
     {
         // Arrange
-        var conn = new TestPhormConnection("")
+        var conn = new TestPhormConnection()
         {
             DefaultSchema = "schema"
         };
@@ -222,7 +222,7 @@ public class PhormContractRunnerTests_Events
     public async Task Get__Invokes_both_CommandExecuted_events_after_execution()
     {
         // Arrange
-        var conn = new TestPhormConnection("")
+        var conn = new TestPhormConnection()
         {
             DefaultSchema = "schema",
         };
@@ -294,7 +294,7 @@ public class PhormContractRunnerTests_Events
     public async Task Get__Unmapped_record_column__Invokes_both_UnexpectedRecordColumn_events()
     {
         // Arrange
-        var conn = new TestPhormConnection("")
+        var conn = new TestPhormConnection()
         {
             DefaultSchema = "schema",
         };
@@ -361,7 +361,7 @@ public class PhormContractRunnerTests_Events
     public async Task Get__Unused_entity_member__Invokes_both_UnresolvedContractMember_events()
     {
         // Arrange
-        var conn = new TestPhormConnection("")
+        var conn = new TestPhormConnection()
         {
             DefaultSchema = "schema",
         };
@@ -429,7 +429,7 @@ public class PhormContractRunnerTests_Events
     public async Task Call__Events_can_receive_console_messages(bool asGlobal)
     {
         // Arrange
-        var conn = new TestPhormConnection("")
+        var conn = new TestPhormConnection()
         {
             DefaultSchema = "schema"
         };
@@ -475,7 +475,7 @@ public class PhormContractRunnerTests_Events
     public async Task Get__Events_can_receive_console_messages(bool asGlobal)
     {
         // Arrange
-        var conn = new TestPhormConnection("")
+        var conn = new TestPhormConnection()
         {
             DefaultSchema = "schema"
         };

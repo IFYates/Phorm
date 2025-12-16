@@ -199,7 +199,7 @@ public class PhormContractRunnerTests
     public async Task Contract_can_be_marked_with_ReadOnly_intent()
     {
         // Arrange
-        var conn = new TestPhormConnection("")
+        var conn = new TestPhormConnection()
         {
             DefaultSchema = "schema"
         };
@@ -221,7 +221,7 @@ public class PhormContractRunnerTests
     public async Task GetAsync_Many__Procedure_by_anon_contract()
     {
         // Arrange
-        var conn = new TestPhormConnection("")
+        var conn = new TestPhormConnection()
         {
             DefaultSchema = "schema"
         };
@@ -274,7 +274,7 @@ public class PhormContractRunnerTests
     public async Task GetAsync_Many__NonProcedure_by_anon_object(DbObjectType objType, string actName)
     {
         // Arrange
-        var conn = new TestPhormConnection("")
+        var conn = new TestPhormConnection()
         {
             DefaultSchema = "schema"
         };
@@ -326,7 +326,7 @@ public class PhormContractRunnerTests
     public async Task GetAsync_Many__Procedure_by_contract()
     {
         // Arrange
-        var conn = new TestPhormConnection("")
+        var conn = new TestPhormConnection()
         {
             DefaultSchema = "schema"
         };
@@ -379,7 +379,7 @@ public class PhormContractRunnerTests
     public async Task GetAsync_Many__NonProcedure_by_contract(DbObjectType objType, string actName)
     {
         // Arrange
-        var conn = new TestPhormConnection("")
+        var conn = new TestPhormConnection()
         {
             DefaultSchema = "schema"
         };
@@ -437,7 +437,7 @@ public class PhormContractRunnerTests
     public async Task GetAsync_Many__SecureValue_sent_encrypted_received_decrypted_by_authenticator()
     {
         // Arrange
-        var conn = new TestPhormConnection("")
+        var conn = new TestPhormConnection()
         {
             DefaultSchema = "schema"
         };
@@ -500,7 +500,7 @@ public class PhormContractRunnerTests
         }
 
         // Arrange
-        var conn = new TestPhormConnection("")
+        var conn = new TestPhormConnection()
         {
             DefaultSchema = "schema"
         };
@@ -556,7 +556,7 @@ public class PhormContractRunnerTests
         }
 
         // Arrange
-        var conn = new TestPhormConnection("")
+        var conn = new TestPhormConnection()
         {
             DefaultSchema = "schema"
         };
@@ -609,7 +609,7 @@ public class PhormContractRunnerTests
     public async Task GetAsync__Supports_DBNull()
     {
         // Arrange
-        var conn = new TestPhormConnection("")
+        var conn = new TestPhormConnection()
         {
             DefaultSchema = "schema"
         };
@@ -641,7 +641,7 @@ public class PhormContractRunnerTests
     public async Task GetAsync__Multiple_records__Exception()
     {
         // Arrange
-        var conn = new TestPhormConnection("")
+        var conn = new TestPhormConnection()
         {
             DefaultSchema = "schema"
         };
@@ -675,7 +675,7 @@ public class PhormContractRunnerTests
     public async Task GetAsync__Multiple_records__StrictResultSize_False__Ignored()
     {
         // Arrange
-        var conn = new TestPhormConnection("")
+        var conn = new TestPhormConnection()
         {
             DefaultSchema = "schema"
         };
@@ -714,7 +714,7 @@ public class PhormContractRunnerTests
     public async Task GetAsync__Procedure_by_anon_contract()
     {
         // Arrange
-        var conn = new TestPhormConnection("")
+        var conn = new TestPhormConnection()
         {
             DefaultSchema = "schema"
         };
@@ -756,7 +756,7 @@ public class PhormContractRunnerTests
     public async Task GetAsync__NonProcedure_by_anon_object(DbObjectType objType, string actName)
     {
         // Arrange
-        var conn = new TestPhormConnection("")
+        var conn = new TestPhormConnection()
         {
             DefaultSchema = "schema"
         };
@@ -797,7 +797,7 @@ public class PhormContractRunnerTests
     public async Task GetAsync__Procedure_by_contract()
     {
         // Arrange
-        var conn = new TestPhormConnection("")
+        var conn = new TestPhormConnection()
         {
             DefaultSchema = "schema"
         };
@@ -839,7 +839,7 @@ public class PhormContractRunnerTests
     public async Task GetAsync__NonProcedure_by_contract(DbObjectType objType, string actName)
     {
         // Arrange
-        var conn = new TestPhormConnection("")
+        var conn = new TestPhormConnection()
         {
             DefaultSchema = "schema"
         };
@@ -879,7 +879,7 @@ public class PhormContractRunnerTests
     public async Task GetAsync__SecureValue_sent_encrypted_received_decrypted_by_authenticator()
     {
         // Arrange
-        var conn = new TestPhormConnection("")
+        var conn = new TestPhormConnection()
         {
             DefaultSchema = "schema"
         };
@@ -954,7 +954,7 @@ public class PhormContractRunnerTests
     public async Task GetAsync__Contract_can_receive_console_messages()
     {
         // Arrange
-        var conn = new TestPhormConnection("")
+        var conn = new TestPhormConnection()
         {
             DefaultSchema = "schema"
         };
@@ -989,7 +989,7 @@ public class PhormContractRunnerTests
     public async Task GetAsync__Anonymous_contract_can_receive_console_messages()
     {
         // Arrange
-        var conn = new TestPhormConnection("")
+        var conn = new TestPhormConnection()
         {
             DefaultSchema = "schema"
         };

@@ -326,17 +326,17 @@ internal sealed partial class PhormContractRunner<TActionContract> : IPhormContr
     {
         var sw = Stopwatch.StartNew();
         using var activity = PhormActivitySource.Source.StartActivity(
-            "phorm.call", 
+            "phorm.call",
             ActivityKind.Client);
-        
+
         try
         {
             // Prepare execution
             using var cmd = startCommand(out var pars, out var eventArgs);
-            
+
             activity?.SetTag("db.statement", cmd.CommandText);
             activity?.SetTag("phorm.contract", typeof(TActionContract).Name);
-            
+
             using var console = _session.StartConsoleCapture(eventArgs.CommandGuid, cmd);
 
             // Execution
@@ -350,12 +350,12 @@ internal sealed partial class PhormContractRunner<TActionContract> : IPhormContr
             var returnValue = parseCommandResult(cmd, _runArgs, pars, console.GetConsoleMessages(), eventArgs, null);
             activity?.SetTag("phorm.return_value", returnValue);
 
-            PhormMetrics.CallCounter.Add(1, 
+            PhormMetrics.CallCounter.Add(1,
                 new KeyValuePair<string, object?>("contract", typeof(TActionContract).Name),
                 new KeyValuePair<string, object?>("object", _objectName));
             PhormMetrics.CallDuration.Record(sw.ElapsedMilliseconds,
                 new KeyValuePair<string, object?>("contract", typeof(TActionContract).Name));
-            
+
             activity?.SetStatus(ActivityStatusCode.Ok);
             return returnValue;
         }
@@ -375,10 +375,10 @@ internal sealed partial class PhormContractRunner<TActionContract> : IPhormContr
     {
         var sw = Stopwatch.StartNew();
         using var activity = PhormActivitySource.Source.StartActivity(
-            "phorm.get", 
+            "phorm.get",
             ActivityKind.Client);
         activity?.SetTag("phorm.result_type", typeof(TResult).Name);
-        
+
         try
         {
             // Check whether this is One or Many
@@ -426,18 +426,29 @@ internal sealed partial class PhormContractRunner<TActionContract> : IPhormContr
                     var members = entityMembers.ToDictionary(static k => k.DbName.ToUpperInvariant());
                     return () => fillEntity(inst, rowData, members, commandGuid, true);
                 }, cancellationToken);
-            if (result is IEnumerable<object> coll)
-            {
-                activity?.SetTag("phorm.result_count", coll.Count());
-            }
 
             PhormMetrics.GetCounter.Add(1,
                 new KeyValuePair<string, object?>("contract", typeof(TActionContract).Name),
                 new KeyValuePair<string, object?>("object", _objectName));
             PhormMetrics.GetDuration.Record(sw.ElapsedMilliseconds,
                 new KeyValuePair<string, object?>("contract", typeof(TActionContract).Name));
-
             activity?.SetStatus(ActivityStatusCode.Ok);
+
+            if (result is IEnumerable<object> coll)
+            {
+                activity?.SetTag("phorm.result_count", coll.Count());
+
+                if (isArray)
+                {
+                    var arr = Array.CreateInstance(entityType, coll.Count());
+                    coll.ToArray().CopyTo(arr, 0);
+                    return (TResult)(object)arr;
+                }
+                else if (!isEnumerable)
+                {
+                    return (TResult?)coll.SingleOrDefault();
+                }
+            }
             return (TResult)result;
         }
         catch (Exception ex)

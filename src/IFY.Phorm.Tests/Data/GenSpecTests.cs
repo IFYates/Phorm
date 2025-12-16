@@ -44,7 +44,7 @@ public class GenSpecTests
 
     private static IPhormContractRunner buildRunner()
     {
-        var conn = new TestPhormConnection("")
+        var conn = new TestPhormConnection()
         {
             DefaultSchema = "schema"
         };

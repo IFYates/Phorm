@@ -23,12 +23,12 @@ internal partial class TestPhormSession : AbstractPhormSession
     public bool IsReadOnly { get; private set; }
 
     public TestPhormSession(string? connectionName = null)
-        : base(null!, connectionName)
+        : base(null!, connectionName ?? Guid.NewGuid().ToString())
     {
         TestConnection = new TestPhormConnection(connectionName);
     }
-    public TestPhormSession(TestPhormConnection connection, string? connectionName = null)
-        : base(null!, connectionName)
+    public TestPhormSession(TestPhormConnection connection)
+        : base(null!, connection.ConnectionName)
     {
         TestConnection = connection;
     }

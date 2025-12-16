@@ -83,7 +83,7 @@ public class PhormContractRunnerTests_Call
     public async Task Call_by_anon_object()
     {
         // Arrange
-        var conn = new TestPhormConnection("")
+        var conn = new TestPhormConnection()
         {
             DefaultSchema = "schema"
         };
@@ -114,7 +114,7 @@ public class PhormContractRunnerTests_Call
     public async Task Call_by_contract()
     {
         // Arrange
-        var conn = new TestPhormConnection("")
+        var conn = new TestPhormConnection()
         {
             DefaultSchema = "schema"
         };
@@ -146,7 +146,7 @@ public class PhormContractRunnerTests_Call
     public async Task Call__Transphormer_removes_parameter(object value)
     {
         // Arrange
-        var conn = new TestPhormConnection("")
+        var conn = new TestPhormConnection()
         {
             DefaultSchema = "schema"
         };
@@ -182,7 +182,7 @@ public class PhormContractRunnerTests_Call
     public async Task Call__Contract_and_arg_rename()
     {
         // Arrange
-        var conn = new TestPhormConnection("")
+        var conn = new TestPhormConnection()
         {
             DefaultSchema = "schema"
         };
@@ -211,7 +211,7 @@ public class PhormContractRunnerTests_Call
     public async Task Call__Concrete_contract_with_input_and_output()
     {
         // Arrange
-        var conn = new TestPhormConnection("")
+        var conn = new TestPhormConnection()
         {
             DefaultSchema = "schema"
         };
@@ -244,7 +244,7 @@ public class PhormContractRunnerTests_Call
     public async Task Call__Out_arg()
     {
         // Arrange
-        var conn = new TestPhormConnection("")
+        var conn = new TestPhormConnection()
         {
             DefaultSchema = "schema"
         };
@@ -277,7 +277,7 @@ public class PhormContractRunnerTests_Call
     public async Task Call__Required_arg_null__Exception()
     {
         // Arrange
-        var conn = new TestPhormConnection("")
+        var conn = new TestPhormConnection()
         {
             DefaultSchema = "schema"
         };
@@ -298,7 +298,7 @@ public class PhormContractRunnerTests_Call
     public async Task Call__SecureValue_sent_encrypted_received_decrypted_by_authenticator()
     {
         // Arrange
-        var conn = new TestPhormConnection("")
+        var conn = new TestPhormConnection()
         {
             DefaultSchema = "schema"
         };
@@ -345,7 +345,7 @@ public class PhormContractRunnerTests_Call
     public async Task Call__Returns_result__Exception()
     {
         // Arrange
-        var conn = new TestPhormConnection("")
+        var conn = new TestPhormConnection()
         {
             DefaultSchema = "schema"
         };
@@ -393,7 +393,7 @@ public class PhormContractRunnerTests_Call
     public async Task Call__Contract_can_receive_console_messages()
     {
         // Arrange
-        var conn = new TestPhormConnection("")
+        var conn = new TestPhormConnection()
         {
             DefaultSchema = "schema"
         };
@@ -430,7 +430,7 @@ public class PhormContractRunnerTests_Call
     public async Task Call__Anonymous_contract_can_receive_console_messages()
     {
         // Arrange
-        var conn = new TestPhormConnection("")
+        var conn = new TestPhormConnection()
         {
             DefaultSchema = "schema"
         };

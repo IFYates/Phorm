@@ -33,7 +33,7 @@ public class PhormContractRunnerTests_Errors
             ReadException = readException
         });
 
-        var conn = new TestPhormConnection("");
+        var conn = new TestPhormConnection();
         conn.CommandQueue.Enqueue(cmd);
 
         var phorm = new TestPhormSession(conn)
@@ -59,7 +59,7 @@ public class PhormContractRunnerTests_Errors
             ReadException = readException
         });
 
-        var conn = new TestPhormConnection("");
+        var conn = new TestPhormConnection();
         conn.CommandQueue.Enqueue(cmd);
 
         var phorm = new TestPhormSession(conn)
@@ -88,7 +88,7 @@ public class PhormContractRunnerTests_Errors
             ReadException = readException
         });
 
-        var conn = new TestPhormConnection("");
+        var conn = new TestPhormConnection();
         conn.CommandQueue.Enqueue(cmd);
 
         var phorm = new TestPhormSession(conn)
@@ -114,7 +114,7 @@ public class PhormContractRunnerTests_Errors
             ReadException = readException
         });
 
-        var conn = new TestPhormConnection("");
+        var conn = new TestPhormConnection();
         conn.CommandQueue.Enqueue(cmd);
 
         var phorm = new TestPhormSession(conn)

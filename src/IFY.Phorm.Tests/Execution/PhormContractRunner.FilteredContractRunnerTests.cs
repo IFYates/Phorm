@@ -62,7 +62,7 @@ public class PhormContractRunner
     public async Task GetAll__Can_filter_entities()
     {
         // Arrange
-        var conn = new TestPhormConnection("")
+        var conn = new TestPhormConnection()
         {
             DefaultSchema = "schema"
         };
@@ -115,7 +115,7 @@ public class PhormContractRunner
     public async Task GetAll__Can_filter_GenSpec_entities()
     {
         // Arrange
-        var conn = new TestPhormConnection("")
+        var conn = new TestPhormConnection()
         {
             DefaultSchema = "schema"
         };
@@ -164,7 +164,7 @@ public class PhormContractRunner
     public async Task GetAll__GenSpec__Unmatched_ignored_for_abstract_base()
     {
         // Arrange
-        var conn = new TestPhormConnection("");
+        var conn = new TestPhormConnection();
 
         var cmd = new TestDbCommand(new TestDbDataReader
         {
@@ -196,7 +196,7 @@ public class PhormContractRunner
     public async Task GetAll__GenSpec__Unmatched_as_concrete_base()
     {
         // Arrange
-        var conn = new TestPhormConnection("");
+        var conn = new TestPhormConnection();
 
         var cmd = new TestDbCommand(new TestDbDataReader
         {
@@ -229,7 +229,7 @@ public class PhormContractRunner
     public async Task GetAll__Cancelled__Does_not_parse_results()
     {
         // Arrange
-        var conn = new TestPhormConnection("")
+        var conn = new TestPhormConnection()
         {
             DefaultSchema = "schema"
         };

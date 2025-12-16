@@ -89,7 +89,7 @@ public class PhormContractRunnerTests_Resultsets
     public async Task ManyAsync__Resolves_secondary_resultset()
     {
         // Arrange
-        var conn = new TestPhormConnection("")
+        var conn = new TestPhormConnection()
         {
             DefaultSchema = "schema"
         };
@@ -137,7 +137,7 @@ public class PhormContractRunnerTests_Resultsets
     public async Task ManyAsync__Resultset_property_not_writable__Fail()
     {
         // Arrange
-        var conn = new TestPhormConnection("")
+        var conn = new TestPhormConnection()
         {
             DefaultSchema = "schema"
         };
@@ -181,7 +181,7 @@ public class PhormContractRunnerTests_Resultsets
     public async Task One__Resolves_secondary_resultset()
     {
         // Arrange
-        var conn = new TestPhormConnection("")
+        var conn = new TestPhormConnection()
         {
             DefaultSchema = "schema"
         };
@@ -229,7 +229,7 @@ public class PhormContractRunnerTests_Resultsets
     public async Task One__Multiple_results_for_single_child__Fail()
     {
         // Arrange
-        var conn = new TestPhormConnection("")
+        var conn = new TestPhormConnection()
         {
             DefaultSchema = "schema"
         };
@@ -279,7 +279,7 @@ public class PhormContractRunnerTests_Resultsets
     public async Task One__Resolves_single_child_entity()
     {
         // Arrange
-        var conn = new TestPhormConnection("")
+        var conn = new TestPhormConnection()
         {
             DefaultSchema = "schema"
         };

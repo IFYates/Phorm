@@ -23,10 +23,10 @@ public sealed class TelemetryTests
     }
     
     [TestMethod]
-    public async Task CallAsync_Creates_Activity()
+    public async Task CallAsync__Creates_Activity()
     {
         // Arrange
-        var conn = new TestPhormConnection("")
+        var conn = new TestPhormConnection()
         {
             DefaultSchema = "schema"
         };

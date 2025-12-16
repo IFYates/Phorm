@@ -5,11 +5,11 @@ using System.Diagnostics.CodeAnalysis;
 namespace IFY.Phorm.Tests;
 
 [ExcludeFromCodeCoverage]
-public class TestPhormConnection : IPhormDbConnection
+public class TestPhormConnection(string? connectionName = null) : IPhormDbConnection
 {
     public Queue<IAsyncDbCommand> CommandQueue { get; } = new Queue<IAsyncDbCommand>();
 
-    public virtual string? ConnectionName { get; }
+    public virtual string? ConnectionName { get; } = connectionName ?? Guid.NewGuid().ToString();
 
     public virtual string DefaultSchema { get; set; } = "dbo";
     [AllowNull] public virtual string ConnectionString { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
@@ -19,11 +19,6 @@ public class TestPhormConnection : IPhormDbConnection
     public virtual string Database => throw new NotImplementedException();
 
     public virtual ConnectionState State => throw new NotImplementedException();
-
-    public TestPhormConnection(string? connectionName)
-    {
-        ConnectionName = connectionName;
-    }
 
     public virtual IDbTransaction BeginTransaction()
     {
