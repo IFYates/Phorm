@@ -71,6 +71,8 @@ public class PhormContractRunnerTests
         string? Arg3 { get; set; }
     }
 
+    record TestRecordDefault(string Value);
+
     [TestInitialize]
     public void Init()
     {
@@ -931,6 +933,32 @@ public class PhormContractRunnerTests
         mocks.Verify();
         Assert.AreEqual("secure_value", res!.Arg3);
         CollectionAssert.AreEqual(100.GetBytes(), encrMock.Object.Authenticator);
+    }
+
+    [TestMethod]
+    public async Task GetAsync__Support_record_missing_default_constructor()
+    {
+        // Arrange
+        var conn = new TestPhormConnection("")
+        {
+            DefaultSchema = "schema"
+        };
+
+        var cmd = new TestDbCommand(new TestDbDataReader
+        {
+            Data = [ new() { ["Value"] = "value1" } ]
+        });
+        conn.CommandQueue.Enqueue(cmd);
+
+        var phorm = new TestPhormSession(conn);
+
+        var runner = new PhormContractRunner<IPhormContract>(phorm, "ContractName", DbObjectType.StoredProcedure, new { Arg = 1 }, null);
+
+        // Act
+        var res = await runner.GetAsync<TestRecordDefault>(TestContext.CancellationToken);
+
+        // Assert
+        Assert.AreEqual("value1", res!.Value);
     }
 
     #endregion One

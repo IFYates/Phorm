@@ -201,6 +201,8 @@ internal sealed partial class PhormContractRunner<TActionContract> : IPhormContr
         return result;
     }
 
+    // TODO: Split so can use some logic for record primary constructor
+    // TODO: May need to mimic "with" expression for records for deferred members
     private object fillEntity(object entity, IDictionary<string, object?> values, IDictionary<string, ContractMemberDefinition> members, Guid commandGuid, bool warnOnUnresolved)
     {
         // Apply member values
@@ -363,7 +365,10 @@ internal sealed partial class PhormContractRunner<TActionContract> : IPhormContr
                 entityType = entityType.GenericTypeArguments[0];
             }
         }
-        if (!isGenSpec && entityType.GetConstructor([]) == null)
+
+        var isRecord = entityType.GetMethod("<Clone>$") != null;
+        var defaultCtor = entityType.GetConstructor([]); // TODO: Cache by type
+        if (!isGenSpec && !isRecord && defaultCtor == null)
         {
             throw new MissingMethodException($"Attempt to get type {entityType.FullName} without empty constructor.");
         }
@@ -403,7 +408,7 @@ internal sealed partial class PhormContractRunner<TActionContract> : IPhormContr
         return (TResult)result;
     }
 
-    private async Task<object> executeGetAll(Type resultType, Type entityType, Func<object, ContractMemberDefinition[], IDictionary<string, object?>, Guid, int, Func<object>?> entityProcessor, CancellationToken cancellationToken)
+    private async Task<object> executeGetAll(Type resultType, Type modelType, Func<object, ContractMemberDefinition[], IDictionary<string, object?>, Guid, int, Func<object>?> entityProcessor, CancellationToken cancellationToken)
     {
         // Prepare and execute
         using var cmd = startCommand(out var pars, out var eventArgs);
@@ -413,7 +418,8 @@ internal sealed partial class PhormContractRunner<TActionContract> : IPhormContr
         // Prepare genspec
         GenSpecBase? genspec = null;
         Dictionary<string, object?>? tempProps = null;
-        ContractMemberDefinition[]? entityMembers = null;
+        ContractMemberDefinition[]? entityMembers = null; // TODO: Should be cached by type?
+        var entityType = modelType;
         if (typeof(GenSpecBase).IsAssignableFrom(resultType))
         {
             genspec = (GenSpecBase)Activator.CreateInstance(resultType)!;
@@ -421,11 +427,11 @@ internal sealed partial class PhormContractRunner<TActionContract> : IPhormContr
         }
         else
         {
-            entityMembers = ContractMemberDefinition.GetFromContract(entityType);
+            entityMembers = ContractMemberDefinition.GetFromContract(modelType);
         }
 
         // Build list of self-resolving entities
-        var resolverListType = typeof(EntityList<>).MakeGenericType(entityType);
+        var resolverListType = typeof(EntityList<>).MakeGenericType(modelType);
         var resolverList = (IEntityList)Activator.CreateInstance(resolverListType)!;
         var record = 0;
         while (!cancellationToken.IsCancellationRequested && safeRead(rdr, console))
@@ -433,7 +439,7 @@ internal sealed partial class PhormContractRunner<TActionContract> : IPhormContr
             ++record;
             var rowData = PhormContractRunner<TActionContract>.getRowValues(rdr);
 
-            var instType = entityType;
+            entityType = modelType;
             if (genspec != null)
             {
                 // Resolve spec type
@@ -458,12 +464,11 @@ internal sealed partial class PhormContractRunner<TActionContract> : IPhormContr
                     continue;
                 }
 
-                instType = spec?.Type ?? genspec.GenType;
-                entityMembers = ContractMemberDefinition.GetFromContract(instType);
+                entityType = spec?.Type ?? genspec.GenType;
+                entityMembers = ContractMemberDefinition.GetFromContract(entityType);
             }
 
-            var inst = Activator.CreateInstance(instType)!;
-            var resolver = entityProcessor(inst, entityMembers!, rowData, eventArgs.CommandGuid, record);
+            var resolver = createInstanceResolver(rowData);
             if (resolver != null)
             {
                 resolverList.AddResolver(resolver);
@@ -476,7 +481,7 @@ internal sealed partial class PhormContractRunner<TActionContract> : IPhormContr
             var rsOrder = 0;
             while (!cancellationToken.IsCancellationRequested && await rdr.NextResultAsync(CancellationToken.None))
             {
-                matchResultset(entityType, rsOrder++, rdr, (IEnumerable<object>)resolverList, eventArgs.CommandGuid, console);
+                matchResultset(modelType, rsOrder++, rdr, (IEnumerable<object>)resolverList, eventArgs.CommandGuid, console);
             }
         }
 
@@ -488,5 +493,53 @@ internal sealed partial class PhormContractRunner<TActionContract> : IPhormContr
             return genspec;
         }
         return resolverList;
+
+        // TODO: Prepare this by type so resolver just needs to be passed rowData next time
+        Func<object>? createInstanceResolver(Dictionary<string, object?> rowData)
+        {
+            // TODO: cache by type
+            // Try to create using default constructor
+            var defaultCtor = entityType.GetConstructor(BindingFlags.Public | BindingFlags.Instance, null, Type.EmptyTypes, null);
+            if (defaultCtor != null)
+            {
+                var inst = defaultCtor.Invoke(null);
+                return entityProcessor(inst, entityMembers!, rowData, eventArgs.CommandGuid, record);
+            }
+
+            // TODO: Use default record constructor, if available
+            var isRecord = entityType.GetMethod("<Clone>$") != null;
+            if (!isRecord)
+            {
+                return null;
+            }
+
+            // TODO: Prepare this so resolver just needs to be passed rowData next time
+            // TODO: Must resolve values same as above (secure, transforms)
+            // Create using record primary constructor
+            var ctor = entityType.GetConstructors(BindingFlags.Public | BindingFlags.Instance).First();
+            var ctorParams = ctor.GetParameters();
+            var ctorArgResolvers = new Func<object?>[ctorParams.Length];
+            for (var i = 0; i < ctorParams.Length; ++i)
+            {
+                var param = ctorParams[i];
+                if (entityMembers!.FirstOrDefault(m => m.SourceMember?.Name == param.Name) is ContractMemberDefinition memb)
+                {
+                    ctorArgResolvers[i] = () =>
+                    {
+                        if (memb.TryFromDatasource(rowData.TryGetValue(memb.DbName, out var val) ? val : null, null, out var member))
+                        {
+                            return member.Value;
+                        }
+                        return param.HasDefaultValue ? param.DefaultValue : null;
+                    };
+                }
+            }
+            // TODO: values not found on constructor can use property setters / "with" expression
+            return () =>
+            {
+                var ctorArgs = ctorArgResolvers.Select(r => r()).ToArray();
+                return ctor.Invoke(ctorArgs);
+            };
+        }
     }
 }
