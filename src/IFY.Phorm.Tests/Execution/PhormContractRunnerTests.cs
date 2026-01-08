@@ -251,7 +251,7 @@ public class PhormContractRunnerTests
         var runner = new PhormContractRunner<IPhormContract>(phorm, "ContractName", DbObjectType.StoredProcedure, new { Arg = 1 }, null);
 
         // Act
-        var res = await runner.GetAsync<TestDto[]>(TestContext.CancellationToken);
+        var res = (await runner.GetAsync<TestDto[]>(TestContext.CancellationToken))!;
 
         // Assert
         Assert.HasCount(3, res);
@@ -304,7 +304,7 @@ public class PhormContractRunnerTests
         var runner = new PhormContractRunner<IPhormContract>(phorm, "ContractName", objType, new { Arg1 = 1, Arg2 = 2 }, null);
 
         // Act
-        var res = await runner.GetAsync<TestDto[]>(TestContext.CancellationToken);
+        var res = (await runner.GetAsync<TestDto[]>(TestContext.CancellationToken))!;
 
         // Assert
         Assert.HasCount(3, res);
@@ -356,7 +356,7 @@ public class PhormContractRunnerTests
         var runner = new PhormContractRunner<TestContract>(phorm, "ContractName", DbObjectType.StoredProcedure, new TestContract { Arg = 1 }, null);
 
         // Act
-        var res = await runner.GetAsync<TestDto[]>(TestContext.CancellationToken);
+        var res = (await runner.GetAsync<TestDto[]>(TestContext.CancellationToken))!;
 
         // Assert
         Assert.HasCount(3, res);
@@ -409,7 +409,7 @@ public class PhormContractRunnerTests
         var runner = new PhormContractRunner<TestContract>(phorm, "ContractName", objType, new TestContract { Arg = 1 }, null);
 
         // Act
-        var res = await runner.GetAsync<TestDto[]>(TestContext.CancellationToken);
+        var res = (await runner.GetAsync<TestDto[]>(TestContext.CancellationToken))!;
 
         // Assert
         Assert.HasCount(3, res);
@@ -481,7 +481,7 @@ public class PhormContractRunnerTests
         var runner = new PhormContractRunner<ISecureTestContract>(phorm, null, DbObjectType.Default, dto, null);
 
         // Act
-        var res = await runner.GetAsync<TestSecureDto[]>(TestContext.CancellationToken);
+        var res = (await runner.GetAsync<TestSecureDto[]>(TestContext.CancellationToken))!;
 
         // Assert
         Assert.HasCount(1, res);
@@ -530,7 +530,7 @@ public class PhormContractRunnerTests
         var runner = new PhormContractRunner<TestContract>(phorm, "ContractName", DbObjectType.StoredProcedure, new TestContract { Arg = 1 }, null);
 
         // Act
-        var res = await runner.GetAsync<IEnumerable<TestDto>>(TestContext.CancellationToken);
+        var res = (await runner.GetAsync<IEnumerable<TestDto>>(TestContext.CancellationToken))!;
 
         // Assert
         Assert.HasCount(3, res);

@@ -50,23 +50,24 @@ partial class PhormContractRunner<TActionContract>
             var predicateProperties = _predicate.Body.GetExpressionParameterProperties(typeof(TEntity));
             var cond = _predicate.Compile();
 
-            return (TResult)await _parent.executeGetAll(typeof(TResult), typeof(TEntity),
-                (inst, entityMembers, rowData, commandGuid, record) =>
+            var contract = getContract(typeof(TEntity));
+            return (TResult)await _parent.executeGetAll(typeof(TResult), contract,
+                (contract, rowData, _) =>
                 {
-                    var predicateMembers = entityMembers.Where(m => predicateProperties.Any(p => p.Name == m.SourceMember!.Name))
-                        .ToDictionary(static k => k.DbName.ToUpperInvariant());
-                    var otherMembers = entityMembers.Except(predicateMembers.Values)
-                        .ToDictionary(static k => k.DbName.ToUpperInvariant());
+                    var predicateMembers = contract.Members
+                        .Where(m => predicateProperties.Any(p => p.Name == m.SourceMember!.Name)).ToArray();
+                    var otherMembers = contract.Members.Except(predicateMembers).ToArray();
 
-                    // Resolve predicate properties for entity and filter
-                    _ = _parent.fillEntity(inst, rowData, predicateMembers, commandGuid, false);
+                    // Resolve predicate properties for entity then filter
+                    var inst = contract.BuildInstance(rowData);
+                    EntityContract.FillInstance(inst, rowData, predicateMembers);
                     if (!cond((TEntity)inst))
                     {
                         return null;
                     }
 
                     // Resolver for remaining properties
-                    return () => _parent.fillEntity(inst, rowData, otherMembers, commandGuid, true);
+                    return () => EntityContract.FillInstance(inst, rowData, otherMembers);
                 }, cancellationToken);
         }
     }

@@ -129,8 +129,9 @@ internal static class Extensions
                     if (me.Member is PropertyInfo pi)
                     {
                         // Remember properties on target object
-                        // Ignore all othrs - if the expression compiles, it must be valid
-                        if (me.Expression?.NodeType == ExpressionType.Parameter && me.Expression?.Type == parameterType)
+                        // Ignore all others - if the expression compiles, it must be valid
+                        if (me.Expression?.NodeType == ExpressionType.Parameter
+                            && me.Expression?.Type == parameterType)
                         {
                             props.Add(pi);
                             break;

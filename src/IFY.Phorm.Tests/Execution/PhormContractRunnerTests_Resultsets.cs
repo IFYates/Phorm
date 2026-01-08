@@ -54,22 +54,6 @@ public class PhormContractRunnerTests_Resultsets
     }
 
     [TestMethod]
-    public async Task Get__Entity_missing_default_constructor__Fail()
-    {
-        // Arrange
-        var phorm = new TestPhormSession();
-
-        var runner = new PhormContractRunner<ITestContract>(phorm, "ContractName", DbObjectType.StoredProcedure, null, null);
-
-        // Act
-        var ex = await Assert.ThrowsExactlyAsync<MissingMethodException>
-            (async () => await runner.GetAsync<TestBadEntity>(TestContext.CancellationToken));
-
-        // Assert
-        Assert.AreEqual("Attempt to get type IFY.Phorm.Execution.Tests.PhormContractRunnerTests_Resultsets+TestBadEntity without empty constructor.", ex.Message);
-    }
-
-    [TestMethod]
     public async Task GetAsync__Entity_missing_default_constructor__Fail()
     {
         // Arrange
@@ -82,7 +66,7 @@ public class PhormContractRunnerTests_Resultsets
             (async () => await runner.GetAsync<TestBadEntity>(TestContext.CancellationToken));
 
         // Assert
-        Assert.AreEqual("Attempt to get type IFY.Phorm.Execution.Tests.PhormContractRunnerTests_Resultsets+TestBadEntity without empty constructor.", ex.Message);
+        Assert.AreEqual("Entity type 'IFY.Phorm.Execution.Tests.PhormContractRunnerTests_Resultsets+TestBadEntity' does not have a valid public constructor.", ex.Message);
     }
 
     [TestMethod]

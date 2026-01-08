@@ -28,7 +28,7 @@ internal partial class TestPhormSession : AbstractPhormSession
         TestConnection = new TestPhormConnection(connectionName);
     }
     public TestPhormSession(TestPhormConnection connection, string? connectionName = null)
-        : base(null!, connectionName)
+        : base(null!, connectionName ?? connection.ConnectionName)
     {
         TestConnection = connection;
     }
