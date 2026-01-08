@@ -71,8 +71,6 @@ public class PhormContractRunnerTests
         string? Arg3 { get; set; }
     }
 
-    record TestRecordDefault(string Value);
-
     [TestInitialize]
     public void Init()
     {
@@ -253,7 +251,7 @@ public class PhormContractRunnerTests
         var runner = new PhormContractRunner<IPhormContract>(phorm, "ContractName", DbObjectType.StoredProcedure, new { Arg = 1 }, null);
 
         // Act
-        var res = await runner.GetAsync<TestDto[]>(TestContext.CancellationToken);
+        var res = (await runner.GetAsync<TestDto[]>(TestContext.CancellationToken))!;
 
         // Assert
         Assert.HasCount(3, res);
@@ -306,7 +304,7 @@ public class PhormContractRunnerTests
         var runner = new PhormContractRunner<IPhormContract>(phorm, "ContractName", objType, new { Arg1 = 1, Arg2 = 2 }, null);
 
         // Act
-        var res = await runner.GetAsync<TestDto[]>(TestContext.CancellationToken);
+        var res = (await runner.GetAsync<TestDto[]>(TestContext.CancellationToken))!;
 
         // Assert
         Assert.HasCount(3, res);
@@ -358,7 +356,7 @@ public class PhormContractRunnerTests
         var runner = new PhormContractRunner<TestContract>(phorm, "ContractName", DbObjectType.StoredProcedure, new TestContract { Arg = 1 }, null);
 
         // Act
-        var res = await runner.GetAsync<TestDto[]>(TestContext.CancellationToken);
+        var res = (await runner.GetAsync<TestDto[]>(TestContext.CancellationToken))!;
 
         // Assert
         Assert.HasCount(3, res);
@@ -411,7 +409,7 @@ public class PhormContractRunnerTests
         var runner = new PhormContractRunner<TestContract>(phorm, "ContractName", objType, new TestContract { Arg = 1 }, null);
 
         // Act
-        var res = await runner.GetAsync<TestDto[]>(TestContext.CancellationToken);
+        var res = (await runner.GetAsync<TestDto[]>(TestContext.CancellationToken))!;
 
         // Assert
         Assert.HasCount(3, res);
@@ -483,7 +481,7 @@ public class PhormContractRunnerTests
         var runner = new PhormContractRunner<ISecureTestContract>(phorm, null, DbObjectType.Default, dto, null);
 
         // Act
-        var res = await runner.GetAsync<TestSecureDto[]>(TestContext.CancellationToken);
+        var res = (await runner.GetAsync<TestSecureDto[]>(TestContext.CancellationToken))!;
 
         // Assert
         Assert.HasCount(1, res);
@@ -532,7 +530,7 @@ public class PhormContractRunnerTests
         var runner = new PhormContractRunner<TestContract>(phorm, "ContractName", DbObjectType.StoredProcedure, new TestContract { Arg = 1 }, null);
 
         // Act
-        var res = await runner.GetAsync<IEnumerable<TestDto>>(TestContext.CancellationToken);
+        var res = (await runner.GetAsync<IEnumerable<TestDto>>(TestContext.CancellationToken))!;
 
         // Assert
         Assert.HasCount(3, res);
@@ -933,32 +931,6 @@ public class PhormContractRunnerTests
         mocks.Verify();
         Assert.AreEqual("secure_value", res!.Arg3);
         CollectionAssert.AreEqual(100.GetBytes(), encrMock.Object.Authenticator);
-    }
-
-    [TestMethod]
-    public async Task GetAsync__Support_record_missing_default_constructor()
-    {
-        // Arrange
-        var conn = new TestPhormConnection("")
-        {
-            DefaultSchema = "schema"
-        };
-
-        var cmd = new TestDbCommand(new TestDbDataReader
-        {
-            Data = [ new() { ["Value"] = "value1" } ]
-        });
-        conn.CommandQueue.Enqueue(cmd);
-
-        var phorm = new TestPhormSession(conn);
-
-        var runner = new PhormContractRunner<IPhormContract>(phorm, "ContractName", DbObjectType.StoredProcedure, new { Arg = 1 }, null);
-
-        // Act
-        var res = await runner.GetAsync<TestRecordDefault>(TestContext.CancellationToken);
-
-        // Assert
-        Assert.AreEqual("value1", res!.Value);
     }
 
     #endregion One

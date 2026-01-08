@@ -156,8 +156,10 @@ public class ContractMemberDefinition
     {
         // Resolve member direction
         var cmAttr = prop.GetCustomAttribute<ContractMemberAttribute>();
-        var canRead = prop.CanRead && cmAttr?.DisableInput != true;
-        var canWrite = prop.CanWrite && cmAttr?.DisableOutput != true;
+        var canRead = prop.GetMethod?.IsPrivate is not null and not true
+            && cmAttr?.DisableInput != true;
+        var canWrite = prop.SetMethod?.IsPrivate is not null and not true
+            && cmAttr?.DisableOutput != true;
         var dir = (canRead ? ParameterType.Input : 0) | (canWrite ? ParameterType.Output : 0);
         if (prop.PropertyType.IsGenericType && prop.PropertyType.GetGenericTypeDefinition() == typeof(ContractOutMember<>))
         {

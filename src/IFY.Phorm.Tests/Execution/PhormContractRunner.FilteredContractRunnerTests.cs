@@ -156,8 +156,8 @@ public class PhormContractRunner
         // Assert
         var arr = res.All();
         Assert.HasCount(2, arr);
-        Assert.IsInstanceOfType(arr[0], typeof(BaseDto));
-        Assert.IsInstanceOfType(arr[1], typeof(TestDto));
+        Assert.IsInstanceOfType<BaseDto>(arr[0]);
+        Assert.IsInstanceOfType<TestDto>(arr[1]);
     }
 
     [TestMethod]
@@ -222,7 +222,7 @@ public class PhormContractRunner
 
         // Assert
         var arr = res.All();
-        Assert.IsInstanceOfType(arr.Single(), typeof(BaseDto));
+        Assert.IsInstanceOfType<BaseDto>(arr.Single());
     }
 
     [TestMethod]

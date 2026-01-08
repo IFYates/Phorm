@@ -66,7 +66,7 @@ public class PhormContractRunnerTests_Resultsets
             (async () => await runner.GetAsync<TestBadEntity>(TestContext.CancellationToken));
 
         // Assert
-        Assert.AreEqual("Attempt to get type IFY.Phorm.Execution.Tests.PhormContractRunnerTests_Resultsets+TestBadEntity without empty constructor.", ex.Message);
+        Assert.AreEqual("Entity type 'IFY.Phorm.Execution.Tests.PhormContractRunnerTests_Resultsets+TestBadEntity' does not have a valid public constructor.", ex.Message);
     }
 
     [TestMethod]

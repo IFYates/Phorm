@@ -18,7 +18,7 @@ public class TestPhormConnection : IPhormDbConnection
 
     public virtual string Database => throw new NotImplementedException();
 
-    public virtual ConnectionState State => throw new NotImplementedException();
+    public virtual ConnectionState State => ConnectionState.Open;
 
     public TestPhormConnection(string? connectionName)
     {

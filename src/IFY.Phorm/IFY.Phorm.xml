@@ -298,6 +298,47 @@
             Value being passed to or returned from stored procedure.
             </summary>
         </member>
+        <member name="P:IFY.Phorm.Data.EntityContract.EntityType">
+            <summary>
+            Gets the type of the entity this contract represents.
+            </summary>
+        </member>
+        <member name="P:IFY.Phorm.Data.EntityContract.Members">
+            <summary>
+            Gets the list of members defined in the contract.
+            </summary>
+        </member>
+        <member name="P:IFY.Phorm.Data.EntityContract.IsRecord">
+            <summary>
+            Gets a value indicating whether the current instance represents a record.
+            </summary>
+        </member>
+        <member name="P:IFY.Phorm.Data.EntityContract.Constructor">
+            <summary>
+            Gets the constructor information for the primary constructor of the record, if applicable.
+            </summary>
+        </member>
+        <member name="P:IFY.Phorm.Data.EntityContract.ConstructorFields">
+            <summary>
+            Gets the array of argument names used to construct the instance, or null if no arguments were provided.
+            </summary>
+        </member>
+        <member name="P:IFY.Phorm.Data.EntityContract.BasicPropertySetters">
+            <summary>
+            Gets the property setters for basic properties that can be set directly.
+            </summary>
+        </member>
+        <member name="P:IFY.Phorm.Data.EntityContract.DeferredPropertySetters">
+            <summary>
+            Gets the property setters for deferred properties that require special handling.
+            </summary>
+        </member>
+        <member name="M:IFY.Phorm.Data.EntityContract.findPrimaryConstructor(System.Type,System.Collections.Generic.Dictionary{System.String,IFY.Phorm.Data.ContractMemberDefinition})">
+            <summary>
+            Finds the primary constructor for a record type.
+            The primary constructor is defined as the one with the most parameters that are exposed as properties.
+            </summary>
+        </member>
         <member name="T:IFY.Phorm.Data.GenSpecBase">
             <summary>
             Provides a base class for defining generic specification types used in contract member generation scenarios.
