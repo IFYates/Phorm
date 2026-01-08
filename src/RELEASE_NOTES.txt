@@ -1,3 +1,9 @@
+v2.2.0
+- #49: Added support for record primary constructors
+
+v2.1.0
+- #47: Support read-only application intent per contract
+
 v2.0.0
 - #52: Removed non-async methods
 
