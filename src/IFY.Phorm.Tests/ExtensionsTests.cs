@@ -141,7 +141,7 @@ public class ExtensionsTests
 
     #endregion GetBytes
 
-    #region GetReferencedObjectProperties
+    #region GetExpressionParameterProperties
 
     [ExcludeFromCodeCoverage]
     class TestObject
@@ -165,7 +165,7 @@ public class ExtensionsTests
     public bool OtherObjectInstanceMethod(string str) => true;
 
     [TestMethod]
-    public void GetReferencedObjectProperties__Expression_does_not_require_property_references()
+    public void GetExpressionParameterProperties__Expression_does_not_require_property_references()
     {
         Expression<Func<TestObject, bool>> expr = (o) => true;
 
@@ -175,16 +175,23 @@ public class ExtensionsTests
         Assert.IsEmpty(props);
     }
 
-    [TestMethod]
-    public void GetReferencedObjectProperties__Can_handle_all_individual_expressions()
+    static void assertExprRefProp(Expression<Func<TestObject, bool>> fn, string prop)
     {
-        static void assertExprRefProp(Expression<Func<TestObject, bool>> fn, string prop)
-        {
-            _ = fn.Compile(); // Must compile
-            var props = fn.Body.GetExpressionParameterProperties(typeof(TestObject));
-            Assert.AreEqual(prop, props.Single().Name, prop);
-        }
+        _ = fn.Compile(); // Must compile
+        var props = fn.Body.GetExpressionParameterProperties(typeof(TestObject));
+        Assert.AreEqual(prop, props.Single().Name, prop);
+    }
+    static void assertExprRefProps(string name, Expression<Func<TestObject, bool>> fn, params string[] expProps)
+    {
+        _ = fn.Compile(); // Must compile
+        var props = fn.Body.GetExpressionParameterProperties(typeof(TestObject));
+        CollectionAssert.AreEquivalent(expProps, props.Select(p => p.Name).ToArray(), name);
+    }
 
+
+    [TestMethod]
+    public void GetExpressionParameterProperties__Can_handle_all_individual_expressions()
+    {
         // Numeric
         assertExprRefProp(o => o.Numeric == 0, nameof(TestObject.Numeric));
         assertExprRefProp(o => (double)o.Numeric == 0, nameof(TestObject.Numeric));
@@ -224,15 +231,8 @@ public class ExtensionsTests
     }
 
     [TestMethod]
-    public void GetReferencedObjectProperties__Can_handle_complex_expressions()
+    public void GetExpressionParameterProperties__Can_handle_complex_expressions()
     {
-        static void assertExprRefProps(string name, Expression<Func<TestObject, bool>> fn, params string[] expProps)
-        {
-            _ = fn.Compile(); // Must compile
-            var props = fn.Body.GetExpressionParameterProperties(typeof(TestObject));
-            CollectionAssert.AreEquivalent(expProps, props.Select(p => p.Name).ToArray(), name);
-        }
-
         assertExprRefProps("Multiple properties", o => (o.Numeric > 0 && o.String != null && o.Boolean && o.Array.Length > 0) || o.Nullable.HasValue, nameof(TestObject.Numeric), nameof(TestObject.String), nameof(TestObject.Boolean), nameof(TestObject.Array), nameof(TestObject.Nullable));
 
         assertExprRefProps("Multiple uses returned once", o => o.Numeric == 0 && (double)o.Numeric == 0 && o.Numeric != 0 && o.Numeric < 0 && o.Numeric > 0, nameof(TestObject.Numeric));
@@ -245,7 +245,7 @@ public class ExtensionsTests
     }
 
     [TestMethod]
-    public void GetReferencedObjectProperties__Fails_for_unrecognised_expression()
+    public void GetExpressionParameterProperties__Fails_for_unrecognised_expression()
     {
         // Unknown expression type
         var exprMock = new Mock<Expression>();
@@ -253,7 +253,7 @@ public class ExtensionsTests
             (() => exprMock.Object.GetExpressionParameterProperties(typeof(TestObject)));
     }
 
-    #endregion GetReferencedObjectProperties
+    #endregion GetExpressionParameterProperties
 
     #region FromBytes
 

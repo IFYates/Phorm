@@ -86,7 +86,7 @@ internal sealed partial class PhormContractRunner<TActionContract> : IPhormContr
     #region Execution
 
     private static readonly Dictionary<Type, EntityContract> _contracts = [];
-    private static EntityContract getContract(Type entityType, bool ignoreMissingConstructor = false)
+    private static EntityContract getContract(Type entityType)
     {
         if (!_contracts.TryGetValue(entityType, out var contract))
         {
@@ -331,7 +331,7 @@ internal sealed partial class PhormContractRunner<TActionContract> : IPhormContr
             }
         }
 
-        var contract = getContract(entityType, isGenSpec);
+        var contract = getContract(entityType);
         if (!isGenSpec && contract.Constructor is null)
         {
             throw new MissingMethodException($"Entity type '{entityType.FullName}' does not have a valid public constructor.");
@@ -339,7 +339,7 @@ internal sealed partial class PhormContractRunner<TActionContract> : IPhormContr
 
         // Execute method as either IEnumerable<TEntity> or GenSpec<...>
         var result = await executeGetAll(resultType, contract,
-            (contract, rowData, rowIndex, commandGuid) =>
+            (contract, rowData, rowIndex) =>
             {
                 // Single result
                 if (!isEnumerable && !isGenSpec && rowIndex > 1)
@@ -372,7 +372,7 @@ internal sealed partial class PhormContractRunner<TActionContract> : IPhormContr
     }
 
     // TODO: why nullable?
-    delegate Func<object>? EntityProcessorDelegate(EntityContract contract, Dictionary<string, object?> rowData, int rowIndex, Guid commandGuid);
+    delegate Func<object>? EntityProcessorDelegate(EntityContract contract, Dictionary<string, object?> rowData, int rowIndex);
 
     private async Task<object> executeGetAll(Type resultType, EntityContract contract, EntityProcessorDelegate entityProcessor, CancellationToken cancellationToken)
     {
@@ -436,7 +436,7 @@ internal sealed partial class PhormContractRunner<TActionContract> : IPhormContr
                 hasValidatedResultset.Add(entityType);
             }
 
-            var resolver = entityProcessor(ec, rowData, rowIndex, eventArgs.CommandGuid);
+            var resolver = entityProcessor(ec, rowData, rowIndex);
             if (resolver != null)
             {
                 resolverList.AddResolver(resolver);

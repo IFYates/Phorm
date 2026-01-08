@@ -1017,6 +1017,33 @@
             <returns>An instance of <see cref="T:IFY.Phorm.Execution.ITransactedPhormSession"/> that operates within the context of the provided
             transaction.</returns>
         </member>
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.CallAsync``1">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.CallAsync``1(System.Object)">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.CallAsync``1(``0)">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.CallAsync``1(``0,System.Threading.CancellationToken)">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.GetAsync``1">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.GetAsync``1(System.Object)">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.GetAsync``1(System.Threading.CancellationToken)">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.GetAsync``1(``0)">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.GetAsync``1(``0,System.Threading.CancellationToken)">
+            <inheritdoc/>
+        </member>
         <member name="P:IFY.Phorm.Execution.ConsoleMessage.IsError">
             <summary>
             Whether this message is for an error that interrupted execution.

@@ -52,7 +52,7 @@ partial class PhormContractRunner<TActionContract>
 
             var contract = getContract(typeof(TEntity));
             return (TResult)await _parent.executeGetAll(typeof(TResult), contract,
-                (contract, rowData, rowIndex, commandGuid) =>
+                (contract, rowData, _) =>
                 {
                     var predicateMembers = contract.Members
                         .Where(m => predicateProperties.Any(p => p.Name == m.SourceMember!.Name)).ToArray();

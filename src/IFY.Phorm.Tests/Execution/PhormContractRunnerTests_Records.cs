@@ -4,7 +4,6 @@ using IFY.Phorm.Execution;
 using IFY.Phorm.Transformation;
 using Moq;
 using System.Diagnostics.CodeAnalysis;
-using System.Xml.Linq;
 
 namespace IFY.Phorm.Tests.Execution;
 
@@ -129,13 +128,12 @@ public class PhormContractRunnerTests_Records
 
     record Record_ManyConstructors(string Id)
     {
-        public int ConstructorUsed { get; private set; } = 1;
         public string Name { get; set; } = string.Empty;
 
+        [ExcludeFromCodeCoverage] // Does not get called
         public Record_ManyConstructors(string id, string name) : this(id)
         {
-            Name = name;
-            ConstructorUsed = 2;
+            throw new NotImplementedException();
         }
     }
 
@@ -148,13 +146,11 @@ public class PhormContractRunnerTests_Records
         // Assert
         Assert.AreEqual("id1", res.Id);
         Assert.AreEqual("name1", res.Name);
-        Assert.AreEqual(1, res.ConstructorUsed);
     }
 
     record Record_ConstructorSecureValue(
         string Key,
-        [property: SecureValue("class")]
-        string Value
+        [property: SecureValue("class")] string Value
     );
 
     [TestMethod]
@@ -240,8 +236,7 @@ public class PhormContractRunnerTests_Records
 
     record Record_ConstructorTransphormed(
         string Key,
-        [property: TestTransformer]
-        string Value
+        [property: TestTransformer] string Value
     );
 
     [TestMethod]
