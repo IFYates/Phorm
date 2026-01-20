@@ -121,51 +121,39 @@ public abstract class AbstractPhormSession(string databaseConnectionString, stri
 
     #region Connection
 
-    private static readonly Dictionary<string, IPhormDbConnection> _connectionPool = [];
-    internal static void ResetConnectionPool()
+    /// <summary>
+    /// Asynchronously obtains a database connection for the current context, reusing an existing connection if
+    /// available.
+    /// </summary>
+    /// <remarks>The returned connection is managed by an internal connection pool and may be reused across
+    /// multiple calls. Callers should not dispose the connection directly. If a suitable connection does not exist or
+    /// is closed, a new connection is created and initialized before being returned.</remarks>
+    /// <param name="readOnly">true to request a connection optimized for read-only operations; otherwise, false to request a read-write
+    /// connection. The default is false.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains an IPhormDbConnection instance that
+    /// is open and ready for use.</returns>
+    protected internal IPhormDbConnection GetConnection(bool readOnly)
     {
-        lock (_connectionPool)
-        {
-            foreach (var conn in _connectionPool.Values)
-            {
-                conn.Dispose();
-            }
-            _connectionPool.Clear();
-        }
+        // Reuse existing Phorm connections, where possible
+        var connStr = GetConnectionString(readOnly);
+        var conn = CreateConnection(connStr);
+        return new PhormDbConnection(this, conn);
     }
 
-    /// <inheritdoc/>
-    protected internal virtual IPhormDbConnection GetConnection(bool readOnly = false)
-    {
-        // Reuse existing connections, where possible
-        var key = $"{ConnectionName ?? string.Empty}:{readOnly}";
-        if (!_connectionPool.TryGetValue(key, out var phormConn)
-            || phormConn.State != ConnectionState.Open)
-        {
-            lock (_connectionPool)
-            {
-                if (!_connectionPool.TryGetValue(key, out phormConn)
-                    || phormConn.State != ConnectionState.Open)
-                {
-                    // Create new connection
-                    phormConn?.Dispose();
+    /// <summary>
+    /// Retrieves the database connection string for the specified access mode.
+    /// </summary>
+    /// <param name="readOnly">true to retrieve a connection string configured for read-only access; false to retrieve a connection string for
+    /// read-write access.</param>
+    /// <returns>A connection string that can be used to connect to the database with the requested access mode.</returns>
+    protected abstract string GetConnectionString(bool readOnly);
 
-                    // Create connection
-                    phormConn = CreateConnection(readOnly);
-
-                    // Resolve default schema
-                    if (phormConn.DefaultSchema.Length == 0)
-                    {
-                        SetDefaultSchema(phormConn);
-                    }
-                    _connectionPool[key] = phormConn;
-
-                    OnConnected(new ConnectedEventArgs { Connection = phormConn });
-                }
-            }
-        }
-        return phormConn;
-    }
+    /// <summary>
+    /// Creates and returns a new database connection configured for either read-only or read-write access.
+    /// </summary>
+    /// <param name="connectionString">The connection string to use for creating the database connection.</param>
+    /// <returns>An <see cref="IDbConnection"/> instance representing the newly created database connection.</returns>
+    protected abstract IAsyncDbConnection CreateConnection(string connectionString);
 
     /// <summary>
     /// Creates and returns a new database connection configured for either read-only or read-write access.
@@ -178,16 +166,17 @@ public abstract class AbstractPhormSession(string databaseConnectionString, stri
     /// Implementations to provide logic for resolving the default schema of the connection.
     /// </summary>
     /// <returns>The default schema name, if known.</returns>
-    protected virtual void SetDefaultSchema(IPhormDbConnection phormConn) { }
+    internal protected virtual Task ResolveDefaultSchemaAsync(IPhormDbConnection phormConn) => Task.CompletedTask;
 
     /// <inheritdoc/>
     public abstract IPhormSession SetConnectionName(string connectionName);
 
     #endregion Connection
 
-    internal IAsyncDbCommand CreateCommand(string? schema, string objectName, DbObjectType objectType, bool readOnly)
+    internal async Task<IAsyncDbCommand> CreateCommand(string? schema, string objectName, DbObjectType objectType, bool readOnly)
     {
         var conn = GetConnection(readOnly);
+        await conn.OpenAsync(default);
         schema = schema?.Length > 0 ? schema : conn.DefaultSchema;
         return CreateCommand(conn, schema, objectName, objectType);
     }
@@ -309,7 +298,7 @@ public abstract class AbstractPhormSession(string databaseConnectionString, stri
     public abstract bool IsInTransaction { get; }
 
     /// <inheritdoc/>
-    public abstract ITransactedPhormSession BeginTransaction();
+    public abstract Task<ITransactedPhormSession> BeginTransactionAsync(CancellationToken cancellationToken);
 
     /// <summary>
     /// Wraps the current session with transactional support using the specified database transaction.

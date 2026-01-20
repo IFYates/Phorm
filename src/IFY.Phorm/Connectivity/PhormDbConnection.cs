@@ -35,12 +35,12 @@ public sealed class PhormDbConnection : IPhormDbConnection
     }
 
     /// <inheritdoc/>
-    public ValueTask<IDbTransaction> BeginTransactionAsync(CancellationToken cancellationToken) => dbConnection.BeginTransactionAsync(cancellationToken);
+    public ValueTask<IDbTransaction> BeginTransactionAsync(CancellationToken cancellationToken) => DbConnection.BeginTransactionAsync(cancellationToken);
     /// <inheritdoc/>
-    public ValueTask<IDbTransaction> BeginTransactionAsync(IsolationLevel il, CancellationToken cancellationToken) => dbConnection.BeginTransactionAsync(il, cancellationToken);
+    public ValueTask<IDbTransaction> BeginTransactionAsync(IsolationLevel il, CancellationToken cancellationToken) => DbConnection.BeginTransactionAsync(il, cancellationToken);
 
     /// <inheritdoc/>
-    public Task ChangeDatabaseAsync(string databaseName, CancellationToken cancellationToken) => dbConnection.ChangeDatabaseAsync(databaseName, cancellationToken);
+    public Task ChangeDatabaseAsync(string databaseName, CancellationToken cancellationToken) => DbConnection.ChangeDatabaseAsync(databaseName, cancellationToken);
 
     /// <inheritdoc/>
     public async Task OpenAsync(CancellationToken cancellationToken)
