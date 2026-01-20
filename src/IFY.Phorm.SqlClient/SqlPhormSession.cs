@@ -23,7 +23,7 @@ public class SqlPhormSession(string databaseConnectionString, string? connection
     internal Func<string, DbConnection> _connectionBuilder = (sqlConnStr) => new SqlConnection(sqlConnStr);
 
     /// <inheritdoc/>
-    public override IPhormSession SetConnectionName(string connectionName)
+    public override IPhormSession WithContext(string connectionName, IDictionary<string, object?> contextData)
     {
         return new SqlPhormSession(_databaseConnectionString, connectionName)
         {
@@ -47,6 +47,30 @@ public class SqlPhormSession(string databaseConnectionString, string? connection
     {
         return _connectionBuilder(connectionString).Shim<IAsyncDbConnection>();
     }
+
+    /// <inheritdoc/>
+    protected override async Task ApplyContextAsync(IPhormDbConnection phormConn)
+    {
+        if (ContextData.Count > 0)
+        {
+            using var cmd = phormConn.CreateCommand();
+            var sql = new StringBuilder();
+            var data = ContextData.ToArray();
+            for (var i = 0; i < data.Length; i++)
+            {
+                sql.AppendLine($"EXEC sp_set_session_context @keyParam{i}, @valueParam{i};");
+                var keyParam = cmd.CreateParameter();
+                keyParam.ParameterName = $"@keyParam{i}";
+                keyParam.DbType = DbType.String;
+                keyParam.Value = data[i].Key;
+                cmd.Parameters.Add(keyParam);
+                var valueParam = cmd.CreateParameter();
+                valueParam.ParameterName = $"@valueParam{i}";
+                valueParam.DbType = DbType.String;
+                valueParam.Value = data[i].Value ?? DBNull.Value;
+                cmd.Parameters.Add(valueParam);
+            }
+            await cmd.ExecuteNonQueryAsync(default);
         }
     }
 

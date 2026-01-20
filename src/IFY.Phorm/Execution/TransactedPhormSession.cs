@@ -129,8 +129,8 @@ partial class TransactedPhormSession
         => _baseSession.GetConnection();
 
     /// <inheritdoc/>
-    public IPhormSession SetConnectionName(string connectionName)
-        => _baseSession.SetConnectionName(connectionName);
+    public IPhormSession WithContext(string connectionName, IDictionary<string, object?> contextData)
+        => _baseSession.WithContext(connectionName, contextData);
 
     /// <inheritdoc/>
     public ITransactedPhormSession BeginTransaction()

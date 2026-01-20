@@ -23,6 +23,8 @@ public abstract class AbstractPhormSession(string databaseConnectionString, stri
 
     /// <inheritdoc/>
     public string? ConnectionName { get; } = connectionName;
+    /// <inheritdoc/>
+    public IDictionary<string, object?> ContextData { get; } = new Dictionary<string, object?>();
 
     /// <summary>
     /// Gets or sets the prefix used for accessing database stored procedures.
@@ -156,11 +158,11 @@ public abstract class AbstractPhormSession(string databaseConnectionString, stri
     protected abstract IAsyncDbConnection CreateConnection(string connectionString);
 
     /// <summary>
-    /// Creates and returns a new database connection configured for either read-only or read-write access.
+    /// Asynchronously applies the current context to the specified database connection.
     /// </summary>
-    /// <param name="readOnly">true to create a connection with read-only access; false to create a connection with read-write access.</param>
-    /// <returns>An <see cref="IPhormDbConnection"/> instance representing the newly created database connection.</returns>
-    protected abstract IPhormDbConnection CreateConnection(bool readOnly);
+    /// <param name="phormConn">The database connection to which the context will be applied. Cannot be null.</param>
+    /// <returns>A task that represents the asynchronous operation.</returns>
+    internal protected abstract Task ApplyContextAsync(IPhormDbConnection phormConn);
 
     /// <summary>
     /// Implementations to provide logic for resolving the default schema of the connection.
@@ -169,7 +171,7 @@ public abstract class AbstractPhormSession(string databaseConnectionString, stri
     internal protected virtual Task ResolveDefaultSchemaAsync(IPhormDbConnection phormConn) => Task.CompletedTask;
 
     /// <inheritdoc/>
-    public abstract IPhormSession SetConnectionName(string connectionName);
+    public abstract IPhormSession WithContext(string connectionName, IDictionary<string, object?> contextData);
 
     #endregion Connection
 

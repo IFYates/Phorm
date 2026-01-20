@@ -53,6 +53,10 @@ public interface IPhormSession
     /// The connection name this session uses for database scoping.
     /// </summary>
     string? ConnectionName { get; }
+    /// <summary>
+    /// Context data applied to this session.
+    /// </summary>
+    IDictionary<string, object?> ContextData { get; }
 
     /// <summary>
     /// If true, will consume execution errors and treat like a console message.
@@ -71,7 +75,35 @@ public interface IPhormSession
     /// </summary>
     /// <param name="connectionName">The connection name to use when scoping the new session instance.</param>
     /// <returns>A new instance of this session with a different connection name.</returns>
-    IPhormSession SetConnectionName(string connectionName);
+    [Obsolete("Use WithContext(string) instead.")]
+    IPhormSession SetConnectionName(string connectionName)
+        => WithContext(connectionName, null!);
+
+    /// <summary>
+    /// Returns a new session instance that uses the specified connection context.
+    /// </summary>
+    /// <param name="connectionName">The connection name to use when scoping the new session instance.</param>
+    /// <returns>A new <see cref="IPhormSession"/> instance configured to use the specified connection context.</returns>
+    /// <remarks>The new session will have an empty <see cref="ContextData"/>.</remarks>
+    public IPhormSession WithContext(string connectionName)
+        => WithContext(connectionName, null!);
+    /// <summary>
+    /// Creates a new session with the specified context data applied.
+    /// </summary>
+    /// <remarks>This method returns a new session instance with the updated
+    /// context data, persisting any current <see cref="ConnectionName"/>.</remarks>
+    /// <param name="contextData">A dictionary containing key-value pairs to associate with the session context. Keys must be non-null strings;
+    /// values may be any object.</param>
+    /// <returns>A new session instance that includes the provided context data.</returns>
+    public IPhormSession WithContext(IDictionary<string, object?> contextData)
+        => WithContext(ConnectionName!, contextData);
+    /// <summary>
+    /// Creates a new session instance with the specified connection name and additional context data.
+    /// </summary>
+    /// <param name="connectionName">The connection name to use when scoping the new session instance.</param>
+    /// <param name="contextData">A dictionary containing key-value pairs that provide additional context for the session. Cannot be null.</param>
+    /// <returns>A new <see cref="IPhormSession"/> instance configured with the specified connection name and context data.</returns>
+    IPhormSession WithContext(string connectionName, IDictionary<string, object?> contextData);
 
     #region Call/get from action contract
 
