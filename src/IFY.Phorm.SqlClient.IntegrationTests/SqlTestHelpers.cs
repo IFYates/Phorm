@@ -1,4 +1,5 @@
-﻿using IFY.Phorm.Execution;
+﻿using IFY.Phorm.Connectivity;
+using IFY.Phorm.Execution;
 using System.Data;
 
 namespace IFY.Phorm.SqlClient.IntegrationTests;
@@ -7,7 +8,11 @@ internal class SqlTestHelpers
 {
     public static async Task ApplySql(AbstractPhormSession connProv, CancellationToken cancellationToken, params string[] scripts)
     {
-        using var conn = connProv.GetConnection(false);
+        var createMethod = typeof(AbstractPhormSession)
+            .GetMethod("GetConnection", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!;
+        using var conn = (IPhormDbConnection)createMethod.Invoke(connProv, [false])!;
+        await conn.OpenAsync(default);
+
         foreach (var sql in scripts)
         {
             using var cmd = conn.CreateCommand();

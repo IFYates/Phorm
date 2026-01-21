@@ -1320,9 +1320,6 @@
         <member name="P:IFY.Phorm.Execution.TransactedPhormSession.SupportsTransactions">
             <inheritdoc/>
         </member>
-        <member name="M:IFY.Phorm.Execution.TransactedPhormSession.GetConnection(System.Boolean)">
-            <inheritdoc/>
-        </member>
         <member name="M:IFY.Phorm.Execution.TransactedPhormSession.WithContext(System.String,System.Collections.Generic.IDictionary{System.String,System.Object})">
             <inheritdoc/>
         </member>
@@ -1768,6 +1765,20 @@
         </member>
         <member name="M:IFY.Phorm.Transformation.EnumValueAttribute.FromDatasource(System.Type,System.Object,System.Object)">
             <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Transformation.EnumValueAttribute.ConvertToEnum(System.Object,System.Type)">
+            <summary>
+            Converts the specified value to an instance of the given enumeration type, supporting both numeric and string
+            representations.
+            </summary>
+            <remarks>If the input is not a string, the method attempts to parse it as a numeric value. If the
+            input is a string, it first matches against enum member names and EnumMemberAttribute values, ignoring case. If
+            no match is found, an exception may be thrown. The method does not validate whether the value is defined in the
+            enumeration.</remarks>
+            <param name="data">The value to convert to the enumeration type. Can be a numeric value or a string representing either the enum
+            member name or its associated EnumMemberAttribute value.</param>
+            <param name="enumType">The type of the enumeration to convert to. Must be a valid enum type.</param>
+            <returns>An object representing the corresponding value of the specified enumeration type.</returns>
         </member>
         <member name="M:IFY.Phorm.Transformation.EnumValueAttribute.ToDatasource(System.Object,System.Object)">
             <inheritdoc/>

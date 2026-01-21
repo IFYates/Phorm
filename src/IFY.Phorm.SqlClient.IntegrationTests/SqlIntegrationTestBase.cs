@@ -40,7 +40,6 @@ public abstract class SqlIntegrationTestBase
 
     protected static AbstractPhormSession getPhormSession(string? connectionName = null)
     {
-        var phorm = new SqlPhormSession(@"Server=(localdb)\ProjectModels;Database=PhormTests;MultipleActiveResultSets=True", connectionName);
-        return phorm;
+        return new SqlPhormSession(@"Server=(localdb)\ProjectModels;Database=PhormTests;MultipleActiveResultSets=True", connectionName);
     }
 }

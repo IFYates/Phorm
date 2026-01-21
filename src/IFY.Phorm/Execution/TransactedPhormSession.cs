@@ -9,7 +9,7 @@ namespace IFY.Phorm.Execution;
 /// <summary>
 /// A wrapper for an <see cref="AbstractPhormSession"/> instance, adding standard transaction-handling logic.
 /// </summary>
-public partial class TransactedPhormSession : ITransactedPhormSession
+public sealed partial class TransactedPhormSession : ITransactedPhormSession
 {
     private bool _isDisposed;
 
