@@ -20,11 +20,12 @@ namespace IFY.Phorm.SqlClient;
 public class SqlPhormSession(string databaseConnectionString, string? connectionName = null)
     : AbstractPhormSession(databaseConnectionString, connectionName)
 {
-    internal Func<string, DbConnection> _connectionBuilder = (sqlConnStr) => new SqlConnection(sqlConnStr);
+    internal Func<string, IAsyncDbConnection> _connectionBuilder = (sqlConnStr) => new SqlConnection(sqlConnStr).Shim<IAsyncDbConnection>();
 
     /// <inheritdoc/>
     public override IPhormSession WithContext(string connectionName, IDictionary<string, object?> contextData)
     {
+        // TODO
         return new SqlPhormSession(_databaseConnectionString, connectionName)
         {
             _connectionBuilder = _connectionBuilder
@@ -45,7 +46,7 @@ public class SqlPhormSession(string databaseConnectionString, string? connection
     /// <inheritdoc/>
     protected override IAsyncDbConnection CreateConnection(string connectionString)
     {
-        return _connectionBuilder(connectionString).Shim<IAsyncDbConnection>();
+        return _connectionBuilder(connectionString);
     }
 
     /// <inheritdoc/>

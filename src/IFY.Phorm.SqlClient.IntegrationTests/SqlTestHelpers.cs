@@ -7,7 +7,7 @@ internal class SqlTestHelpers
 {
     public static async Task ApplySql(AbstractPhormSession connProv, CancellationToken cancellationToken, params string[] scripts)
     {
-        using var conn = connProv.GetConnection();
+        using var conn = connProv.GetConnection(false);
         foreach (var sql in scripts)
         {
             using var cmd = conn.CreateCommand();

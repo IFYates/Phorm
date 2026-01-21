@@ -24,7 +24,7 @@ public class TransactionTests : SqlIntegrationTestBase
 
     private async Task setupGetTestSchema(AbstractPhormSession phorm)
     {
-        await SqlTestHelpers.ApplySql(phorm, TestContext.CancellationTokenSource.Token, [
+        await SqlTestHelpers.ApplySql(phorm, TestContext.CancellationToken, [
             @"DROP TABLE IF EXISTS [dbo].[GetTestTable]",
             @"CREATE TABLE [dbo].[GetTestTable] (
 	[Id] BIGINT NOT NULL IDENTITY(1,1) PRIMARY KEY,
@@ -53,18 +53,18 @@ RETURN @@ROWCOUNT"
         await setupGetTestSchema(phorm);
 
         // Act
-        await phorm.CallAsync("GetTest_Upsert", new { Text = "Aaa" }, TestContext.CancellationTokenSource.Token);
-        var data1 = await ((IPhormSession)phorm).GetAsync<DataItem[]>(TestContext.CancellationTokenSource.Token);
+        await phorm.CallAsync("GetTest_Upsert", new { Text = "Aaa" }, TestContext.CancellationToken);
+        var data1 = await ((IPhormSession)phorm).GetAsync<DataItem[]>(TestContext.CancellationToken);
 
         DataItem[]? data2;
-        using (var transaction = phorm.BeginTransaction())
+        using (var transaction = await phorm.BeginTransactionAsync(TestContext.CancellationToken))
         {
-            await transaction.CallAsync("GetTest_Upsert", new { Text = "Bbb" }, TestContext.CancellationTokenSource.Token);
-            data2 = await transaction.GetAsync<DataItem[]>(TestContext.CancellationTokenSource.Token);
+            await transaction.CallAsync("GetTest_Upsert", new { Text = "Bbb" }, TestContext.CancellationToken);
+            data2 = await transaction.GetAsync<DataItem[]>(TestContext.CancellationToken);
         }
 
-        await phorm.CallAsync("GetTest_Upsert", new { Text = "Ccc" }, TestContext.CancellationTokenSource.Token);
-        var data3 = await ((IPhormSession)phorm).GetAsync<DataItem[]>(TestContext.CancellationTokenSource.Token);
+        await phorm.CallAsync("GetTest_Upsert", new { Text = "Ccc" }, TestContext.CancellationToken);
+        var data3 = await ((IPhormSession)phorm).GetAsync<DataItem[]>(TestContext.CancellationToken);
 
         // Assert
         Assert.AreEqual("Aaa", string.Join(',', data1!.Select(d => d.Text)));

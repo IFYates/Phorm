@@ -27,12 +27,6 @@ public class AbstractPhormSessionTests
     {
     }
 
-    [TestInitialize]
-    public void Init()
-    {
-        AbstractPhormSession.ResetConnectionPool();
-    }
-
     [TestMethod]
     public void Defaults_prefixes_to_GlobalSettings()
     {

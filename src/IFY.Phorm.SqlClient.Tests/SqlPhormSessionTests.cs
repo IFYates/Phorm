@@ -12,12 +12,6 @@ public class SqlPhormSessionTests
 {
     private const string CONN_STR = "Data Source=local";
 
-    [TestInitialize]
-    public void Init()
-    {
-        AbstractPhormSession.ResetConnectionPool();
-    }
-
     [TestMethod]
     public void SupportsTransactions__True()
     {
@@ -39,41 +33,39 @@ public class SqlPhormSessionTests
     }
 
     [TestMethod]
-    public void BeginTransaction()
+    public async Task BeginTransaction()
     {
         // Arrange
         var mocks = new MockRepository(MockBehavior.Strict);
 
         var tranMock = mocks.Create<IDbTransaction>();
 
-        var connMock = mocks.Create<IPhormDbConnection>();
+        var connMock = mocks.Create<IAsyncDbConnection>();
         connMock.Setup(m => m.Dispose());
         connMock.SetupGet(m => m.State)
             .Returns(ConnectionState.Open);
-        connMock.SetupProperty(m => m.DefaultSchema).Object.DefaultSchema = "dbo";
-        connMock.Setup(m => m.Open());
-        connMock.Setup(m => m.BeginTransaction())
-            .Returns(tranMock.Object).Verifiable();
+        connMock.Setup(m => m.OpenAsync(default));
+        connMock.Setup(m => m.BeginTransactionAsync(default))
+            .ReturnsAsync(tranMock.Object).Verifiable();
 
         var connName = Guid.NewGuid().ToString();
 
         var sess = new SqlPhormSession(CONN_STR, connName)
         {
-            _connectionBuilder = (cs, cn) =>
+            _connectionBuilder = (cs) =>
             {
                 connMock.SetupGet(m => m.ConnectionString).Returns(cs);
-                connMock.SetupGet(m => m.ConnectionName).Returns(cn);
                 return connMock.Object;
             }
         };
 
         // Act
-        var res = (TransactedPhormSession)sess.BeginTransaction();
+        var res = (TransactedPhormSession)await sess.BeginTransactionAsync(default);
 
         // Assert
         mocks.Verify();
         Assert.AreSame(tranMock.Object, getField(res, "_transaction"));
-        Assert.AreEqual(CONN_STR + ";Application Name=" + connName, res.GetConnection().ConnectionString);
+        Assert.AreEqual(CONN_STR + ";Application Name=" + connName, res.GetConnection(false).ConnectionString);
         Assert.AreEqual(connName, res.ConnectionName);
     }
 
@@ -86,14 +78,13 @@ public class SqlPhormSessionTests
     public void GetConnection()
     {
         // Arrange
-        var connMock = new Mock<IPhormDbConnection>();
+        var connMock = new Mock<IAsyncDbConnection>();
         connMock.Setup(m => m.Dispose());
-        connMock.SetupProperty(m => m.DefaultSchema, "dbo");
 
         var connStrUsed = string.Empty;
         var sess = new SqlPhormSession(CONN_STR)
         {
-            _connectionBuilder = (cs, cn) =>
+            _connectionBuilder = (cs) =>
             {
                 connStrUsed = cs;
                 return connMock.Object;
@@ -101,7 +92,7 @@ public class SqlPhormSessionTests
         };
 
         // Act
-        var res = sess.GetConnection();
+        var res = sess.GetConnection(false);
 
         // Assert
         Assert.AreSame(connMock.Object, res);
@@ -112,14 +103,13 @@ public class SqlPhormSessionTests
     public void GetConnection__Can_add_ReadOnly_intent()
     {
         // Arrange
-        var connMock = new Mock<IPhormDbConnection>();
+        var connMock = new Mock<IAsyncDbConnection>();
         connMock.Setup(m => m.Dispose());
-        connMock.SetupProperty(m => m.DefaultSchema, "dbo");
 
         var connStrUsed = string.Empty;
         var sess = new SqlPhormSession(CONN_STR)
         {
-            _connectionBuilder = (cs, cn) =>
+            _connectionBuilder = (cs) =>
             {
                 connStrUsed = cs;
                 return connMock.Object;
@@ -138,30 +128,27 @@ public class SqlPhormSessionTests
     public void GetConnection__First_connection__Gets_new_instance()
     {
         // Arrange
-        var connMock = new Mock<IPhormDbConnection>(MockBehavior.Strict);
+        var connMock = new Mock<IAsyncDbConnection>(MockBehavior.Strict);
         connMock.Setup(m => m.Dispose());
-        connMock.SetupProperty(m => m.DefaultSchema).Object.DefaultSchema = "dbo";
 
         var connName = Guid.NewGuid().ToString();
 
         string? connectionStringUsed = null;
-        string? connectionNameUsed = null;
         var sess = new SqlPhormSession(CONN_STR, connName)
         {
-            _connectionBuilder = (connectionString, connectionName) =>
+            _connectionBuilder = (connectionString) =>
             {
                 connectionStringUsed = connectionString;
-                connectionNameUsed = connectionName;
                 return connMock.Object;
             }
         };
 
         // Act
-        var res = sess.GetConnection();
+        var res = sess.GetConnection(false);
 
         // Assert
         Assert.AreEqual(CONN_STR + ";Application Name=" + connName, connectionStringUsed);
-        Assert.AreEqual(connName, connectionNameUsed);
+        Assert.AreEqual(connName, res.ConnectionName);
         Assert.AreSame(connMock.Object, res);
     }
 
@@ -181,12 +168,12 @@ public class SqlPhormSessionTests
 
         var sess = new SqlPhormSession(CONN_STR)
         {
-            _connectionBuilder = (_, __) => getConnMock().Object
+            _connectionBuilder = (_) => getConnMock().Object
         };
 
         // Act
-        var res1 = sess.GetConnection();
-        var res2 = sess.GetConnection();
+        var res1 = sess.GetConnection(false);
+        var res2 = sess.GetConnection(false);
 
         // Assert
         Assert.AreSame(res1, res2);
@@ -198,22 +185,19 @@ public class SqlPhormSessionTests
         // Arrange
         var sess1 = new SqlPhormSession(CONN_STR)
         {
-            _connectionBuilder = (_, connectionName) =>
+            _connectionBuilder = (cs) =>
             {
-                var connMock = new Mock<IPhormDbConnection>(MockBehavior.Strict);
+                var connMock = new Mock<IAsyncDbConnection>(MockBehavior.Strict);
                 connMock.Setup(m => m.Dispose());
-                connMock.SetupProperty(m => m.DefaultSchema).Object.DefaultSchema = "dbo";
-                connMock.SetupGet(m => m.ConnectionName)
-                    .Returns(connectionName);
                 return connMock.Object;
             }
         };
 
         // Act
-        var res1 = sess1.GetConnection();
+        var res1 = sess1.GetConnection(false);
 
-        var sess2 = (SqlPhormSession)sess1.SetConnectionName("A");
-        var res2 = sess2.GetConnection();
+        var sess2 = (SqlPhormSession)sess1.WithContext("A", new Dictionary<string, object?>());
+        var res2 = sess2.GetConnection(false);
 
         // Assert
         Assert.AreNotSame(res1, res2);
@@ -225,24 +209,21 @@ public class SqlPhormSessionTests
     public void GetConnection__Request_closed_connection__Open_new_instance()
     {
         // Arrange
-        static Mock<IPhormDbConnection> getConnMock()
-        {
-            var connMock = new Mock<IPhormDbConnection>(MockBehavior.Strict);
-            connMock.Setup(m => m.Dispose());
-            connMock.SetupProperty(m => m.DefaultSchema).Object.DefaultSchema = "dbo";
-            connMock.SetupGet(m => m.State)
-                .Returns(ConnectionState.Closed);
-            return connMock;
-        }
-
         var sess = new SqlPhormSession(CONN_STR)
         {
-            _connectionBuilder = (_, __) => getConnMock().Object
+            _connectionBuilder = (_) =>
+            {
+                var connMock = new Mock<IAsyncDbConnection>(MockBehavior.Strict);
+                connMock.Setup(m => m.Dispose());
+                connMock.SetupGet(m => m.State)
+                    .Returns(ConnectionState.Closed);
+                return connMock.Object;
+            }
         };
 
         // Act
-        var res1 = sess.GetConnection();
-        var res2 = sess.GetConnection();
+        var res1 = sess.GetConnection(false);
+        var res2 = sess.GetConnection(false);
 
         // Assert
         Assert.AreNotSame(res1, res2);
@@ -252,13 +233,11 @@ public class SqlPhormSessionTests
     public void GetConnection__Schema_not_known__Connection_schema_used()
     {
         // Arrange
-        var connMock = new Mock<IPhormDbConnection>(MockBehavior.Strict);
+        var connMock = new Mock<IAsyncDbConnection>(MockBehavior.Strict);
         connMock.Setup(m => m.Dispose());
-        connMock.SetupProperty(m => m.DefaultSchema);
         connMock.SetupGet(m => m.State)
             .Returns(ConnectionState.Closed);
-        connMock.Setup(m => m.Open());
-        connMock.Object.DefaultSchema = string.Empty;
+        connMock.Setup(m => m.OpenAsync(default));
 
         var cmdMock = new Mock<IDbCommand>(MockBehavior.Strict);
         cmdMock.SetupProperty(m => m.CommandText);
@@ -271,27 +250,25 @@ public class SqlPhormSessionTests
 
         var sess = new SqlPhormSession(CONN_STR)
         {
-            _connectionBuilder = (_, __) => connMock.Object
+            _connectionBuilder = (_) => connMock.Object
         };
 
         // Act
-        var res = sess.GetConnection();
+        var res = sess.GetConnection(false);
 
         // Assert
-        Assert.AreEqual("schema", connMock.Object.DefaultSchema);
+        Assert.AreEqual("schema", res.DefaultSchema);
     }
 
     [TestMethod]
     public void GetConnection__Schema_not_known_Connection_schema_missing__Connection_UserID_used()
     {
         // Arrange
-        var connMock = new Mock<IPhormDbConnection>(MockBehavior.Strict);
+        var connMock = new Mock<IAsyncDbConnection>(MockBehavior.Strict);
         connMock.Setup(m => m.Dispose());
-        connMock.SetupProperty(m => m.DefaultSchema);
         connMock.SetupGet(m => m.State)
             .Returns(ConnectionState.Closed);
-        connMock.Setup(m => m.Open());
-        connMock.Object.DefaultSchema = string.Empty;
+        connMock.Setup(m => m.OpenAsync(default));
 
         var cmdMock = new Mock<IDbCommand>(MockBehavior.Strict);
         cmdMock.SetupProperty(m => m.CommandText);
@@ -306,29 +283,28 @@ public class SqlPhormSessionTests
 
         var sess = new SqlPhormSession(CONN_STR + ";User ID=" + defaultSchema)
         {
-            _connectionBuilder = (_, __) => connMock.Object
+            _connectionBuilder = (_) => connMock.Object
         };
 
         // Act
-        var res = sess.GetConnection();
+        var res = sess.GetConnection(false);
 
         // Assert
-        Assert.AreEqual(defaultSchema, connMock.Object.DefaultSchema);
+        Assert.AreEqual(defaultSchema, res.DefaultSchema);
     }
 
     [TestMethod]
     public void GetConnection__Fires_Connected_event_on_new_connection()
     {
         // Arrange
-        var connMock = new Mock<IPhormDbConnection>();
+        var connMock = new Mock<IAsyncDbConnection>();
         connMock.Setup(m => m.Dispose());
-        connMock.SetupProperty(m => m.DefaultSchema).Object.DefaultSchema = "dbo";
         connMock.SetupGet(m => m.State)
             .Returns(ConnectionState.Open);
 
         var sess = new SqlPhormSession(CONN_STR)
         {
-            _connectionBuilder = (cs, cn) => connMock.Object
+            _connectionBuilder = (_) => connMock.Object
         };
 
         int fired = 0;
@@ -341,8 +317,8 @@ public class SqlPhormSessionTests
         };
 
         // Act
-        _ = sess.GetConnection();
-        _ = sess.GetConnection();
+        _ = sess.GetConnection(false);
+        _ = sess.GetConnection(false);
 
         // Assert
         Assert.AreEqual(1, fired);
@@ -357,7 +333,7 @@ public class SqlPhormSessionTests
         var sess1 = new SqlPhormSession(null!, "name1");
 
         // Act
-        var sess2 = (SqlPhormSession)sess1.SetConnectionName("name2");
+        var sess2 = (SqlPhormSession)sess1.WithContext("name2", new Dictionary<string, object?>());
 
         // Assert
         Assert.AreNotSame(sess2, sess1);

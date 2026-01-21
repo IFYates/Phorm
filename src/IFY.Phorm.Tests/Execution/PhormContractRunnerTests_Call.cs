@@ -73,12 +73,6 @@ public class PhormContractRunnerTests_Call
             => ToDatasourceReturnValue;
     }
 
-    [TestInitialize]
-    public void Init()
-    {
-        AbstractPhormSession.ResetConnectionPool();
-    }
-
     [TestMethod]
     public async Task Call_by_anon_object()
     {

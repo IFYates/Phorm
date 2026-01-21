@@ -17,12 +17,6 @@ public class PhormContractRunnerTests_Errors
         }
     }
 
-    [TestInitialize]
-    public void Init()
-    {
-        AbstractPhormSession.ResetConnectionPool();
-    }
-
     [TestMethod]
     public async Task Call__Error_not_processed_by_console__Thrown()
     {

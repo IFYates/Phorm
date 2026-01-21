@@ -12,12 +12,6 @@ public class TransactedPhormSessionTests
 
     private readonly MockRepository _mocks = new(MockBehavior.Strict);
 
-    [TestInitialize]
-    public void Init()
-    {
-        AbstractPhormSession.ResetConnectionPool();
-    }
-
     [TestMethod]
     public void IsInTransaction__True()
     {

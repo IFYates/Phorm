@@ -42,12 +42,6 @@ public class TransformationTests
             => throw new NotImplementedException();
     }
 
-    [TestInitialize]
-    public void Init()
-    {
-        AbstractPhormSession.ResetConnectionPool();
-    }
-
     [TestMethod]
     public async Task Can_transform_value_to_datasource()
     {

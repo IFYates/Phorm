@@ -47,12 +47,6 @@ public class EncryptorTests
         }
     }
 
-    [TestInitialize]
-    public void Init()
-    {
-        AbstractPhormSession.ResetConnectionPool();
-    }
-
     [TestMethod]
     public async Task Can_encrypt_string_value_out_to_database()
     {

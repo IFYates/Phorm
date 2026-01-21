@@ -124,16 +124,11 @@ public abstract class AbstractPhormSession(string databaseConnectionString, stri
     #region Connection
 
     /// <summary>
-    /// Asynchronously obtains a database connection for the current context, reusing an existing connection if
-    /// available.
+    /// Creates and returns a prepared database connection for the current context.
     /// </summary>
-    /// <remarks>The returned connection is managed by an internal connection pool and may be reused across
-    /// multiple calls. Callers should not dispose the connection directly. If a suitable connection does not exist or
-    /// is closed, a new connection is created and initialized before being returned.</remarks>
-    /// <param name="readOnly">true to request a connection optimized for read-only operations; otherwise, false to request a read-write
-    /// connection. The default is false.</param>
-    /// <returns>A task that represents the asynchronous operation. The task result contains an IPhormDbConnection instance that
-    /// is open and ready for use.</returns>
+    /// <param name="readOnly">true to request a connection optimised for read-only operations; otherwise, false to request a connection that
+    /// supports write operations.</param>
+    /// <returns>An <see cref="IPhormDbConnection"/> instance representing the database connection for the current context.</returns>
     protected internal IPhormDbConnection GetConnection(bool readOnly)
     {
         // Reuse existing Phorm connections, where possible

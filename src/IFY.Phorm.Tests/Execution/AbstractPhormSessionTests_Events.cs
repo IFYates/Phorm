@@ -20,8 +20,6 @@ public class AbstractPhormSessionTests_Events
     [TestInitialize]
     public void Init()
     {
-        AbstractPhormSession.ResetConnectionPool();
-
         Events.Connected += invokeHandler;
         Events.CommandExecuting += invokeHandler;
         Events.CommandExecuted += invokeHandler;
