@@ -108,6 +108,7 @@ public class SqlPhormSession(string databaseConnectionString, string? connection
     public override async Task<ITransactedPhormSession> BeginTransactionAsync(CancellationToken cancellationToken)
     {
         var conn = GetConnection(false);
+        await conn.OpenAsync(cancellationToken);
         var transaction = await conn.BeginTransactionAsync(cancellationToken);
         return WrapSessionAsTransacted(transaction);
     }

@@ -48,7 +48,6 @@ public class TestPhormConnection(string? connectionName) : IPhormDbConnection
         }
         return new TestDbCommand();
     }
-    IDbCommand IAsyncDbConnection.CreateCommand() => (IDbCommand)CreateCommand();
 
     public virtual void Dispose()
     {

@@ -216,7 +216,7 @@ public class PhormDbConnectionTests
     public void CreateCommand__IDbConnection__Connection_open__Wraps_command_as_IAsyncDbCommand()
     {
         // Arrange
-        var cmdMock = new Mock<IDbCommand>(MockBehavior.Strict);
+        var cmdMock = new Mock<IAsyncDbCommand>(MockBehavior.Strict);
 
         var dbMock = new Mock<IAsyncDbConnection>(MockBehavior.Strict);
         dbMock.SetupGet(m => m.State)
@@ -227,7 +227,7 @@ public class PhormDbConnectionTests
         var db = new PhormDbConnection(new TestPhormSession(), dbMock.Object);
 
         // Act
-        var res = ((IAsyncDbConnection)db).CreateCommand();
+        var res = db.CreateCommand();
 
         // Assert
         Assert.AreSame(cmdMock.Object, res);
@@ -238,7 +238,7 @@ public class PhormDbConnectionTests
     public void CreateCommand__IDbConnection__Connection_closed__Opens_connection_and_wraps_command_as_IAsyncDbCommand()
     {
         // Arrange
-        var cmdMock = new Mock<IDbCommand>(MockBehavior.Strict);
+        var cmdMock = new Mock<IAsyncDbCommand>(MockBehavior.Strict);
 
         var dbMock = new Mock<IAsyncDbConnection>(MockBehavior.Strict);
         dbMock.SetupGet(m => m.State)
@@ -251,7 +251,7 @@ public class PhormDbConnectionTests
         var db = new PhormDbConnection(new TestPhormSession(), dbMock.Object);
 
         // Act
-        var res = ((IAsyncDbConnection)db).CreateCommand();
+        var res = db.CreateCommand();
 
         // Assert
         Assert.AreSame(cmdMock.Object, res);

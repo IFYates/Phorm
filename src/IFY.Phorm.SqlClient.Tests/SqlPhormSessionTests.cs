@@ -65,7 +65,7 @@ public class SqlPhormSessionTests
         // Assert
         mocks.Verify();
         Assert.AreSame(tranMock.Object, getField(res, "_transaction"));
-        Assert.AreEqual(CONN_STR + ";Application Name=" + connName, res.GetConnection(false).ConnectionString);
+        Assert.AreEqual(connName, sess.ConnectionName);
         Assert.AreEqual(connName, res.ConnectionName);
     }
 

@@ -62,8 +62,8 @@ public interface IAsyncDbConnection : IDisposable
     /// <remarks>The returned command is not automatically associated with a transaction. The caller is
     /// responsible for configuring the command's properties, such as the command text and parameters, before
     /// execution.</remarks>
-    /// <returns>An <see cref="IDbCommand"/> object that can be used to execute queries or commands against the data source.</returns>
-    [Shim(typeof(DbConnection))] IDbCommand CreateCommand();
+    /// <returns>An <see cref="IAsyncDbCommand"/> object that can be used to execute queries or commands against the data source.</returns>
+    [Shim(typeof(DbConnection))] IAsyncDbCommand CreateCommand();
     /// <summary>
     /// Asynchronously opens the connection, enabling operations that require an open state.
     /// </summary>

@@ -132,7 +132,7 @@
             <remarks>The returned command is not automatically associated with a transaction. The caller is
             responsible for configuring the command's properties, such as the command text and parameters, before
             execution.</remarks>
-            <returns>An <see cref="T:System.Data.IDbCommand"/> object that can be used to execute queries or commands against the data source.</returns>
+            <returns>An <see cref="T:System.Data.IAsyncDbCommand"/> object that can be used to execute queries or commands against the data source.</returns>
         </member>
         <member name="M:System.Data.IAsyncDbConnection.OpenAsync(System.Threading.CancellationToken)">
             <summary>
@@ -203,9 +203,6 @@
             <inheritdoc/>
         </member>
         <member name="M:IFY.Phorm.Connectivity.PhormDbConnection.CreateCommand">
-            <inheritdoc/>
-        </member>
-        <member name="M:IFY.Phorm.Connectivity.PhormDbConnection.System#Data#IAsyncDbConnection#CreateCommand">
             <inheritdoc/>
         </member>
         <member name="M:IFY.Phorm.Connectivity.PhormDbConnection.Dispose">
@@ -1318,6 +1315,9 @@
             <inheritdoc/>
         </member>
         <member name="P:IFY.Phorm.Execution.TransactedPhormSession.SupportsTransactions">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Execution.TransactedPhormSession.GetConnection(System.Boolean)">
             <inheritdoc/>
         </member>
         <member name="M:IFY.Phorm.Execution.TransactedPhormSession.WithContext(System.String,System.Collections.Generic.IDictionary{System.String,System.Object})">

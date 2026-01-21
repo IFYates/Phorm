@@ -70,9 +70,6 @@ public sealed class PhormDbConnection : IPhormDbConnection
 
     /// <inheritdoc/>
     public IAsyncDbCommand CreateCommand()
-        => ((IAsyncDbConnection)this).CreateCommand().Shim<IAsyncDbCommand>()!;
-    /// <inheritdoc/>
-    IDbCommand IAsyncDbConnection.CreateCommand()
         => DbConnection.CreateCommand();
 
     /// <inheritdoc/>
