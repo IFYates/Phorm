@@ -981,6 +981,19 @@
             Becomes true if this instance has captured at least one error.
             </summary>
         </member>
+        <member name="M:IFY.Phorm.Execution.AbstractConsoleMessageCapture.OnConsoleMessage(IFY.Phorm.Execution.ConsoleMessage)">
+            <summary>
+            Handles a console message event by recording the message and notifying the current session.
+            </summary>
+            <param name="ev">The console message to process. Cannot be null.</param>
+        </member>
+        <member name="M:IFY.Phorm.Execution.AbstractConsoleMessageCapture.GetConsoleMessages">
+            <summary>
+            Retrieves all console messages that have been recorded.
+            </summary>
+            <returns>An array of <see cref="T:IFY.Phorm.Execution.ConsoleMessage"/> objects representing the recorded console messages. The array is empty
+            if no messages have been recorded.</returns>
+        </member>
         <member name="M:IFY.Phorm.Execution.AbstractConsoleMessageCapture.ProcessException(System.Exception)">
             <inheritdoc/>
         </member>
@@ -1147,6 +1160,14 @@
         </member>
         <member name="M:IFY.Phorm.Execution.AbstractPhormSession.BeginTransactionAsync(System.Threading.CancellationToken)">
             <inheritdoc/>
+        </member>
+        <member name="T:IFY.Phorm.Execution.ConsoleMessage">
+            <summary>
+            Represents a message written to the console, including its content, severity, and source information.
+            </summary>
+            <remarks>Use this record to encapsulate information about console output, such as log entries, errors, or
+            informational messages. The properties provide details about the message's severity, origin, and content, which can
+            be useful for logging, diagnostics, or user feedback scenarios.</remarks>
         </member>
         <member name="P:IFY.Phorm.Execution.ConsoleMessage.IsError">
             <summary>

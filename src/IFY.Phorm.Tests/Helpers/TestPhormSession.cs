@@ -53,7 +53,7 @@ internal partial class TestPhormSession : AbstractPhormSession, IPhormSession
     }
 
     [ExcludeFromCodeCoverage]
-    public IPhormSession WithContext(string connectionName, IDictionary<string, object?> contextData)
+    public IPhormSession WithContext(string? connectionName, IDictionary<string, object?> contextData)
     {
         throw new NotImplementedException();
     }

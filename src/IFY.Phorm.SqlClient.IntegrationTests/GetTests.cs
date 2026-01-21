@@ -171,7 +171,7 @@ RETURN @@ROWCOUNT"
 
         // Assert
         Assert.HasCount(3, res!);
-        Assert.IsTrue(res.All(e => e.Num == 1));
+        Assert.IsTrue(res!.All(e => e.Num == 1));
     }
 
     [TestMethod]

@@ -5,6 +5,7 @@ using IFY.Phorm.Tests;
 namespace IFY.Phorm.Execution.Tests;
 
 [TestClass]
+[DoNotParallelize]
 public class PhormContractRunnerTests_Events
 {
     public TestContext TestContext { get; set; }

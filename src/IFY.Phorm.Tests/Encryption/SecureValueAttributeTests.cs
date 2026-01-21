@@ -17,7 +17,7 @@ public class SecureValueAttributeTests
         var attr = new SecureValueAttribute("class", null);
 
         // Act
-        var res = attr.Decrypt(null, null);
+        var res = attr.Decrypt(null, null)!;
 
         // Assert
         Assert.IsEmpty(res);

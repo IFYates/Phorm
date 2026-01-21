@@ -22,7 +22,7 @@ public abstract class AbstractPhormSession(string? connectionName)
 {
     private readonly IDbTransaction? _transaction = null;
 
-    internal AbstractPhormSession(IDbTransaction transaction, string? connectionName)
+    private protected AbstractPhormSession(IDbTransaction transaction, string? connectionName)
         : this(connectionName)
     {
         _transaction = transaction;
