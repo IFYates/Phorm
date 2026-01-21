@@ -38,13 +38,24 @@ public class EnumValueAttribute : AbstractTransphormAttribute
         return ConvertToEnum(data, enumType);
     }
 
-    internal static object ConvertToEnum(object data, Type enumType)
+    /// <summary>
+    /// Converts the specified value to an instance of the given enumeration type, supporting both numeric and string
+    /// representations.
+    /// </summary>
+    /// <remarks>If the input is not a string, the method attempts to parse it as a numeric value. If the
+    /// input is a string, it first matches against enum member names and EnumMemberAttribute values, ignoring case. If
+    /// no match is found, an exception may be thrown. The method does not validate whether the value is defined in the
+    /// enumeration.</remarks>
+    /// <param name="data">The value to convert to the enumeration type. Can be a numeric value or a string representing either the enum
+    /// member name or its associated EnumMemberAttribute value.</param>
+    /// <param name="enumType">The type of the enumeration to convert to. Must be a valid enum type.</param>
+    /// <returns>An object representing the corresponding value of the specified enumeration type.</returns>
+    public static object ConvertToEnum(object data, Type enumType)
     {
         // Favour numeric
         if (data is not string str)
         {
-            str = $"{data}";
-            return Enum.Parse(enumType, str); // Will not fail on bad value (TODO: option to check)
+            return Enum.Parse(enumType, $"{data}"); // Will not fail on bad value (TODO: option to check)
         }
 
         // Supports name by EnumMember first

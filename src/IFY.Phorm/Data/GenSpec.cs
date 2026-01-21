@@ -61,11 +61,11 @@ public abstract class GenSpecBase
 
 /// <summary>
 /// Provides a generic base class for working with collections of records, allowing access to all items as the base type
-/// and filtering by specialized types.
+/// and filtering by specialised types.
 /// </summary>
 /// <remarks>This class enables retrieval of all records as the specified base type and supports filtering records
-/// by derived or specialized types. It is intended to be used as a foundation for more specific collection types that
-/// require generalized access and type-based filtering.</remarks>
+/// by derived or specialised types. It is intended to be used as a foundation for more specific collection types that
+/// require generalised access and type-based filtering.</remarks>
 /// <typeparam name="TBase">The base type of the records contained in the collection.</typeparam>
 public class GenSpecBase<TBase> : GenSpecBase
 {

@@ -3,8 +3,9 @@ using IFY.Phorm.Tests;
 using Moq;
 using System.Data;
 
-namespace IFY.Phorm.Execution.Tests;
 #pragma warning disable CA1859 // Use concrete types when possible for improved performance
+#pragma warning disable IDE0130 // Namespace does not match folder structure
+namespace IFY.Phorm.Execution.Tests;
 
 [TestClass]
 public class AbstractPhormSessionTests
@@ -25,12 +26,6 @@ public class AbstractPhormSessionTests
     [PhormContract(Target = DbObjectType.Table)]
     class TestEntityTable : ITestContract
     {
-    }
-
-    [TestInitialize]
-    public void Init()
-    {
-        AbstractPhormSession.ResetConnectionPool();
     }
 
     [TestMethod]
@@ -80,7 +75,7 @@ public class AbstractPhormSessionTests
         var runner = phorm.From("objectName");
 
         // Assert
-        Assert.IsInstanceOfType(runner, typeof(PhormContractRunner<IPhormContract>));
+        Assert.IsInstanceOfType<PhormContractRunner<IPhormContract>>(runner);
     }
 
     [TestMethod]
@@ -93,7 +88,7 @@ public class AbstractPhormSessionTests
         var runner = phorm.From<ITestContract>();
 
         // Assert
-        Assert.IsInstanceOfType(runner, typeof(PhormContractRunner<ITestContract>));
+        Assert.IsInstanceOfType<PhormContractRunner<ITestContract>>(runner);
     }
 
     [TestMethod]
@@ -108,7 +103,7 @@ public class AbstractPhormSessionTests
         var runner = phorm.From(arg);
 
         // Assert
-        Assert.IsInstanceOfType(runner, typeof(PhormContractRunner<ITestContract>));
+        Assert.IsInstanceOfType<PhormContractRunner<ITestContract>>(runner);
     }
 
     [TestMethod]
@@ -443,10 +438,10 @@ public class AbstractPhormSessionTests
     }
 
     [TestMethod]
-    public void CreateCommand__Unknown_DbObjectType__Fail()
+    public async Task CreateCommand__Unknown_DbObjectType__Fail()
     {
         var phorm = new TestPhormSession();
-        Assert.ThrowsExactly<NotSupportedException>
-            (() => phorm.CreateCommand("schema", "Object", (DbObjectType)255, false));
+        await Assert.ThrowsExactlyAsync<NotSupportedException>
+            (async () => await phorm.CreateCommandAsync("schema", "Object", (DbObjectType)255, false));
     }
 }

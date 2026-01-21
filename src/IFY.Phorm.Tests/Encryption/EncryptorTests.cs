@@ -10,6 +10,7 @@ using System.Text;
 namespace IFY.Phorm.Encryption.Tests;
 
 [TestClass]
+[DoNotParallelize]
 public class EncryptorTests
 {
     public TestContext TestContext { get; set; }
@@ -45,12 +46,6 @@ public class EncryptorTests
         {
             return string.Join("", ((string?)data ?? "").AsEnumerable().Reverse());
         }
-    }
-
-    [TestInitialize]
-    public void Init()
-    {
-        AbstractPhormSession.ResetConnectionPool();
     }
 
     [TestMethod]

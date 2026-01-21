@@ -9,14 +9,18 @@ public abstract class AbstractConsoleMessageCapture(AbstractPhormSession session
     : IDisposable
 {
     private readonly List<ConsoleMessage> _consoleEvents = [];
-    protected readonly AbstractPhormSession _session = session;
-    protected readonly Guid _commandGuid = commandGuid;
+    private readonly AbstractPhormSession _session = session;
+    private readonly Guid _commandGuid = commandGuid;
 
     /// <summary>
     /// Becomes true if this instance has captured at least one error.
     /// </summary>
     public bool HasError { get; protected set; }
 
+    /// <summary>
+    /// Handles a console message event by recording the message and notifying the current session.
+    /// </summary>
+    /// <param name="ev">The console message to process. Cannot be null.</param>
     protected void OnConsoleMessage(ConsoleMessage ev)
     {
         _consoleEvents.Add(ev);
@@ -28,6 +32,11 @@ public abstract class AbstractConsoleMessageCapture(AbstractPhormSession session
         });
     }
 
+    /// <summary>
+    /// Retrieves all console messages that have been recorded.
+    /// </summary>
+    /// <returns>An array of <see cref="ConsoleMessage"/> objects representing the recorded console messages. The array is empty
+    /// if no messages have been recorded.</returns>
     public ConsoleMessage[] GetConsoleMessages() => _consoleEvents.ToArray();
 
     /// <inheritdoc/>

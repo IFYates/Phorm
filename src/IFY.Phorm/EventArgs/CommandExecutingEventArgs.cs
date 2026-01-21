@@ -1,5 +1,11 @@
 ﻿namespace IFY.Phorm.EventArgs;
 
+/// <summary>
+/// Provides data for an event that occurs before a command is executed.
+/// </summary>
+/// <remarks>This class supplies information about the command being executed, including its unique identifier,
+/// text, and parameters. It is typically used in event handlers to inspect or log command details prior to
+/// execution.</remarks>
 public sealed class CommandExecutingEventArgs : System.EventArgs
 {
     /// <summary>

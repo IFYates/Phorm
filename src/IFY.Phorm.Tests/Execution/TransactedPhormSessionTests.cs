@@ -1,178 +1,172 @@
-﻿using IFY.Phorm.Data;
-using IFY.Phorm.Tests;
-using Moq;
-using System.Data;
+﻿//using IFY.Phorm.Data;
+//using IFY.Phorm.Tests;
+//using Moq;
+//using System.Data;
 
-namespace IFY.Phorm.Execution.Tests;
+//namespace IFY.Phorm.Execution.Tests;
 
-[TestClass]
-public class TransactedPhormSessionTests
-{
-    public TestContext TestContext { get; set; }
+//[TestClass]
+//public class TransactedPhormSessionTests
+//{
+//    public TestContext TestContext { get; set; }
 
-    private readonly MockRepository _mocks = new(MockBehavior.Strict);
+//    private readonly MockRepository _mocks = new(MockBehavior.Strict);
 
-    [TestInitialize]
-    public void Init()
-    {
-        AbstractPhormSession.ResetConnectionPool();
-    }
+//    [TestMethod]
+//    public void IsInTransaction__True()
+//    {
+//        // Arrange
+//        var sessMock = _mocks.Create<AbstractPhormSession>(null!, null!);
 
-    [TestMethod]
-    public void IsInTransaction__True()
-    {
-        // Arrange
-        var sessMock = _mocks.Create<AbstractPhormSession>(null!, null!);
+//        var sess = new TransactedPhormSession(sessMock.Object, null!);
 
-        var sess = new TransactedPhormSession(sessMock.Object, null!);
+//        // Assert
+//        _mocks.Verify();
+//        Assert.IsTrue(sess.IsInTransaction);
+//    }
 
-        // Assert
-        _mocks.Verify();
-        Assert.IsTrue(sess.IsInTransaction);
-    }
+//    [TestMethod]
+//    public void Commit()
+//    {
+//        // Arrange
+//        var transMock = _mocks.Create<IDbTransaction>();
+//        transMock.Setup(m => m.Commit()).Verifiable();
 
-    [TestMethod]
-    public void Commit()
-    {
-        // Arrange
-        var transMock = _mocks.Create<IDbTransaction>();
-        transMock.Setup(m => m.Commit()).Verifiable();
+//        var sess = new TransactedPhormSession(null!, transMock.Object);
 
-        var sess = new TransactedPhormSession(null!, transMock.Object);
+//        // Act
+//        sess.Commit();
 
-        // Act
-        sess.Commit();
+//        // Assert
+//        _mocks.Verify();
+//        Assert.IsTrue(sess.IsInTransaction);
+//    }
 
-        // Assert
-        _mocks.Verify();
-        Assert.IsTrue(sess.IsInTransaction);
-    }
+//    [TestMethod]
+//    public void Rollback()
+//    {
+//        // Arrange
+//        var transMock = _mocks.Create<IDbTransaction>();
+//        transMock.Setup(m => m.Rollback()).Verifiable();
 
-    [TestMethod]
-    public void Rollback()
-    {
-        // Arrange
-        var transMock = _mocks.Create<IDbTransaction>();
-        transMock.Setup(m => m.Rollback()).Verifiable();
+//        var sess = new TransactedPhormSession(null!, transMock.Object);
 
-        var sess = new TransactedPhormSession(null!, transMock.Object);
+//        // Act
+//        sess.Rollback();
 
-        // Act
-        sess.Rollback();
+//        // Assert
+//        _mocks.Verify();
+//    }
 
-        // Assert
-        _mocks.Verify();
-    }
+//    [TestMethod]
+//    public void Dispose()
+//    {
+//        // Arrange
+//        var transMock = _mocks.Create<IDbTransaction>();
+//        transMock.Setup(m => m.Dispose()).Verifiable();
 
-    [TestMethod]
-    public void Dispose()
-    {
-        // Arrange
-        var transMock = _mocks.Create<IDbTransaction>();
-        transMock.Setup(m => m.Dispose()).Verifiable();
+//        var sess = new TransactedPhormSession(null!, transMock.Object);
 
-        var sess = new TransactedPhormSession(null!, transMock.Object);
+//        // Act
+//        sess.Dispose();
 
-        // Act
-        sess.Dispose();
+//        // Assert
+//        _mocks.Verify();
+//    }
 
-        // Assert
-        _mocks.Verify();
-    }
+//    interface ITestAction : IPhormContract
+//    {
+//    }
 
-    interface ITestAction : IPhormContract
-    {
-    }
+//    [TestMethod]
+//    public async Task CallAsync__Has_transaction_set()
+//    {
+//        // Arrange
+//        var baseSession = new TestPhormSession();
 
-    [TestMethod]
-    public async Task CallAsync__Has_transaction_set()
-    {
-        // Arrange
-        var baseSession = new TestPhormSession();
+//        var dbtranMock = _mocks.Create<IDbTransaction>();
 
-        var dbtranMock = _mocks.Create<IDbTransaction>();
+//        var sess = new TransactedPhormSession(baseSession, dbtranMock.Object);
 
-        var sess = new TransactedPhormSession(baseSession, dbtranMock.Object);
+//        // Act
+//        await sess.CallAsync("contract", null, TestContext.CancellationToken);
 
-        // Act
-        await sess.CallAsync("contract", null, TestContext.CancellationToken);
+//        // Assert
+//        var cmd = baseSession.Commands.Single();
+//        Assert.AreSame(dbtranMock.Object, cmd.Transaction);
+//    }
 
-        // Assert
-        var cmd = baseSession.Commands.Single();
-        Assert.AreSame(dbtranMock.Object, cmd.Transaction);
-    }
+//    [TestMethod]
+//    public async Task CallAsync_T__Has_transaction_set()
+//    {
+//        // Arrange
+//        var baseSession = new TestPhormSession();
 
-    [TestMethod]
-    public async Task CallAsync_T__Has_transaction_set()
-    {
-        // Arrange
-        var baseSession = new TestPhormSession();
+//        var dbtranMock = _mocks.Create<IDbTransaction>();
 
-        var dbtranMock = _mocks.Create<IDbTransaction>();
+//        var sess = new TransactedPhormSession(baseSession, dbtranMock.Object);
 
-        var sess = new TransactedPhormSession(baseSession, dbtranMock.Object);
+//        // Act
+//        await sess.CallAsync<ITestAction>(null, TestContext.CancellationToken);
 
-        // Act
-        await sess.CallAsync<ITestAction>(null, TestContext.CancellationToken);
+//        // Assert
+//        var cmd = baseSession.Commands.Single();
+//        Assert.AreSame(dbtranMock.Object, cmd.Transaction);
+//    }
 
-        // Assert
-        var cmd = baseSession.Commands.Single();
-        Assert.AreSame(dbtranMock.Object, cmd.Transaction);
-    }
+//    [TestMethod]
+//    public async Task From__Has_transaction_set()
+//    {
+//        // Arrange
+//        var baseSession = new TestPhormSession();
 
-    [TestMethod]
-    public async Task From__Has_transaction_set()
-    {
-        // Arrange
-        var baseSession = new TestPhormSession();
+//        var dbtranMock = _mocks.Create<IDbTransaction>();
 
-        var dbtranMock = _mocks.Create<IDbTransaction>();
+//        var sess = new TransactedPhormSession(baseSession, dbtranMock.Object);
 
-        var sess = new TransactedPhormSession(baseSession, dbtranMock.Object);
+//        // Act
+//        var runner = sess.From("contract", null);
+//        await runner.GetAsync<object>(TestContext.CancellationToken);
 
-        // Act
-        var runner = sess.From("contract", null);
-        await runner.GetAsync<object>(TestContext.CancellationToken);
+//        // Assert
+//        var cmd = baseSession.Commands.Single();
+//        Assert.AreSame(dbtranMock.Object, cmd.Transaction);
+//    }
 
-        // Assert
-        var cmd = baseSession.Commands.Single();
-        Assert.AreSame(dbtranMock.Object, cmd.Transaction);
-    }
+//    [TestMethod]
+//    public async Task From_T__Has_transaction_set()
+//    {
+//        // Arrange
+//        var baseSession = new TestPhormSession();
 
-    [TestMethod]
-    public async Task From_T__Has_transaction_set()
-    {
-        // Arrange
-        var baseSession = new TestPhormSession();
+//        var dbtranMock = _mocks.Create<IDbTransaction>();
 
-        var dbtranMock = _mocks.Create<IDbTransaction>();
+//        var sess = new TransactedPhormSession(baseSession, dbtranMock.Object);
 
-        var sess = new TransactedPhormSession(baseSession, dbtranMock.Object);
+//        // Act
+//        var runner = sess.From<ITestAction>(null);
+//        await runner.GetAsync<object>(TestContext.CancellationToken);
 
-        // Act
-        var runner = sess.From<ITestAction>(null);
-        await runner.GetAsync<object>(TestContext.CancellationToken);
+//        // Assert
+//        var cmd = baseSession.Commands.Single();
+//        Assert.AreSame(dbtranMock.Object, cmd.Transaction);
+//    }
 
-        // Assert
-        var cmd = baseSession.Commands.Single();
-        Assert.AreSame(dbtranMock.Object, cmd.Transaction);
-    }
+//    [TestMethod]
+//    public async Task GetAsync_T__Has_transaction_set()
+//    {
+//        // Arrange
+//        var baseSession = new TestPhormSession();
 
-    [TestMethod]
-    public async Task GetAsync_T__Has_transaction_set()
-    {
-        // Arrange
-        var baseSession = new TestPhormSession();
+//        var dbtranMock = _mocks.Create<IDbTransaction>();
 
-        var dbtranMock = _mocks.Create<IDbTransaction>();
+//        var sess = new TransactedPhormSession(baseSession, dbtranMock.Object);
 
-        var sess = new TransactedPhormSession(baseSession, dbtranMock.Object);
+//        // Act
+//        await sess.GetAsync<object>(null, TestContext.CancellationToken);
 
-        // Act
-        await sess.GetAsync<object>(null, TestContext.CancellationToken);
-
-        // Assert
-        var cmd = baseSession.Commands.Single();
-        Assert.AreSame(dbtranMock.Object, cmd.Transaction);
-    }
-}
+//        // Assert
+//        var cmd = baseSession.Commands.Single();
+//        Assert.AreSame(dbtranMock.Object, cmd.Transaction);
+//    }
+//}

@@ -28,12 +28,6 @@ public class PhormContractRunner
         public string? Value2 { get; set; }
     }
 
-    [TestInitialize]
-    public void Init()
-    {
-        AbstractPhormSession.ResetConnectionPool();
-    }
-
     [TestMethod]
     public void Constructor__TEntity_without_constructor__Fail()
     {

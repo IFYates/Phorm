@@ -11,13 +11,14 @@ public class PhormDbConnectionTests
     public void Properties()
     {
         // Arrange
-        var dbMock = new Mock<IDbConnection>(MockBehavior.Strict);
+        var dbMock = new Mock<IAsyncDbConnection>(MockBehavior.Strict);
         dbMock.SetupProperty(m => m.ConnectionString);
         dbMock.SetupGet(m => m.ConnectionTimeout).Returns(1234);
         dbMock.SetupGet(m => m.Database).Returns("databaseName");
         dbMock.SetupGet(m => m.State).Returns(ConnectionState.Connecting);
 
-        var db = new PhormDbConnection("contextName", dbMock.Object)
+        var sess = new TestPhormSession("contextName");
+        var db = new PhormDbConnection(sess, dbMock.Object)
         {
             DefaultSchema = "schema",
             ConnectionString = "connString"
@@ -35,87 +36,87 @@ public class PhormDbConnectionTests
     }
 
     [TestMethod]
-    public void BeginTransaction()
+    public async Task BeginTransaction()
     {
         // Arrange
-        var dbMock = new Mock<IDbConnection>(MockBehavior.Strict);
-        dbMock.Setup(m => m.BeginTransaction())
-            .Returns(() => null!).Verifiable();
+        var dbMock = new Mock<IAsyncDbConnection>(MockBehavior.Strict);
+        dbMock.Setup(m => m.BeginTransactionAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(() => null!).Verifiable();
 
-        var db = new PhormDbConnection("", dbMock.Object);
+        var db = new PhormDbConnection(new TestPhormSession(), dbMock.Object);
 
         // Act
-        db.BeginTransaction();
+        await db.BeginTransactionAsync(default);
 
         // Assert
         dbMock.Verify();
     }
 
     [TestMethod]
-    public void BeginTransaction__With_IsolationLevel()
+    public async Task BeginTransaction__With_IsolationLevel()
     {
         // Arrange
-        var dbMock = new Mock<IDbConnection>(MockBehavior.Strict);
-        dbMock.Setup(m => m.BeginTransaction(It.IsAny<IsolationLevel>()))
-            .Returns(() => null!).Verifiable();
+        var dbMock = new Mock<IAsyncDbConnection>(MockBehavior.Strict);
+        dbMock.Setup(m => m.BeginTransactionAsync(IsolationLevel.Chaos, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(() => null!).Verifiable();
 
-        var db = new PhormDbConnection("", dbMock.Object);
+        var db = new PhormDbConnection(new TestPhormSession(), dbMock.Object);
 
         // Act
-        db.BeginTransaction(IsolationLevel.Chaos);
+        await db.BeginTransactionAsync(IsolationLevel.Chaos, default);
 
         // Assert
         dbMock.Verify();
     }
 
     [TestMethod]
-    public void ChangeDatabase()
+    public async Task ChangeDatabase()
     {
         // Arrange
-        var dbMock = new Mock<IDbConnection>(MockBehavior.Strict);
-        dbMock.Setup(m => m.ChangeDatabase(It.IsAny<string>()))
-            .Verifiable();
+        var dbMock = new Mock<IAsyncDbConnection>(MockBehavior.Strict);
+        dbMock.Setup(m => m.ChangeDatabaseAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask).Verifiable();
 
-        var db = new PhormDbConnection("", dbMock.Object);
+        var db = new PhormDbConnection(new TestPhormSession(), dbMock.Object);
 
         // Act
-        db.ChangeDatabase(string.Empty);
+        await db.ChangeDatabaseAsync(string.Empty, default);
 
         // Assert
         dbMock.Verify();
     }
 
     [TestMethod]
-    public void Open__Is_open__Noop()
+    public async Task Open__Is_open__Noop()
     {
         // Arrange
-        var dbMock = new Mock<IDbConnection>(MockBehavior.Strict);
+        var dbMock = new Mock<IAsyncDbConnection>(MockBehavior.Strict);
         dbMock.SetupGet(m => m.State)
             .Returns(ConnectionState.Open).Verifiable();
 
-        var db = new PhormDbConnection("", dbMock.Object);
+        var db = new PhormDbConnection(new TestPhormSession(), dbMock.Object);
 
         // Act
-        db.Open();
+        await db.OpenAsync(default);
 
         // Assert
         dbMock.Verify();
     }
 
     [TestMethod]
-    public void Open__Not_open__Open()
+    public async Task Open__Not_open__Open()
     {
         // Arrange
-        var dbMock = new Mock<IDbConnection>(MockBehavior.Strict);
+        var dbMock = new Mock<IAsyncDbConnection>(MockBehavior.Strict);
         dbMock.SetupGet(m => m.State)
             .Returns(ConnectionState.Closed).Verifiable();
-        dbMock.Setup(m => m.Open())
-            .Verifiable();
+        dbMock.Setup(m => m.OpenAsync(It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask).Verifiable();
 
-        var db = new PhormDbConnection("", dbMock.Object);
+        var db = new PhormDbConnection(new TestPhormSession(), dbMock.Object);
 
         // Act
-        db.Open();
+        await db.OpenAsync(default);
 
         // Assert
         dbMock.Verify();
@@ -125,11 +126,11 @@ public class PhormDbConnectionTests
     public void Close__Is_closed__Noop()
     {
         // Arrange
-        var dbMock = new Mock<IDbConnection>(MockBehavior.Strict);
+        var dbMock = new Mock<IAsyncDbConnection>(MockBehavior.Strict);
         dbMock.SetupGet(m => m.State)
             .Returns(ConnectionState.Closed).Verifiable();
 
-        var db = new PhormDbConnection("", dbMock.Object);
+        var db = new PhormDbConnection(new TestPhormSession(), dbMock.Object);
 
         // Act
         db.Close();
@@ -142,13 +143,13 @@ public class PhormDbConnectionTests
     public void Close__Not_closed__Close()
     {
         // Arrange
-        var dbMock = new Mock<IDbConnection>(MockBehavior.Strict);
+        var dbMock = new Mock<IAsyncDbConnection>(MockBehavior.Strict);
         dbMock.SetupGet(m => m.State)
             .Returns(ConnectionState.Open).Verifiable();
         dbMock.Setup(m => m.Close())
             .Verifiable();
 
-        var db = new PhormDbConnection("", dbMock.Object);
+        var db = new PhormDbConnection(new TestPhormSession(), dbMock.Object);
 
         // Act
         db.Close();
@@ -167,13 +168,13 @@ public class PhormDbConnectionTests
             CommandText = cmdText
         };
 
-        var dbMock = new Mock<IDbConnection>(MockBehavior.Strict);
+        var dbMock = new Mock<IAsyncDbConnection>(MockBehavior.Strict);
         dbMock.SetupGet(m => m.State)
             .Returns(ConnectionState.Open);
         dbMock.Setup(m => m.CreateCommand())
             .Returns(cmd).Verifiable();
 
-        var db = new PhormDbConnection("", dbMock.Object);
+        var db = new PhormDbConnection(new TestPhormSession(), dbMock.Object);
 
         // Act
         var res = db.CreateCommand();
@@ -193,15 +194,13 @@ public class PhormDbConnectionTests
             CommandText = cmdText
         };
 
-        var dbMock = new Mock<IDbConnection>(MockBehavior.Strict);
+        var dbMock = new Mock<IAsyncDbConnection>(MockBehavior.Strict);
         dbMock.SetupGet(m => m.State)
             .Returns(ConnectionState.Closed);
-        dbMock.Setup(m => m.Open())
-            .Verifiable();
         dbMock.Setup(m => m.CreateCommand())
             .Returns(cmd).Verifiable();
 
-        var db = new PhormDbConnection("", dbMock.Object);
+        var db = new PhormDbConnection(new TestPhormSession(), dbMock.Object);
 
         // Act
         var res = db.CreateCommand();
@@ -215,18 +214,18 @@ public class PhormDbConnectionTests
     public void CreateCommand__IDbConnection__Connection_open__Wraps_command_as_IAsyncDbCommand()
     {
         // Arrange
-        var cmdMock = new Mock<IDbCommand>(MockBehavior.Strict);
+        var cmdMock = new Mock<IAsyncDbCommand>(MockBehavior.Strict);
 
-        var dbMock = new Mock<IDbConnection>(MockBehavior.Strict);
+        var dbMock = new Mock<IAsyncDbConnection>(MockBehavior.Strict);
         dbMock.SetupGet(m => m.State)
             .Returns(ConnectionState.Open);
         dbMock.Setup(m => m.CreateCommand())
             .Returns(cmdMock.Object).Verifiable();
 
-        var db = new PhormDbConnection("", dbMock.Object);
+        var db = new PhormDbConnection(new TestPhormSession(), dbMock.Object);
 
         // Act
-        var res = ((IDbConnection)db).CreateCommand();
+        var res = db.CreateCommand();
 
         // Assert
         Assert.AreSame(cmdMock.Object, res);
@@ -237,20 +236,18 @@ public class PhormDbConnectionTests
     public void CreateCommand__IDbConnection__Connection_closed__Opens_connection_and_wraps_command_as_IAsyncDbCommand()
     {
         // Arrange
-        var cmdMock = new Mock<IDbCommand>(MockBehavior.Strict);
+        var cmdMock = new Mock<IAsyncDbCommand>(MockBehavior.Strict);
 
-        var dbMock = new Mock<IDbConnection>(MockBehavior.Strict);
+        var dbMock = new Mock<IAsyncDbConnection>(MockBehavior.Strict);
         dbMock.SetupGet(m => m.State)
             .Returns(ConnectionState.Closed);
-        dbMock.Setup(m => m.Open())
-            .Verifiable();
         dbMock.Setup(m => m.CreateCommand())
             .Returns(cmdMock.Object).Verifiable();
 
-        var db = new PhormDbConnection("", dbMock.Object);
+        var db = new PhormDbConnection(new TestPhormSession(), dbMock.Object);
 
         // Act
-        var res = ((IDbConnection)db).CreateCommand();
+        var res = db.CreateCommand();
 
         // Assert
         Assert.AreSame(cmdMock.Object, res);
@@ -261,11 +258,11 @@ public class PhormDbConnectionTests
     public void Dispose()
     {
         // Arrange
-        var dbMock = new Mock<IDbConnection>(MockBehavior.Strict);
+        var dbMock = new Mock<IAsyncDbConnection>(MockBehavior.Strict);
         dbMock.Setup(m => m.Dispose())
             .Verifiable();
 
-        var db = new PhormDbConnection("", dbMock.Object);
+        var db = new PhormDbConnection(new TestPhormSession(), dbMock.Object);
 
         // Act
         db.Dispose();

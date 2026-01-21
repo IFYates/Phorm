@@ -9,6 +9,7 @@ using System.Runtime.Serialization;
 namespace IFY.Phorm.Execution.Tests;
 
 [TestClass]
+[DoNotParallelize]
 public class PhormContractRunnerTests_Call
 {
     public TestContext TestContext { get; set; }
@@ -71,12 +72,6 @@ public class PhormContractRunnerTests_Call
             => FromDatasourceReturnValue;
         public override object? ToDatasource(object? data, object? context)
             => ToDatasourceReturnValue;
-    }
-
-    [TestInitialize]
-    public void Init()
-    {
-        AbstractPhormSession.ResetConnectionPool();
     }
 
     [TestMethod]

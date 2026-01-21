@@ -76,12 +76,6 @@ public class GenSpecTests
         return new PhormContractRunner<IPhormContract>(phorm, "ContractName", DbObjectType.StoredProcedure, null, null);
     }
 
-    [TestInitialize]
-    public void Init()
-    {
-        AbstractPhormSession.ResetConnectionPool();
-    }
-
     [TestMethod]
     public async Task GetAsync__GenSpec__Shapes_records_by_selector()
     {

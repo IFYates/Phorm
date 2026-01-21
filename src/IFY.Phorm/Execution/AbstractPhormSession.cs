@@ -5,6 +5,9 @@ using System.Data;
 
 namespace IFY.Phorm.Execution;
 
+// TODO: Review the Session, Connection, Runner relationship
+// esp. what provider implementations need to override and what is purely internal
+
 /// <summary>
 /// Represents a session for executing Phorm contracts and database operations, providing methods for invoking actions,
 /// retrieving data, and managing transactions within a scoped database connection.
@@ -14,15 +17,29 @@ namespace IFY.Phorm.Execution;
 /// supported by the underlying runner. Configuration properties allow control over error handling and result size
 /// strictness. Use this interface to interact with Phorm contracts and database entities in a scoped and configurable
 /// manner.</remarks>
-public abstract class AbstractPhormSession(string databaseConnectionString, string? connectionName) : IPhormSession
+public abstract class AbstractPhormSession(string? connectionName)
+    : IPhormConnectedSession
 {
-    /// <summary>
-    /// The connection string used to connect to the database.
-    /// </summary>
-    protected readonly string _databaseConnectionString = databaseConnectionString;
+    private readonly IDbTransaction? _transaction = null;
+
+    private protected AbstractPhormSession(IDbTransaction transaction, string? connectionName)
+        : this(connectionName)
+    {
+        _transaction = transaction;
+    }
 
     /// <inheritdoc/>
     public string? ConnectionName { get; } = connectionName;
+    /// <inheritdoc/>
+    public IDictionary<string, object?> ContextData
+    {
+        get; protected internal
+#if !NET5_0_OR_GREATER
+        set;
+#else
+        init;
+#endif
+    } = new Dictionary<string, object?>();
 
     /// <summary>
     /// Gets or sets the prefix used for accessing database stored procedures.
@@ -121,79 +138,61 @@ public abstract class AbstractPhormSession(string databaseConnectionString, stri
 
     #region Connection
 
-    private static readonly Dictionary<string, IPhormDbConnection> _connectionPool = [];
-    internal static void ResetConnectionPool()
+    /// <summary>
+    /// Creates and returns a prepared database connection for the current context.
+    /// </summary>
+    /// <param name="readOnly">true to request a connection optimised for read-only operations; otherwise, false to request a connection that
+    /// supports write operations.</param>
+    /// <returns>An <see cref="IPhormDbConnection"/> instance representing the database connection for the current context.</returns>
+    protected internal virtual IPhormDbConnection GetConnection(bool readOnly)
     {
-        lock (_connectionPool)
-        {
-            foreach (var conn in _connectionPool.Values)
-            {
-                conn.Dispose();
-            }
-            _connectionPool.Clear();
-        }
-    }
-
-    /// <inheritdoc/>
-    protected internal virtual IPhormDbConnection GetConnection(bool readOnly = false)
-    {
-        // Reuse existing connections, where possible
-        var key = $"{ConnectionName ?? string.Empty}:{readOnly}";
-        if (!_connectionPool.TryGetValue(key, out var phormConn)
-            || phormConn.State != ConnectionState.Open)
-        {
-            lock (_connectionPool)
-            {
-                if (!_connectionPool.TryGetValue(key, out phormConn)
-                    || phormConn.State != ConnectionState.Open)
-                {
-                    // Create new connection
-                    phormConn?.Dispose();
-
-                    // Create connection
-                    phormConn = CreateConnection(readOnly);
-
-                    // Resolve default schema
-                    if (phormConn.DefaultSchema.Length == 0)
-                    {
-                        SetDefaultSchema(phormConn);
-                    }
-                    _connectionPool[key] = phormConn;
-
-                    OnConnected(new ConnectedEventArgs { Connection = phormConn });
-                }
-            }
-        }
-        return phormConn;
+        var conn = CreateConnection(readOnly);
+        return new PhormDbConnection(this, conn);
     }
 
     /// <summary>
-    /// Creates and returns a new database connection configured for either read-only or read-write access.
+    /// Creates a new asynchronous database connection with the specified access mode.
     /// </summary>
-    /// <param name="readOnly">true to create a connection with read-only access; false to create a connection with read-write access.</param>
-    /// <returns>An <see cref="IPhormDbConnection"/> instance representing the newly created database connection.</returns>
-    protected abstract IPhormDbConnection CreateConnection(bool readOnly);
+    /// <param name="readOnly">A value indicating whether the connection should be opened in read-only mode. Specify <see langword="true"/> to
+    /// restrict operations to reading data; otherwise, <see langword="false"/> to allow both read and write operations.</param>
+    /// <returns>An <see cref="IAsyncDbConnection"/> instance representing the newly created database connection.</returns>
+    protected abstract IAsyncDbConnection CreateConnection(bool readOnly);
+
+    /// <summary>
+    /// Asynchronously applies the current context to the specified database connection.
+    /// </summary>
+    /// <param name="phormConn">The database connection to which the context will be applied. Cannot be null.</param>
+    /// <returns>A task that represents the asynchronous operation.</returns>
+    protected internal virtual Task ApplyContextAsync(IPhormDbConnection phormConn) => Task.CompletedTask;
 
     /// <summary>
     /// Implementations to provide logic for resolving the default schema of the connection.
     /// </summary>
     /// <returns>The default schema name, if known.</returns>
-    protected virtual void SetDefaultSchema(IPhormDbConnection phormConn) { }
-
-    /// <inheritdoc/>
-    public abstract IPhormSession SetConnectionName(string connectionName);
+    protected internal virtual Task ResolveDefaultSchemaAsync(IPhormDbConnection phormConn) => Task.CompletedTask;
 
     #endregion Connection
 
-    internal IAsyncDbCommand CreateCommand(string? schema, string objectName, DbObjectType objectType, bool readOnly)
+    /// <summary>
+    /// Asynchronously creates an open database command for the specified object and schema.
+    /// </summary>
+    /// <param name="schema">The name of the database schema containing the object, or null to use the connection's default schema. If an
+    /// empty string is provided, the default schema is used.</param>
+    /// <param name="objectName">The name of the database object for which to create the command. Cannot be null or empty.</param>
+    /// <param name="objectType">The type of the database object, such as table, view, or stored procedure.</param>
+    /// <param name="readOnly">true to create the command using a read-only connection; otherwise, false.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains an <see cref="IAsyncDbCommand"/> for
+    /// the specified database object.</returns>
+    internal async Task<IAsyncDbCommand> CreateCommandAsync(string? schema, string objectName, DbObjectType objectType, bool readOnly)
     {
         var conn = GetConnection(readOnly);
+        await conn.OpenAsync(default);
         schema = schema?.Length > 0 ? schema : conn.DefaultSchema;
         return CreateCommand(conn, schema, objectName, objectType);
     }
 
     /// <inheritdoc/>
-    protected internal virtual IAsyncDbCommand CreateCommand(IPhormDbConnection connection, string schema, string objectName, DbObjectType objectType)
+    protected virtual IAsyncDbCommand CreateCommand(IPhormDbConnection connection, string schema, string objectName, DbObjectType objectType)
     {
         // Complete object name
         objectName = objectType switch
@@ -257,7 +256,7 @@ public abstract class AbstractPhormSession(string databaseConnectionString, stri
     /// <inheritdoc/>
     public Task<int> CallAsync(string contractName, object? args, CancellationToken cancellationToken)
     {
-        var runner = new PhormContractRunner<IPhormContract>(this, contractName, DbObjectType.StoredProcedure, args, null);
+        var runner = new PhormContractRunner<IPhormContract>(this, contractName, DbObjectType.StoredProcedure, args, _transaction);
         return runner.CallAsync(cancellationToken);
     }
 
@@ -265,7 +264,7 @@ public abstract class AbstractPhormSession(string databaseConnectionString, stri
     public Task<int> CallAsync<TActionContract>(object? args, CancellationToken cancellationToken)
         where TActionContract : IPhormContract
     {
-        var runner = new PhormContractRunner<TActionContract>(this, null, DbObjectType.StoredProcedure, args, null);
+        var runner = new PhormContractRunner<TActionContract>(this, null, DbObjectType.StoredProcedure, args, _transaction);
         return runner.CallAsync(cancellationToken);
     }
 
@@ -276,14 +275,14 @@ public abstract class AbstractPhormSession(string databaseConnectionString, stri
     /// <inheritdoc/>
     public IPhormContractRunner From(string contractName, object? args)
     {
-        return new PhormContractRunner<IPhormContract>(this, contractName, DbObjectType.StoredProcedure, args, null);
+        return new PhormContractRunner<IPhormContract>(this, contractName, DbObjectType.StoredProcedure, args, _transaction);
     }
 
     /// <inheritdoc/>
     public IPhormContractRunner<TActionContract> From<TActionContract>(object? args)
         where TActionContract : IPhormContract
     {
-        return new PhormContractRunner<TActionContract>(this, null, DbObjectType.StoredProcedure, args, null);
+        return new PhormContractRunner<TActionContract>(this, null, DbObjectType.StoredProcedure, args, _transaction);
     }
 
     #endregion From
@@ -294,7 +293,7 @@ public abstract class AbstractPhormSession(string databaseConnectionString, stri
     public Task<TResult?> GetAsync<TResult>(object? args, CancellationToken cancellationToken)
         where TResult : class
     {
-        var runner = new PhormContractRunner<IPhormContract>(this, typeof(TResult), null, DbObjectType.View, args, null);
+        var runner = new PhormContractRunner<IPhormContract>(this, typeof(TResult), null, DbObjectType.View, args, _transaction);
         return runner.GetAsync<TResult>(cancellationToken);
     }
 
@@ -309,17 +308,12 @@ public abstract class AbstractPhormSession(string databaseConnectionString, stri
     public abstract bool IsInTransaction { get; }
 
     /// <inheritdoc/>
-    public abstract ITransactedPhormSession BeginTransaction();
-
-    /// <summary>
-    /// Wraps the current session with transactional support using the specified database transaction.
-    /// </summary>
-    /// <param name="transaction">The database transaction to associate with the session. Cannot be null.</param>
-    /// <returns>An instance of <see cref="ITransactedPhormSession"/> that operates within the context of the provided
-    /// transaction.</returns>
-    protected ITransactedPhormSession WrapSessionAsTransacted(IDbTransaction transaction)
+    public async Task<ITransactedPhormSession> BeginTransactionAsync(CancellationToken cancellationToken)
     {
-        return new TransactedPhormSession(this, transaction);
+        var conn = GetConnection(false);
+        await conn.OpenAsync(cancellationToken);
+        var transaction = await conn.BeginTransactionAsync(cancellationToken);
+        return new TransactedPhormSession(conn, transaction, this);
     }
 
     #endregion Transactions

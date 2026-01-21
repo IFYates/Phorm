@@ -96,10 +96,10 @@ internal sealed partial class PhormContractRunner<TActionContract> : IPhormContr
         return contract;
     }
 
-    private IAsyncDbCommand startCommand(out ContractMember[] members, out CommandExecutingEventArgs eventArgs)
+    private async Task<(IAsyncDbCommand cmd, ContractMember[] members, CommandExecutingEventArgs eventArgs)> startCommand()
     {
-        members = ContractMember.GetMembersFromContract(_runArgs, typeof(TActionContract), true);
-        var cmd = _session.CreateCommand(_schema, _objectName, _objectType, _readOnly);
+        var members = ContractMember.GetMembersFromContract(_runArgs, typeof(TActionContract), true);
+        var cmd = await _session.CreateCommandAsync(_schema, _objectName, _objectType, _readOnly);
         cmd.Transaction = _transaction;
 
         // Build WHERE clause from members
@@ -133,7 +133,7 @@ internal sealed partial class PhormContractRunner<TActionContract> : IPhormContr
             }
         }
 
-        eventArgs = new CommandExecutingEventArgs
+        var eventArgs = new CommandExecutingEventArgs
         {
             CommandGuid = Guid.NewGuid(),
             CommandText = cmd.CommandText,
@@ -142,7 +142,7 @@ internal sealed partial class PhormContractRunner<TActionContract> : IPhormContr
         };
         _session.OnCommandExecuting(eventArgs);
 
-        return cmd;
+        return (cmd, members, eventArgs);
     }
 
     private void matchResultset(Type entityType, int order, IDataReader rdr, IEnumerable<object> parents, Guid commandGuid, AbstractConsoleMessageCapture console)
@@ -290,7 +290,8 @@ internal sealed partial class PhormContractRunner<TActionContract> : IPhormContr
     public async Task<int> CallAsync(CancellationToken cancellationToken)
     {
         // Prepare execution
-        using var cmd = startCommand(out var pars, out var eventArgs);
+        var (cmd, pars, eventArgs) = await startCommand();
+        using var _ = cmd;
         using var console = _session.StartConsoleCapture(eventArgs.CommandGuid, cmd);
 
         // Execution
@@ -377,7 +378,8 @@ internal sealed partial class PhormContractRunner<TActionContract> : IPhormContr
     private async Task<object> executeGetAll(Type resultType, EntityContract contract, EntityProcessorDelegate entityProcessor, CancellationToken cancellationToken)
     {
         // Prepare and execute
-        using var cmd = startCommand(out var pars, out var eventArgs);
+        var (cmd, pars, eventArgs) = await startCommand();
+        using var _ = cmd;
         using var console = _session.StartConsoleCapture(eventArgs.CommandGuid, cmd);
         using var rdr = await cmd.ExecuteReaderAsync(cancellationToken);
 

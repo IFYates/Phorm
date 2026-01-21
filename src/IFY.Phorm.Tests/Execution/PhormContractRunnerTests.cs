@@ -10,6 +10,7 @@ using System.Runtime.Serialization;
 namespace IFY.Phorm.Execution.Tests;
 
 [TestClass]
+[DoNotParallelize]
 public class PhormContractRunnerTests
 {
     public TestContext TestContext { get; set; }
@@ -69,12 +70,6 @@ public class PhormContractRunnerTests
         [DataMember(Name = "SecureArg")]
         [SecureValue("class", nameof(Arg))]
         string? Arg3 { get; set; }
-    }
-
-    [TestInitialize]
-    public void Init()
-    {
-        AbstractPhormSession.ResetConnectionPool();
     }
 
     #region Constructor

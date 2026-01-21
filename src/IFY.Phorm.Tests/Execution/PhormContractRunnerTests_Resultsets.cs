@@ -47,12 +47,6 @@ public class PhormContractRunnerTests_Resultsets
         public TestBadEntity(string value) { value.ToString(); }
     }
 
-    [TestInitialize]
-    public void Init()
-    {
-        AbstractPhormSession.ResetConnectionPool();
-    }
-
     [TestMethod]
     public async Task GetAsync__Entity_missing_default_constructor__Fail()
     {

@@ -4,7 +4,7 @@
 /// A <see cref="IPhormSession"/> that is in a transaction.
 /// Disposing this runner before invoking <see cref="Commit"/> is the same as calling <see cref="Rollback"/>.
 /// </summary>
-public interface ITransactedPhormSession : IPhormSession, IDisposable
+public interface ITransactedPhormSession : IPhormConnectedSession, IDisposable
 {
     /// <summary>
     /// Commit the transaction, making this runner unusable for further calls.

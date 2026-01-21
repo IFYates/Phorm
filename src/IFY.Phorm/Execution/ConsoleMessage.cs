@@ -1,6 +1,12 @@
 ﻿namespace IFY.Phorm.Execution;
 
-public record ConsoleMessage
+/// <summary>
+/// Represents a message written to the console, including its content, severity, and source information.
+/// </summary>
+/// <remarks>Use this record to encapsulate information about console output, such as log entries, errors, or
+/// informational messages. The properties provide details about the message's severity, origin, and content, which can
+/// be useful for logging, diagnostics, or user feedback scenarios.</remarks>
+public sealed record ConsoleMessage
 {
     /// <summary>
     /// Whether this message is for an error that interrupted execution.

@@ -6,7 +6,7 @@ using System.Diagnostics.CodeAnalysis;
 namespace IFY.Phorm.Tests;
 
 [ExcludeFromCodeCoverage]
-internal partial class TestPhormSession : AbstractPhormSession
+internal partial class TestPhormSession : AbstractPhormSession, IPhormSession
 {
     public TestPhormConnection TestConnection { get; }
 
@@ -33,26 +33,27 @@ internal partial class TestPhormSession : AbstractPhormSession
         TestConnection = connection;
     }
 
-    public override ITransactedPhormSession BeginTransaction()
-    {
-        throw new NotSupportedException();
-    }
-
-    protected internal override IAsyncDbCommand CreateCommand(IPhormDbConnection connection, string schema, string objectName, DbObjectType objectType)
+    protected override IAsyncDbCommand CreateCommand(IPhormDbConnection connection, string schema, string objectName, DbObjectType objectType)
     {
         var cmd = base.CreateCommand(connection, schema, objectName, objectType);
         _commands.Add(cmd);
         return cmd;
     }
 
-    protected override IPhormDbConnection CreateConnection(bool readOnly)
+    protected override IAsyncDbConnection CreateConnection(bool readOnly)
+    {
+        // TestPhormSession overrides GetConnection, so does not use this method
+        throw new NotImplementedException();
+    }
+
+    protected internal override IPhormDbConnection GetConnection(bool readOnly)
     {
         IsReadOnly = readOnly;
         return TestConnection;
     }
 
     [ExcludeFromCodeCoverage]
-    public override IPhormSession SetConnectionName(string connectionName)
+    public IPhormSession WithContext(string? connectionName, IDictionary<string, object?> contextData)
     {
         throw new NotImplementedException();
     }

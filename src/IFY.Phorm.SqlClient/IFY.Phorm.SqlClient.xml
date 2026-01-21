@@ -54,13 +54,16 @@
             <param name="connectionName">An optional name for the connection, used to identify the session or set the application name in the connection
             string. If null, the default application name is used.</param>
         </member>
-        <member name="M:IFY.Phorm.SqlClient.SqlPhormSession.SetConnectionName(System.String)">
+        <member name="M:IFY.Phorm.SqlClient.SqlPhormSession.WithContext(System.String,System.Collections.Generic.IDictionary{System.String,System.Object})">
             <inheritdoc/>
         </member>
         <member name="M:IFY.Phorm.SqlClient.SqlPhormSession.CreateConnection(System.Boolean)">
             <inheritdoc/>
         </member>
-        <member name="M:IFY.Phorm.SqlClient.SqlPhormSession.SetDefaultSchema(IFY.Phorm.Connectivity.IPhormDbConnection)">
+        <member name="M:IFY.Phorm.SqlClient.SqlPhormSession.ApplyContextAsync(IFY.Phorm.Connectivity.IPhormDbConnection)">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.SqlClient.SqlPhormSession.ResolveDefaultSchemaAsync(IFY.Phorm.Connectivity.IPhormDbConnection)">
             <inheritdoc/>
         </member>
         <member name="M:IFY.Phorm.SqlClient.SqlPhormSession.StartConsoleCapture(System.Guid,System.Data.IAsyncDbCommand)">
@@ -70,9 +73,6 @@
             <inheritdoc/>
         </member>
         <member name="P:IFY.Phorm.SqlClient.SqlPhormSession.IsInTransaction">
-            <inheritdoc/>
-        </member>
-        <member name="M:IFY.Phorm.SqlClient.SqlPhormSession.BeginTransaction">
             <inheritdoc/>
         </member>
     </members>

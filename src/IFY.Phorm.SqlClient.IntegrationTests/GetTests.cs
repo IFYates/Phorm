@@ -3,13 +3,19 @@ using IFY.Phorm.Execution;
 using System.Collections;
 using System.Reflection;
 using System.Runtime.Serialization;
-using System.Threading.Tasks;
 
 namespace IFY.Phorm.SqlClient.IntegrationTests;
 
 [TestClass]
 public class GetTests : SqlIntegrationTestBase
 {
+    static bool hasUnresolvedEntities(IEnumerable l)
+    {
+        var resolversField = l.GetType()
+            .GetField("_resolvers", BindingFlags.Instance | BindingFlags.NonPublic)!;
+        return ((ICollection)resolversField.GetValue(l)!).Count > 0;
+    }
+
     [PhormContract(Name = "GetTestTable", Target = DbObjectType.Table)]
     public class DataItem(long id, int? num, string? text, byte[]? data, DateTime? dateTime) : IUpsert, IUpsertOnlyIntWithId, IUpsertWithId
     {
@@ -82,7 +88,7 @@ public class GetTests : SqlIntegrationTestBase
 
     private async Task setupGetTestSchema(AbstractPhormSession phorm)
     {
-        await SqlTestHelpers.ApplySql(phorm, TestContext.CancellationTokenSource.Token, [
+        await SqlTestHelpers.ApplySql(phorm, TestContext.CancellationToken, [
             @"DROP TABLE IF EXISTS [dbo].[GetTestTable]",
             @"CREATE TABLE [dbo].[GetTestTable] (
 	[Id] BIGINT NOT NULL IDENTITY(1,1) PRIMARY KEY,
@@ -133,17 +139,17 @@ RETURN @@ROWCOUNT"
         var phorm = getPhormSession();
         await setupGetTestSchema(phorm);
 
-        await ((IPhormSession)phorm).CallAsync("GetTest_Upsert", TestContext.CancellationTokenSource.Token);
-        await ((IPhormSession)phorm).CallAsync("GetTest_Upsert", TestContext.CancellationTokenSource.Token);
-        await ((IPhormSession)phorm).CallAsync("GetTest_Upsert", TestContext.CancellationTokenSource.Token);
-        await ((IPhormSession)phorm).CallAsync("GetTest_Upsert", TestContext.CancellationTokenSource.Token);
+        await ((IPhormSession)phorm).CallAsync("GetTest_Upsert", TestContext.CancellationToken);
+        await ((IPhormSession)phorm).CallAsync("GetTest_Upsert", TestContext.CancellationToken);
+        await ((IPhormSession)phorm).CallAsync("GetTest_Upsert", TestContext.CancellationToken);
+        await ((IPhormSession)phorm).CallAsync("GetTest_Upsert", TestContext.CancellationToken);
 
         var obj = new { ReturnValue = ContractMember.RetVal() };
         var res = await phorm.From<IGetAll>(obj)
-            .GetAsync<DataItem[]>(TestContext.CancellationTokenSource.Token);
+            .GetAsync<DataItem[]>(TestContext.CancellationToken);
 
         Assert.AreEqual(1, obj.ReturnValue.Value);
-        Assert.AreEqual(4, res!.Length);
+        Assert.HasCount(4, res!);
     }
 
     [TestMethod]
@@ -153,19 +159,19 @@ RETURN @@ROWCOUNT"
         var phorm = getPhormSession();
         await setupGetTestSchema(phorm);
 
-        await phorm.CallAsync("GetTest_Upsert", new { Int = 0, IsInView = false }, TestContext.CancellationTokenSource.Token);
-        await phorm.CallAsync("GetTest_Upsert", new { Int = 0, IsInView = false }, TestContext.CancellationTokenSource.Token);
-        await phorm.CallAsync("GetTest_Upsert", new { Int = 1, IsInView = true }, TestContext.CancellationTokenSource.Token);
-        await phorm.CallAsync("GetTest_Upsert", new { Int = 1, IsInView = true }, TestContext.CancellationTokenSource.Token);
-        await phorm.CallAsync("GetTest_Upsert", new { Int = 1, IsInView = true }, TestContext.CancellationTokenSource.Token);
+        await phorm.CallAsync("GetTest_Upsert", new { Int = 0, IsInView = false }, TestContext.CancellationToken);
+        await phorm.CallAsync("GetTest_Upsert", new { Int = 0, IsInView = false }, TestContext.CancellationToken);
+        await phorm.CallAsync("GetTest_Upsert", new { Int = 1, IsInView = true }, TestContext.CancellationToken);
+        await phorm.CallAsync("GetTest_Upsert", new { Int = 1, IsInView = true }, TestContext.CancellationToken);
+        await phorm.CallAsync("GetTest_Upsert", new { Int = 1, IsInView = true }, TestContext.CancellationToken);
 
         // Act
         var res = await phorm.From<IDataView>(null)
-            .GetAsync<DataItem[]>(TestContext.CancellationTokenSource.Token);
+            .GetAsync<DataItem[]>(TestContext.CancellationToken);
 
         // Assert
-        Assert.AreEqual(3, res!.Length);
-        Assert.IsTrue(res.All(e => e.Num == 1));
+        Assert.HasCount(3, res!);
+        Assert.IsTrue(res!.All(e => e.Num == 1));
     }
 
     [TestMethod]
@@ -176,14 +182,14 @@ RETURN @@ROWCOUNT"
         await setupGetTestSchema(phorm);
 
         var obj1 = new DataItem();
-        var res1 = await phorm.CallAsync<IUpsertWithId>(obj1, TestContext.CancellationTokenSource.Token);
+        var res1 = await phorm.CallAsync<IUpsertWithId>(obj1, TestContext.CancellationToken);
 
         var obj2 = new DataItem();
-        var res2 = await phorm.CallAsync<IUpsertWithId>(obj2, TestContext.CancellationTokenSource.Token);
+        var res2 = await phorm.CallAsync<IUpsertWithId>(obj2, TestContext.CancellationToken);
 
         // Act
         var res3 = await phorm.From<IDataView>(new { obj2.Id })
-            .GetAsync<DataItem[]>(TestContext.CancellationTokenSource.Token);
+            .GetAsync<DataItem[]>(TestContext.CancellationToken);
 
         // Assert
         Assert.AreEqual(1, res1);
@@ -198,13 +204,13 @@ RETURN @@ROWCOUNT"
         var phorm = getPhormSession();
         await setupGetTestSchema(phorm);
 
-        await phorm.CallAsync("GetTest_Upsert", null, TestContext.CancellationTokenSource.Token);
-        await phorm.CallAsync("GetTest_Upsert", null, TestContext.CancellationTokenSource.Token);
-        await phorm.CallAsync("GetTest_Upsert", null, TestContext.CancellationTokenSource.Token);
+        await phorm.CallAsync("GetTest_Upsert", null, TestContext.CancellationToken);
+        await phorm.CallAsync("GetTest_Upsert", null, TestContext.CancellationToken);
+        await phorm.CallAsync("GetTest_Upsert", null, TestContext.CancellationToken);
 
-        var res = await phorm.GetAsync<DataItemWithoutText[]>(null!, TestContext.CancellationTokenSource.Token);
+        var res = await phorm.GetAsync<DataItemWithoutText[]>(null!, TestContext.CancellationToken);
 
-        Assert.AreEqual(3, res!.Length);
+        Assert.HasCount(3, res!);
     }
 
     [TestMethod]
@@ -213,11 +219,11 @@ RETURN @@ROWCOUNT"
         var phorm = getPhormSession();
         await setupGetTestSchema(phorm);
 
-        await phorm.CallAsync("GetTest_Upsert", null, TestContext.CancellationTokenSource.Token);
-        await phorm.CallAsync("GetTest_Upsert", null, TestContext.CancellationTokenSource.Token);
-        await phorm.CallAsync("GetTest_Upsert", null, TestContext.CancellationTokenSource.Token);
+        await phorm.CallAsync("GetTest_Upsert", null, TestContext.CancellationToken);
+        await phorm.CallAsync("GetTest_Upsert", null, TestContext.CancellationToken);
+        await phorm.CallAsync("GetTest_Upsert", null, TestContext.CancellationToken);
 
-        var res = await phorm.GetAsync<DataItem[]>(new { Id = 1 }, TestContext.CancellationTokenSource.Token);
+        var res = await phorm.GetAsync<DataItem[]>(new { Id = 1 }, TestContext.CancellationToken);
 
         Assert.AreEqual(1, res!.Single().Id);
     }
@@ -225,52 +231,38 @@ RETURN @@ROWCOUNT"
     [TestMethod]
     public async Task Many__IEnumerable_resolves_later()
     {
-        static bool hasUnresolvedEntities(IEnumerable l)
-        {
-            var resolversField = typeof(EntityList<DataItem>)
-                .GetField("_resolvers", BindingFlags.Instance | BindingFlags.NonPublic)!;
-            return ((ICollection)resolversField.GetValue(l)!).Count > 0;
-        }
-
         var phorm = getPhormSession();
         await setupGetTestSchema(phorm);
 
-        await phorm.CallAsync("GetTest_Upsert", null, TestContext.CancellationTokenSource.Token);
-        await phorm.CallAsync("GetTest_Upsert", null, TestContext.CancellationTokenSource.Token);
-        await phorm.CallAsync("GetTest_Upsert", null, TestContext.CancellationTokenSource.Token);
+        await phorm.CallAsync("GetTest_Upsert", null, TestContext.CancellationToken);
+        await phorm.CallAsync("GetTest_Upsert", null, TestContext.CancellationToken);
+        await phorm.CallAsync("GetTest_Upsert", null, TestContext.CancellationToken);
 
-        var res = await phorm.From<IDataView>(null).GetAsync<IEnumerable<DataItem>>(TestContext.CancellationTokenSource.Token);
+        var res = await phorm.From<IDataView>(null).GetAsync<IEnumerable<DataItem>>(TestContext.CancellationToken);
 
         Assert.IsTrue(hasUnresolvedEntities(res!));
-        Assert.AreEqual(3, res!.Count());
+        Assert.HasCount(3, res!);
         Assert.IsTrue(hasUnresolvedEntities(res!));
-        Assert.AreEqual(3, res!.ToArray().Length);
+        Assert.HasCount(3, res!.ToArray()); // Resolve the entities
         Assert.IsFalse(hasUnresolvedEntities(res!));
     }
 
     [TestMethod]
     public async Task Many__ICollection_resolves_later()
     {
-        static bool hasUnresolvedEntities(IEnumerable l)
-        {
-            var resolversField = typeof(EntityList<DataItem>)
-                .GetField("_resolvers", BindingFlags.Instance | BindingFlags.NonPublic)!;
-            return ((ICollection)resolversField.GetValue(l)!).Count > 0;
-        }
-
         var phorm = getPhormSession();
         await setupGetTestSchema(phorm);
 
-        await phorm.CallAsync("GetTest_Upsert", null, TestContext.CancellationTokenSource.Token);
-        await phorm.CallAsync("GetTest_Upsert", null, TestContext.CancellationTokenSource.Token);
-        await phorm.CallAsync("GetTest_Upsert", null, TestContext.CancellationTokenSource.Token);
+        await phorm.CallAsync("GetTest_Upsert", null, TestContext.CancellationToken);
+        await phorm.CallAsync("GetTest_Upsert", null, TestContext.CancellationToken);
+        await phorm.CallAsync("GetTest_Upsert", null, TestContext.CancellationToken);
 
-        var res = await phorm.From<IDataView>(null).GetAsync<ICollection<DataItem>>(TestContext.CancellationTokenSource.Token);
+        var res = await phorm.From<IDataView>(null).GetAsync<ICollection<DataItem>>(TestContext.CancellationToken);
 
         Assert.IsTrue(hasUnresolvedEntities(res!));
         Assert.HasCount(3, res!);
         Assert.IsTrue(hasUnresolvedEntities(res!));
-        Assert.AreEqual(3, res!.ToArray().Length);
+        Assert.HasCount(3, res!.ToArray()); // Resolve the entities
         Assert.IsFalse(hasUnresolvedEntities(res!));
     }
 
@@ -284,10 +276,10 @@ RETURN @@ROWCOUNT"
         var phorm = getPhormSession();
         await setupGetTestSchema(phorm);
 
-        var res = await phorm.CallAsync("GetTest_Upsert", null, TestContext.CancellationTokenSource.Token);
+        var res = await phorm.CallAsync("GetTest_Upsert", null, TestContext.CancellationToken);
 
         var obj = await phorm.From<IDataView>(new { Id = 1 })
-            .GetAsync<DataItemWithoutText>(TestContext.CancellationTokenSource.Token);
+            .GetAsync<DataItemWithoutText>(TestContext.CancellationToken);
 
         Assert.AreEqual(1, res);
         Assert.IsNull(obj!.Text);
@@ -320,7 +312,7 @@ RETURN @@ROWCOUNT"
     {
         var phorm = getPhormSession();
 
-        await SqlTestHelpers.ApplySql(phorm, TestContext.CancellationTokenSource.Token, [
+        await SqlTestHelpers.ApplySql(phorm, TestContext.CancellationToken, [
             @"DROP TABLE IF EXISTS [dbo].[GetTestTable]",
             @"CREATE TABLE [dbo].[GetTestTable] (
 	[A] TINYINT,
@@ -331,7 +323,7 @@ RETURN @@ROWCOUNT"
             @"INSERT INTO [dbo].[GetTestTable] VALUES (1, 2, 3, 4)"
         ]);
 
-        var dto = await ((IPhormSession)phorm).GetAsync<EnumDto>(TestContext.CancellationTokenSource.Token);
+        var dto = await ((IPhormSession)phorm).GetAsync<EnumDto>(TestContext.CancellationToken);
 
         Assert.AreEqual(MyEnum.A, dto!.A);
         Assert.AreEqual(MyEnum.B, dto.B);
@@ -349,13 +341,13 @@ RETURN @@ROWCOUNT"
         var phorm = getPhormSession();
         await setupGetTestSchema(phorm);
 
-        await phorm.CallAsync("GetTest_Upsert", null, TestContext.CancellationTokenSource.Token);
-        await phorm.CallAsync("GetTest_Upsert", null, TestContext.CancellationTokenSource.Token);
-        await phorm.CallAsync("GetTest_Upsert", null, TestContext.CancellationTokenSource.Token);
+        await phorm.CallAsync("GetTest_Upsert", null, TestContext.CancellationToken);
+        await phorm.CallAsync("GetTest_Upsert", null, TestContext.CancellationToken);
+        await phorm.CallAsync("GetTest_Upsert", null, TestContext.CancellationToken);
 
         var filter = phorm.From<IDataView>(null)
             .Where<DataItem>(o => o.Id == 1);
-        var res = await filter.GetAllAsync(TestContext.CancellationTokenSource.Token);
+        var res = await filter.GetAllAsync(TestContext.CancellationToken);
 
         Assert.AreEqual(1, res.Single().Id);
     }
@@ -366,13 +358,13 @@ RETURN @@ROWCOUNT"
         var phorm = getPhormSession();
         await setupGetTestSchema(phorm);
 
-        await phorm.CallAsync("GetTest_Upsert", null, TestContext.CancellationTokenSource.Token);
-        await phorm.CallAsync("GetTest_Upsert", null, TestContext.CancellationTokenSource.Token);
-        await phorm.CallAsync("GetTest_Upsert", null, TestContext.CancellationTokenSource.Token);
+        await phorm.CallAsync("GetTest_Upsert", null, TestContext.CancellationToken);
+        await phorm.CallAsync("GetTest_Upsert", null, TestContext.CancellationToken);
+        await phorm.CallAsync("GetTest_Upsert", null, TestContext.CancellationToken);
 
         var filter = phorm.From<DataItem>(null)
             .Where<DataItem>(o => o.Id == 1);
-        var res = await filter.GetAllAsync(TestContext.CancellationTokenSource.Token);
+        var res = await filter.GetAllAsync(TestContext.CancellationToken);
 
         Assert.AreEqual(1, res.Single().Id);
     }
@@ -380,29 +372,22 @@ RETURN @@ROWCOUNT"
     [TestMethod]
     public async Task Many__Filtered_result_doesnt_resolve_unwanted()
     {
-        static bool hasUnresolvedEntities(IEnumerable l)
-        {
-            var resolversField = typeof(EntityList<DataItem>)
-                .GetField("_resolvers", BindingFlags.Instance | BindingFlags.NonPublic)!;
-            return ((ICollection)resolversField.GetValue(l)!).Count > 0;
-        }
-
         var phorm = getPhormSession();
         await setupGetTestSchema(phorm);
 
-        await phorm.CallAsync("GetTest_Upsert", new { Int = 10 }, TestContext.CancellationTokenSource.Token);
-        await phorm.CallAsync("GetTest_Upsert", new { Int = 20 }, TestContext.CancellationTokenSource.Token);
-        await phorm.CallAsync("GetTest_Upsert", new { Int = 30 }, TestContext.CancellationTokenSource.Token);
-        await phorm.CallAsync("GetTest_Upsert", new { Int = 40 }, TestContext.CancellationTokenSource.Token);
+        await phorm.CallAsync("GetTest_Upsert", new { Int = 10 }, TestContext.CancellationToken);
+        await phorm.CallAsync("GetTest_Upsert", new { Int = 20 }, TestContext.CancellationToken);
+        await phorm.CallAsync("GetTest_Upsert", new { Int = 30 }, TestContext.CancellationToken);
+        await phorm.CallAsync("GetTest_Upsert", new { Int = 40 }, TestContext.CancellationToken);
 
         // Act
         var filter = phorm.From<IDataView>(null)
             .Where<DataItem>(o => o.Id <= 3 && o.Text == null && o.Num.HasValue && o.Num.Value > 10 && o.Flag);
-        var res = await filter.GetAllAsync(TestContext.CancellationTokenSource.Token);
+        var res = await filter.GetAllAsync(TestContext.CancellationToken);
 
         Assert.IsTrue(hasUnresolvedEntities(res));
-        Assert.AreEqual(2, res.Count());
-        Assert.AreEqual(2, res.ToArray().Length);
+        Assert.HasCount(2, res);
+        Assert.HasCount(2, res.ToArray()); // Resolve the entities
         Assert.IsFalse(hasUnresolvedEntities(res));
     }
 

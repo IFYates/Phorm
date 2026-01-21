@@ -38,9 +38,8 @@ public abstract class SqlIntegrationTestBase
         Events.ConsoleMessage -= invokeHandler;
     }
 
-    protected static AbstractPhormSession getPhormSession(string? connectionName = null)
+    protected static SqlPhormSession getPhormSession(string? connectionName = null)
     {
-        var phorm = new SqlPhormSession(@"Server=(localdb)\ProjectModels;Database=PhormTests;MultipleActiveResultSets=True", connectionName);
-        return phorm;
+        return new SqlPhormSession(@"Server=(localdb)\ProjectModels;Database=PhormTests;MultipleActiveResultSets=True", connectionName);
     }
 }

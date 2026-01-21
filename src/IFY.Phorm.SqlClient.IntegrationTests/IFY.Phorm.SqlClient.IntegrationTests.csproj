@@ -9,6 +9,10 @@
     </PropertyGroup>
 
 	<ItemGroup>
+	  <Compile Include="..\IFY.Phorm\Extensions.cs" Link="Core\Extensions.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<PackageReference Include="Microsoft.NET.Test.Sdk" />
 		<PackageReference Include="Moq" />
 		<PackageReference Include="MSTest.TestAdapter" />
@@ -22,6 +26,10 @@
 	<ItemGroup>
 		<ProjectReference Include="..\IFY.Phorm.SqlClient\IFY.Phorm.SqlClient.csproj" />
 		<ProjectReference Include="..\IFY.Phorm\IFY.Phorm.Core.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="Core\" />
 	</ItemGroup>
 
 </Project>
