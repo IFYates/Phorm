@@ -1,5 +1,6 @@
 ﻿using IFY.Phorm.Connectivity;
 using IFY.Phorm.Execution;
+using IFY.Phorm.Tests;
 using Microsoft.Data.SqlClient;
 using Moq;
 using System.Data;
@@ -72,7 +73,7 @@ public class SqlPhormSessionTests
 
     static object? getField<T>(T inst, string fieldName)
     {
-        return typeof(T).GetField(fieldName, BindingFlags.NonPublic | BindingFlags.Instance)?.GetValue(inst);
+        return typeof(T).GetField(fieldName, BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(inst);
     }
 
     [TestMethod]
@@ -311,6 +312,60 @@ public class SqlPhormSessionTests
     }
 
     [TestMethod]
+    public async Task GetConnection__Has_ContextData__Sets_on_first_open()
+    {
+        // Arrange
+        var connMock = new Mock<IAsyncDbConnection>(MockBehavior.Strict);
+        connMock.Setup(m => m.Dispose());
+        connMock.SetupGet(m => m.State)
+            .Returns(ConnectionState.Closed);
+        connMock.Setup(m => m.OpenAsync(It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        var cmdMock = new Mock<IAsyncDbCommand>(MockBehavior.Strict);
+        cmdMock.SetupProperty(m => m.CommandText);
+        cmdMock.Setup(m => m.ExecuteNonQueryAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(0);
+        cmdMock.Setup(m => m.Dispose());
+        connMock.Setup(m => m.CreateCommand())
+            .Returns(cmdMock.Object);
+
+        var paramCollection = new TestDataParameterCollection();
+        cmdMock.SetupGet(m => m.Parameters).Returns(paramCollection);
+        cmdMock.Setup(m => m.CreateParameter())
+            .Returns(() =>
+            {
+                var paramMock = new Mock<IDbDataParameter>();
+                paramMock.SetupAllProperties();
+                return paramMock.Object;
+            });
+
+        var sess = new SqlPhormSession(CONN_STR)
+        {
+            _connectionBuilder = (_) => connMock.Object,
+            ContextData = new Dictionary<string, object?>
+            {
+                { "key1", 123 },
+                { "key2", "value2" }
+            }
+        };
+
+        // Act
+        var conn = sess.GetConnection(false);
+        conn.DefaultSchema = "dbo";
+        await conn.OpenAsync(default);
+
+        // Assert
+        Assert.HasCount(4, paramCollection);
+        Assert.AreEqual("key1", ((IDbDataParameter)paramCollection["@keyParam0"]).Value);
+        Assert.AreEqual(123, ((IDbDataParameter)paramCollection["@valueParam0"]).Value);
+        Assert.AreEqual("key2", ((IDbDataParameter)paramCollection["@keyParam1"]).Value);
+        Assert.AreEqual("value2", ((IDbDataParameter)paramCollection["@valueParam1"]).Value);
+        Assert.Contains("EXEC sp_set_session_context @keyParam0, @valueParam0;", cmdMock.Object.CommandText);
+        Assert.Contains("EXEC sp_set_session_context @keyParam1, @valueParam1;", cmdMock.Object.CommandText);
+    }
+
+    [TestMethod]
     public void SetConnectionName__Returns_new_session_with_updated_connection_name()
     {
         // Arrange
@@ -362,5 +417,27 @@ public class SqlPhormSessionTests
 
         // Assert
         Assert.IsFalse(res.HasError);
+    }
+
+    [TestMethod]
+    public void WithContext__Provides_new_session_with_values_set()
+    {
+        // Arrange
+        var sess1 = new SqlPhormSession(null!);
+
+        // Act
+        var sess2 = sess1.WithContext("connName", new Dictionary<string, object?>
+        {
+            { "key1", 123 },
+            { "key2", "value2" }
+        });
+
+        // Assert
+        Assert.AreNotSame(sess1, sess2);
+        Assert.IsNull(sess1.ConnectionName);
+        Assert.IsEmpty(sess1.ContextData);
+        Assert.AreEqual("connName", sess2.ConnectionName);
+        Assert.AreEqual(123, sess2.ContextData["key1"]);
+        Assert.AreEqual("value2", sess2.ContextData["key2"]);
     }
 }

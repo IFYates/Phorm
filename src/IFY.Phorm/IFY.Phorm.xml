@@ -1656,7 +1656,7 @@
             <summary>
             Creates a new session instance with the specified connection name and additional context data.
             </summary>
-            <param name="connectionName">The connection name to use when scoping the new session instance.</param>
+            <param name="connectionName">The connection name to use when scoping the new session instance. Null will remove the current value.</param>
             <param name="contextData">A dictionary containing key-value pairs that provide additional context for the session. Cannot be null.</param>
             <returns>A new <see cref="T:IFY.Phorm.IPhormSession"/> instance configured with the specified connection name and context data.</returns>
         </member>

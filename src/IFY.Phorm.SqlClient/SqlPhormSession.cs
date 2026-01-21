@@ -23,12 +23,12 @@ public class SqlPhormSession(string databaseConnectionString, string? connection
     internal Func<string, IAsyncDbConnection> _connectionBuilder = (sqlConnStr) => new SqlConnection(sqlConnStr).Shim<IAsyncDbConnection>();
 
     /// <inheritdoc/>
-    public IPhormSession WithContext(string connectionName, IDictionary<string, object?> contextData)
+    public IPhormSession WithContext(string? connectionName, IDictionary<string, object?> contextData)
     {
-        // TODO
         return new SqlPhormSession(databaseConnectionString, connectionName)
         {
-            _connectionBuilder = _connectionBuilder
+            _connectionBuilder = _connectionBuilder,
+            ContextData = contextData.ToDictionary(e => e.Key, e => e.Value)
         };
     }
 
@@ -65,6 +65,7 @@ public class SqlPhormSession(string databaseConnectionString, string? connection
                 valueParam.Value = data[i].Value ?? DBNull.Value;
                 cmd.Parameters.Add(valueParam);
             }
+            cmd.CommandText = sql.ToString();
             await cmd.ExecuteNonQueryAsync(default);
         }
     }

@@ -75,6 +75,27 @@ RETURN 1");
 
     // NOTE: Low-value test; we have no control over the ADO.NET pool
     [TestMethod]
+    public async Task Requests_done_on_different_sessions()
+    {
+        // Arrange
+        var phorm = getPhormSession("TestContext1");
+        await setContextTestContract(phorm);
+
+        // Act
+        var res1 = await phorm.From("ContextTest", null)
+            .GetAsync<ContextTest>(TestContext.CancellationToken);
+        var res2 = await phorm.From("ContextTest", null)
+            .GetAsync<ContextTest>(TestContext.CancellationToken);
+        var res3 = await phorm.From("ContextTest", null)
+            .GetAsync<ContextTest>(TestContext.CancellationToken);
+
+        // Assert
+        Assert.AreNotEqual(res1!.SPID, res2!.SPID);
+        Assert.AreNotEqual(res1.SPID, res3!.SPID);
+    }
+
+    // NOTE: Low-value test; we have no control over the ADO.NET pool
+    [TestMethod]
     public async Task ConnectionName_forces_new_connection()
     {
         // Arrange

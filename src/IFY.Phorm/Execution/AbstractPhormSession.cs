@@ -31,7 +31,15 @@ public abstract class AbstractPhormSession(string? connectionName)
     /// <inheritdoc/>
     public string? ConnectionName { get; } = connectionName;
     /// <inheritdoc/>
-    public IDictionary<string, object?> ContextData { get; } = new Dictionary<string, object?>();
+    public IDictionary<string, object?> ContextData
+    {
+        get; protected internal
+#if !NET5_0_OR_GREATER
+        set;
+#else
+        init;
+#endif
+    } = new Dictionary<string, object?>();
 
     /// <summary>
     /// Gets or sets the prefix used for accessing database stored procedures.

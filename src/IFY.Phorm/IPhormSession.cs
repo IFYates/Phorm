@@ -50,12 +50,12 @@ public interface IPhormSession : IPhormConnectedSession
     /// values may be any object.</param>
     /// <returns>A new session instance that includes the provided context data.</returns>
     public IPhormSession WithContext(IDictionary<string, object?> contextData)
-        => WithContext(ConnectionName!, contextData);
+        => WithContext(ConnectionName, contextData);
     /// <summary>
     /// Creates a new session instance with the specified connection name and additional context data.
     /// </summary>
-    /// <param name="connectionName">The connection name to use when scoping the new session instance.</param>
+    /// <param name="connectionName">The connection name to use when scoping the new session instance. Null will remove the current value.</param>
     /// <param name="contextData">A dictionary containing key-value pairs that provide additional context for the session. Cannot be null.</param>
     /// <returns>A new <see cref="IPhormSession"/> instance configured with the specified connection name and context data.</returns>
-    IPhormSession WithContext(string connectionName, IDictionary<string, object?> contextData);
+    IPhormSession WithContext(string? connectionName, IDictionary<string, object?> contextData);
 }
