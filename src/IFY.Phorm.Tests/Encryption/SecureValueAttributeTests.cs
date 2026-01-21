@@ -3,6 +3,7 @@
 namespace IFY.Phorm.Encryption.Tests;
 
 [TestClass]
+[DoNotParallelize]
 public class SecureValueAttributeTests
 {
     public class ClassWithAuthenticator

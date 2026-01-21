@@ -9,6 +9,7 @@ using System.Runtime.Serialization;
 namespace IFY.Phorm.Execution.Tests;
 
 [TestClass]
+[DoNotParallelize]
 public class PhormContractRunnerTests_Call
 {
     public TestContext TestContext { get; set; }
