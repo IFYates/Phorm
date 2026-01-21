@@ -20,10 +20,10 @@ jobs:
 
     steps:
     # Setup
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v6.0.1
 
     - name: Setup .NET 10
-      uses: actions/setup-dotnet@v1.7.2
+      uses: actions/setup-dotnet@v5.1.0
       with:
         dotnet-version: 10.0.x
 
@@ -33,7 +33,7 @@ jobs:
       run: dotnet tool restore
       
     - name: Set branch-based environment variables
-      uses: iamtheyammer/branch-env-vars@v1.1.2
+      uses: iamtheyammer/branch-env-vars@v1.2.2
       with:
         BUILD_CONFIG: |
           main:Release
@@ -62,7 +62,7 @@ jobs:
 
     # Mutation test
     - name: Configure Stryker.NET for IFY.Phorm
-      uses: DamianReeves/write-file-action@v1.0
+      uses: DamianReeves/write-file-action@v1.3
       with:
         path: stryker-config.json
         write-mode: overwrite
@@ -83,7 +83,7 @@ jobs:
       run: dotnet stryker --dashboard-api-key ${{ secrets.STRYKER_DASHBOARD }}
       continue-on-error: true
     - name: Configure Stryker.NET for IFY.Phorm.SqlClient
-      uses: DamianReeves/write-file-action@v1.0
+      uses: DamianReeves/write-file-action@v1.3
       with:
         path: stryker-config.json
         write-mode: overwrite
@@ -104,7 +104,7 @@ jobs:
       run: dotnet stryker --dashboard-api-key ${{ secrets.STRYKER_DASHBOARD }}
       continue-on-error: true
     - name: Upload mutation reports
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
         name: mutation-report.html
         path: ./**/mutation-report.html

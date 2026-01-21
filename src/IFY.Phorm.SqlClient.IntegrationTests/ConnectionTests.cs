@@ -94,6 +94,30 @@ RETURN 1");
         Assert.AreNotEqual(res1.SPID, res3!.SPID);
     }
 
+    [TestMethod]
+    public async Task Transaction_requests_done_in_same_session()
+    {
+        // Arrange
+        var phorm = getPhormSession();
+        await setContextTestContract(phorm);
+
+        // Act
+        ContextTest? res1, res2, res3;
+        using (var transaction = await phorm.BeginTransactionAsync(TestContext.CancellationToken))
+        {
+            res1 = await transaction.From("ContextTest", null)
+                .GetAsync<ContextTest>(TestContext.CancellationToken);
+            res2 = await transaction.From("ContextTest", null)
+                .GetAsync<ContextTest>(TestContext.CancellationToken);
+            res3 = await transaction.From("ContextTest", null)
+                .GetAsync<ContextTest>(TestContext.CancellationToken);
+        }
+
+        // Assert
+        Assert.AreEqual(res1!.SPID, res2!.SPID);
+        Assert.AreEqual(res1.SPID, res3!.SPID);
+    }
+
     // NOTE: Low-value test; we have no control over the ADO.NET pool
     [TestMethod]
     public async Task ConnectionName_forces_new_connection()
