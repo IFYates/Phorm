@@ -75,7 +75,7 @@ public class PhormDbConnectionTests
         // Arrange
         var dbMock = new Mock<IAsyncDbConnection>(MockBehavior.Strict);
         dbMock.Setup(m => m.ChangeDatabaseAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-            .Verifiable();
+            .Returns(Task.CompletedTask).Verifiable();
 
         var db = new PhormDbConnection(new TestPhormSession(), dbMock.Object);
 
@@ -111,7 +111,7 @@ public class PhormDbConnectionTests
         dbMock.SetupGet(m => m.State)
             .Returns(ConnectionState.Closed).Verifiable();
         dbMock.Setup(m => m.OpenAsync(It.IsAny<CancellationToken>()))
-            .Verifiable();
+            .Returns(Task.CompletedTask).Verifiable();
 
         var db = new PhormDbConnection(new TestPhormSession(), dbMock.Object);
 
@@ -197,8 +197,6 @@ public class PhormDbConnectionTests
         var dbMock = new Mock<IAsyncDbConnection>(MockBehavior.Strict);
         dbMock.SetupGet(m => m.State)
             .Returns(ConnectionState.Closed);
-        dbMock.Setup(m => m.OpenAsync(It.IsAny<CancellationToken>()))
-            .Verifiable();
         dbMock.Setup(m => m.CreateCommand())
             .Returns(cmd).Verifiable();
 
@@ -243,8 +241,6 @@ public class PhormDbConnectionTests
         var dbMock = new Mock<IAsyncDbConnection>(MockBehavior.Strict);
         dbMock.SetupGet(m => m.State)
             .Returns(ConnectionState.Closed);
-        dbMock.Setup(m => m.OpenAsync(It.IsAny<CancellationToken>()))
-            .Verifiable();
         dbMock.Setup(m => m.CreateCommand())
             .Returns(cmdMock.Object).Verifiable();
 

@@ -3,8 +3,9 @@ using IFY.Phorm.Tests;
 using Moq;
 using System.Data;
 
-namespace IFY.Phorm.Execution.Tests;
 #pragma warning disable CA1859 // Use concrete types when possible for improved performance
+#pragma warning disable IDE0130 // Namespace does not match folder structure
+namespace IFY.Phorm.Execution.Tests;
 
 [TestClass]
 public class AbstractPhormSessionTests
@@ -74,7 +75,7 @@ public class AbstractPhormSessionTests
         var runner = phorm.From("objectName");
 
         // Assert
-        Assert.IsInstanceOfType(runner, typeof(PhormContractRunner<IPhormContract>));
+        Assert.IsInstanceOfType<PhormContractRunner<IPhormContract>>(runner);
     }
 
     [TestMethod]
@@ -87,7 +88,7 @@ public class AbstractPhormSessionTests
         var runner = phorm.From<ITestContract>();
 
         // Assert
-        Assert.IsInstanceOfType(runner, typeof(PhormContractRunner<ITestContract>));
+        Assert.IsInstanceOfType<PhormContractRunner<ITestContract>>(runner);
     }
 
     [TestMethod]
@@ -102,7 +103,7 @@ public class AbstractPhormSessionTests
         var runner = phorm.From(arg);
 
         // Assert
-        Assert.IsInstanceOfType(runner, typeof(PhormContractRunner<ITestContract>));
+        Assert.IsInstanceOfType<PhormContractRunner<ITestContract>>(runner);
     }
 
     [TestMethod]

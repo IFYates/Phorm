@@ -13,7 +13,7 @@ public class SqlConsoleMessageCaptureTests
     public void ProcessException__SqlException__Logs_error()
     {
         // Arrange
-        var sessionMock = new Mock<AbstractPhormSession>(MockBehavior.Strict, null!, null!);
+        var sessionMock = new Mock<AbstractPhormSession>(MockBehavior.Strict, null!);
         var conn = new SqlConnection();
 
         var obj = new SqlConsoleMessageCapture(sessionMock.Object, Guid.Empty, conn);
@@ -43,7 +43,7 @@ public class SqlConsoleMessageCaptureTests
     public void ProcessException__SqlException__Sends_event()
     {
         // Arrange
-        var sessionMock = new Mock<AbstractPhormSession>(MockBehavior.Strict, null!, null!);
+        var sessionMock = new Mock<AbstractPhormSession>(MockBehavior.Strict, null!);
         var conn = new SqlConnection();
 
         var cmdGuid = Guid.NewGuid();
@@ -78,7 +78,7 @@ public class SqlConsoleMessageCaptureTests
     public void ProcessException__Not_SqlException__False()
     {
         // Arrange
-        var sessionMock = new Mock<AbstractPhormSession>(MockBehavior.Strict, null!, null!);
+        var sessionMock = new Mock<AbstractPhormSession>(MockBehavior.Strict, null!);
         var conn = new SqlConnection();
 
         var obj = new SqlConsoleMessageCapture(sessionMock.Object, Guid.Empty, conn);
@@ -97,7 +97,7 @@ public class SqlConsoleMessageCaptureTests
     public void InfoMessage__Logs_event()
     {
         // Arrange
-        var sessionMock = new Mock<AbstractPhormSession>(MockBehavior.Strict, null!, null!);
+        var sessionMock = new Mock<AbstractPhormSession>(MockBehavior.Strict, null!);
         var conn = new SqlConnection();
 
         var obj = new SqlConsoleMessageCapture(sessionMock.Object, Guid.Empty, conn);
@@ -128,7 +128,7 @@ public class SqlConsoleMessageCaptureTests
     public void InfoMessage__Sends_event()
     {
         // Arrange
-        var sessionMock = new Mock<AbstractPhormSession>(MockBehavior.Strict, null!, null!);
+        var sessionMock = new Mock<AbstractPhormSession>(MockBehavior.Strict, null!);
         var conn = new SqlConnection();
 
         var cmdGuid = Guid.NewGuid();
@@ -164,7 +164,7 @@ public class SqlConsoleMessageCaptureTests
     public void Dispose__Unsubscribes_event()
     {
         // Arrange
-        var sessionMock = new Mock<AbstractPhormSession>(MockBehavior.Strict, null!, null!);
+        var sessionMock = new Mock<AbstractPhormSession>(MockBehavior.Strict, null!);
         var conn = new SqlConnection();
 
         var obj = new SqlConsoleMessageCapture(sessionMock.Object, Guid.Empty, conn);

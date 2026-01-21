@@ -9,7 +9,7 @@
     </PropertyGroup>
 
 	<ItemGroup>
-	  <Compile Include="..\IFY.Phorm\Extensions.cs" Link="Code\Extensions.cs" />
+	  <Compile Include="..\IFY.Phorm\Extensions.cs" Link="Core\Extensions.cs" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -29,7 +29,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Folder Include="Code\" />
+	  <Folder Include="Core\" />
 	</ItemGroup>
 
 </Project>

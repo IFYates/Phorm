@@ -18,7 +18,7 @@ namespace IFY.Phorm.SqlClient;
 /// <param name="connectionName">An optional name for the connection, used to identify the session or set the application name in the connection
 /// string. If null, the default application name is used.</param>
 public class SqlPhormSession(string databaseConnectionString, string? connectionName = null)
-    : AbstractPhormSession(databaseConnectionString, connectionName), IPhormSession
+    : AbstractPhormSession(connectionName), IPhormSession
 {
     internal Func<string, IAsyncDbConnection> _connectionBuilder = (sqlConnStr) => new SqlConnection(sqlConnStr).Shim<IAsyncDbConnection>();
 
@@ -26,27 +26,21 @@ public class SqlPhormSession(string databaseConnectionString, string? connection
     public IPhormSession WithContext(string connectionName, IDictionary<string, object?> contextData)
     {
         // TODO
-        return new SqlPhormSession(_databaseConnectionString, connectionName)
+        return new SqlPhormSession(databaseConnectionString, connectionName)
         {
             _connectionBuilder = _connectionBuilder
         };
     }
 
     /// <inheritdoc/>
-    protected override string GetConnectionString(bool readOnly)
+    protected override IAsyncDbConnection CreateConnection(bool readOnly)
     {
-        var connstrBuilder = new SqlConnectionStringBuilder(_databaseConnectionString)
+        var connstrBuilder = new SqlConnectionStringBuilder(databaseConnectionString)
         {
             ApplicationIntent = readOnly ? ApplicationIntent.ReadOnly : ApplicationIntent.ReadWrite,
         };
         connstrBuilder.ApplicationName = ConnectionName ?? connstrBuilder.ApplicationName;
-        return connstrBuilder.ConnectionString;
-    }
-
-    /// <inheritdoc/>
-    protected override IAsyncDbConnection CreateConnection(string connectionString)
-    {
-        return _connectionBuilder(connectionString);
+        return _connectionBuilder(connstrBuilder.ConnectionString);
     }
 
     /// <inheritdoc/>
@@ -78,11 +72,14 @@ public class SqlPhormSession(string databaseConnectionString, string? connection
     /// <inheritdoc/>
     protected override async Task ResolveDefaultSchemaAsync(IPhormDbConnection phormConn)
     {
-        using var cmd = phormConn.CreateCommand();
-        cmd.CommandText = "SELECT schema_name()";
-        var result = await cmd.ExecuteScalarAsync(default);
-        phormConn.DefaultSchema = result?.ToString()
-            ?? new SqlConnectionStringBuilder(_databaseConnectionString).UserID;
+        if (phormConn.DefaultSchema.Length == 0)
+        {
+            using var cmd = phormConn.CreateCommand();
+            cmd.CommandText = "SELECT schema_name()";
+            var result = await cmd.ExecuteScalarAsync(default);
+            phormConn.DefaultSchema = result?.ToString()
+                ?? new SqlConnectionStringBuilder(databaseConnectionString).UserID;
+        }
     }
 
     #region Console capture
@@ -103,15 +100,6 @@ public class SqlPhormSession(string databaseConnectionString, string? connection
     public override bool SupportsTransactions => true;
     /// <inheritdoc/>
     public override bool IsInTransaction => false;
-
-    /// <inheritdoc/>
-    public override async Task<ITransactedPhormSession> BeginTransactionAsync(CancellationToken cancellationToken)
-    {
-        var conn = GetConnection(false);
-        await conn.OpenAsync(cancellationToken);
-        var transaction = await conn.BeginTransactionAsync(cancellationToken);
-        return WrapSessionAsTransacted(transaction);
-    }
 
     #endregion Transactions
 }

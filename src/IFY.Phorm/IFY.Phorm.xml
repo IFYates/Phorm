@@ -799,6 +799,14 @@
         <member name="M:IFY.Phorm.Encryption.SecureValueAttribute.Encrypt(System.Object,System.Object)">
             <inheritdoc/>
         </member>
+        <member name="T:IFY.Phorm.EventArgs.CommandExecutedEventArgs">
+            <summary>
+            Provides data for the event that occurs after a command has been executed.
+            </summary>
+            <remarks>This class supplies information about the executed command, including its unique identifier, text,
+            parameters, result count, and return value. Instances of this class are typically provided to event handlers that
+            respond to command execution events.</remarks>
+        </member>
         <member name="P:IFY.Phorm.EventArgs.CommandExecutedEventArgs.CommandGuid">
             <summary>
             The unique GUID for this command instance.
@@ -824,6 +832,14 @@
             The return value of the execution.
             </summary>
         </member>
+        <member name="T:IFY.Phorm.EventArgs.CommandExecutingEventArgs">
+            <summary>
+            Provides data for an event that occurs before a command is executed.
+            </summary>
+            <remarks>This class supplies information about the command being executed, including its unique identifier,
+            text, and parameters. It is typically used in event handlers to inspect or log command details prior to
+            execution.</remarks>
+        </member>
         <member name="P:IFY.Phorm.EventArgs.CommandExecutingEventArgs.CommandGuid">
             <summary>
             The unique GUID for this command instance.
@@ -848,6 +864,14 @@
             <summary>
             The connection that has been created.
             </summary>
+        </member>
+        <member name="T:IFY.Phorm.EventArgs.ConsoleMessageEventArgs">
+            <summary>
+            Provides data for events that report messages written to the console by a command instance.
+            </summary>
+            <remarks>Use this class to access information about a console message generated during the execution of a
+            command, including the unique identifier of the command and the message details. Instances of this class are
+            typically provided to event handlers for console message events.</remarks>
         </member>
         <member name="P:IFY.Phorm.EventArgs.ConsoleMessageEventArgs.CommandGuid">
             <summary>
@@ -882,6 +906,15 @@
             <summary>
             The name of the record column that cannot be mapped to the entity.
             </summary>
+        </member>
+        <member name="T:IFY.Phorm.EventArgs.UnresolvedContractMemberEventArgs">
+            <summary>
+            Provides data for an event that occurs when one or more contract members cannot be resolved during entity
+            construction.
+            </summary>
+            <remarks>This event argument is typically used to notify subscribers when the mapping between data source
+            fields and entity members is incomplete. It allows handlers to inspect which members were not matched and take
+            appropriate action, such as logging or applying custom resolution logic.</remarks>
         </member>
         <member name="P:IFY.Phorm.EventArgs.UnresolvedContractMemberEventArgs.CommandGuid">
             <summary>
@@ -965,7 +998,7 @@
             strictness. Use this interface to interact with Phorm contracts and database entities in a scoped and configurable
             manner.</remarks>
         </member>
-        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.#ctor(System.String,System.String)">
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.#ctor(System.String)">
             <summary>
             Represents a session for executing Phorm contracts and database operations, providing methods for invoking actions,
             retrieving data, and managing transactions within a scoped database connection.
@@ -975,11 +1008,6 @@
             supported by the underlying runner. Configuration properties allow control over error handling and result size
             strictness. Use this interface to interact with Phorm contracts and database entities in a scoped and configurable
             manner.</remarks>
-        </member>
-        <member name="F:IFY.Phorm.Execution.AbstractPhormSession._databaseConnectionString">
-            <summary>
-            The connection string used to connect to the database.
-            </summary>
         </member>
         <member name="P:IFY.Phorm.Execution.AbstractPhormSession.ConnectionName">
             <inheritdoc/>
@@ -1034,20 +1062,13 @@
             supports write operations.</param>
             <returns>An <see cref="T:IFY.Phorm.Connectivity.IPhormDbConnection"/> instance representing the database connection for the current context.</returns>
         </member>
-        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.GetConnectionString(System.Boolean)">
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.CreateConnection(System.Boolean)">
             <summary>
-            Retrieves the database connection string for the specified access mode.
+            Creates a new asynchronous database connection with the specified access mode.
             </summary>
-            <param name="readOnly">true to retrieve a connection string configured for read-only access; false to retrieve a connection string for
-            read-write access.</param>
-            <returns>A connection string that can be used to connect to the database with the requested access mode.</returns>
-        </member>
-        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.CreateConnection(System.String)">
-            <summary>
-            Creates and returns a new database connection configured for either read-only or read-write access.
-            </summary>
-            <param name="connectionString">The connection string to use for creating the database connection.</param>
-            <returns>An <see cref="T:System.Data.IDbConnection"/> instance representing the newly created database connection.</returns>
+            <param name="readOnly">A value indicating whether the connection should be opened in read-only mode. Specify <see langword="true"/> to
+            restrict operations to reading data; otherwise, <see langword="false"/> to allow both read and write operations.</param>
+            <returns>An <see cref="T:System.Data.IAsyncDbConnection"/> instance representing the newly created database connection.</returns>
         </member>
         <member name="M:IFY.Phorm.Execution.AbstractPhormSession.ApplyContextAsync(IFY.Phorm.Connectivity.IPhormDbConnection)">
             <summary>
@@ -1125,41 +1146,6 @@
             <inheritdoc/>
         </member>
         <member name="M:IFY.Phorm.Execution.AbstractPhormSession.BeginTransactionAsync(System.Threading.CancellationToken)">
-            <inheritdoc/>
-        </member>
-        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.WrapSessionAsTransacted(System.Data.IDbTransaction)">
-            <summary>
-            Wraps the current session with transactional support using the specified database transaction.
-            </summary>
-            <param name="transaction">The database transaction to associate with the session. Cannot be null.</param>
-            <returns>An instance of <see cref="T:IFY.Phorm.Execution.ITransactedPhormSession"/> that operates within the context of the provided
-            transaction.</returns>
-        </member>
-        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.CallAsync``1">
-            <inheritdoc/>
-        </member>
-        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.CallAsync``1(System.Object)">
-            <inheritdoc/>
-        </member>
-        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.CallAsync``1(``0)">
-            <inheritdoc/>
-        </member>
-        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.CallAsync``1(``0,System.Threading.CancellationToken)">
-            <inheritdoc/>
-        </member>
-        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.GetAsync``1">
-            <inheritdoc/>
-        </member>
-        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.GetAsync``1(System.Object)">
-            <inheritdoc/>
-        </member>
-        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.GetAsync``1(System.Threading.CancellationToken)">
-            <inheritdoc/>
-        </member>
-        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.GetAsync``1(``0)">
-            <inheritdoc/>
-        </member>
-        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.GetAsync``1(``0,System.Threading.CancellationToken)">
             <inheritdoc/>
         </member>
         <member name="P:IFY.Phorm.Execution.ConsoleMessage.IsError">
@@ -1275,13 +1261,13 @@
             <typeparam name="TEntity">The entity type that will be received and filtered OR the base type of the <see cref="T:IFY.Phorm.Data.GenSpecBase"/> <typeparamref name="TResult"/>. Must have a default constructor, unless this is the abstract base type of the GenSpec.</typeparam>
             <typeparam name="TResult">Either the same as <typeparamref name="TEntity"/>, or any GenSpec&lt;TEntity, ...&gt;.</typeparam>
         </member>
-        <member name="T:IFY.Phorm.Execution.TransactedPhormSession">
-            <summary>
-            A wrapper for an <see cref="T:IFY.Phorm.Execution.AbstractPhormSession"/> instance, adding standard transaction-handling logic.
-            </summary>
-            --- Purely wrapped members below here
+        <member name="P:IFY.Phorm.Execution.TransactedPhormSession.SupportsTransactions">
+            <inheritdoc/>
         </member>
         <member name="P:IFY.Phorm.Execution.TransactedPhormSession.IsInTransaction">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Execution.TransactedPhormSession.CreateConnection(System.Boolean)">
             <inheritdoc/>
         </member>
         <member name="M:IFY.Phorm.Execution.TransactedPhormSession.Commit">
@@ -1291,57 +1277,6 @@
             <inheritdoc/>
         </member>
         <member name="M:IFY.Phorm.Execution.TransactedPhormSession.Dispose">
-            <inheritdoc/>
-        </member>
-        <member name="M:IFY.Phorm.Execution.TransactedPhormSession.CallAsync(System.String,System.Object,System.Threading.CancellationToken)">
-            <inheritdoc/>
-        </member>
-        <member name="M:IFY.Phorm.Execution.TransactedPhormSession.CallAsync``1(System.Object,System.Threading.CancellationToken)">
-            <inheritdoc/>
-        </member>
-        <member name="M:IFY.Phorm.Execution.TransactedPhormSession.From(System.String,System.Object)">
-            <inheritdoc/>
-        </member>
-        <member name="M:IFY.Phorm.Execution.TransactedPhormSession.From``1(System.Object)">
-            <inheritdoc/>
-        </member>
-        <member name="M:IFY.Phorm.Execution.TransactedPhormSession.GetAsync``1(System.Object,System.Threading.CancellationToken)">
-            <inheritdoc/>
-        </member>
-        <member name="E:IFY.Phorm.Execution.TransactedPhormSession.Connected">
-            <inheritdoc/>
-        </member>
-        <member name="E:IFY.Phorm.Execution.TransactedPhormSession.CommandExecuting">
-            <inheritdoc/>
-        </member>
-        <member name="E:IFY.Phorm.Execution.TransactedPhormSession.CommandExecuted">
-            <inheritdoc/>
-        </member>
-        <member name="E:IFY.Phorm.Execution.TransactedPhormSession.UnexpectedRecordColumn">
-            <inheritdoc/>
-        </member>
-        <member name="E:IFY.Phorm.Execution.TransactedPhormSession.UnresolvedContractMember">
-            <inheritdoc/>
-        </member>
-        <member name="E:IFY.Phorm.Execution.TransactedPhormSession.ConsoleMessage">
-            <inheritdoc/>
-        </member>
-        <member name="P:IFY.Phorm.Execution.TransactedPhormSession.ConnectionName">
-            <inheritdoc/>
-        </member>
-        <member name="P:IFY.Phorm.Execution.TransactedPhormSession.ContextData">
-            <inheritdoc/>
-        </member>
-        <member name="P:IFY.Phorm.Execution.TransactedPhormSession.ExceptionsAsConsoleMessage">
-            <inheritdoc/>
-        </member>
-        <member name="P:IFY.Phorm.Execution.TransactedPhormSession.StrictResultSize">
-            <inheritdoc/>
-        </member>
-        <member name="P:IFY.Phorm.Execution.TransactedPhormSession.SupportsTransactions">
-            <inheritdoc/>
-        </member>
-        <member name="M:IFY.Phorm.Execution.TransactedPhormSession.BeginTransactionAsync(System.Threading.CancellationToken)">
             <inheritdoc/>
         </member>
         <member name="M:IFY.Phorm.Extensions.GetExpressionParameterProperties(System.Linq.Expressions.Expression,System.Type)">

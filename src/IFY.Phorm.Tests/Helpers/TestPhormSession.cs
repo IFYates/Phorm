@@ -33,11 +33,6 @@ internal partial class TestPhormSession : AbstractPhormSession, IPhormSession
         TestConnection = connection;
     }
 
-    public override Task<ITransactedPhormSession> BeginTransactionAsync(CancellationToken cancellationToken)
-    {
-        throw new NotSupportedException();
-    }
-
     protected override IAsyncDbCommand CreateCommand(IPhormDbConnection connection, string schema, string objectName, DbObjectType objectType)
     {
         var cmd = base.CreateCommand(connection, schema, objectName, objectType);
@@ -45,7 +40,7 @@ internal partial class TestPhormSession : AbstractPhormSession, IPhormSession
         return cmd;
     }
 
-    protected override IAsyncDbConnection CreateConnection(string connectionString)
+    protected override IAsyncDbConnection CreateConnection(bool readOnly)
     {
         // TestPhormSession overrides GetConnection, so does not use this method
         throw new NotImplementedException();
@@ -55,12 +50,6 @@ internal partial class TestPhormSession : AbstractPhormSession, IPhormSession
     {
         IsReadOnly = readOnly;
         return TestConnection;
-    }
-
-    protected override string GetConnectionString(bool readOnly)
-    {
-        // TestPhormSession overrides GetConnection, so does not use this method
-        throw new NotImplementedException();
     }
 
     [ExcludeFromCodeCoverage]

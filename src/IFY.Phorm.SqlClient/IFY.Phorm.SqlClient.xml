@@ -57,10 +57,7 @@
         <member name="M:IFY.Phorm.SqlClient.SqlPhormSession.WithContext(System.String,System.Collections.Generic.IDictionary{System.String,System.Object})">
             <inheritdoc/>
         </member>
-        <member name="M:IFY.Phorm.SqlClient.SqlPhormSession.GetConnectionString(System.Boolean)">
-            <inheritdoc/>
-        </member>
-        <member name="M:IFY.Phorm.SqlClient.SqlPhormSession.CreateConnection(System.String)">
+        <member name="M:IFY.Phorm.SqlClient.SqlPhormSession.CreateConnection(System.Boolean)">
             <inheritdoc/>
         </member>
         <member name="M:IFY.Phorm.SqlClient.SqlPhormSession.ApplyContextAsync(IFY.Phorm.Connectivity.IPhormDbConnection)">
@@ -76,9 +73,6 @@
             <inheritdoc/>
         </member>
         <member name="P:IFY.Phorm.SqlClient.SqlPhormSession.IsInTransaction">
-            <inheritdoc/>
-        </member>
-        <member name="M:IFY.Phorm.SqlClient.SqlPhormSession.BeginTransactionAsync(System.Threading.CancellationToken)">
             <inheritdoc/>
         </member>
     </members>

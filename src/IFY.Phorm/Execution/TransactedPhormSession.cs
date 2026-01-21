@@ -1,27 +1,25 @@
-﻿using IFY.Phorm.Data;
-using IFY.Phorm.EventArgs;
-using System.Data;
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Data;
 
 namespace IFY.Phorm.Execution;
 
-/// <summary>
-/// A wrapper for an <see cref="AbstractPhormSession"/> instance, adding standard transaction-handling logic.
-/// </summary>
-public sealed partial class TransactedPhormSession : ITransactedPhormSession
+// TODO: Transaction logic to a new type of IPhormDbConnection instead?
+// TODO: CommitAsync, RollbackAsync
+internal sealed class TransactedPhormSession(IAsyncDbConnection connection, IDbTransaction transaction, AbstractPhormSession sourceSession)
+    : AbstractPhormSession(transaction, sourceSession.ConnectionName), ITransactedPhormSession
 {
-    private bool _isDisposed;
-
-    private readonly AbstractPhormSession _baseSession;
-    private readonly IDbTransaction _transaction; // TODO: CommitAsync, RollbackAsync
+    private readonly IAsyncDbConnection _connection = connection;
+    private readonly IDbTransaction _transaction = transaction;
 
     /// <inheritdoc/>
-    public bool IsInTransaction => true;
+    public override bool SupportsTransactions => true;
 
-    internal TransactedPhormSession(AbstractPhormSession baseSession, IDbTransaction transaction)
+    /// <inheritdoc/>
+    public override bool IsInTransaction => true;
+
+    /// <inheritdoc/>
+    protected override IAsyncDbConnection CreateConnection(bool readOnly)
     {
-        _baseSession = baseSession;
-        _transaction = transaction;
+        return _connection;
     }
 
     /// <inheritdoc/>
@@ -39,93 +37,7 @@ public sealed partial class TransactedPhormSession : ITransactedPhormSession
     /// <inheritdoc/>
     public void Dispose()
     {
-        if (!_isDisposed)
-        {
-            _transaction.Dispose();
-            _isDisposed = true;
-        }
+        _transaction.Dispose();
         GC.SuppressFinalize(this);
     }
-
-    #region Call
-
-    /// <inheritdoc/>
-    public Task<int> CallAsync(string contractName, object? args, CancellationToken cancellationToken)
-    {
-        var runner = new PhormContractRunner<IPhormContract>(_baseSession, contractName, DbObjectType.StoredProcedure, args, _transaction);
-        return runner.CallAsync(cancellationToken);
-    }
-    /// <inheritdoc/>
-    public Task<int> CallAsync<TActionContract>(object? args, CancellationToken cancellationToken)
-        where TActionContract : IPhormContract
-    {
-        var runner = new PhormContractRunner<TActionContract>(_baseSession, null, DbObjectType.StoredProcedure, args, _transaction);
-        return runner.CallAsync(cancellationToken);
-    }
-
-    #endregion Call
-
-    #region From
-
-    /// <inheritdoc/>
-    public IPhormContractRunner From(string contractName, object? args)
-    {
-        return new PhormContractRunner<IPhormContract>(_baseSession, contractName, DbObjectType.StoredProcedure, args, _transaction);
-    }
-
-    /// <inheritdoc/>
-    public IPhormContractRunner<TActionContract> From<TActionContract>(object? args)
-        where TActionContract : IPhormContract
-    {
-        return new PhormContractRunner<TActionContract>(_baseSession, null, DbObjectType.StoredProcedure, args, _transaction);
-    }
-
-    #endregion From
-
-    #region Get
-
-    /// <inheritdoc/>
-    public Task<TResult?> GetAsync<TResult>(object? args, CancellationToken cancellationToken)
-        where TResult : class
-    {
-        var runner = new PhormContractRunner<IPhormContract>(_baseSession, typeof(TResult), null, DbObjectType.View, args, _transaction);
-        return runner.GetAsync<TResult>(cancellationToken);
-    }
-
-    #endregion Get
-}
-
-///--- Purely wrapped members below here
-[ExcludeFromCodeCoverage]
-partial class TransactedPhormSession
-{
-    /// <inheritdoc/>
-    public event EventHandler<ConnectedEventArgs> Connected { add => _baseSession.Connected += value; remove => _baseSession.Connected -= value; }
-    /// <inheritdoc/>
-    public event EventHandler<CommandExecutingEventArgs> CommandExecuting { add => _baseSession.CommandExecuting += value; remove => _baseSession.CommandExecuting -= value; }
-    /// <inheritdoc/>
-    public event EventHandler<CommandExecutedEventArgs> CommandExecuted { add => _baseSession.CommandExecuted += value; remove => _baseSession.CommandExecuted -= value; }
-    /// <inheritdoc/>
-    public event EventHandler<UnexpectedRecordColumnEventArgs> UnexpectedRecordColumn { add => _baseSession.UnexpectedRecordColumn += value; remove => _baseSession.UnexpectedRecordColumn -= value; }
-    /// <inheritdoc/>
-    public event EventHandler<UnresolvedContractMemberEventArgs> UnresolvedContractMember { add => _baseSession.UnresolvedContractMember += value; remove => _baseSession.UnresolvedContractMember -= value; }
-    /// <inheritdoc/>
-    public event EventHandler<ConsoleMessageEventArgs> ConsoleMessage { add => _baseSession.ConsoleMessage += value; remove => _baseSession.ConsoleMessage -= value; }
-
-    /// <inheritdoc/>
-    public string? ConnectionName => _baseSession.ConnectionName;
-    /// <inheritdoc/>
-    public IDictionary<string, object?> ContextData => _baseSession.ContextData;
-
-    /// <inheritdoc/>
-    public bool ExceptionsAsConsoleMessage { get => _baseSession.ExceptionsAsConsoleMessage; set => _baseSession.ExceptionsAsConsoleMessage = value; }
-    /// <inheritdoc/>
-    public bool StrictResultSize { get => _baseSession.StrictResultSize; set => _baseSession.StrictResultSize = value; }
-
-    /// <inheritdoc/>
-    public bool SupportsTransactions => _baseSession.SupportsTransactions;
-
-    /// <inheritdoc/>
-    public Task<ITransactedPhormSession> BeginTransactionAsync(CancellationToken cancellationToken)
-        => _baseSession.BeginTransactionAsync(cancellationToken);
 }

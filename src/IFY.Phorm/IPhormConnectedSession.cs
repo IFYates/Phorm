@@ -1,6 +1,7 @@
 ﻿using IFY.Phorm.Data;
 using IFY.Phorm.EventArgs;
 using IFY.Phorm.Execution;
+using System.ComponentModel;
 
 namespace IFY.Phorm;
 
@@ -300,6 +301,7 @@ public interface IPhormConnectedSession
     /// </summary>
     /// <returns>The runner of the transaction.</returns>
     [Obsolete("Use BeginTransactionAsync")]
+    [EditorBrowsable(EditorBrowsableState.Never)]
     ITransactedPhormSession BeginTransaction() => BeginTransactionAsync(default).Result;
 
     #endregion Transactions

@@ -1,5 +1,4 @@
 ﻿using IFY.Phorm.Execution;
-using IFY.Shimr.Extensions;
 using System.Data;
 
 namespace IFY.Phorm.Connectivity;
@@ -7,7 +6,7 @@ namespace IFY.Phorm.Connectivity;
 /// <summary>
 /// Wraps <see cref="IDbConnection"/> with additional Pho/rm values.
 /// </summary>
-public sealed class PhormDbConnection : IPhormDbConnection
+internal sealed class PhormDbConnection : IPhormDbConnection
 {
     private readonly AbstractPhormSession _session;
 
@@ -30,8 +29,17 @@ public sealed class PhormDbConnection : IPhormDbConnection
 
     internal PhormDbConnection(AbstractPhormSession session, IAsyncDbConnection dbConnection)
     {
-        DbConnection = dbConnection;
         _session = session;
+
+        if (dbConnection is PhormDbConnection phorm)
+        {
+            DbConnection = phorm.DbConnection;
+            DefaultSchema = phorm.DefaultSchema;
+        }
+        else
+        {
+            DbConnection = dbConnection;
+        }
     }
 
     /// <inheritdoc/>
@@ -56,7 +64,7 @@ public sealed class PhormDbConnection : IPhormDbConnection
             await _session.ApplyContextAsync(this);
             await _session.ResolveDefaultSchemaAsync(this);
 
-            _session.OnConnected(new());
+            _session.OnConnected(new() { Connection = this });
         }
     }
     /// <inheritdoc/>
