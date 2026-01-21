@@ -99,7 +99,7 @@ internal sealed partial class PhormContractRunner<TActionContract> : IPhormContr
     private async Task<(IAsyncDbCommand cmd, ContractMember[] members, CommandExecutingEventArgs eventArgs)> startCommand()
     {
         var members = ContractMember.GetMembersFromContract(_runArgs, typeof(TActionContract), true);
-        var cmd = await _session.CreateCommand(_schema, _objectName, _objectType, _readOnly);
+        var cmd = await _session.CreateCommandAsync(_schema, _objectName, _objectType, _readOnly);
         cmd.Transaction = _transaction;
 
         // Build WHERE clause from members

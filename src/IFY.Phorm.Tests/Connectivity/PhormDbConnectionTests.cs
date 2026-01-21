@@ -123,7 +123,7 @@ public class PhormDbConnectionTests
     }
 
     [TestMethod]
-    public async Task Close__Is_closed__Noop()
+    public void Close__Is_closed__Noop()
     {
         // Arrange
         var dbMock = new Mock<IAsyncDbConnection>(MockBehavior.Strict);
@@ -133,26 +133,26 @@ public class PhormDbConnectionTests
         var db = new PhormDbConnection(new TestPhormSession(), dbMock.Object);
 
         // Act
-        await db.CloseAsync(default);
+        db.Close();
 
         // Assert
         dbMock.Verify();
     }
 
     [TestMethod]
-    public async Task Close__Not_closed__Close()
+    public void Close__Not_closed__Close()
     {
         // Arrange
         var dbMock = new Mock<IAsyncDbConnection>(MockBehavior.Strict);
         dbMock.SetupGet(m => m.State)
             .Returns(ConnectionState.Open).Verifiable();
-        dbMock.Setup(m => m.CloseAsync(It.IsAny<CancellationToken>()))
+        dbMock.Setup(m => m.Close())
             .Verifiable();
 
         var db = new PhormDbConnection(new TestPhormSession(), dbMock.Object);
 
         // Act
-        await db.CloseAsync(default);
+        db.Close();
 
         // Assert
         dbMock.Verify();

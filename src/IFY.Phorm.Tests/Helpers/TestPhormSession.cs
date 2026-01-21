@@ -45,15 +45,22 @@ internal partial class TestPhormSession : AbstractPhormSession
         return cmd;
     }
 
-    protected override string GetConnectionString(bool readOnly)
-    {
-        IsReadOnly = readOnly;
-        return "connection";
-    }
-
     protected override IAsyncDbConnection CreateConnection(string connectionString)
     {
+        // TestPhormSession overrides GetConnection, so does not use this method
+        throw new NotImplementedException();
+    }
+
+    protected internal override IPhormDbConnection GetConnection(bool readOnly)
+    {
+        IsReadOnly = readOnly;
         return TestConnection;
+    }
+
+    protected override string GetConnectionString(bool readOnly)
+    {
+        // TestPhormSession overrides GetConnection, so does not use this method
+        throw new NotImplementedException();
     }
 
     [ExcludeFromCodeCoverage]

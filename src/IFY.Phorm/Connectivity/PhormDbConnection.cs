@@ -47,7 +47,7 @@ public sealed class PhormDbConnection : IPhormDbConnection
     {
         if (DbConnection.State == ConnectionState.Broken)
         {
-            await DbConnection.CloseAsync(default);
+            DbConnection.Close();
         }
         if (DbConnection.State == ConnectionState.Closed)
         {
@@ -60,11 +60,11 @@ public sealed class PhormDbConnection : IPhormDbConnection
         }
     }
     /// <inheritdoc/>
-    public async Task CloseAsync(CancellationToken cancellationToken)
+    public void Close()
     {
         if (DbConnection.State != ConnectionState.Closed)
         {
-            await DbConnection.CloseAsync(cancellationToken);
+            DbConnection.Close();
         }
     }
 

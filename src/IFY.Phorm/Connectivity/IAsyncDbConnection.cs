@@ -44,12 +44,6 @@ public interface IAsyncDbConnection : IDisposable
     /// represents the new transaction.</returns>
     [Shim(typeof(DbConnection))] ValueTask<IDbTransaction> BeginTransactionAsync(IsolationLevel il, CancellationToken cancellationToken);
     /// <summary>
-    /// Asynchronously closes the connection and releases any associated resources.
-    /// </summary>
-    /// <param name="cancellationToken">A cancellation token that can be used to cancel the close operation.</param>
-    /// <returns>A task that represents the asynchronous close operation.</returns>
-    [Shim(typeof(DbConnection))] Task CloseAsync(CancellationToken cancellationToken);
-    /// <summary>
     /// Asynchronously changes the current database for an open connection to the specified database name.
     /// </summary>
     /// <remarks>The connection must be open before calling this method. If the operation is canceled, the
@@ -59,13 +53,17 @@ public interface IAsyncDbConnection : IDisposable
     /// <returns>A task that represents the asynchronous operation.</returns>
     [Shim(typeof(DbConnection))] Task ChangeDatabaseAsync(string databaseName, CancellationToken cancellationToken);
     /// <summary>
+    /// Closes the connection to the database. This is the preferred method of closing any open connection.
+    /// </summary>
+    void Close();
+    /// <summary>
     /// Creates and returns a new command associated with the current database connection.
     /// </summary>
     /// <remarks>The returned command is not automatically associated with a transaction. The caller is
     /// responsible for configuring the command's properties, such as the command text and parameters, before
     /// execution.</remarks>
     /// <returns>An <see cref="IDbCommand"/> object that can be used to execute queries or commands against the data source.</returns>
-    IDbCommand CreateCommand();
+    [Shim(typeof(DbConnection))] IDbCommand CreateCommand();
     /// <summary>
     /// Asynchronously opens the connection, enabling operations that require an open state.
     /// </summary>

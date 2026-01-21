@@ -437,10 +437,10 @@ public class AbstractPhormSessionTests
     }
 
     [TestMethod]
-    public void CreateCommand__Unknown_DbObjectType__Fail()
+    public async Task CreateCommand__Unknown_DbObjectType__Fail()
     {
         var phorm = new TestPhormSession();
-        Assert.ThrowsExactly<NotSupportedException>
-            (() => phorm.CreateCommand("schema", "Object", (DbObjectType)255, false));
+        await Assert.ThrowsExactlyAsync<NotSupportedException>
+            (async () => await phorm.CreateCommandAsync("schema", "Object", (DbObjectType)255, false));
     }
 }

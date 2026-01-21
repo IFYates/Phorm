@@ -18,7 +18,7 @@ public class TestPhormConnection(string? connectionName) : IPhormDbConnection
 
     public virtual string Database => throw new NotImplementedException();
 
-    public virtual ConnectionState State => ConnectionState.Open;
+    public virtual ConnectionState State { get; set; } = ConnectionState.Open;
 
     public virtual ValueTask<IDbTransaction> BeginTransactionAsync(CancellationToken cancellationToken)
     {
@@ -35,9 +35,9 @@ public class TestPhormConnection(string? connectionName) : IPhormDbConnection
         throw new NotImplementedException();
     }
 
-    public virtual Task CloseAsync(CancellationToken cancellationToken)
+    public void Close()
     {
-        throw new NotImplementedException();
+        State = ConnectionState.Closed;
     }
 
     public virtual IAsyncDbCommand CreateCommand()
@@ -57,6 +57,7 @@ public class TestPhormConnection(string? connectionName) : IPhormDbConnection
 
     public virtual Task OpenAsync(CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        State = ConnectionState.Open;
+        return Task.CompletedTask;
     }
 }

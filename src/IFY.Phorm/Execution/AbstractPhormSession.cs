@@ -129,7 +129,7 @@ public abstract class AbstractPhormSession(string databaseConnectionString, stri
     /// <param name="readOnly">true to request a connection optimised for read-only operations; otherwise, false to request a connection that
     /// supports write operations.</param>
     /// <returns>An <see cref="IPhormDbConnection"/> instance representing the database connection for the current context.</returns>
-    protected internal IPhormDbConnection GetConnection(bool readOnly)
+    protected internal virtual IPhormDbConnection GetConnection(bool readOnly)
     {
         // Reuse existing Phorm connections, where possible
         var connStr = GetConnectionString(readOnly);
@@ -170,7 +170,17 @@ public abstract class AbstractPhormSession(string databaseConnectionString, stri
 
     #endregion Connection
 
-    internal async Task<IAsyncDbCommand> CreateCommand(string? schema, string objectName, DbObjectType objectType, bool readOnly)
+    /// <summary>
+    /// Asynchronously creates an open database command for the specified object and schema.
+    /// </summary>
+    /// <param name="schema">The name of the database schema containing the object, or null to use the connection's default schema. If an
+    /// empty string is provided, the default schema is used.</param>
+    /// <param name="objectName">The name of the database object for which to create the command. Cannot be null or empty.</param>
+    /// <param name="objectType">The type of the database object, such as table, view, or stored procedure.</param>
+    /// <param name="readOnly">true to create the command using a read-only connection; otherwise, false.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains an <see cref="IAsyncDbCommand"/> for
+    /// the specified database object.</returns>
+    internal async Task<IAsyncDbCommand> CreateCommandAsync(string? schema, string objectName, DbObjectType objectType, bool readOnly)
     {
         var conn = GetConnection(readOnly);
         await conn.OpenAsync(default);
