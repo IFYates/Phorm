@@ -18,12 +18,12 @@ namespace IFY.Phorm.SqlClient;
 /// <param name="connectionName">An optional name for the connection, used to identify the session or set the application name in the connection
 /// string. If null, the default application name is used.</param>
 public class SqlPhormSession(string databaseConnectionString, string? connectionName = null)
-    : AbstractPhormSession(databaseConnectionString, connectionName)
+    : AbstractPhormSession(databaseConnectionString, connectionName), IPhormSession
 {
     internal Func<string, IAsyncDbConnection> _connectionBuilder = (sqlConnStr) => new SqlConnection(sqlConnStr).Shim<IAsyncDbConnection>();
 
     /// <inheritdoc/>
-    public override IPhormSession WithContext(string connectionName, IDictionary<string, object?> contextData)
+    public IPhormSession WithContext(string connectionName, IDictionary<string, object?> contextData)
     {
         // TODO
         return new SqlPhormSession(_databaseConnectionString, connectionName)

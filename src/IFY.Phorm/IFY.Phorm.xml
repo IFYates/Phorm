@@ -1062,9 +1062,6 @@
             </summary>
             <returns>The default schema name, if known.</returns>
         </member>
-        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.WithContext(System.String,System.Collections.Generic.IDictionary{System.String,System.Object})">
-            <inheritdoc/>
-        </member>
         <member name="M:IFY.Phorm.Execution.AbstractPhormSession.CreateCommandAsync(System.String,System.String,IFY.Phorm.DbObjectType,System.Boolean)">
             <summary>
             Asynchronously creates an open database command for the specified object and schema.
@@ -1137,6 +1134,33 @@
             <param name="transaction">The database transaction to associate with the session. Cannot be null.</param>
             <returns>An instance of <see cref="T:IFY.Phorm.Execution.ITransactedPhormSession"/> that operates within the context of the provided
             transaction.</returns>
+        </member>
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.CallAsync``1">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.CallAsync``1(System.Object)">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.CallAsync``1(``0)">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.CallAsync``1(``0,System.Threading.CancellationToken)">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.GetAsync``1">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.GetAsync``1(System.Object)">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.GetAsync``1(System.Threading.CancellationToken)">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.GetAsync``1(``0)">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.GetAsync``1(``0,System.Threading.CancellationToken)">
+            <inheritdoc/>
         </member>
         <member name="P:IFY.Phorm.Execution.ConsoleMessage.IsError">
             <summary>
@@ -1317,12 +1341,6 @@
         <member name="P:IFY.Phorm.Execution.TransactedPhormSession.SupportsTransactions">
             <inheritdoc/>
         </member>
-        <member name="M:IFY.Phorm.Execution.TransactedPhormSession.GetConnection(System.Boolean)">
-            <inheritdoc/>
-        </member>
-        <member name="M:IFY.Phorm.Execution.TransactedPhormSession.WithContext(System.String,System.Collections.Generic.IDictionary{System.String,System.Object})">
-            <inheritdoc/>
-        </member>
         <member name="M:IFY.Phorm.Execution.TransactedPhormSession.BeginTransactionAsync(System.Threading.CancellationToken)">
             <inheritdoc/>
         </member>
@@ -1388,6 +1406,276 @@
             <remarks>The default value is "vw_". This property can be set to customize the naming convention for
             views in database operations.</remarks>
         </member>
+        <member name="T:IFY.Phorm.IPhormConnectedSession">
+            <summary>
+            Represents a session for executing Phorm contracts and database operations, providing methods for invoking actions,
+            retrieving data, and managing transactions within a scoped database connection.
+            </summary>
+            <remarks>The session exposes events for monitoring connection lifecycle, command execution, and contract
+            mapping issues. It supports both synchronous and asynchronous operations, as well as transaction management if
+            supported by the underlying runner. Configuration properties allow control over error handling and result size
+            strictness. Use this interface to interact with Phorm contracts and database entities in a scoped and configurable
+            manner.</remarks>
+        </member>
+        <member name="E:IFY.Phorm.IPhormConnectedSession.CommandExecuting">
+            <summary>
+            The event invoked when a command is about to be executed.
+            </summary>
+        </member>
+        <member name="E:IFY.Phorm.IPhormConnectedSession.CommandExecuted">
+            <summary>
+            The event invoked when a command has finished executing.
+            </summary>
+        </member>
+        <member name="E:IFY.Phorm.IPhormConnectedSession.UnexpectedRecordColumn">
+            <summary>
+            A result record contained a column not specified in the target entity type.
+            </summary>
+        </member>
+        <member name="E:IFY.Phorm.IPhormConnectedSession.UnresolvedContractMember">
+            <summary>
+            A result record did not contain a column specified in the target entity type.
+            </summary>
+        </member>
+        <member name="E:IFY.Phorm.IPhormConnectedSession.ConsoleMessage">
+            <summary>
+            A log message was received during execution.
+            </summary>
+        </member>
+        <member name="P:IFY.Phorm.IPhormConnectedSession.ConnectionName">
+            <summary>
+            The connection name this session uses for database scoping.
+            </summary>
+        </member>
+        <member name="P:IFY.Phorm.IPhormConnectedSession.ContextData">
+            <summary>
+            Context data applied to this session.
+            </summary>
+        </member>
+        <member name="P:IFY.Phorm.IPhormConnectedSession.ExceptionsAsConsoleMessage">
+            <summary>
+            If true, will consume execution errors and treat like a console message.
+            Defaults to value in <see cref="P:IFY.Phorm.GlobalSettings.ExceptionsAsConsoleMessage"/>.
+            </summary>
+        </member>
+        <member name="P:IFY.Phorm.IPhormConnectedSession.StrictResultSize">
+            <summary>
+            Whether to throw a <see cref="T:System.InvalidOperationException"/> if an invocation result includes more records than expected.
+            Defaults to value in <see cref="P:IFY.Phorm.GlobalSettings.StrictResultSize"/>.
+            </summary>
+        </member>
+        <member name="M:IFY.Phorm.IPhormConnectedSession.CallAsync(System.String)">
+            <summary>
+            Invokes the specified contract asynchronously and returns the result as an integer.
+            </summary>
+            <param name="contractName">The name of the contract to invoke. Cannot be null or empty.</param>
+            <returns>A task that represents the asynchronous operation. The task result contains the integer value returned by the
+            contract.</returns>
+        </member>
+        <member name="M:IFY.Phorm.IPhormConnectedSession.CallAsync(System.String,System.Object)">
+            <summary>
+            Invokes an asynchronous call to the specified contract with the provided arguments.
+            </summary>
+            <param name="contractName">The name of the contract to invoke. Cannot be null or empty.</param>
+            <param name="args">An object containing the arguments to pass to the contract. May be null if the contract does not require
+            arguments.</param>
+            <returns>A task that represents the asynchronous operation. The task result contains the integer value returned by the
+            contract call.</returns>
+        </member>
+        <member name="M:IFY.Phorm.IPhormConnectedSession.CallAsync(System.String,System.Threading.CancellationToken)">
+            <summary>
+            Invokes the specified contract asynchronously and returns the result as an integer.
+            </summary>
+            <param name="contractName">The name of the contract to invoke. Cannot be null or empty.</param>
+            <param name="cancellationToken">A token that can be used to cancel the asynchronous operation.</param>
+            <returns>A task that represents the asynchronous operation. The task result contains the integer value returned by the
+            contract.</returns>
+        </member>
+        <member name="M:IFY.Phorm.IPhormConnectedSession.CallAsync(System.String,System.Object,System.Threading.CancellationToken)">
+            <summary>
+            Invokes an asynchronous call to the specified contract and returns the result as an integer.
+            </summary>
+            <param name="contractName">The name of the contract to invoke. Cannot be null or empty.</param>
+            <param name="args">An optional argument object to pass to the contract. May be null if the contract does not require arguments.</param>
+            <param name="cancellationToken">A cancellation token that can be used to cancel the asynchronous operation.</param>
+            <returns>A task that represents the asynchronous operation. The task result contains the integer value returned by the
+            contract.</returns>
+        </member>
+        <member name="M:IFY.Phorm.IPhormConnectedSession.CallAsync``1">
+            <summary>
+            Invokes the specified action contract asynchronously without any arguments and returns the result code.
+            </summary>
+            <typeparam name="TActionContract">The type of the action contract to invoke. Must implement <see cref="T:IFY.Phorm.Data.IPhormContract"/>.</typeparam>
+            <returns>A task that represents the asynchronous operation. The task result contains the integer result code returned by
+            the action contract.</returns>
+        </member>
+        <member name="M:IFY.Phorm.IPhormConnectedSession.CallAsync``1(System.Object)">
+            <summary>
+            Invokes the specified action contract asynchronously using the provided arguments.
+            </summary>
+            <typeparam name="TActionContract">The type of the action contract to invoke. Must implement <see cref="T:IFY.Phorm.Data.IPhormContract"/>.</typeparam>
+            <param name="args">An object containing the arguments to pass to the action contract. May be <see langword="null"/> if the contract
+            does not require arguments.</param>
+            <returns>A task that represents the asynchronous operation. The task result contains the status code returned by the
+            action contract.</returns>
+        </member>
+        <member name="M:IFY.Phorm.IPhormConnectedSession.CallAsync``1(System.Threading.CancellationToken)">
+            <summary>
+            Invokes the specified action contract asynchronously without arguments and returns the result code.
+            </summary>
+            <typeparam name="TActionContract">The type of the action contract to invoke. Must implement <see cref="T:IFY.Phorm.Data.IPhormContract"/>.</typeparam>
+            <param name="cancellationToken">A cancellation token that can be used to cancel the asynchronous operation.</param>
+            <returns>A task that represents the asynchronous operation. The task result contains the result code returned by the
+            action contract.</returns>
+        </member>
+        <member name="M:IFY.Phorm.IPhormConnectedSession.CallAsync``1(``0)">
+            <summary>
+            Invokes the specified action contract asynchronously and returns the result code.
+            </summary>
+            <typeparam name="TActionContract">The type of the action contract to execute. Must implement <see cref="T:IFY.Phorm.Data.IPhormContract"/>.</typeparam>
+            <param name="contract">The action contract instance containing the parameters for the call. Cannot be null.</param>
+            <returns>A task that represents the asynchronous operation. The task result contains the integer code returned by the
+            action.</returns>
+        </member>
+        <member name="M:IFY.Phorm.IPhormConnectedSession.CallAsync``1(``0,System.Threading.CancellationToken)">
+            <summary>
+            Invokes the specified action contract asynchronously and returns the result code.
+            </summary>
+            <typeparam name="TActionContract">The type of the action contract to execute. Must implement <see cref="T:IFY.Phorm.Data.IPhormContract"/>.</typeparam>
+            <param name="contract">The action contract instance to invoke. Cannot be null.</param>
+            <param name="cancellationToken">A cancellation token that can be used to cancel the operation.</param>
+            <returns>A task that represents the asynchronous operation. The task result contains the integer result code returned by
+            the action contract.</returns>
+        </member>
+        <member name="M:IFY.Phorm.IPhormConnectedSession.CallAsync``1(System.Object,System.Threading.CancellationToken)">
+            <summary>
+            Invokes an asynchronous call to the specified action contract with the provided arguments.
+            </summary>
+            <typeparam name="TActionContract">The type of the action contract to invoke. Must implement <see cref="T:IFY.Phorm.Data.IPhormContract"/>.</typeparam>
+            <param name="args">An object containing the arguments to pass to the action contract. Can be <see langword="null"/> if the action
+            does not require arguments.</param>
+            <param name="cancellationToken">A cancellation token that can be used to cancel the asynchronous operation.</param>
+            <returns>A task that represents the asynchronous operation. The task result contains an integer status code returned by
+            the action contract.</returns>
+        </member>
+        <member name="M:IFY.Phorm.IPhormConnectedSession.From(System.String)">
+            <summary>
+            Creates a contract runner for the specified contract name.
+            </summary>
+            <param name="contractName">The name of the contract to instantiate. Cannot be null or empty.</param>
+            <returns>An instance of <see cref="T:IFY.Phorm.Execution.IPhormContractRunner"/> for the specified contract name.</returns>
+        </member>
+        <member name="M:IFY.Phorm.IPhormConnectedSession.From(System.String,System.Object)">
+            <summary>
+            Creates a contract runner instance for the specified contract name and optional arguments.
+            </summary>
+            <param name="contractName">The name of the contract to instantiate. Cannot be null or empty.</param>
+            <param name="args">An optional object containing initialization arguments for the contract. May be null if the contract does not
+            require arguments.</param>
+            <returns>An <see cref="T:IFY.Phorm.Execution.IPhormContractRunner"/> instance configured for the specified contract and arguments.</returns>
+        </member>
+        <member name="M:IFY.Phorm.IPhormConnectedSession.From``1">
+            <summary>
+            Creates a contract runner for the specified action contract type.
+            </summary>
+            <typeparam name="TActionContract">The type of action contract to execute. Must implement <see cref="T:IFY.Phorm.Data.IPhormContract"/>.</typeparam>
+            <returns>An <see cref="T:IFY.Phorm.Execution.IPhormContractRunner`1"/> instance for executing the specified contract type.</returns>
+        </member>
+        <member name="M:IFY.Phorm.IPhormConnectedSession.From``1(System.Object)">
+            <summary>
+            Creates a contract runner for the specified action contract type, optionally initializing it with the provided
+            arguments.
+            </summary>
+            <typeparam name="TActionContract">The type of action contract to be executed. Must implement <see cref="T:IFY.Phorm.Data.IPhormContract"/>.</typeparam>
+            <param name="args">An optional object containing initialization arguments for the contract. May be <see langword="null"/> if no
+            arguments are required.</param>
+            <returns>An <see cref="T:IFY.Phorm.Execution.IPhormContractRunner`1"/> instance configured for the specified contract type.</returns>
+        </member>
+        <member name="M:IFY.Phorm.IPhormConnectedSession.From``1(``0)">
+            <summary>
+            Creates a contract runner for the specified action contract instance.
+            </summary>
+            <typeparam name="TActionContract">The type of the action contract to be executed. Must implement <see cref="T:IFY.Phorm.Data.IPhormContract"/>.</typeparam>
+            <param name="contract">The action contract instance to be used for execution. Cannot be null.</param>
+            <returns>An <see cref="T:IFY.Phorm.Execution.IPhormContractRunner`1"/> that can execute the specified contract.</returns>
+        </member>
+        <member name="M:IFY.Phorm.IPhormConnectedSession.GetAsync``1">
+            <summary>
+            Asynchronously retrieves a result of the specified reference type, or null if no result is available.
+            </summary>
+            <typeparam name="TResult">The type of the result to retrieve. Must be a reference type.</typeparam>
+            <returns>A task that represents the asynchronous operation. The task result contains the retrieved object of type
+            <typeparamref name="TResult"/>, or null if no result is found.</returns>
+        </member>
+        <member name="M:IFY.Phorm.IPhormConnectedSession.GetAsync``1(System.Object)">
+            <summary>
+            Asynchronously retrieves a result of the specified type using the provided arguments.
+            </summary>
+            <typeparam name="TResult">The type of the result to retrieve. Must be a reference type.</typeparam>
+            <param name="args">An object containing the arguments required to perform the retrieval. Can be null if no arguments are needed.</param>
+            <returns>A task that represents the asynchronous operation. The task result contains the retrieved object of type
+            <typeparamref name="TResult"/> if found; otherwise, null.</returns>
+        </member>
+        <member name="M:IFY.Phorm.IPhormConnectedSession.GetAsync``1(System.Threading.CancellationToken)">
+            <summary>
+            Asynchronously retrieves a result of the specified reference type, supporting cancellation.
+            </summary>
+            <typeparam name="TResult">The type of the result to retrieve. Must be a reference type.</typeparam>
+            <param name="cancellationToken">A token that can be used to cancel the asynchronous operation.</param>
+            <returns>A task that represents the asynchronous operation. The task result contains the retrieved value of type
+            <typeparamref name="TResult"/>, or <see langword="null"/> if no result is available.</returns>
+        </member>
+        <member name="M:IFY.Phorm.IPhormConnectedSession.GetAsync``1(``0)">
+            <summary>
+            Asynchronously retrieves a result based on the specified contract object.
+            </summary>
+            <typeparam name="TResult">The type of the contract object and the result to retrieve. Must be a reference type.</typeparam>
+            <param name="contract">The contract object that specifies the parameters for the retrieval operation. Cannot be null.</param>
+            <returns>A task that represents the asynchronous operation. The task result contains the retrieved object of type
+            TResult, or null if no result is found.</returns>
+        </member>
+        <member name="M:IFY.Phorm.IPhormConnectedSession.GetAsync``1(``0,System.Threading.CancellationToken)">
+            <summary>
+            Asynchronously retrieves a result of the specified contract type.
+            </summary>
+            <typeparam name="TResult">The type of the contract to retrieve. Must be a reference type.</typeparam>
+            <param name="contract">An instance of the contract type that specifies the retrieval criteria. Cannot be null.</param>
+            <param name="cancellationToken">A token that can be used to cancel the asynchronous operation.</param>
+            <returns>A task that represents the asynchronous operation. The task result contains the retrieved contract instance, or
+            null if no matching result is found.</returns>
+        </member>
+        <member name="M:IFY.Phorm.IPhormConnectedSession.GetAsync``1(System.Object,System.Threading.CancellationToken)">
+            <summary>
+            Asynchronously retrieves a result of the specified reference type using the provided arguments.
+            </summary>
+            <typeparam name="TResult">The type of the result to retrieve. Must be a reference type.</typeparam>
+            <param name="args">An object containing the arguments required to perform the retrieval. May be null if no arguments are needed.</param>
+            <param name="cancellationToken">A token that can be used to cancel the asynchronous operation.</param>
+            <returns>A task that represents the asynchronous operation. The task result contains the retrieved object of type
+            TResult, or null if no result is found.</returns>
+        </member>
+        <member name="P:IFY.Phorm.IPhormConnectedSession.SupportsTransactions">
+            <summary>
+            True if this runner implementation supports transactions.
+            </summary>
+        </member>
+        <member name="P:IFY.Phorm.IPhormConnectedSession.IsInTransaction">
+            <summary>
+            True if this runner is currently in a transaction.
+            </summary>
+        </member>
+        <member name="M:IFY.Phorm.IPhormConnectedSession.BeginTransactionAsync(System.Threading.CancellationToken)">
+            <summary>
+            Begin a new transaction, with associated runner.
+            </summary>
+            <returns>The runner of the transaction.</returns>
+        </member>
+        <member name="M:IFY.Phorm.IPhormConnectedSession.BeginTransaction">
+            <summary>
+            Begin a new transaction, with associated runner.
+            </summary>
+            <returns>The runner of the transaction.</returns>
+        </member>
         <member name="T:IFY.Phorm.IPhormSession">
             <summary>
             Represents a session for executing Phorm contracts and database operations, providing methods for invoking actions,
@@ -1404,53 +1692,6 @@
             The event invoked when a new database connection is created.
             </summary>
         </member>
-        <member name="E:IFY.Phorm.IPhormSession.CommandExecuting">
-            <summary>
-            The event invoked when a command is about to be executed.
-            </summary>
-        </member>
-        <member name="E:IFY.Phorm.IPhormSession.CommandExecuted">
-            <summary>
-            The event invoked when a command has finished executing.
-            </summary>
-        </member>
-        <member name="E:IFY.Phorm.IPhormSession.UnexpectedRecordColumn">
-            <summary>
-            A result record contained a column not specified in the target entity type.
-            </summary>
-        </member>
-        <member name="E:IFY.Phorm.IPhormSession.UnresolvedContractMember">
-            <summary>
-            A result record did not contain a column specified in the target entity type.
-            </summary>
-        </member>
-        <member name="E:IFY.Phorm.IPhormSession.ConsoleMessage">
-            <summary>
-            A log message was received during execution.
-            </summary>
-        </member>
-        <member name="P:IFY.Phorm.IPhormSession.ConnectionName">
-            <summary>
-            The connection name this session uses for database scoping.
-            </summary>
-        </member>
-        <member name="P:IFY.Phorm.IPhormSession.ContextData">
-            <summary>
-            Context data applied to this session.
-            </summary>
-        </member>
-        <member name="P:IFY.Phorm.IPhormSession.ExceptionsAsConsoleMessage">
-            <summary>
-            If true, will consume execution errors and treat like a console message.
-            Defaults to value in <see cref="P:IFY.Phorm.GlobalSettings.ExceptionsAsConsoleMessage"/>.
-            </summary>
-        </member>
-        <member name="P:IFY.Phorm.IPhormSession.StrictResultSize">
-            <summary>
-            Whether to throw a <see cref="T:System.InvalidOperationException"/> if an invocation result includes more records than expected.
-            Defaults to value in <see cref="P:IFY.Phorm.GlobalSettings.StrictResultSize"/>.
-            </summary>
-        </member>
         <member name="M:IFY.Phorm.IPhormSession.SetConnectionName(System.String)">
             <summary>
             Get a new instance of this session scoped with a different connection name.
@@ -1464,14 +1705,14 @@
             </summary>
             <param name="connectionName">The connection name to use when scoping the new session instance.</param>
             <returns>A new <see cref="T:IFY.Phorm.IPhormSession"/> instance configured to use the specified connection context.</returns>
-            <remarks>The new session will have an empty <see cref="P:IFY.Phorm.IPhormSession.ContextData"/>.</remarks>
+            <remarks>The new session will have an empty <see cref="P:IFY.Phorm.IPhormConnectedSession.ContextData"/>.</remarks>
         </member>
         <member name="M:IFY.Phorm.IPhormSession.WithContext(System.Collections.Generic.IDictionary{System.String,System.Object})">
             <summary>
             Creates a new session with the specified context data applied.
             </summary>
             <remarks>This method returns a new session instance with the updated
-            context data, persisting any current <see cref="P:IFY.Phorm.IPhormSession.ConnectionName"/>.</remarks>
+            context data, persisting any current <see cref="P:IFY.Phorm.IPhormConnectedSession.ConnectionName"/>.</remarks>
             <param name="contextData">A dictionary containing key-value pairs to associate with the session context. Keys must be non-null strings;
             values may be any object.</param>
             <returns>A new session instance that includes the provided context data.</returns>
@@ -1483,218 +1724,6 @@
             <param name="connectionName">The connection name to use when scoping the new session instance.</param>
             <param name="contextData">A dictionary containing key-value pairs that provide additional context for the session. Cannot be null.</param>
             <returns>A new <see cref="T:IFY.Phorm.IPhormSession"/> instance configured with the specified connection name and context data.</returns>
-        </member>
-        <member name="M:IFY.Phorm.IPhormSession.CallAsync(System.String)">
-            <summary>
-            Invokes the specified contract asynchronously and returns the result as an integer.
-            </summary>
-            <param name="contractName">The name of the contract to invoke. Cannot be null or empty.</param>
-            <returns>A task that represents the asynchronous operation. The task result contains the integer value returned by the
-            contract.</returns>
-        </member>
-        <member name="M:IFY.Phorm.IPhormSession.CallAsync(System.String,System.Object)">
-            <summary>
-            Invokes an asynchronous call to the specified contract with the provided arguments.
-            </summary>
-            <param name="contractName">The name of the contract to invoke. Cannot be null or empty.</param>
-            <param name="args">An object containing the arguments to pass to the contract. May be null if the contract does not require
-            arguments.</param>
-            <returns>A task that represents the asynchronous operation. The task result contains the integer value returned by the
-            contract call.</returns>
-        </member>
-        <member name="M:IFY.Phorm.IPhormSession.CallAsync(System.String,System.Threading.CancellationToken)">
-            <summary>
-            Invokes the specified contract asynchronously and returns the result as an integer.
-            </summary>
-            <param name="contractName">The name of the contract to invoke. Cannot be null or empty.</param>
-            <param name="cancellationToken">A token that can be used to cancel the asynchronous operation.</param>
-            <returns>A task that represents the asynchronous operation. The task result contains the integer value returned by the
-            contract.</returns>
-        </member>
-        <member name="M:IFY.Phorm.IPhormSession.CallAsync(System.String,System.Object,System.Threading.CancellationToken)">
-            <summary>
-            Invokes an asynchronous call to the specified contract and returns the result as an integer.
-            </summary>
-            <param name="contractName">The name of the contract to invoke. Cannot be null or empty.</param>
-            <param name="args">An optional argument object to pass to the contract. May be null if the contract does not require arguments.</param>
-            <param name="cancellationToken">A cancellation token that can be used to cancel the asynchronous operation.</param>
-            <returns>A task that represents the asynchronous operation. The task result contains the integer value returned by the
-            contract.</returns>
-        </member>
-        <member name="M:IFY.Phorm.IPhormSession.CallAsync``1">
-            <summary>
-            Invokes the specified action contract asynchronously without any arguments and returns the result code.
-            </summary>
-            <typeparam name="TActionContract">The type of the action contract to invoke. Must implement <see cref="T:IFY.Phorm.Data.IPhormContract"/>.</typeparam>
-            <returns>A task that represents the asynchronous operation. The task result contains the integer result code returned by
-            the action contract.</returns>
-        </member>
-        <member name="M:IFY.Phorm.IPhormSession.CallAsync``1(System.Object)">
-            <summary>
-            Invokes the specified action contract asynchronously using the provided arguments.
-            </summary>
-            <typeparam name="TActionContract">The type of the action contract to invoke. Must implement <see cref="T:IFY.Phorm.Data.IPhormContract"/>.</typeparam>
-            <param name="args">An object containing the arguments to pass to the action contract. May be <see langword="null"/> if the contract
-            does not require arguments.</param>
-            <returns>A task that represents the asynchronous operation. The task result contains the status code returned by the
-            action contract.</returns>
-        </member>
-        <member name="M:IFY.Phorm.IPhormSession.CallAsync``1(System.Threading.CancellationToken)">
-            <summary>
-            Invokes the specified action contract asynchronously without arguments and returns the result code.
-            </summary>
-            <typeparam name="TActionContract">The type of the action contract to invoke. Must implement <see cref="T:IFY.Phorm.Data.IPhormContract"/>.</typeparam>
-            <param name="cancellationToken">A cancellation token that can be used to cancel the asynchronous operation.</param>
-            <returns>A task that represents the asynchronous operation. The task result contains the result code returned by the
-            action contract.</returns>
-        </member>
-        <member name="M:IFY.Phorm.IPhormSession.CallAsync``1(``0)">
-            <summary>
-            Invokes the specified action contract asynchronously and returns the result code.
-            </summary>
-            <typeparam name="TActionContract">The type of the action contract to execute. Must implement <see cref="T:IFY.Phorm.Data.IPhormContract"/>.</typeparam>
-            <param name="contract">The action contract instance containing the parameters for the call. Cannot be null.</param>
-            <returns>A task that represents the asynchronous operation. The task result contains the integer code returned by the
-            action.</returns>
-        </member>
-        <member name="M:IFY.Phorm.IPhormSession.CallAsync``1(``0,System.Threading.CancellationToken)">
-            <summary>
-            Invokes the specified action contract asynchronously and returns the result code.
-            </summary>
-            <typeparam name="TActionContract">The type of the action contract to execute. Must implement <see cref="T:IFY.Phorm.Data.IPhormContract"/>.</typeparam>
-            <param name="contract">The action contract instance to invoke. Cannot be null.</param>
-            <param name="cancellationToken">A cancellation token that can be used to cancel the operation.</param>
-            <returns>A task that represents the asynchronous operation. The task result contains the integer result code returned by
-            the action contract.</returns>
-        </member>
-        <member name="M:IFY.Phorm.IPhormSession.CallAsync``1(System.Object,System.Threading.CancellationToken)">
-            <summary>
-            Invokes an asynchronous call to the specified action contract with the provided arguments.
-            </summary>
-            <typeparam name="TActionContract">The type of the action contract to invoke. Must implement <see cref="T:IFY.Phorm.Data.IPhormContract"/>.</typeparam>
-            <param name="args">An object containing the arguments to pass to the action contract. Can be <see langword="null"/> if the action
-            does not require arguments.</param>
-            <param name="cancellationToken">A cancellation token that can be used to cancel the asynchronous operation.</param>
-            <returns>A task that represents the asynchronous operation. The task result contains an integer status code returned by
-            the action contract.</returns>
-        </member>
-        <member name="M:IFY.Phorm.IPhormSession.From(System.String)">
-            <summary>
-            Creates a contract runner for the specified contract name.
-            </summary>
-            <param name="contractName">The name of the contract to instantiate. Cannot be null or empty.</param>
-            <returns>An instance of <see cref="T:IFY.Phorm.Execution.IPhormContractRunner"/> for the specified contract name.</returns>
-        </member>
-        <member name="M:IFY.Phorm.IPhormSession.From(System.String,System.Object)">
-            <summary>
-            Creates a contract runner instance for the specified contract name and optional arguments.
-            </summary>
-            <param name="contractName">The name of the contract to instantiate. Cannot be null or empty.</param>
-            <param name="args">An optional object containing initialization arguments for the contract. May be null if the contract does not
-            require arguments.</param>
-            <returns>An <see cref="T:IFY.Phorm.Execution.IPhormContractRunner"/> instance configured for the specified contract and arguments.</returns>
-        </member>
-        <member name="M:IFY.Phorm.IPhormSession.From``1">
-            <summary>
-            Creates a contract runner for the specified action contract type.
-            </summary>
-            <typeparam name="TActionContract">The type of action contract to execute. Must implement <see cref="T:IFY.Phorm.Data.IPhormContract"/>.</typeparam>
-            <returns>An <see cref="T:IFY.Phorm.Execution.IPhormContractRunner`1"/> instance for executing the specified contract type.</returns>
-        </member>
-        <member name="M:IFY.Phorm.IPhormSession.From``1(System.Object)">
-            <summary>
-            Creates a contract runner for the specified action contract type, optionally initializing it with the provided
-            arguments.
-            </summary>
-            <typeparam name="TActionContract">The type of action contract to be executed. Must implement <see cref="T:IFY.Phorm.Data.IPhormContract"/>.</typeparam>
-            <param name="args">An optional object containing initialization arguments for the contract. May be <see langword="null"/> if no
-            arguments are required.</param>
-            <returns>An <see cref="T:IFY.Phorm.Execution.IPhormContractRunner`1"/> instance configured for the specified contract type.</returns>
-        </member>
-        <member name="M:IFY.Phorm.IPhormSession.From``1(``0)">
-            <summary>
-            Creates a contract runner for the specified action contract instance.
-            </summary>
-            <typeparam name="TActionContract">The type of the action contract to be executed. Must implement <see cref="T:IFY.Phorm.Data.IPhormContract"/>.</typeparam>
-            <param name="contract">The action contract instance to be used for execution. Cannot be null.</param>
-            <returns>An <see cref="T:IFY.Phorm.Execution.IPhormContractRunner`1"/> that can execute the specified contract.</returns>
-        </member>
-        <member name="M:IFY.Phorm.IPhormSession.GetAsync``1">
-            <summary>
-            Asynchronously retrieves a result of the specified reference type, or null if no result is available.
-            </summary>
-            <typeparam name="TResult">The type of the result to retrieve. Must be a reference type.</typeparam>
-            <returns>A task that represents the asynchronous operation. The task result contains the retrieved object of type
-            <typeparamref name="TResult"/>, or null if no result is found.</returns>
-        </member>
-        <member name="M:IFY.Phorm.IPhormSession.GetAsync``1(System.Object)">
-            <summary>
-            Asynchronously retrieves a result of the specified type using the provided arguments.
-            </summary>
-            <typeparam name="TResult">The type of the result to retrieve. Must be a reference type.</typeparam>
-            <param name="args">An object containing the arguments required to perform the retrieval. Can be null if no arguments are needed.</param>
-            <returns>A task that represents the asynchronous operation. The task result contains the retrieved object of type
-            <typeparamref name="TResult"/> if found; otherwise, null.</returns>
-        </member>
-        <member name="M:IFY.Phorm.IPhormSession.GetAsync``1(System.Threading.CancellationToken)">
-            <summary>
-            Asynchronously retrieves a result of the specified reference type, supporting cancellation.
-            </summary>
-            <typeparam name="TResult">The type of the result to retrieve. Must be a reference type.</typeparam>
-            <param name="cancellationToken">A token that can be used to cancel the asynchronous operation.</param>
-            <returns>A task that represents the asynchronous operation. The task result contains the retrieved value of type
-            <typeparamref name="TResult"/>, or <see langword="null"/> if no result is available.</returns>
-        </member>
-        <member name="M:IFY.Phorm.IPhormSession.GetAsync``1(``0)">
-            <summary>
-            Asynchronously retrieves a result based on the specified contract object.
-            </summary>
-            <typeparam name="TResult">The type of the contract object and the result to retrieve. Must be a reference type.</typeparam>
-            <param name="contract">The contract object that specifies the parameters for the retrieval operation. Cannot be null.</param>
-            <returns>A task that represents the asynchronous operation. The task result contains the retrieved object of type
-            TResult, or null if no result is found.</returns>
-        </member>
-        <member name="M:IFY.Phorm.IPhormSession.GetAsync``1(``0,System.Threading.CancellationToken)">
-            <summary>
-            Asynchronously retrieves a result of the specified contract type.
-            </summary>
-            <typeparam name="TResult">The type of the contract to retrieve. Must be a reference type.</typeparam>
-            <param name="contract">An instance of the contract type that specifies the retrieval criteria. Cannot be null.</param>
-            <param name="cancellationToken">A token that can be used to cancel the asynchronous operation.</param>
-            <returns>A task that represents the asynchronous operation. The task result contains the retrieved contract instance, or
-            null if no matching result is found.</returns>
-        </member>
-        <member name="M:IFY.Phorm.IPhormSession.GetAsync``1(System.Object,System.Threading.CancellationToken)">
-            <summary>
-            Asynchronously retrieves a result of the specified reference type using the provided arguments.
-            </summary>
-            <typeparam name="TResult">The type of the result to retrieve. Must be a reference type.</typeparam>
-            <param name="args">An object containing the arguments required to perform the retrieval. May be null if no arguments are needed.</param>
-            <param name="cancellationToken">A token that can be used to cancel the asynchronous operation.</param>
-            <returns>A task that represents the asynchronous operation. The task result contains the retrieved object of type
-            TResult, or null if no result is found.</returns>
-        </member>
-        <member name="P:IFY.Phorm.IPhormSession.SupportsTransactions">
-            <summary>
-            True if this runner implementation supports transactions.
-            </summary>
-        </member>
-        <member name="P:IFY.Phorm.IPhormSession.IsInTransaction">
-            <summary>
-            True if this runner is currently in a transaction.
-            </summary>
-        </member>
-        <member name="M:IFY.Phorm.IPhormSession.BeginTransactionAsync(System.Threading.CancellationToken)">
-            <summary>
-            Begin a new transaction, with associated runner.
-            </summary>
-            <returns>The runner of the transaction.</returns>
-        </member>
-        <member name="M:IFY.Phorm.IPhormSession.BeginTransaction">
-            <summary>
-            Begin a new transaction, with associated runner.
-            </summary>
-            <returns>The runner of the transaction.</returns>
         </member>
         <member name="T:IFY.Phorm.PhormContractAttribute">
             <summary>

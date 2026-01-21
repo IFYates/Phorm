@@ -6,7 +6,7 @@ using System.Diagnostics.CodeAnalysis;
 namespace IFY.Phorm.Tests;
 
 [ExcludeFromCodeCoverage]
-internal partial class TestPhormSession : AbstractPhormSession
+internal partial class TestPhormSession : AbstractPhormSession, IPhormSession
 {
     public TestPhormConnection TestConnection { get; }
 
@@ -64,7 +64,7 @@ internal partial class TestPhormSession : AbstractPhormSession
     }
 
     [ExcludeFromCodeCoverage]
-    public override IPhormSession WithContext(string connectionName, IDictionary<string, object?> contextData)
+    public IPhormSession WithContext(string connectionName, IDictionary<string, object?> contextData)
     {
         throw new NotImplementedException();
     }

@@ -14,7 +14,8 @@ namespace IFY.Phorm.Execution;
 /// supported by the underlying runner. Configuration properties allow control over error handling and result size
 /// strictness. Use this interface to interact with Phorm contracts and database entities in a scoped and configurable
 /// manner.</remarks>
-public abstract class AbstractPhormSession(string databaseConnectionString, string? connectionName) : IPhormSession
+public abstract class AbstractPhormSession(string databaseConnectionString, string? connectionName)
+    : IPhormConnectedSession
 {
     /// <summary>
     /// The connection string used to connect to the database.
@@ -164,9 +165,6 @@ public abstract class AbstractPhormSession(string databaseConnectionString, stri
     /// </summary>
     /// <returns>The default schema name, if known.</returns>
     protected internal virtual Task ResolveDefaultSchemaAsync(IPhormDbConnection phormConn) => Task.CompletedTask;
-
-    /// <inheritdoc/>
-    public abstract IPhormSession WithContext(string connectionName, IDictionary<string, object?> contextData);
 
     #endregion Connection
 

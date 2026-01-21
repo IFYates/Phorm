@@ -1,5 +1,4 @@
-﻿using IFY.Phorm.Connectivity;
-using IFY.Phorm.Data;
+﻿using IFY.Phorm.Data;
 using IFY.Phorm.EventArgs;
 using System.Data;
 using System.Diagnostics.CodeAnalysis;
@@ -14,7 +13,7 @@ public sealed partial class TransactedPhormSession : ITransactedPhormSession
     private bool _isDisposed;
 
     private readonly AbstractPhormSession _baseSession;
-    private readonly IDbTransaction _transaction;
+    private readonly IDbTransaction _transaction; // TODO: CommitAsync, RollbackAsync
 
     /// <inheritdoc/>
     public bool IsInTransaction => true;
@@ -125,14 +124,6 @@ partial class TransactedPhormSession
 
     /// <inheritdoc/>
     public bool SupportsTransactions => _baseSession.SupportsTransactions;
-
-    /// <inheritdoc/>
-    protected internal IPhormDbConnection GetConnection(bool readOnly)
-        => _baseSession.GetConnection(readOnly);
-
-    /// <inheritdoc/>
-    public IPhormSession WithContext(string connectionName, IDictionary<string, object?> contextData)
-        => _baseSession.WithContext(connectionName, contextData);
 
     /// <inheritdoc/>
     public Task<ITransactedPhormSession> BeginTransactionAsync(CancellationToken cancellationToken)
