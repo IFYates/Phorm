@@ -115,6 +115,8 @@ partial class TransactedPhormSession
 
     /// <inheritdoc/>
     public string? ConnectionName => _baseSession.ConnectionName;
+    /// <inheritdoc/>
+    public IDictionary<string, object?> ContextData => _baseSession.ContextData;
 
     /// <inheritdoc/>
     public bool ExceptionsAsConsoleMessage { get => _baseSession.ExceptionsAsConsoleMessage; set => _baseSession.ExceptionsAsConsoleMessage = value; }
@@ -125,14 +127,14 @@ partial class TransactedPhormSession
     public bool SupportsTransactions => _baseSession.SupportsTransactions;
 
     /// <inheritdoc/>
-    protected internal IPhormDbConnection GetConnection()
-        => _baseSession.GetConnection();
+    protected internal IPhormDbConnection GetConnection(bool readOnly)
+        => _baseSession.GetConnection(readOnly);
 
     /// <inheritdoc/>
     public IPhormSession WithContext(string connectionName, IDictionary<string, object?> contextData)
         => _baseSession.WithContext(connectionName, contextData);
 
     /// <inheritdoc/>
-    public ITransactedPhormSession BeginTransaction()
-        => _baseSession.BeginTransaction();
+    public Task<ITransactedPhormSession> BeginTransactionAsync(CancellationToken cancellationToken)
+        => _baseSession.BeginTransactionAsync(cancellationToken);
 }

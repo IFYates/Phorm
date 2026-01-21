@@ -334,7 +334,13 @@ public interface IPhormSession
     /// Begin a new transaction, with associated runner.
     /// </summary>
     /// <returns>The runner of the transaction.</returns>
-    ITransactedPhormSession BeginTransaction();
+    Task<ITransactedPhormSession> BeginTransactionAsync(CancellationToken cancellationToken);
+    /// <summary>
+    /// Begin a new transaction, with associated runner.
+    /// </summary>
+    /// <returns>The runner of the transaction.</returns>
+    [Obsolete("Use BeginTransactionAsync")]
+    ITransactedPhormSession BeginTransaction() => BeginTransactionAsync(default).Result;
 
     #endregion Transactions
 }

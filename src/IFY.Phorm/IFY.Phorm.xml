@@ -6,7 +6,7 @@
     <members>
         <member name="T:System.Data.IAsyncDbCommand">
             <summary>
-            Exposes the asynchronous parts of <see cref="T:System.Data.Common.DbCommand"/>
+            Exposes the asynchronous parts of <see cref="T:System.Data.Common.DbCommand"/>.
             </summary>
         </member>
         <member name="P:System.Data.IAsyncDbCommand.CommandText">
@@ -50,6 +50,99 @@
             </summary>
             <returns>An <see cref="T:System.Data.IDataReader"/> object.</returns>
         </member>
+        <member name="M:System.Data.IAsyncDbCommand.ExecuteScalarAsync(System.Threading.CancellationToken)">
+            <summary>
+            Asynchronously executes the query and returns the first column of the first row in the result set.
+            </summary>
+            <param name="cancellationToken">A cancellation token that can be used to request cancellation of the asynchronous operation.</param>
+            <returns>A task representing the asynchronous operation. The task result contains the value of the first column of the
+            first row in the result set, or null if the result set is empty.</returns>
+        </member>
+        <member name="M:System.Data.IAsyncDbCommand.ExecuteNonQueryAsync(System.Threading.CancellationToken)">
+            <summary>
+            Asynchronously executes a SQL statement against the connection and returns the number of rows affected.
+            </summary>
+            <param name="cancellationToken">A cancellation token that can be used to request cancellation of the asynchronous operation.</param>
+            <returns>A task that represents the asynchronous operation. The task result contains the number of rows affected by the
+            SQL statement.</returns>
+        </member>
+        <member name="T:System.Data.IAsyncDbConnection">
+            <summary>
+            Exposes the asynchronous parts of <see cref="T:System.Data.Common.DbConnection"/>.
+            </summary>
+        </member>
+        <member name="P:System.Data.IAsyncDbConnection.ConnectionString">
+            <summary>
+            Gets or sets the connection string used to establish a connection to the data source.
+            </summary>
+        </member>
+        <member name="P:System.Data.IAsyncDbConnection.ConnectionTimeout">
+            <summary>
+            Gets the time, in seconds, to wait while trying to establish a connection before terminating the attempt and
+            generating an error.
+            </summary>
+        </member>
+        <member name="P:System.Data.IAsyncDbConnection.Database">
+            <summary>
+            Gets the name of the current database for the connection.
+            </summary>
+        </member>
+        <member name="P:System.Data.IAsyncDbConnection.State">
+            <summary>
+            Gets the current state of the connection.
+            </summary>
+        </member>
+        <member name="M:System.Data.IAsyncDbConnection.BeginTransactionAsync(System.Threading.CancellationToken)">
+            <summary>
+            Begins an asynchronous database transaction using the current connection.
+            </summary>
+            <param name="cancellationToken">A cancellation token that can be used to cancel the asynchronous operation.</param>
+            <returns>A value task representing the asynchronous operation. The result contains an <see cref="T:System.Data.IDbTransaction"/> that
+            represents the new transaction.</returns>
+        </member>
+        <member name="M:System.Data.IAsyncDbConnection.BeginTransactionAsync(System.Data.IsolationLevel,System.Threading.CancellationToken)">
+            <summary>
+            Begins an asynchronous database transaction with the specified isolation level.
+            </summary>
+            <param name="il">The isolation level to use for the transaction. Determines the locking and row versioning behavior for the
+            transaction.</param>
+            <param name="cancellationToken">A cancellation token that can be used to request cancellation of the asynchronous operation.</param>
+            <returns>A value task representing the asynchronous operation. The result contains an <see cref="T:System.Data.IDbTransaction"/> that
+            represents the new transaction.</returns>
+        </member>
+        <member name="M:System.Data.IAsyncDbConnection.CloseAsync(System.Threading.CancellationToken)">
+            <summary>
+            Asynchronously closes the connection and releases any associated resources.
+            </summary>
+            <param name="cancellationToken">A cancellation token that can be used to cancel the close operation.</param>
+            <returns>A task that represents the asynchronous close operation.</returns>
+        </member>
+        <member name="M:System.Data.IAsyncDbConnection.ChangeDatabaseAsync(System.String,System.Threading.CancellationToken)">
+            <summary>
+            Asynchronously changes the current database for an open connection to the specified database name.
+            </summary>
+            <remarks>The connection must be open before calling this method. If the operation is canceled, the
+            connection remains unchanged.</remarks>
+            <param name="databaseName">The name of the database to switch to. Cannot be null, empty, or contain only whitespace.</param>
+            <param name="cancellationToken">A cancellation token that can be used to cancel the asynchronous operation.</param>
+            <returns>A task that represents the asynchronous operation.</returns>
+        </member>
+        <member name="M:System.Data.IAsyncDbConnection.CreateCommand">
+            <summary>
+            Creates and returns a new command associated with the current database connection.
+            </summary>
+            <remarks>The returned command is not automatically associated with a transaction. The caller is
+            responsible for configuring the command's properties, such as the command text and parameters, before
+            execution.</remarks>
+            <returns>An <see cref="T:System.Data.IDbCommand"/> object that can be used to execute queries or commands against the data source.</returns>
+        </member>
+        <member name="M:System.Data.IAsyncDbConnection.OpenAsync(System.Threading.CancellationToken)">
+            <summary>
+            Asynchronously opens the connection, enabling operations that require an open state.
+            </summary>
+            <param name="cancellationToken">A cancellation token that can be used to cancel the open operation before it completes.</param>
+            <returns>A task that represents the asynchronous open operation.</returns>
+        </member>
         <member name="T:IFY.Phorm.Connectivity.IPhormDbConnection">
             <summary>
             Represents a connection to a data source, wrapped by Pho/rm functionality.
@@ -75,18 +168,10 @@
             Wraps <see cref="T:System.Data.IDbConnection"/> with additional Pho/rm values.
             </summary>
         </member>
-        <member name="M:IFY.Phorm.Connectivity.PhormDbConnection.#ctor(System.String,System.Data.IDbConnection)">
-            <summary>
-            Wraps <see cref="T:System.Data.IDbConnection"/> with additional Pho/rm values.
-            </summary>
-        </member>
-        <member name="P:IFY.Phorm.Connectivity.PhormDbConnection.DbConnection">
-            <inheritdoc/>
-        </member>
         <member name="P:IFY.Phorm.Connectivity.PhormDbConnection.ConnectionName">
             <inheritdoc/>
         </member>
-        <member name="P:IFY.Phorm.Connectivity.PhormDbConnection.DefaultSchema">
+        <member name="P:IFY.Phorm.Connectivity.PhormDbConnection.DbConnection">
             <inheritdoc/>
         </member>
         <member name="P:IFY.Phorm.Connectivity.PhormDbConnection.ConnectionString">
@@ -101,22 +186,28 @@
         <member name="P:IFY.Phorm.Connectivity.PhormDbConnection.State">
             <inheritdoc/>
         </member>
-        <member name="M:IFY.Phorm.Connectivity.PhormDbConnection.BeginTransaction">
+        <member name="P:IFY.Phorm.Connectivity.PhormDbConnection.DefaultSchema">
             <inheritdoc/>
         </member>
-        <member name="M:IFY.Phorm.Connectivity.PhormDbConnection.BeginTransaction(System.Data.IsolationLevel)">
+        <member name="M:IFY.Phorm.Connectivity.PhormDbConnection.BeginTransactionAsync(System.Threading.CancellationToken)">
             <inheritdoc/>
         </member>
-        <member name="M:IFY.Phorm.Connectivity.PhormDbConnection.ChangeDatabase(System.String)">
+        <member name="M:IFY.Phorm.Connectivity.PhormDbConnection.BeginTransactionAsync(System.Data.IsolationLevel,System.Threading.CancellationToken)">
             <inheritdoc/>
         </member>
-        <member name="M:IFY.Phorm.Connectivity.PhormDbConnection.Open">
+        <member name="M:IFY.Phorm.Connectivity.PhormDbConnection.ChangeDatabaseAsync(System.String,System.Threading.CancellationToken)">
             <inheritdoc/>
         </member>
-        <member name="M:IFY.Phorm.Connectivity.PhormDbConnection.Close">
+        <member name="M:IFY.Phorm.Connectivity.PhormDbConnection.OpenAsync(System.Threading.CancellationToken)">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Connectivity.PhormDbConnection.CloseAsync(System.Threading.CancellationToken)">
             <inheritdoc/>
         </member>
         <member name="M:IFY.Phorm.Connectivity.PhormDbConnection.CreateCommand">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Connectivity.PhormDbConnection.System#Data#IAsyncDbConnection#CreateCommand">
             <inheritdoc/>
         </member>
         <member name="M:IFY.Phorm.Connectivity.PhormDbConnection.Dispose">
@@ -898,6 +989,9 @@
         <member name="P:IFY.Phorm.Execution.AbstractPhormSession.ConnectionName">
             <inheritdoc/>
         </member>
+        <member name="P:IFY.Phorm.Execution.AbstractPhormSession.ContextData">
+            <inheritdoc/>
+        </member>
         <member name="P:IFY.Phorm.Execution.AbstractPhormSession.ProcedurePrefix">
             <summary>
             Gets or sets the prefix used for accessing database stored procedures.
@@ -938,22 +1032,47 @@
             <inheritdoc/>
         </member>
         <member name="M:IFY.Phorm.Execution.AbstractPhormSession.GetConnection(System.Boolean)">
-            <inheritdoc/>
+            <summary>
+            Asynchronously obtains a database connection for the current context, reusing an existing connection if
+            available.
+            </summary>
+            <remarks>The returned connection is managed by an internal connection pool and may be reused across
+            multiple calls. Callers should not dispose the connection directly. If a suitable connection does not exist or
+            is closed, a new connection is created and initialized before being returned.</remarks>
+            <param name="readOnly">true to request a connection optimized for read-only operations; otherwise, false to request a read-write
+            connection. The default is false.</param>
+            <returns>A task that represents the asynchronous operation. The task result contains an IPhormDbConnection instance that
+            is open and ready for use.</returns>
         </member>
-        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.CreateConnection(System.Boolean)">
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.GetConnectionString(System.Boolean)">
+            <summary>
+            Retrieves the database connection string for the specified access mode.
+            </summary>
+            <param name="readOnly">true to retrieve a connection string configured for read-only access; false to retrieve a connection string for
+            read-write access.</param>
+            <returns>A connection string that can be used to connect to the database with the requested access mode.</returns>
+        </member>
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.CreateConnection(System.String)">
             <summary>
             Creates and returns a new database connection configured for either read-only or read-write access.
             </summary>
-            <param name="readOnly">true to create a connection with read-only access; false to create a connection with read-write access.</param>
-            <returns>An <see cref="T:IFY.Phorm.Connectivity.IPhormDbConnection"/> instance representing the newly created database connection.</returns>
+            <param name="connectionString">The connection string to use for creating the database connection.</param>
+            <returns>An <see cref="T:System.Data.IDbConnection"/> instance representing the newly created database connection.</returns>
         </member>
-        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.SetDefaultSchema(IFY.Phorm.Connectivity.IPhormDbConnection)">
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.ApplyContextAsync(IFY.Phorm.Connectivity.IPhormDbConnection)">
+            <summary>
+            Asynchronously applies the current context to the specified database connection.
+            </summary>
+            <param name="phormConn">The database connection to which the context will be applied. Cannot be null.</param>
+            <returns>A task that represents the asynchronous operation.</returns>
+        </member>
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.ResolveDefaultSchemaAsync(IFY.Phorm.Connectivity.IPhormDbConnection)">
             <summary>
             Implementations to provide logic for resolving the default schema of the connection.
             </summary>
             <returns>The default schema name, if known.</returns>
         </member>
-        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.SetConnectionName(System.String)">
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.WithContext(System.String,System.Collections.Generic.IDictionary{System.String,System.Object})">
             <inheritdoc/>
         </member>
         <member name="M:IFY.Phorm.Execution.AbstractPhormSession.CreateCommand(IFY.Phorm.Connectivity.IPhormDbConnection,System.String,System.String,IFY.Phorm.DbObjectType)">
@@ -1006,7 +1125,7 @@
         <member name="P:IFY.Phorm.Execution.AbstractPhormSession.IsInTransaction">
             <inheritdoc/>
         </member>
-        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.BeginTransaction">
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.BeginTransactionAsync(System.Threading.CancellationToken)">
             <inheritdoc/>
         </member>
         <member name="M:IFY.Phorm.Execution.AbstractPhormSession.WrapSessionAsTransacted(System.Data.IDbTransaction)">
@@ -1184,6 +1303,9 @@
         <member name="P:IFY.Phorm.Execution.TransactedPhormSession.ConnectionName">
             <inheritdoc/>
         </member>
+        <member name="P:IFY.Phorm.Execution.TransactedPhormSession.ContextData">
+            <inheritdoc/>
+        </member>
         <member name="P:IFY.Phorm.Execution.TransactedPhormSession.ExceptionsAsConsoleMessage">
             <inheritdoc/>
         </member>
@@ -1193,13 +1315,13 @@
         <member name="P:IFY.Phorm.Execution.TransactedPhormSession.SupportsTransactions">
             <inheritdoc/>
         </member>
-        <member name="M:IFY.Phorm.Execution.TransactedPhormSession.GetConnection">
+        <member name="M:IFY.Phorm.Execution.TransactedPhormSession.GetConnection(System.Boolean)">
             <inheritdoc/>
         </member>
-        <member name="M:IFY.Phorm.Execution.TransactedPhormSession.SetConnectionName(System.String)">
+        <member name="M:IFY.Phorm.Execution.TransactedPhormSession.WithContext(System.String,System.Collections.Generic.IDictionary{System.String,System.Object})">
             <inheritdoc/>
         </member>
-        <member name="M:IFY.Phorm.Execution.TransactedPhormSession.BeginTransaction">
+        <member name="M:IFY.Phorm.Execution.TransactedPhormSession.BeginTransactionAsync(System.Threading.CancellationToken)">
             <inheritdoc/>
         </member>
         <member name="M:IFY.Phorm.Extensions.GetExpressionParameterProperties(System.Linq.Expressions.Expression,System.Type)">
@@ -1310,6 +1432,11 @@
             The connection name this session uses for database scoping.
             </summary>
         </member>
+        <member name="P:IFY.Phorm.IPhormSession.ContextData">
+            <summary>
+            Context data applied to this session.
+            </summary>
+        </member>
         <member name="P:IFY.Phorm.IPhormSession.ExceptionsAsConsoleMessage">
             <summary>
             If true, will consume execution errors and treat like a console message.
@@ -1328,6 +1455,32 @@
             </summary>
             <param name="connectionName">The connection name to use when scoping the new session instance.</param>
             <returns>A new instance of this session with a different connection name.</returns>
+        </member>
+        <member name="M:IFY.Phorm.IPhormSession.WithContext(System.String)">
+            <summary>
+            Returns a new session instance that uses the specified connection context.
+            </summary>
+            <param name="connectionName">The connection name to use when scoping the new session instance.</param>
+            <returns>A new <see cref="T:IFY.Phorm.IPhormSession"/> instance configured to use the specified connection context.</returns>
+            <remarks>The new session will have an empty <see cref="P:IFY.Phorm.IPhormSession.ContextData"/>.</remarks>
+        </member>
+        <member name="M:IFY.Phorm.IPhormSession.WithContext(System.Collections.Generic.IDictionary{System.String,System.Object})">
+            <summary>
+            Creates a new session with the specified context data applied.
+            </summary>
+            <remarks>This method returns a new session instance with the updated
+            context data, persisting any current <see cref="P:IFY.Phorm.IPhormSession.ConnectionName"/>.</remarks>
+            <param name="contextData">A dictionary containing key-value pairs to associate with the session context. Keys must be non-null strings;
+            values may be any object.</param>
+            <returns>A new session instance that includes the provided context data.</returns>
+        </member>
+        <member name="M:IFY.Phorm.IPhormSession.WithContext(System.String,System.Collections.Generic.IDictionary{System.String,System.Object})">
+            <summary>
+            Creates a new session instance with the specified connection name and additional context data.
+            </summary>
+            <param name="connectionName">The connection name to use when scoping the new session instance.</param>
+            <param name="contextData">A dictionary containing key-value pairs that provide additional context for the session. Cannot be null.</param>
+            <returns>A new <see cref="T:IFY.Phorm.IPhormSession"/> instance configured with the specified connection name and context data.</returns>
         </member>
         <member name="M:IFY.Phorm.IPhormSession.CallAsync(System.String)">
             <summary>
@@ -1529,7 +1682,7 @@
             True if this runner is currently in a transaction.
             </summary>
         </member>
-        <member name="M:IFY.Phorm.IPhormSession.BeginTransaction">
+        <member name="M:IFY.Phorm.IPhormSession.BeginTransactionAsync(System.Threading.CancellationToken)">
             <summary>
             Begin a new transaction, with associated runner.
             </summary>

@@ -162,13 +162,13 @@ public abstract class AbstractPhormSession(string databaseConnectionString, stri
     /// </summary>
     /// <param name="phormConn">The database connection to which the context will be applied. Cannot be null.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    internal protected abstract Task ApplyContextAsync(IPhormDbConnection phormConn);
+    protected internal virtual Task ApplyContextAsync(IPhormDbConnection phormConn) => Task.CompletedTask;
 
     /// <summary>
     /// Implementations to provide logic for resolving the default schema of the connection.
     /// </summary>
     /// <returns>The default schema name, if known.</returns>
-    internal protected virtual Task ResolveDefaultSchemaAsync(IPhormDbConnection phormConn) => Task.CompletedTask;
+    protected internal virtual Task ResolveDefaultSchemaAsync(IPhormDbConnection phormConn) => Task.CompletedTask;
 
     /// <inheritdoc/>
     public abstract IPhormSession WithContext(string connectionName, IDictionary<string, object?> contextData);
@@ -184,7 +184,7 @@ public abstract class AbstractPhormSession(string databaseConnectionString, stri
     }
 
     /// <inheritdoc/>
-    protected internal virtual IAsyncDbCommand CreateCommand(IPhormDbConnection connection, string schema, string objectName, DbObjectType objectType)
+    protected virtual IAsyncDbCommand CreateCommand(IPhormDbConnection connection, string schema, string objectName, DbObjectType objectType)
     {
         // Complete object name
         objectName = objectType switch

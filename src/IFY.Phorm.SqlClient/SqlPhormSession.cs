@@ -91,7 +91,7 @@ public class SqlPhormSession(string databaseConnectionString, string? connection
     {
         return cmd.Connection is SqlConnection sql
             ? new SqlConsoleMessageCapture(this, commandGuid, sql)
-            : (AbstractConsoleMessageCapture)NullConsoleMessageCapture.Instance;
+            : NullConsoleMessageCapture.Instance;
     }
 
     #endregion Console capture

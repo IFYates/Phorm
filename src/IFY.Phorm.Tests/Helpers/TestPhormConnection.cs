@@ -5,11 +5,11 @@ using System.Diagnostics.CodeAnalysis;
 namespace IFY.Phorm.Tests;
 
 [ExcludeFromCodeCoverage]
-public class TestPhormConnection : IPhormDbConnection
+public class TestPhormConnection(string? connectionName) : IPhormDbConnection
 {
     public Queue<IAsyncDbCommand> CommandQueue { get; } = new Queue<IAsyncDbCommand>();
 
-    public virtual string? ConnectionName { get; }
+    public virtual string? ConnectionName { get; } = connectionName;
 
     public virtual string DefaultSchema { get; set; } = "dbo";
     [AllowNull] public virtual string ConnectionString { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
@@ -20,27 +20,22 @@ public class TestPhormConnection : IPhormDbConnection
 
     public virtual ConnectionState State => ConnectionState.Open;
 
-    public TestPhormConnection(string? connectionName)
-    {
-        ConnectionName = connectionName;
-    }
-
-    public virtual IDbTransaction BeginTransaction()
+    public virtual ValueTask<IDbTransaction> BeginTransactionAsync(CancellationToken cancellationToken)
     {
         throw new NotImplementedException();
     }
 
-    public virtual IDbTransaction BeginTransaction(IsolationLevel il)
+    public virtual ValueTask<IDbTransaction> BeginTransactionAsync(IsolationLevel il, CancellationToken cancellationToken)
     {
         throw new NotImplementedException();
     }
 
-    public virtual void ChangeDatabase(string databaseName)
+    public virtual Task ChangeDatabaseAsync(string databaseName, CancellationToken cancellationToken)
     {
         throw new NotImplementedException();
     }
 
-    public virtual void Close()
+    public virtual Task CloseAsync(CancellationToken cancellationToken)
     {
         throw new NotImplementedException();
     }
@@ -53,14 +48,14 @@ public class TestPhormConnection : IPhormDbConnection
         }
         return new TestDbCommand();
     }
-    IDbCommand IDbConnection.CreateCommand() => (IDbCommand)CreateCommand();
+    IDbCommand IAsyncDbConnection.CreateCommand() => (IDbCommand)CreateCommand();
 
     public virtual void Dispose()
     {
         // NOOP
     }
 
-    public virtual void Open()
+    public virtual Task OpenAsync(CancellationToken cancellationToken)
     {
         throw new NotImplementedException();
     }
