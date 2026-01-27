@@ -1,11 +1,17 @@
+<div align="center">
+
+![Cham](cham.png)
+
+</div>
+
 # Pho/rm - The **P**rocedure-**h**eavy **o**bject-**r**elational **m**apping framework
 
 [![Build & Test](https://github.com/IFYates/Phorm/actions/workflows/dotnet.yml/badge.svg)](https://github.com/IFYates/Phorm/actions/workflows/dotnet.yml)
-[![Code Coverage](https://app.codacy.com/project/badge/Coverage/9862eeae674c422f84ea6dbe46ecc51e)](https://www.codacy.com/gh/IFYates/Phorm/dashboard?utm_source=github.com&utm_medium=referral&utm_content=IFYates/Phorm&utm_campaign=Badge_Coverage)
+[![Code Coverage](https://app.codacy.com/project/badge/Coverage/9862eeae674c422f84ea6dbe46ecc51e)](https://app.codacy.com/gh/IFYates/Phorm/dashboard?utm_source=github.com&utm_medium=referral&utm_content=IFYates/Phorm&utm_campaign=Badge_Coverage)
 [![Mutation testing badge](https://img.shields.io/endpoint?style=flat&url=https%3A%2F%2Fbadge-api.stryker-mutator.io%2Fgithub.com%2FIFYates%2FPhorm%2Fmain)](https://dashboard.stryker-mutator.io/reports/github.com/IFYates/Phorm/main)
-[![Code Quality](https://app.codacy.com/project/badge/Grade/9862eeae674c422f84ea6dbe46ecc51e)](https://www.codacy.com/gh/IFYates/Phorm/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=IFYates/Phorm&amp;utm_campaign=Badge_Grade)
+[![Code Quality](https://app.codacy.com/project/badge/Grade/9862eeae674c422f84ea6dbe46ecc51e)](https://app.codacy.com/gh/IFYates/Phorm/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=IFYates/Phorm&amp;utm_campaign=Badge_Grade)
 
-A full O/RM, focused on strong separation between the data structures and the business entity representation.
+A [micro-O/RM](https://stackoverflow.com/a/48279585), focused on strong separation between the data structures and the business entity representation.
 
 See our [ethos](https://github.com/IFYates/Phorm/wiki/ethos) for how and why Pho/rm is different to other O/RMs.
 
@@ -21,10 +27,10 @@ Pho/rm supports:
 * [Your DI framework](https://github.com/IFYates/Phorm/wiki/howto-di)
 * And more!
 
-Packages|||
--|-|-
-IFY.Phorm.Core|[![NuGet Version](https://img.shields.io/nuget/v/IFY.Phorm.Core)](https://www.nuget.org/packages/IFY.Phorm.Core/)|[![NuGet Downloads](https://img.shields.io/nuget/dt/IFY.Phorm.Core)](https://www.nuget.org/packages/IFY.Phorm.Core/)
-IFY.Phorm.SqlClient|[![NuGet Version](https://img.shields.io/nuget/v/IFY.Phorm.SqlClient)](https://www.nuget.org/packages/IFY.Phorm.SqlClient/)|[![NuGet Downloads](https://img.shields.io/nuget/dt/IFY.Phorm.SqlClient)](https://www.nuget.org/packages/IFY.Phorm.SqlClient/)
+| Packages | | |
+| - | - | -
+| IFY.Phorm.Core | [![NuGet Version](https://img.shields.io/nuget/v/IFY.Phorm.Core)](https://www.nuget.org/packages/IFY.Phorm.Core/) | [![NuGet Downloads](https://img.shields.io/nuget/dt/IFY.Phorm.Core)](https://www.nuget.org/packages/IFY.Phorm.Core/)
+| IFY.Phorm.SqlClient | [![NuGet Version](https://img.shields.io/nuget/v/IFY.Phorm.SqlClient)](https://www.nuget.org/packages/IFY.Phorm.SqlClient/) | [![NuGet Downloads](https://img.shields.io/nuget/dt/IFY.Phorm.SqlClient)](https://www.nuget.org/packages/IFY.Phorm.SqlClient/)
 
 ## Driving principals
 The are many, brilliant O/RM frameworks available using different paradigms for database interaction.  
@@ -37,21 +43,30 @@ Our goal is to have a strongly-typed data surface and allow for a mutable physic
 With this approach, the data management team can provide access contracts to meet the business logic requirements, which the implementing team can rely on without concern over the underlying structures and query efficiency.
 
 ```mermaid
-flowchart RL
-subgraph Database
-    D[(Data)]
+flowchart
+    I[/Interface/]
+    O[DTO]
+    T[Table]
     V((vw))
     SP((sp))
-end
-subgraph Application
-    O[DTO]
-    I[/Interface/]
-end
 
-D -->|Get| O;
-D --> V -->|Get| O;
-SP -->|From.Get| O;
-O -.->|Call/From| I --> SP --> D;
+    I --> SP
+    V -->|Get| O
+    SP -->|From.Get| O
+    T -->|Get| O
+    O -.->|Call/From| I
+    T --> V
+    T <--> SP
+
+    subgraph Application
+        O
+        I
+    end
+    subgraph Database
+        T
+        V
+        SP
+    end
 ```
 
 ## Common example
@@ -82,7 +97,7 @@ RETURN 1 -- Success
 ```
 ```CSharp
 // DTO and contracts
-[PhormContract(Name = "Data")]
+[PhormContract(Name = "Data")] // Name of underlying table (optional)
 class DataItem : ISaveData
 {
     public long Id { get; set; }
@@ -100,12 +115,41 @@ interface ISaveData : IPhormContract
 IPhormSession session = new SqlPhormSession(connectionString);
 
 // Get all existing records from the table
-DataItem[] allData = session.Get<DataItem[]>()!;
+DataItem[] allData = await session.GetAsync<DataItem[]>()!; // Table dbo.Data
 
 // Add a new record to the table, getting back the new id
 var newItem = new { Id = ContractMember.Out<long>(), Key = "Name", Value = "T Ester" };
-int result = session.Call<ISaveData>(newItem);
+int result = await session.CallAsync<ISaveData>(newItem); // Procedure dbo.usp_SaveData
 
-DataItem? itemById = session.Get<DataItem>(new { Id = newItem.Id });
-DataItem? itemByKey = session.Get<DataItem>(new { Key = "Name" });
+DataItem? itemById = await session.GetAsync<DataItem>(new { Id = newItem.Id }); // Table dbo.Data
+DataItem? itemByKey = await session.GetAsync<DataItem>(new { Key = "Name" }); // Table dbo.Data
 ```
+
+## Syntax overview
+```CSharp
+IPhormSession
+    // Calling a contract
+    Task<int> CallAsync(string contractName, object? args = null, CancellationToken cancellationToken = CancellationToken.None);
+    Task<int> CallAsync<TActionContract>(object? args = null, CancellationToken cancellationToken = CancellationToken.None);
+
+    // Fetching from a DTO definition (table, view)
+    Task<TResult?> GetAsync<TResult>(object? args = null, CancellationToken cancellationToken = CancellationToken.None);
+
+    // Fetching from a named procedure
+    From(string contractName, object? args = null)
+        Task<TResult?> GetAsync<TResult>(CancellationToken cancellationToken = CancellationToken.None);
+        // Resultset filtering
+        Where<TEntity>(Expression<Func<TEntity, bool>> predicate)
+            Task<IEnumerable<TEntity>> GetAllAsync(CancellationToken cancellationToken = CancellationToken.None);
+    
+    // Fetching from a contract definition (procedure, table, view)
+    From<TActionContract>(object? args = null)
+        Task<TResult?> GetAsync<TResult>(CancellationToken cancellationToken = CancellationToken.None);
+        // Resultset filtering
+        Where<TEntity>(Expression<Func<TEntity, bool>> predicate)
+            Task<IEnumerable<TEntity>> GetAllAsync(CancellationToken cancellationToken = CancellationToken.None);
+```
+
+# Versioning
+Pho/rm uses [Semantic Versioning](https://semver.org/) where provider implementations (e.g. SQL Server) will use the same major and minor versions as the core package, but may have a different patch version.  
+For example, the provider package patch version will be incremented when there is a fix or change in the provider implementation (or core), but the core package remains unchanged.

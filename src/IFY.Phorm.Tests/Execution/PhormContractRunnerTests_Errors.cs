@@ -1,11 +1,12 @@
 ﻿using IFY.Phorm.Tests;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace IFY.Phorm.Execution.Tests;
 
 [TestClass]
 public class PhormContractRunnerTests_Errors
 {
+    public TestContext TestContext { get; set; }
+
     class FailingDataReader : TestDbDataReader
     {
         public Exception ReadException { get; set; } = null!;
@@ -16,14 +17,8 @@ public class PhormContractRunnerTests_Errors
         }
     }
 
-    [TestInitialize]
-    public void Init()
-    {
-        AbstractPhormSession.ResetConnectionPool();
-    }
-
     [TestMethod]
-    public void Call__Error_not_processed_by_console__Thrown()
+    public async Task Call__Error_not_processed_by_console__Thrown()
     {
         // Arrange
         var readException = new InvalidOperationException();
@@ -41,17 +36,15 @@ public class PhormContractRunnerTests_Errors
         };
 
         // Act
-        var ex = Assert.ThrowsException<InvalidOperationException>(() =>
-        {
-            _ = phorm.Call("Test", null);
-        });
+        var ex = await Assert.ThrowsExactlyAsync<InvalidOperationException>
+            (async () => await phorm.CallAsync("Test", null, TestContext.CancellationToken));
 
         // Assert
         Assert.AreSame(readException, ex);
     }
 
     [TestMethod]
-    public void Call__Error_processed_by_console__Consumed()
+    public async Task Call__Error_processed_by_console__Consumed()
     {
         // Arrange
         var readException = new InvalidOperationException();
@@ -73,14 +66,14 @@ public class PhormContractRunnerTests_Errors
         };
 
         // Act
-        var res = phorm.Call("Test", null);
+        var res = await phorm.CallAsync("Test", null, TestContext.CancellationToken);
 
         // Assert
         Assert.AreEqual(1, res);
     }
 
     [TestMethod]
-    public void Get__Error_not_processed_by_console__Thrown()
+    public async Task Get__Error_not_processed_by_console__Thrown()
     {
         // Arrange
         var readException = new InvalidOperationException();
@@ -98,17 +91,15 @@ public class PhormContractRunnerTests_Errors
         };
 
         // Act
-        var ex = Assert.ThrowsException<InvalidOperationException>(() =>
-        {
-            _ = phorm.From("Test", null).Get<object>();
-        });
+        var ex = await Assert.ThrowsExactlyAsync<InvalidOperationException>
+            (async () => await phorm.From("Test", null).GetAsync<object>(TestContext.CancellationToken));
 
         // Assert
         Assert.AreSame(readException, ex);
     }
 
     [TestMethod]
-    public void Get__Error_processed_by_console__Consumed()
+    public async Task Get__Error_processed_by_console__Consumed()
     {
         // Arrange
         var readException = new InvalidOperationException();
@@ -130,7 +121,7 @@ public class PhormContractRunnerTests_Errors
         };
 
         // Act
-        var res = phorm.From("Test", null).Get<object>();
+        var res = await phorm.From("Test", null).GetAsync<object>(TestContext.CancellationToken);
 
         // Assert
         Assert.IsNull(res);

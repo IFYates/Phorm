@@ -2,7 +2,6 @@
 using IFY.Phorm.Execution;
 using IFY.Phorm.SqlClient.Tests.Helpers;
 using Microsoft.Data.SqlClient;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 
 namespace IFY.Phorm.SqlClient.Tests;
@@ -14,7 +13,7 @@ public class SqlConsoleMessageCaptureTests
     public void ProcessException__SqlException__Logs_error()
     {
         // Arrange
-        var sessionMock = new Mock<AbstractPhormSession>(MockBehavior.Strict, null!, null!);
+        var sessionMock = new Mock<AbstractPhormSession>(MockBehavior.Strict, null!);
         var conn = new SqlConnection();
 
         var obj = new SqlConsoleMessageCapture(sessionMock.Object, Guid.Empty, conn);
@@ -33,7 +32,7 @@ public class SqlConsoleMessageCaptureTests
         Assert.IsTrue(obj.HasError);
 
         var msgs = obj.GetConsoleMessages();
-        Assert.AreEqual(1, msgs.Length);
+        Assert.HasCount(1, msgs);
         Assert.AreEqual("err message", msgs[0].Message);
         Assert.AreEqual("err procedure @ 7", msgs[0].Source);
         Assert.AreEqual(3, msgs[0].Level);
@@ -44,7 +43,7 @@ public class SqlConsoleMessageCaptureTests
     public void ProcessException__SqlException__Sends_event()
     {
         // Arrange
-        var sessionMock = new Mock<AbstractPhormSession>(MockBehavior.Strict, null!, null!);
+        var sessionMock = new Mock<AbstractPhormSession>(MockBehavior.Strict, null!);
         var conn = new SqlConnection();
 
         var cmdGuid = Guid.NewGuid();
@@ -67,7 +66,7 @@ public class SqlConsoleMessageCaptureTests
         Assert.IsTrue(res);
         Assert.IsTrue(obj.HasError);
 
-        Assert.AreEqual(1, events.Count);
+        Assert.HasCount(1, events);
         Assert.AreEqual(cmdGuid, events[0].CommandGuid);
         Assert.AreEqual("err message", events[0].ConsoleMessage.Message);
         Assert.AreEqual("err procedure @ 7", events[0].ConsoleMessage.Source);
@@ -79,7 +78,7 @@ public class SqlConsoleMessageCaptureTests
     public void ProcessException__Not_SqlException__False()
     {
         // Arrange
-        var sessionMock = new Mock<AbstractPhormSession>(MockBehavior.Strict, null!, null!);
+        var sessionMock = new Mock<AbstractPhormSession>(MockBehavior.Strict, null!);
         var conn = new SqlConnection();
 
         var obj = new SqlConsoleMessageCapture(sessionMock.Object, Guid.Empty, conn);
@@ -91,14 +90,14 @@ public class SqlConsoleMessageCaptureTests
         Assert.IsFalse(res);
 
         var msgs = obj.GetConsoleMessages();
-        Assert.AreEqual(0, msgs.Length);
+        Assert.IsEmpty(msgs);
     }
 
     [TestMethod]
     public void InfoMessage__Logs_event()
     {
         // Arrange
-        var sessionMock = new Mock<AbstractPhormSession>(MockBehavior.Strict, null!, null!);
+        var sessionMock = new Mock<AbstractPhormSession>(MockBehavior.Strict, null!);
         var conn = new SqlConnection();
 
         var obj = new SqlConsoleMessageCapture(sessionMock.Object, Guid.Empty, conn);
@@ -118,7 +117,7 @@ public class SqlConsoleMessageCaptureTests
         Assert.IsFalse(obj.HasError);
 
         var msgs = obj.GetConsoleMessages();
-        Assert.AreEqual(1, msgs.Length);
+        Assert.HasCount(1, msgs);
         Assert.AreEqual("err message", msgs[0].Message);
         Assert.AreEqual("err procedure @ 7", msgs[0].Source);
         Assert.AreEqual(3, msgs[0].Level);
@@ -129,7 +128,7 @@ public class SqlConsoleMessageCaptureTests
     public void InfoMessage__Sends_event()
     {
         // Arrange
-        var sessionMock = new Mock<AbstractPhormSession>(MockBehavior.Strict, null!, null!);
+        var sessionMock = new Mock<AbstractPhormSession>(MockBehavior.Strict, null!);
         var conn = new SqlConnection();
 
         var cmdGuid = Guid.NewGuid();
@@ -153,7 +152,7 @@ public class SqlConsoleMessageCaptureTests
         // Assert
         Assert.IsFalse(obj.HasError);
 
-        Assert.AreEqual(1, events.Count);
+        Assert.HasCount(1, events);
         Assert.AreEqual(cmdGuid, events[0].CommandGuid);
         Assert.AreEqual("err message", events[0].ConsoleMessage.Message);
         Assert.AreEqual("err procedure @ 7", events[0].ConsoleMessage.Source);
@@ -165,7 +164,7 @@ public class SqlConsoleMessageCaptureTests
     public void Dispose__Unsubscribes_event()
     {
         // Arrange
-        var sessionMock = new Mock<AbstractPhormSession>(MockBehavior.Strict, null!, null!);
+        var sessionMock = new Mock<AbstractPhormSession>(MockBehavior.Strict, null!);
         var conn = new SqlConnection();
 
         var obj = new SqlConsoleMessageCapture(sessionMock.Object, Guid.Empty, conn);
@@ -178,6 +177,7 @@ public class SqlConsoleMessageCaptureTests
 
         var events = new List<ConsoleMessageEventArgs>();
         sessionMock.Object.ConsoleMessage += (_, e) => events.Add(e);
+        sessionMock.Object.OnConsoleMessage(null!); // Prove handler works
 
         var e = MicrosoftDataSqlClientHelpers.NewSqlInfoMessageEventArgs(ex);
 
@@ -186,7 +186,7 @@ public class SqlConsoleMessageCaptureTests
         MicrosoftDataSqlClientHelpers.FireInfoMessageEvent(conn, e);
 
         // Assert
-        Assert.AreEqual(0, events.Count);
+        Assert.IsNull(events.Single()); // Only event should be our fake one
         Assert.IsFalse(obj.HasError);
     }
 }

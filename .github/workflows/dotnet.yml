@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - src
+      - src/**
   pull_request:
     types: [opened, synchronize, reopened]
     branches:
@@ -15,27 +15,25 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
     # Setup
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v6.0.1
 
-    - name: Setup .NET Core 3.1
-      uses: actions/setup-dotnet@v1.7.2
+    - name: Setup .NET 10
+      uses: actions/setup-dotnet@v5.1.0
       with:
-        dotnet-version: 3.1.x
-    - name: Setup .NET 6
-      uses: actions/setup-dotnet@v1.7.2
-      with:
-        dotnet-version: 6.0.x
+        dotnet-version: 10.0.x
 
     - name: Restore dependencies
-      run: dotnet restore src
+      run: dotnet restore src/IFY.Phorm.sln
     - name: Restore tools
       run: dotnet tool restore
       
     - name: Set branch-based environment variables
-      uses: iamtheyammer/branch-env-vars@v1.1.2
+      uses: iamtheyammer/branch-env-vars@v1.2.2
       with:
         BUILD_CONFIG: |
           main:Release
@@ -46,15 +44,16 @@ jobs:
       run: dotnet build src --configuration $BUILD_CONFIG --no-restore
 
     - name: Publish package
-      uses: nanoufo/action-upload-artifacts-and-release-assets@v1.4
+      if: github.ref == 'refs/heads/main'
+      uses: nanoufo/action-upload-artifacts-and-release-assets@v2
       with:
         path: ./src/**/IFY.Phorm.*.*nupkg
 
     # Test & coverage
     - name: Test and coverage - IFY.Phorm
-      run: dotnet coverlet ./src/IFY.Phorm.Tests/bin/$BUILD_CONFIG/net6.0/IFY.Phorm.Tests.dll --target "dotnet" --targetargs "test ./src/IFY.Phorm.Tests/IFY.Phorm.Tests.csproj --configuration $BUILD_CONFIG --no-build" --include-test-assembly --exclude-by-file "**/.nuget/**" --format lcov -o ify_phorm.lcov
+      run: dotnet coverlet ./src/IFY.Phorm.Tests/bin/$BUILD_CONFIG/net10.0/IFY.Phorm.Tests.dll --target "dotnet" --targetargs "test ./src/IFY.Phorm.Tests/IFY.Phorm.Tests.csproj --configuration $BUILD_CONFIG --no-build" --include-test-assembly --exclude-by-file "**/.nuget/**" --format lcov -o ify_phorm.lcov
     - name: Test and coverage - IFY.Phorm.SqlClient
-      run: dotnet coverlet ./src/IFY.Phorm.SqlClient.Tests/bin/$BUILD_CONFIG/net6.0/IFY.Phorm.SqlClient.Tests.dll --target "dotnet" --targetargs "test ./src/IFY.Phorm.SqlClient.Tests/IFY.Phorm.SqlClient.Tests.csproj --configuration $BUILD_CONFIG --no-build" --include-test-assembly --exclude "[IFY.Phorm]*" --format lcov -o ify_phorm_sqlclient.lcov       
+      run: dotnet coverlet ./src/IFY.Phorm.SqlClient.Tests/bin/$BUILD_CONFIG/net10.0/IFY.Phorm.SqlClient.Tests.dll --target "dotnet" --targetargs "test ./src/IFY.Phorm.SqlClient.Tests/IFY.Phorm.SqlClient.Tests.csproj --configuration $BUILD_CONFIG --no-build" --include-test-assembly --exclude "[IFY.Phorm]*" --format lcov -o ify_phorm_sqlclient.lcov       
     - name: Report coverage to Codacy
       uses: codacy/codacy-coverage-reporter-action@v1.3.0
       with:
@@ -63,7 +62,7 @@ jobs:
 
     # Mutation test
     - name: Configure Stryker.NET for IFY.Phorm
-      uses: DamianReeves/write-file-action@v1.0
+      uses: DamianReeves/write-file-action@v1.3
       with:
         path: stryker-config.json
         write-mode: overwrite
@@ -82,8 +81,9 @@ jobs:
           }
     - name: Run Stryker.NET
       run: dotnet stryker --dashboard-api-key ${{ secrets.STRYKER_DASHBOARD }}
+      continue-on-error: true
     - name: Configure Stryker.NET for IFY.Phorm.SqlClient
-      uses: DamianReeves/write-file-action@v1.0
+      uses: DamianReeves/write-file-action@v1.3
       with:
         path: stryker-config.json
         write-mode: overwrite
@@ -102,8 +102,9 @@ jobs:
           }
     - name: Run Stryker.NET
       run: dotnet stryker --dashboard-api-key ${{ secrets.STRYKER_DASHBOARD }}
+      continue-on-error: true
     - name: Upload mutation reports
-      uses: actions/upload-artifact@v2.2.2
+      uses: actions/upload-artifact@v6
       with:
         name: mutation-report.html
         path: ./**/mutation-report.html

@@ -1,22 +1,32 @@
 ﻿namespace IFY.Phorm.Data;
 
+/// <summary>
+/// Marks the property as being the target of an additional resultset.
+/// </summary>
 [AttributeUsage(AttributeTargets.Property)]
-public class ResultsetAttribute : Attribute
+public class ResultsetAttribute(int order, string? selectorPropertyName = null) : Attribute
 {
-    public int Order { get; }
-    public string SelectorPropertyName { get; }
+    /// <summary>
+    /// The 0-based index of the additional resultset to match.
+    /// </summary>
+    public int Order { get; } = order;
+    /// <summary>
+    /// The name of the sibling property that provides the <see cref="IRecordMatcher"/> implementation for matching the resultset records to the parent instances.
+    /// </summary>
+    public string? SelectorPropertyName { get; } = selectorPropertyName;
 
     private Type? _lastSelectorType;
     private IRecordMatcher? _lastMatcher;
 
-    public ResultsetAttribute(int order, string selectorPropertyName)
+    internal object[] FilterMatched(object parent, IEnumerable<object> children)
     {
-        Order = order;
-        SelectorPropertyName = selectorPropertyName;
-    }
+        // No selector means take all children
+        if (SelectorPropertyName == null)
+        {
+            return children.ToArray();
+        }
 
-    public object[] FilterMatched(object parent, IEnumerable<object> children)
-    {
+        // Cache the selector temporarily, as we often use the same one in batches
         if (_lastSelectorType != parent.GetType())
         {
             var selectorProp = parent.GetType().GetProperty(SelectorPropertyName);

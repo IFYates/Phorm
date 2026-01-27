@@ -1,15 +1,17 @@
 ﻿using IFY.Phorm.Data;
 using IFY.Phorm.Execution;
+using IFY.Phorm.Tests;
 using IFY.Phorm.Transformation;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Data;
 using System.Diagnostics.CodeAnalysis;
 
-namespace IFY.Phorm.Tests.Encryption;
+namespace IFY.Phorm.Encryption.Tests;
 
 [TestClass]
 public class TransformationTests
 {
+    public TestContext TestContext { get; set; }
+
     class DataObject
     {
         [TransformFromSource]
@@ -40,14 +42,8 @@ public class TransformationTests
             => throw new NotImplementedException();
     }
 
-    [TestInitialize]
-    public void Init()
-    {
-        AbstractPhormSession.ResetConnectionPool();
-    }
-
     [TestMethod]
-    public void Can_transform_value_to_datasource()
+    public async Task Can_transform_value_to_datasource()
     {
         // Arrange
         var runner = new TestPhormSession();
@@ -55,7 +51,7 @@ public class TransformationTests
         var args = new { Value = "value" };
 
         // Act
-        var res = runner.Call<IWithTransformation>(args);
+        var res = await runner.CallAsync<IWithTransformation>(args, TestContext.CancellationToken);
 
         // Assert
         Assert.AreEqual(1, res);
@@ -65,28 +61,74 @@ public class TransformationTests
     }
 
     [TestMethod]
-    public void Can_transform_value_from_datasource()
+    public async Task Can_transform_value_from_datasource()
     {
         // Arrange
         var cmd = new TestDbCommand(new TestDbDataReader
         {
-            Data = new List<Dictionary<string, object>>
-            {
-                new Dictionary<string, object>
+            Data =
+            [
+                new()
                 {
                     ["Value"] = "value"
                 }
-            }
+            ]
         });
 
         var runner = new TestPhormSession();
-        runner.TestConnection?.CommandQueue.Enqueue(cmd);
+        runner.TestConnection!.CommandQueue.Enqueue(cmd);
 
         // Act
-        var res = runner.From("Get").Get<DataObject>();
+        var res = await runner.From("Get", null).GetAsync<DataObject>(TestContext.CancellationToken);
 
         // Assert
         Assert.IsNotNull(res);
-        Assert.AreEqual("FromSource_value", res?.Value);
+        Assert.AreEqual("FromSource_value", res.Value);
+    }
+
+    class DataObject2
+    {
+        public string? A { get; set; }
+        [TransformFromSourceLast]
+        public string? Value { get; set; }
+        public string? Z { get; set; }
+    }
+    class TransformFromSourceLastAttribute : AbstractTransphormAttribute
+    {
+        public override object? FromDatasource(Type type, object? data, object? context)
+        {
+            var obj = (DataObject2)context!;
+            return string.Join(',', obj.A, data, obj.Z);
+        }
+        [ExcludeFromCodeCoverage]
+        public override object? ToDatasource(object? data, object? context)
+            => throw new NotImplementedException();
+    }
+    [TestMethod]
+    public async Task Transformed_values_happen_last()
+    {
+        // Arrange
+        var cmd = new TestDbCommand(new TestDbDataReader
+        {
+            Data =
+            [
+                new()
+                {
+                    ["A"] = "AAA",
+                    ["Value"] = "Value",
+                    ["Z"] = "ZZZ"
+                }
+            ]
+        });
+
+        var runner = new TestPhormSession();
+        runner.TestConnection!.CommandQueue.Enqueue(cmd);
+
+        // Act
+        var res = await runner.From("Get", null).GetAsync<DataObject2>(TestContext.CancellationToken);
+
+        // Assert
+        Assert.IsNotNull(res);
+        Assert.AreEqual("AAA,Value,ZZZ", res.Value);
     }
 }

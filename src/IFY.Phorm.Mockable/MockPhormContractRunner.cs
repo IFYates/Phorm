@@ -1,5 +1,6 @@
 ﻿using IFY.Phorm.Data;
 using IFY.Phorm.Execution;
+using System.Linq.Expressions;
 
 namespace IFY.Phorm.Mockable;
 
@@ -17,18 +18,8 @@ internal class MockPhormContractRunner<TActionContract> : IPhormContractRunner<T
         _contractName = contractName;
         _args = args;
 
-        var (schemaName, objectName, objectType) = PhormContractRunner<IPhormContract>.ResolveContractName(typeof(TActionContract), contractName);
-        _callContext = session.GetCallContext(schemaName, objectName, objectType);
-    }
-
-    public TResult? Get<TResult>()
-        where TResult : class
-    {
-        if (typeof(TActionContract) == typeof(IPhormContract))
-        {
-            return _mockObject.GetFrom<TResult>(_contractName, _args, _callContext);
-        }
-        return _mockObject.GetFrom<TActionContract, TResult>(_args, _callContext);
+        var (schemaName, objectName, objectType, readOnly) = PhormContractRunner<IPhormContract>.ResolveContractName(typeof(TActionContract), contractName);
+        _callContext = session.GetCallContext(schemaName, objectName, objectType, readOnly);
     }
 
     public Task<TResult?> GetAsync<TResult>() where TResult : class
@@ -47,5 +38,17 @@ internal class MockPhormContractRunner<TActionContract> : IPhormContractRunner<T
             return Task.FromResult(_mockObject.GetFrom<TResult>(_contractName, _args, _callContext));
         }
         return Task.FromResult(_mockObject.GetFrom<TActionContract, TResult>(_args, _callContext));
+    }
+
+    public IPhormFilteredContractRunner<IEnumerable<TEntity>> Where<TEntity>(Expression<Func<TEntity, bool>> predicate) where TEntity : class, new()
+    {
+        throw new NotImplementedException();
+    }
+
+    public IPhormFilteredContractRunner<TGenSpec> Where<TBase, TGenSpec>(Expression<Func<TBase, bool>> predicate)
+        where TBase : class
+        where TGenSpec : GenSpecBase<TBase>
+    {
+        throw new NotImplementedException();
     }
 }

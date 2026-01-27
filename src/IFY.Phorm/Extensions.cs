@@ -1,5 +1,8 @@
-﻿using System.Data;
+﻿using IFY.Phorm.Transformation;
+using System.Data;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq.Expressions;
+using System.Reflection;
 using System.Text;
 
 namespace IFY.Phorm;
@@ -11,23 +14,29 @@ internal static class Extensions
         return coll.Cast<IDataParameter>().ToArray();
     }
 
-    [return: NotNullIfNotNull("value")]
+    [return: NotNullIfNotNull(nameof(value))]
     public static object? ChangeType(this object? value, Type conversionType)
     {
-        if (value != null)
+        if (value == null)
         {
-            if (conversionType.IsInstanceOfType(value))
-            {
-                return value;
-            }
+            return null;
+        }
+        if (conversionType.IsInstanceOfType(value))
+        {
+            return value;
+        }
 
 #if NET6_0_OR_GREATER
-            if (conversionType == typeof(DateOnly))
-            {
-                var dt = (DateTime)Convert.ChangeType(value, typeof(DateTime));
-                return DateOnly.FromDateTime(dt);
-            }
+        if (conversionType == typeof(DateOnly))
+        {
+            var dt = (DateTime)Convert.ChangeType(value, typeof(DateTime));
+            return DateOnly.FromDateTime(dt);
+        }
 #endif
+
+        if (conversionType.IsEnum)
+        {
+            return EnumValueAttribute.ConvertToEnum(value, conversionType);
         }
 
         return Convert.ChangeType(value, conversionType);
@@ -37,7 +46,7 @@ internal static class Extensions
     {
         if (value == null)
         {
-            return Array.Empty<byte>();
+            return [];
         }
 
 #if NET6_0_OR_GREATER
@@ -64,7 +73,7 @@ internal static class Extensions
         return value switch
         {
             byte[] val => val,
-            byte val => new[] { val },
+            byte val => [val],
             char val => BitConverter.GetBytes(val),
             double val => BitConverter.GetBytes(val),
             float val => BitConverter.GetBytes(val),
@@ -75,6 +84,75 @@ internal static class Extensions
             string val => Encoding.UTF8.GetBytes(val),
             _ => throw new InvalidCastException(),
         };
+    }
+
+    /// <summary>
+    /// Return array of all properties referenced in an expression for the parameter of given type.
+    /// </summary>
+    /// <param name="expr"></param>
+    /// <param name="parameterType"></param>
+    /// <returns></returns>
+    /// <exception cref="NotSupportedException"></exception>
+    /// <exception cref="NotImplementedException"></exception>
+    public static PropertyInfo[] GetExpressionParameterProperties(this Expression expr, Type parameterType)
+    {
+        var props = new List<PropertyInfo>();
+        parseExpression(expr);
+        return props.Distinct().ToArray();
+
+        void parseExpression(Expression expr)
+        {
+            switch (expr)
+            {
+                case BinaryExpression be:
+                    parseExpression(be.Left);
+                    parseExpression(be.Right);
+                    break;
+                case ConditionalExpression ce:
+                    parseExpression(ce.Test);
+                    parseExpression(ce.IfTrue);
+                    parseExpression(ce.IfFalse);
+                    break;
+                case ConstantExpression:
+                    break;
+                case MethodCallExpression mce:
+                    if (mce.Object is MemberExpression)
+                    {
+                        parseExpression(mce.Object);
+                    }
+                    foreach (var arg in mce.Arguments)
+                    {
+                        parseExpression(arg);
+                    }
+                    break;
+                case MemberExpression me:
+                    if (me.Member is PropertyInfo pi)
+                    {
+                        // Remember properties on target object
+                        // Ignore all others - if the expression compiles, it must be valid
+                        if (me.Expression?.NodeType == ExpressionType.Parameter
+                            && me.Expression?.Type == parameterType)
+                        {
+                            props.Add(pi);
+                            break;
+                        }
+                    }
+                    if (me.Expression != null)
+                    {
+                        parseExpression(me.Expression);
+                    }
+                    break;
+                default:
+                    // Unary types
+                    if (expr is UnaryExpression ue
+                        && ue.NodeType is ExpressionType.ArrayLength or ExpressionType.Convert or ExpressionType.Not)
+                    {
+                        parseExpression(ue.Operand);
+                        break;
+                    }
+                    throw new NotImplementedException();
+            }
+        }
     }
 
     public static T? FromBytes<T>(this byte[]? bytes)

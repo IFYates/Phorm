@@ -1,5 +1,11 @@
 ﻿namespace IFY.Phorm.EventArgs;
 
+/// <summary>
+/// Provides data for the event that occurs after a command has been executed.
+/// </summary>
+/// <remarks>This class supplies information about the executed command, including its unique identifier, text,
+/// parameters, result count, and return value. Instances of this class are typically provided to event handlers that
+/// respond to command execution events.</remarks>
 public sealed class CommandExecutedEventArgs : System.EventArgs
 {
     /// <summary>
@@ -15,7 +21,7 @@ public sealed class CommandExecutedEventArgs : System.EventArgs
     /// <summary>
     /// The parameters of the command that was executed.
     /// </summary>
-    public Dictionary<string, object?> CommandParameters { get; internal set; } = new Dictionary<string, object?>();
+    public Dictionary<string, object?> CommandParameters { get; internal set; } = [];
 
     /// <summary>
     /// The number of entity results parsed from execution.

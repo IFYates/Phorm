@@ -1,7 +1,6 @@
 ﻿using IFY.Phorm.Data;
 using IFY.Phorm.Encryption;
 using IFY.Phorm.Execution;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using System.Runtime.Serialization;
 
@@ -25,16 +24,16 @@ public class EncryptionTests : SqlIntegrationTestBase
         [SecureValue("test", nameof(Num))] string Data { get; }
     }
 
-    private void setupEncryptionSchema(AbstractPhormSession phorm)
+    private async Task setupEncryptionSchema(AbstractPhormSession phorm)
     {
-        SqlTestHelpers.ApplySql(phorm, @"DROP TABLE IF EXISTS [dbo].[EncryptionTable]");
-        SqlTestHelpers.ApplySql(phorm, @"CREATE TABLE [dbo].[EncryptionTable] (
+        await SqlTestHelpers.ApplySql(phorm, TestContext.CancellationTokenSource.Token, [
+            @"DROP TABLE IF EXISTS [dbo].[EncryptionTable]",
+            @"CREATE TABLE [dbo].[EncryptionTable] (
 	[Id] BIGINT NOT NULL IDENTITY(1,1) PRIMARY KEY,
 	[Int] INT NULL,
 	[Data] VARBINARY(MAX) NULL
-)");
-
-        SqlTestHelpers.ApplySql(phorm, @"CREATE OR ALTER PROC [dbo].[usp_Encryption_Upsert]
+)",
+            @"CREATE OR ALTER PROC [dbo].[usp_Encryption_Upsert]
 	@Id BIGINT = NULL OUTPUT,
 	@Int INT = NULL,
 	@Data VARBINARY(MAX) = NULL
@@ -51,15 +50,16 @@ AS
 		[Int] = @Int,
 		[Data] = @Data
 		WHERE [Id] = @Id
-RETURN @@ROWCOUNT");
+RETURN @@ROWCOUNT"
+        ]);
     }
 
     [TestMethod]
-    public void String_encryption_full()
+    public async Task String_encryption_full()
     {
         // Arrange
         var phorm = getPhormSession();
-        setupEncryptionSchema(phorm);
+        await setupEncryptionSchema(phorm);
 
         var randInt = DateTime.UtcNow.Millisecond;
         var randStr = Guid.NewGuid().ToString();
@@ -84,12 +84,12 @@ RETURN @@ROWCOUNT");
         GlobalSettings.EncryptionProvider = provider.Object;
 
         // Act
-        var res = phorm.CallAsync<IUpsert>(new { Num = randInt, Data = randStr }).Result;
-        var obj = phorm.GetAsync<DataItem>().Result!;
+        var res = await phorm.CallAsync<IUpsert>(new { Num = randInt, Data = randStr }, TestContext.CancellationTokenSource.Token);
+        var obj = await phorm.GetAsync<DataItem>(null!, TestContext.CancellationTokenSource.Token);
 
         // Assert
         Assert.AreEqual(1, res);
-        Assert.AreEqual(randStr, obj.Data);
+        Assert.AreEqual(randStr, obj!.Data);
         CollectionAssert.AreEqual(randInt.GetBytes(), decryptor.Object.Authenticator);
         CollectionAssert.AreEqual(randInt.GetBytes(), encryptor.Object.Authenticator);
     }

@@ -5,44 +5,39 @@ using System.Diagnostics.CodeAnalysis;
 namespace IFY.Phorm.Tests;
 
 [ExcludeFromCodeCoverage]
-public class TestPhormConnection : IPhormDbConnection
+public class TestPhormConnection(string? connectionName) : IPhormDbConnection
 {
     public Queue<IAsyncDbCommand> CommandQueue { get; } = new Queue<IAsyncDbCommand>();
 
-    public virtual string? ConnectionName { get; }
+    public virtual string? ConnectionName { get; } = connectionName;
 
     public virtual string DefaultSchema { get; set; } = "dbo";
-    public virtual string ConnectionString { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+    [AllowNull] public virtual string ConnectionString { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
     public virtual int ConnectionTimeout => throw new NotImplementedException();
 
     public virtual string Database => throw new NotImplementedException();
 
-    public virtual ConnectionState State => throw new NotImplementedException();
+    public virtual ConnectionState State { get; set; } = ConnectionState.Open;
 
-    public TestPhormConnection(string? connectionName)
-    {
-        ConnectionName = connectionName;
-    }
-
-    public virtual IDbTransaction BeginTransaction()
+    public virtual ValueTask<IDbTransaction> BeginTransactionAsync(CancellationToken cancellationToken)
     {
         throw new NotImplementedException();
     }
 
-    public virtual IDbTransaction BeginTransaction(IsolationLevel il)
+    public virtual ValueTask<IDbTransaction> BeginTransactionAsync(IsolationLevel il, CancellationToken cancellationToken)
     {
         throw new NotImplementedException();
     }
 
-    public virtual void ChangeDatabase(string databaseName)
+    public virtual Task ChangeDatabaseAsync(string databaseName, CancellationToken cancellationToken)
     {
         throw new NotImplementedException();
     }
 
-    public virtual void Close()
+    public void Close()
     {
-        throw new NotImplementedException();
+        State = ConnectionState.Closed;
     }
 
     public virtual IAsyncDbCommand CreateCommand()
@@ -53,15 +48,15 @@ public class TestPhormConnection : IPhormDbConnection
         }
         return new TestDbCommand();
     }
-    IDbCommand IDbConnection.CreateCommand() => (IDbCommand)CreateCommand();
 
     public virtual void Dispose()
     {
         // NOOP
     }
 
-    public virtual void Open()
+    public virtual Task OpenAsync(CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        State = ConnectionState.Open;
+        return Task.CompletedTask;
     }
 }

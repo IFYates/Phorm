@@ -6,19 +6,21 @@ using System.Diagnostics.CodeAnalysis;
 namespace IFY.Phorm.Tests;
 
 [ExcludeFromCodeCoverage]
-internal partial class TestPhormSession : AbstractPhormSession
+internal partial class TestPhormSession : AbstractPhormSession, IPhormSession
 {
     public TestPhormConnection TestConnection { get; }
 
     public IReadOnlyList<IAsyncDbCommand> Commands => _commands.AsReadOnly();
-    private readonly List<IAsyncDbCommand> _commands = new List<IAsyncDbCommand>();
+    private readonly List<IAsyncDbCommand> _commands = [];
 
     public Func<TestPhormSession, Guid, AbstractConsoleMessageCapture>? ConsoleMessageCaptureProvider { get; set; }
-    public List<ConsoleMessage> ConsoleMessages { get; } = new List<ConsoleMessage>();
+    public List<ConsoleMessage> ConsoleMessages { get; } = [];
 
     public override bool SupportsTransactions => false;
 
     public override bool IsInTransaction => false;
+
+    public bool IsReadOnly { get; private set; }
 
     public TestPhormSession(string? connectionName = null)
         : base(null!, connectionName)
@@ -26,14 +28,9 @@ internal partial class TestPhormSession : AbstractPhormSession
         TestConnection = new TestPhormConnection(connectionName);
     }
     public TestPhormSession(TestPhormConnection connection, string? connectionName = null)
-        : base(null!, connectionName)
+        : base(null!, connectionName ?? connection.ConnectionName)
     {
         TestConnection = connection;
-    }
-
-    public override ITransactedPhormSession BeginTransaction()
-    {
-        throw new NotSupportedException();
     }
 
     protected override IAsyncDbCommand CreateCommand(IPhormDbConnection connection, string schema, string objectName, DbObjectType objectType)
@@ -43,12 +40,20 @@ internal partial class TestPhormSession : AbstractPhormSession
         return cmd;
     }
 
-    protected override IPhormDbConnection CreateConnection() => TestConnection;
+    protected override IAsyncDbConnection CreateConnection(bool readOnly)
+    {
+        // TestPhormSession overrides GetConnection, so does not use this method
+        throw new NotImplementedException();
+    }
 
-    protected override string? GetDefaultSchema(IPhormDbConnection phormConn) => null;
+    protected internal override IPhormDbConnection GetConnection(bool readOnly)
+    {
+        IsReadOnly = readOnly;
+        return TestConnection;
+    }
 
     [ExcludeFromCodeCoverage]
-    public override IPhormSession SetConnectionName(string connectionName)
+    public IPhormSession WithContext(string? connectionName, IDictionary<string, object?> contextData)
     {
         throw new NotImplementedException();
     }

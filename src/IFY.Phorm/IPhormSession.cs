@@ -1,10 +1,18 @@
-﻿using IFY.Phorm.Data;
-using IFY.Phorm.EventArgs;
-using IFY.Phorm.Execution;
+﻿using IFY.Phorm.EventArgs;
+using System.ComponentModel;
 
 namespace IFY.Phorm;
 
-public interface IPhormSession
+/// <summary>
+/// Represents a session for executing Phorm contracts and database operations, providing methods for invoking actions,
+/// retrieving data, and managing transactions within a scoped database connection.
+/// </summary>
+/// <remarks>The session exposes events for monitoring connection lifecycle, command execution, and contract
+/// mapping issues. It supports both synchronous and asynchronous operations, as well as transaction management if
+/// supported by the underlying runner. Configuration properties allow control over error handling and result size
+/// strictness. Use this interface to interact with Phorm contracts and database entities in a scoped and configurable
+/// manner.</remarks>
+public interface IPhormSession : IPhormConnectedSession
 {
     #region Events
 
@@ -13,137 +21,41 @@ public interface IPhormSession
     /// </summary>
     event EventHandler<ConnectedEventArgs> Connected;
 
-    /// <summary>
-    /// The event invoked when a command is about to be executed.
-    /// </summary>
-    event EventHandler<CommandExecutingEventArgs> CommandExecuting;
-
-    /// <summary>
-    /// The event invoked when a command has finished executing.
-    /// </summary>
-    event EventHandler<CommandExecutedEventArgs> CommandExecuted;
-
-    /// <summary>
-    /// A result record contained a column not specified in the target entity type.
-    /// </summary>
-    event EventHandler<UnexpectedRecordColumnEventArgs> UnexpectedRecordColumn;
-
-    /// <summary>
-    /// A result record did not contain a column specified in the target entity type.
-    /// </summary>
-    event EventHandler<UnresolvedContractMemberEventArgs> UnresolvedContractMember;
-
-    /// <summary>
-    /// A log message was received during execution.
-    /// </summary>
-    event EventHandler<ConsoleMessageEventArgs> ConsoleMessage;
-
     #endregion Events
-
-    /// <summary>
-    /// The connection name this session uses for database scoping.
-    /// </summary>
-    string? ConnectionName { get; }
-
-    /// <summary>
-    /// If true, will consume execution errors and treat like a console message.
-    /// Defaults to value in <see cref="GlobalSettings.ExceptionsAsConsoleMessage"/>.
-    /// </summary>
-    bool ExceptionsAsConsoleMessage { get; set; }
-
-    /// <summary>
-    /// Whether to throw a <see cref="InvalidOperationException"/> if an invocation result includes more records than expected.
-    /// Defaults to value in <see cref="GlobalSettings.StrictResultSize"/>.
-    /// </summary>
-    bool StrictResultSize { get; set; }
 
     /// <summary>
     /// Get a new instance of this session scoped with a different connection name.
     /// </summary>
     /// <param name="connectionName">The connection name to use when scoping the new session instance.</param>
     /// <returns>A new instance of this session with a different connection name.</returns>
-    IPhormSession SetConnectionName(string connectionName);
-
-    #region Call/get from action contract
-
-    int Call(string contractName);
-    int Call(string contractName, object? args);
-    int Call<TActionContract>()
-        where TActionContract : IPhormContract;
-    int Call<TActionContract>(object? args)
-        where TActionContract : IPhormContract;
-    int Call<TActionContract>(TActionContract contract) // Same as "object? args = null", but allows better Intellisense
-        where TActionContract : IPhormContract;
-
-    Task<int> CallAsync(string contractName);
-    Task<int> CallAsync(string contractName, object? args);
-    Task<int> CallAsync(string contractName, CancellationToken cancellationToken);
-    Task<int> CallAsync(string contractName, object? args, CancellationToken cancellationToken);
-    Task<int> CallAsync<TActionContract>()
-        where TActionContract : IPhormContract;
-    Task<int> CallAsync<TActionContract>(object? args)
-        where TActionContract : IPhormContract;
-    Task<int> CallAsync<TActionContract>(CancellationToken cancellationToken)
-        where TActionContract : IPhormContract;
-    Task<int> CallAsync<TActionContract>(object? args, CancellationToken cancellationToken)
-        where TActionContract : IPhormContract;
-    Task<int> CallAsync<TActionContract>(TActionContract contract) // Same as "object? args = null", but allows better Intellisense
-        where TActionContract : IPhormContract;
-    Task<int> CallAsync<TActionContract>(TActionContract contract, CancellationToken cancellationToken) // Same as "object? args = null", but allows better Intellisense
-        where TActionContract : IPhormContract;
-
-    IPhormContractRunner From(string contractName);
-    IPhormContractRunner From(string contractName, object? args);
-    IPhormContractRunner<TActionContract> From<TActionContract>()
-        where TActionContract : IPhormContract;
-    IPhormContractRunner<TActionContract> From<TActionContract>(object? args)
-        where TActionContract : IPhormContract;
-    IPhormContractRunner<TActionContract> From<TActionContract>(TActionContract contract) // Same as "object? args = null", but allows better Intellisense
-        where TActionContract : IPhormContract;
-
-    #endregion Call/get from action contract
-
-    #region Get from Table/View
-
-    TResult? Get<TResult>()
-        where TResult : class;
-    TResult? Get<TResult>(object? args)
-        where TResult : class;
-    TResult? Get<TResult>(TResult args) // Same as "object? args = null", but allows better Intellisense
-        where TResult : class;
-
-    Task<TResult?> GetAsync<TResult>()
-        where TResult : class;
-    Task<TResult?> GetAsync<TResult>(object? args)
-        where TResult : class;
-    Task<TResult?> GetAsync<TResult>(CancellationToken cancellationToken)
-        where TResult : class;
-    Task<TResult?> GetAsync<TResult>(object? args, CancellationToken cancellationToken)
-        where TResult : class;
-    Task<TResult?> GetAsync<TResult>(TResult args) // Same as "object? args = null", but allows better Intellisense
-        where TResult : class;
-    Task<TResult?> GetAsync<TResult>(TResult args, CancellationToken cancellationToken) // Same as "object? args = null", but allows better Intellisense
-        where TResult : class;
-
-    #endregion Get from Table/View
-
-    #region Transactions
+    [Obsolete("Use WithContext(string) instead.")]
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    IPhormSession SetConnectionName(string connectionName)
+        => WithContext(connectionName, null!);
 
     /// <summary>
-    /// True if this runner implementation supports transactions.
+    /// Returns a new session instance that uses the specified connection context.
     /// </summary>
-    bool SupportsTransactions { get; }
-
+    /// <param name="connectionName">The connection name to use when scoping the new session instance.</param>
+    /// <returns>A new <see cref="IPhormSession"/> instance configured to use the specified connection context.</returns>
+    /// <remarks>The new session will have an empty <see cref="IPhormConnectedSession.ContextData"/>.</remarks>
+    public IPhormSession WithContext(string connectionName)
+        => WithContext(connectionName, null!);
     /// <summary>
-    /// True if this runner is currently in a transaction.
+    /// Creates a new session with the specified context data applied.
     /// </summary>
-    bool IsInTransaction { get; }
-
+    /// <remarks>This method returns a new session instance with the updated
+    /// context data, persisting any current <see cref="IPhormConnectedSession.ConnectionName"/>.</remarks>
+    /// <param name="contextData">A dictionary containing key-value pairs to associate with the session context. Keys must be non-null strings;
+    /// values may be any object.</param>
+    /// <returns>A new session instance that includes the provided context data.</returns>
+    public IPhormSession WithContext(IDictionary<string, object?> contextData)
+        => WithContext(ConnectionName, contextData);
     /// <summary>
-    /// Begin a new transaction, with associated runner.
+    /// Creates a new session instance with the specified connection name and additional context data.
     /// </summary>
-    /// <returns>The runner of the transaction.</returns>
-    ITransactedPhormSession BeginTransaction();
-
-    #endregion Transactions
+    /// <param name="connectionName">The connection name to use when scoping the new session instance. Null will remove the current value.</param>
+    /// <param name="contextData">A dictionary containing key-value pairs that provide additional context for the session. Cannot be null.</param>
+    /// <returns>A new <see cref="IPhormSession"/> instance configured with the specified connection name and context data.</returns>
+    IPhormSession WithContext(string? connectionName, IDictionary<string, object?> contextData);
 }

@@ -1,7 +1,6 @@
 using IFY.Phorm.Data;
 using IFY.Phorm.Execution;
 using IFY.Phorm.Transformation;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Runtime.Serialization;
 
 namespace IFY.Phorm.SqlClient.IntegrationTests;
@@ -11,29 +10,21 @@ public class GenSpecTests : SqlIntegrationTestBase
 {
     enum DataType { None, Numeric, String }
 
-    abstract class BaseDataItem
-    {
-        public long Id { get; set; } = 0;
-        public string Key { get; set; } = string.Empty;
-        [DataMember(Name = "TypeId"), EnumValue]
-        public DataType Type { get; set; } = DataType.None;
-    }
+    abstract record BaseDataItem(
+        long Id,
+        string Key,
+        [property: DataMember(Name = "TypeId"), EnumValue] DataType Type
+    );
 
     [PhormSpecOf(nameof(Type), DataType.Numeric)]
-    class NumericDataItem : BaseDataItem
-    {
-        public decimal Number { get; set; } = 0m;
-    }
+    record NumericDataItem(long Id, string Key, DataType Type, decimal Number) : BaseDataItem(Id, Key, Type);
 
     [PhormSpecOf(nameof(Type), DataType.String)]
-    class TextDataItem : BaseDataItem
-    {
-        public string String { get; set; } = string.Empty;
-    }
+    record TextDataItem(long Id, string Key, DataType Type, string String) : BaseDataItem(Id, Key, Type);
 
-    private static void setupGenSpecContract(AbstractPhormSession phorm)
+    private async Task setupGenSpecContract(AbstractPhormSession phorm)
     {
-        SqlTestHelpers.ApplySql(phorm, @"CREATE OR ALTER PROC [dbo].[usp_GetAllDataItems]
+        await SqlTestHelpers.ApplySql(phorm, TestContext.CancellationToken, @"CREATE OR ALTER PROC [dbo].[usp_GetAllDataItems]
 AS
 	SELECT 1 [Id], 'Aaa' [Key], 1 [TypeId], 12.34 [Number], CONVERT(VARCHAR(50), NULL) [String]
 	UNION ALL
@@ -42,43 +33,65 @@ RETURN 1");
     }
 
     [TestMethod]
-    public void GenSpec__Can_retrieve_and_handle_many_types()
+    public async Task GenSpec__Can_retrieve_and_handle_many_types()
     {
         // Arrange
         var phorm = getPhormSession();
-        setupGenSpecContract(phorm);
+        await setupGenSpecContract(phorm);
 
         // Act
-        var res = phorm.From("GetAllDataItems")
-            .Get<GenSpec<BaseDataItem, NumericDataItem, TextDataItem>>()!;
+        var res = await phorm.From("GetAllDataItems", null)
+            .GetAsync<GenSpec<BaseDataItem, NumericDataItem, TextDataItem>>(TestContext.CancellationToken);
 
-        var all = res.All();
+        var all = res!.All();
         var nums = res.OfType<NumericDataItem>().ToArray();
         var strs = res.OfType<TextDataItem>().ToArray();
 
         // Assert
-        Assert.AreEqual(2, all.Length);
+        Assert.HasCount(2, all);
         Assert.AreEqual(12.34m, nums.Single().Number);
         Assert.AreEqual("Value", strs.Single().String);
     }
 
     [TestMethod]
-    public void GenSpec__Unknown_type_Abstract_base__Returns_only_shaped_items()
+    public async Task GenSpec__Can_retrieve_and_handle_many_types_filtered()
     {
         // Arrange
         var phorm = getPhormSession();
-        setupGenSpecContract(phorm);
+        await setupGenSpecContract(phorm);
 
         // Act
-        var res = phorm.From("GetAllDataItems")
-            .Get<GenSpec<BaseDataItem, TextDataItem>>()!;
+        var res = await ((IPhormSession)phorm).From("GetAllDataItems", null)
+            .Where<BaseDataItem, GenSpec<BaseDataItem, NumericDataItem, TextDataItem>>(o => o.Id == 1)
+            .GetAllAsync(TestContext.CancellationToken);
 
+        var nums = res.OfType<NumericDataItem>().ToArray();
+        var strs = res.OfType<TextDataItem>().ToArray();
         var all = res.All();
+
+        // Assert
+        Assert.HasCount(1, all);
+        Assert.AreEqual(12.34m, nums.Single().Number);
+        Assert.HasCount(0, strs);
+    }
+
+    [TestMethod]
+    public async Task GenSpec__Unknown_type_Abstract_base__Returns_only_shaped_items()
+    {
+        // Arrange
+        var phorm = getPhormSession();
+        await setupGenSpecContract(phorm);
+
+        // Act
+        var res = await phorm.From("GetAllDataItems", null)
+            .GetAsync<GenSpec<BaseDataItem, TextDataItem>>(TestContext.CancellationToken);
+
+        var all = res!.All();
         var strs = res.OfType<TextDataItem>().ToArray();
 
         // Assert
-        Assert.AreEqual(1, all.Length);
-        Assert.AreEqual(1, strs.Length);
+        Assert.HasCount(1, all);
+        Assert.HasCount(1, strs);
     }
 
     class BaseDataItemNonabstract
@@ -96,23 +109,23 @@ RETURN 1");
     }
 
     [TestMethod]
-    public void GenSpec__Unknown_type_Nonabstract_base__Returns_item_as_base()
+    public async Task GenSpec__Unknown_type_Nonabstract_base__Returns_item_as_base()
     {
         // Arrange
         var phorm = getPhormSession();
-        setupGenSpecContract(phorm);
+        await setupGenSpecContract(phorm);
 
         // Act
-        var res = phorm.From("GetAllDataItems")
-            .Get<GenSpec<BaseDataItemNonabstract, NumericDataItem2>>()!;
+        var res = await phorm.From("GetAllDataItems", null)
+            .GetAsync<GenSpec<BaseDataItemNonabstract, NumericDataItem2>>(TestContext.CancellationToken);
 
-        var all = res.All();
+        var all = res!.All();
         var asBase = all.Where(r => r.GetType() == typeof(BaseDataItemNonabstract)).ToArray();
         var nums = res.OfType<NumericDataItem2>().ToArray();
 
         // Assert
-        Assert.AreEqual(2, all.Length);
-        Assert.AreEqual(1, nums.Length);
-        Assert.AreEqual(1, asBase.Length);
+        Assert.HasCount(2, all);
+        Assert.HasCount(1, nums);
+        Assert.HasCount(1, asBase);
     }
 }

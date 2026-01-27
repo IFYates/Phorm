@@ -1,27 +1,27 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="MSTest.Sdk/4.0.1">
 
 	<PropertyGroup>
-		<TargetFrameworks>netcoreapp3.1;net6.0</TargetFrameworks>
-		<Nullable>enable</Nullable>
+		<TargetFramework>net10.0</TargetFramework>
+		<LangVersion>latest</LangVersion>
 		<ImplicitUsings>enable</ImplicitUsings>
-		<LangVersion>10.0</LangVersion>
-		<IsPackable>false</IsPackable>
+		<Nullable>enable</Nullable>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.4.0" />
-		<PackageReference Include="Moq" Version="4.18.2" />
-		<PackageReference Include="MSTest.TestAdapter" Version="2.2.10" />
-		<PackageReference Include="MSTest.TestFramework" Version="2.2.10" />
-		<PackageReference Include="coverlet.collector" Version="3.2.0">
+		<PackageReference Include="Moq" />
+		<PackageReference Include="coverlet.collector">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\IFY.Phorm.SqlClient\IFY.Phorm.SqlClient.csproj" />
 		<ProjectReference Include="..\IFY.Phorm\IFY.Phorm.Core.csproj" />
+		<ProjectReference Include="..\IFY.Phorm.SqlClient\IFY.Phorm.SqlClient.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Compile Include="..\IFY.Phorm\Extensions.cs" Link="Core\Extensions.cs" />
 	</ItemGroup>
 
 </Project>

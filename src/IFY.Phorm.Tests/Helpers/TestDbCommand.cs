@@ -15,7 +15,7 @@ public partial class TestDbCommand : DbCommand, IAsyncDbCommand, IDbCommand
 
     public CancellationToken ExecutionCancellationToken { get; private set; } = CancellationToken.None;
 
-    public override string CommandText { get; set; } = string.Empty;
+    [AllowNull] public override string CommandText { get; set; } = string.Empty;
     public override int CommandTimeout { get; set; }
     public override CommandType CommandType { get; set; }
     public new virtual IDbConnection? Connection { get; set; }
@@ -50,6 +50,7 @@ public partial class TestDbCommand : DbCommand, IAsyncDbCommand, IDbCommand
         return new TestDbDataParameter();
     }
 
+#pragma warning disable CA1816 // Dispose methods should call SuppressFinalize
     public new virtual void Dispose()
     {
         base.Dispose();
@@ -62,6 +63,7 @@ public partial class TestDbCommand : DbCommand, IAsyncDbCommand, IDbCommand
     {
         base.Dispose(disposing);
     }
+#pragma warning restore CA1816 // Dispose methods should call SuppressFinalize
 
     public override int ExecuteNonQuery()
     {

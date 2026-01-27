@@ -7,7 +7,7 @@ namespace IFY.Phorm.Tests;
 [ExcludeFromCodeCoverage]
 internal class TestDataParameterCollection : IDataParameterCollection
 {
-    private readonly List<IDbDataParameter> _parameters = new List<IDbDataParameter>();
+    private readonly List<IDbDataParameter> _parameters = [];
 
     public object this[string parameterName] { get => _parameters.First(p => p.ParameterName == parameterName); set => throw new NotImplementedException(); }
     public object? this[int index] { get => _parameters[index]; set => throw new NotImplementedException(); }

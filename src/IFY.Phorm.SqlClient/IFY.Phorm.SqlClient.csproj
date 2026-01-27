@@ -1,35 +1,37 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-	<PropertyGroup>
-		<TargetFrameworks>netstandard2.1;net6.0</TargetFrameworks>
+    <PropertyGroup>
+		<TargetFrameworks>netstandard2.1;net10.0</TargetFrameworks>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
-        <LangVersion>10.0</LangVersion>
+        <LangVersion>latest</LangVersion>
 
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-		<GenerateDocumentationFile>true</GenerateDocumentationFile>
-		<PublishRepositoryUrl>true</PublishRepositoryUrl>
-		<IncludeSymbols>true</IncludeSymbols>
-		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <PublishRepositoryUrl>true</PublishRepositoryUrl>
+        <IncludeSymbols>true</IncludeSymbols>
+		<IncludeSource>true</IncludeSource>
+        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
         <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
         <TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);CopyProjectReferencesToPackage</TargetsForTfmSpecificBuildOutput>
+		<EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
 
 		<Authors>IFYates</Authors>
-		<PackageLicenseExpression>MPL-2.0</PackageLicenseExpression>
-		<PackageProjectUrl>https://github.com/IFYates/Phorm</PackageProjectUrl>
-		<RepositoryUrl>https://github.com/IFYates/Phorm</RepositoryUrl>
-		<RepositoryType>GitHub</RepositoryType>
-		<Version>1.6.0</Version>
-		<PackageReleaseNotes>$([System.IO.File]::ReadAllText("$(MSBuildProjectDirectory)/../RELEASE_NOTES.txt"))</PackageReleaseNotes>
-		<Copyright>(c) IFYates</Copyright>
-		<Description>SqlClient implementation of the Procedure-heavy object-relational mapping framework.</Description>
+        <PackageLicenseExpression>MPL-2.0</PackageLicenseExpression>
+        <PackageProjectUrl>https://github.com/IFYates/Phorm</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/IFYates/Phorm</RepositoryUrl>
+        <RepositoryType>GitHub</RepositoryType>
+		<Version>2.3.0.0</Version>
+        <PackageReleaseNotes>$([System.IO.File]::ReadAllText("$(MSBuildProjectDirectory)/../RELEASE_NOTES.txt"))</PackageReleaseNotes>
+        <Copyright>(c) IFYates</Copyright>
+        <Description>SqlClient implementation of the Procedure-heavy object-relational mapping framework.</Description>
         <PackageReadmeFile>README.md</PackageReadmeFile>
-		<DocumentationFile>IFY.Phorm.SqlClient.xml</DocumentationFile>
+        <DocumentationFile>IFY.Phorm.SqlClient.xml</DocumentationFile>
     </PropertyGroup>
 
-	<ItemGroup>
-	  <None Remove="IFY.Phorm.SqlClient.xml" />
-	</ItemGroup>
+    <ItemGroup>
+        <None Remove="IFY.Phorm.SqlClient.xml" />
+    </ItemGroup>
 
     <ItemGroup>
         <None Include="..\..\README.md">
@@ -39,22 +41,18 @@
     </ItemGroup>
 
     <Target DependsOnTargets="ResolveReferences" Name="CopyProjectReferencesToPackage">
-		<ItemGroup>
-			<BuildOutputInPackage Include="@(ReferenceCopyLocalPaths-&gt;WithMetadataValue('ReferenceSourceTarget', 'ProjectReference'))" />
-		</ItemGroup>
-	</Target>
+        <ItemGroup>
+            <BuildOutputInPackage Include="@(ReferenceCopyLocalPaths-&gt;WithMetadataValue('ReferenceSourceTarget', 'ProjectReference'))" />
+        </ItemGroup>
+    </Target>
 
-	<ItemGroup>
-		<PackageReference Include="IFY.Shimr" Version="2.0.0" />
-		<PackageReference Include="Microsoft.Data.SqlClient" Version="5.0.1" />
-		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
-	</ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Microsoft.Data.SqlClient" />
+        <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All" />
+    </ItemGroup>
 
-	<ItemGroup>
-		<ProjectReference Include="..\IFY.Phorm\IFY.Phorm.Core.csproj">
-			<ReferenceOutputAssembly>true</ReferenceOutputAssembly>
-			<IncludeAssets>{ProjectName}.dll;{ProjectName}.pdb</IncludeAssets>
-		</ProjectReference>
-	</ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\IFY.Phorm\IFY.Phorm.Core.csproj" />
+    </ItemGroup>
 
 </Project>

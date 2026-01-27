@@ -1,18 +1,20 @@
 ﻿using IFY.Phorm.Data;
-using IFY.Phorm.Encryption;
 using IFY.Phorm.Execution;
+using IFY.Phorm.Tests;
 using IFY.Phorm.Transformation;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using System.Data;
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
 
-namespace IFY.Phorm.Tests.Encryption;
+namespace IFY.Phorm.Encryption.Tests;
 
 [TestClass]
+[DoNotParallelize]
 public class EncryptorTests
 {
+    public TestContext TestContext { get; set; }
+
     interface ISaveDataObject : IPhormContract
     {
         [SecureValue("Test")]
@@ -42,18 +44,12 @@ public class EncryptorTests
 
         public override object? ToDatasource(object? data, object? context)
         {
-            return string.Join("", ((string?)data ?? "").ToArray().Reverse());
+            return string.Join("", ((string?)data ?? "").AsEnumerable().Reverse());
         }
     }
 
-    [TestInitialize]
-    public void Init()
-    {
-        AbstractPhormSession.ResetConnectionPool();
-    }
-
     [TestMethod]
-    public void Can_encrypt_string_value_out_to_database()
+    public async Task Can_encrypt_string_value_out_to_database()
     {
         // Arrange
         var runner = new TestPhormSession();
@@ -74,18 +70,18 @@ public class EncryptorTests
         GlobalSettings.EncryptionProvider = encProcMock.Object;
 
         // Act
-        var res = runner.Call<ISaveDataObject>(args);
+        var res = await runner.CallAsync<ISaveDataObject>(args, TestContext.CancellationToken);
 
         // Assert
         Assert.AreEqual(1, res);
-        Assert.AreEqual(0, encMock.Object.Authenticator.Length);
+        Assert.IsEmpty(encMock.Object.Authenticator);
 
         var testCmd = runner.Commands.Single();
         Assert.AreSame(secureData, ((IDataParameter)testCmd.Parameters["@Value"]).Value);
     }
 
     [TestMethod]
-    public void Can_encrypt_with_authenticator()
+    public async Task Can_encrypt_with_authenticator()
     {
         // Arrange
         var runner = new TestPhormSession();
@@ -97,7 +93,7 @@ public class EncryptorTests
         var encMock = new Mock<IEncryptor>();
         encMock.SetupProperty(m => m.Authenticator);
         encMock.Setup(m => m.Encrypt(objectData))
-            .Returns(Array.Empty<byte>());
+            .Returns([]);
 
         var encProcMock = new Mock<IEncryptionProvider>();
         encProcMock.Setup(m => m.GetEncryptor("Test"))
@@ -106,7 +102,7 @@ public class EncryptorTests
         GlobalSettings.EncryptionProvider = encProcMock.Object;
 
         // Act
-        var res = runner.Call<ISaveDataObjectWithAuthenticator>(args);
+        var res = await runner.CallAsync<ISaveDataObjectWithAuthenticator>(args, TestContext.CancellationToken);
 
         // Assert
         Assert.AreEqual(1, res);
@@ -114,7 +110,7 @@ public class EncryptorTests
     }
 
     [TestMethod]
-    public void Can_encrypt_transformed_value()
+    public async Task Can_encrypt_transformed_value()
     {
         // Arrange
         var runner = new TestPhormSession();
@@ -134,7 +130,7 @@ public class EncryptorTests
         GlobalSettings.EncryptionProvider = encProcMock.Object;
 
         // Act
-        var res = runner.Call<ISaveDataObjectWithTransformation>(args);
+        var res = await runner.CallAsync<ISaveDataObjectWithTransformation>(args, TestContext.CancellationToken);
 
         // Assert
         Assert.AreEqual(1, res);

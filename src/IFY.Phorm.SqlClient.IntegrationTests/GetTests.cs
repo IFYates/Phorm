@@ -1,6 +1,7 @@
 using IFY.Phorm.Data;
 using IFY.Phorm.Execution;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Collections;
+using System.Reflection;
 using System.Runtime.Serialization;
 
 namespace IFY.Phorm.SqlClient.IntegrationTests;
@@ -8,48 +9,41 @@ namespace IFY.Phorm.SqlClient.IntegrationTests;
 [TestClass]
 public class GetTests : SqlIntegrationTestBase
 {
-    [PhormContract(Name = "GetTestTable", Target = DbObjectType.Table)]
-    public class DataItem : IUpsert, IUpsertOnlyIntWithId, IUpsertWithId
+    static bool hasUnresolvedEntities(IEnumerable l)
     {
-        public long Id { get; set; }
-        [DataMember(Name = "Int")]
-        public int? Num { get; set; }
-        public string? Text { get; set; }
-        public byte[]? Data { get; set; }
-        public DateTime? DateTime { get; set; }
+        var resolversField = l.GetType()
+            .GetField("_resolvers", BindingFlags.Instance | BindingFlags.NonPublic)!;
+        return ((ICollection)resolversField.GetValue(l)!).Count > 0;
+    }
 
-        public DataItem(long id, int? num, string? text, byte[]? data, DateTime? dateTime)
-        {
-            Id = id;
-            Num = num;
-            Text = text;
-            Data = data;
-            DateTime = dateTime;
-        }
+    [PhormContract(Name = "GetTestTable", Target = DbObjectType.Table)]
+    public class DataItem(long id, int? num, string? text, byte[]? data, DateTime? dateTime) : IUpsert, IUpsertOnlyIntWithId, IUpsertWithId
+    {
+        public long Id { get; set; } = id;
+        [DataMember(Name = "Int")]
+        public int? Num { get; set; } = num;
+        public string? Text { get; set; } = text;
+        public byte[]? Data { get; set; } = data;
+        public DateTime? DateTime { get; set; } = dateTime;
+        public bool Flag { get; set; } = true;
+
         public DataItem() : this(default, default, default, default, default)
         { }
     }
 
     [PhormContract(Name = "GetTestTable", Target = DbObjectType.Table)]
-    public class DataItemWithoutText
+    public class DataItemWithoutText(long id, int? num, string? text, byte[]? data, DateTime? dateTime)
     {
-        public long Id { get; set; }
+        public long Id { get; set; } = id;
         [DataMember(Name = "Int")]
-        public int? Num { get; set; }
+        public int? Num { get; set; } = num;
         [IgnoreDataMember]
-        public string? Text { get; set; }
-        public byte[]? Data { get; set; }
-        public DateTime? DateTime { get; set; }
+        public string? Text { get; set; } = text;
+        public byte[]? Data { get; set; } = data;
+        public DateTime? DateTime { get; set; } = dateTime;
 
-        public DataItemWithoutText(long id, int? num, string? text, byte[]? data, DateTime? dateTime)
-        {
-            Id = id;
-            Num = num;
-            Text = text;
-            Data = data;
-            DateTime = dateTime;
-        }
-        public DataItemWithoutText() : this(default, default, default, default, default)
+        public DataItemWithoutText()
+            : this(default, default, default, default, default)
         { }
     }
 
@@ -92,27 +86,25 @@ public class GetTests : SqlIntegrationTestBase
         long? Id { get; }
     }
 
-    private void setupGetTestSchema(AbstractPhormSession phorm)
+    private async Task setupGetTestSchema(AbstractPhormSession phorm)
     {
-        SqlTestHelpers.ApplySql(phorm, @"DROP TABLE IF EXISTS [dbo].[GetTestTable]");
-        SqlTestHelpers.ApplySql(phorm, @"CREATE TABLE [dbo].[GetTestTable] (
+        await SqlTestHelpers.ApplySql(phorm, TestContext.CancellationToken, [
+            @"DROP TABLE IF EXISTS [dbo].[GetTestTable]",
+            @"CREATE TABLE [dbo].[GetTestTable] (
 	[Id] BIGINT NOT NULL IDENTITY(1,1) PRIMARY KEY,
 	[Int] INT NULL,
 	[Text] VARCHAR(256) NULL,
 	[Data] VARBINARY(MAX) NULL,
 	[DateTime] DATETIME2 NULL,
 	[IsInView] BIT NOT NULL DEFAULT (1)
-)");
-        
-        SqlTestHelpers.ApplySql(phorm, @"CREATE OR ALTER VIEW [dbo].[vw_Data] AS SELECT * FROM [dbo].[GetTestTable] WHERE [IsInView] = 1");
-
-        SqlTestHelpers.ApplySql(phorm, @"CREATE OR ALTER PROC [dbo].[usp_GetAll]
+)",
+            @"CREATE OR ALTER VIEW [dbo].[vw_Data] AS SELECT * FROM [dbo].[GetTestTable] WHERE [IsInView] = 1",
+            @"CREATE OR ALTER PROC [dbo].[usp_GetAll]
 AS
 	SET NOCOUNT ON
 	SELECT * FROM [dbo].[GetTestTable]
-RETURN 1");
-
-        SqlTestHelpers.ApplySql(phorm, @"CREATE OR ALTER PROC [dbo].[usp_GetTest_Upsert]
+RETURN 1",
+            @"CREATE OR ALTER PROC [dbo].[usp_GetTest_Upsert]
 	@Id BIGINT = NULL OUTPUT,
 	@Int INT = NULL,
 	@Text VARCHAR(256) = NULL,
@@ -135,104 +127,143 @@ AS
 		[DateTime] = @DateTime,
 		[IsInView] = ISNULL(@IsInView, [IsInView])
 		WHERE [Id] = @Id
-RETURN @@ROWCOUNT");
+RETURN @@ROWCOUNT"
+        ]);
     }
 
     #region Many
 
     [TestMethod]
-    public void Many__Can_access_returnvalue_of_sproc()
+    public async Task Many__Can_access_returnvalue_of_sproc()
     {
         var phorm = getPhormSession();
-        setupGetTestSchema(phorm);
+        await setupGetTestSchema(phorm);
 
-        phorm.Call("GetTest_Upsert");
-        phorm.Call("GetTest_Upsert");
-        phorm.Call("GetTest_Upsert");
-        phorm.Call("GetTest_Upsert");
+        await ((IPhormSession)phorm).CallAsync("GetTest_Upsert", TestContext.CancellationToken);
+        await ((IPhormSession)phorm).CallAsync("GetTest_Upsert", TestContext.CancellationToken);
+        await ((IPhormSession)phorm).CallAsync("GetTest_Upsert", TestContext.CancellationToken);
+        await ((IPhormSession)phorm).CallAsync("GetTest_Upsert", TestContext.CancellationToken);
 
         var obj = new { ReturnValue = ContractMember.RetVal() };
-        var x = phorm.From<IGetAll>(obj)
-            .Get<DataItem[]>()!;
+        var res = await phorm.From<IGetAll>(obj)
+            .GetAsync<DataItem[]>(TestContext.CancellationToken);
 
         Assert.AreEqual(1, obj.ReturnValue.Value);
-        Assert.AreEqual(4, x.Length);
+        Assert.HasCount(4, res!);
     }
 
     [TestMethod]
-    public void Many__Filtered_from_view()
+    public async Task Many__All_from_view()
     {
         // Arrange
         var phorm = getPhormSession();
-        setupGetTestSchema(phorm);
+        await setupGetTestSchema(phorm);
 
-        var obj1 = new DataItem();
-        var res1 = phorm.Call<IUpsertWithId>(obj1);
-
-        var obj2 = new DataItem();
-        var res2 = phorm.Call<IUpsertWithId>(obj2);
+        await phorm.CallAsync("GetTest_Upsert", new { Int = 0, IsInView = false }, TestContext.CancellationToken);
+        await phorm.CallAsync("GetTest_Upsert", new { Int = 0, IsInView = false }, TestContext.CancellationToken);
+        await phorm.CallAsync("GetTest_Upsert", new { Int = 1, IsInView = true }, TestContext.CancellationToken);
+        await phorm.CallAsync("GetTest_Upsert", new { Int = 1, IsInView = true }, TestContext.CancellationToken);
+        await phorm.CallAsync("GetTest_Upsert", new { Int = 1, IsInView = true }, TestContext.CancellationToken);
 
         // Act
-        var res3 = phorm.From<IDataView>(new { obj2.Id })
-            .Get<DataItem[]>()!;
+        var res = await phorm.From<IDataView>(null)
+            .GetAsync<DataItem[]>(TestContext.CancellationToken);
+
+        // Assert
+        Assert.HasCount(3, res!);
+        Assert.IsTrue(res!.All(e => e.Num == 1));
+    }
+
+    [TestMethod]
+    public async Task Many__Filtered_from_view()
+    {
+        // Arrange
+        var phorm = getPhormSession();
+        await setupGetTestSchema(phorm);
+
+        var obj1 = new DataItem();
+        var res1 = await phorm.CallAsync<IUpsertWithId>(obj1, TestContext.CancellationToken);
+
+        var obj2 = new DataItem();
+        var res2 = await phorm.CallAsync<IUpsertWithId>(obj2, TestContext.CancellationToken);
+
+        // Act
+        var res3 = await phorm.From<IDataView>(new { obj2.Id })
+            .GetAsync<DataItem[]>(TestContext.CancellationToken);
 
         // Assert
         Assert.AreEqual(1, res1);
         Assert.AreEqual(1, res2);
         Assert.AreNotEqual(obj1.Id, obj2.Id);
-        Assert.AreEqual(obj2.Id, res3.Single().Id);
+        Assert.AreEqual(obj2.Id, res3!.Single().Id);
     }
 
     [TestMethod]
-    public void Many__Filtered_by_view()
+    public async Task Many__All_from_table()
     {
-        // Arrange
         var phorm = getPhormSession();
-        setupGetTestSchema(phorm);
+        await setupGetTestSchema(phorm);
 
-        phorm.Call("GetTest_Upsert", new { Int = 0, IsInView = false });
-        phorm.Call("GetTest_Upsert", new { Int = 0, IsInView = false });
-        phorm.Call("GetTest_Upsert", new { Int = 1, IsInView = true });
-        phorm.Call("GetTest_Upsert", new { Int = 1, IsInView = true });
-        phorm.Call("GetTest_Upsert", new { Int = 1, IsInView = true });
+        await phorm.CallAsync("GetTest_Upsert", null, TestContext.CancellationToken);
+        await phorm.CallAsync("GetTest_Upsert", null, TestContext.CancellationToken);
+        await phorm.CallAsync("GetTest_Upsert", null, TestContext.CancellationToken);
 
-        // Act
-        var res = phorm.From<IDataView>()
-            .Get<DataItem[]>()!;
+        var res = await phorm.GetAsync<DataItemWithoutText[]>(null!, TestContext.CancellationToken);
 
-        // Assert
-        Assert.AreEqual(3, res.Length);
-        Assert.IsTrue(res.All(e => e.Num == 1));
+        Assert.HasCount(3, res!);
     }
 
     [TestMethod]
-    public void Many__All_from_table()
+    public async Task Many__Filtered_from_table()
     {
         var phorm = getPhormSession();
-        setupGetTestSchema(phorm);
+        await setupGetTestSchema(phorm);
 
-        _ = phorm.Call("GetTest_Upsert");
-        _ = phorm.Call("GetTest_Upsert");
-        _ = phorm.Call("GetTest_Upsert");
+        await phorm.CallAsync("GetTest_Upsert", null, TestContext.CancellationToken);
+        await phorm.CallAsync("GetTest_Upsert", null, TestContext.CancellationToken);
+        await phorm.CallAsync("GetTest_Upsert", null, TestContext.CancellationToken);
 
-        var res = phorm.Get<DataItemWithoutText[]>()!;
+        var res = await phorm.GetAsync<DataItem[]>(new { Id = 1 }, TestContext.CancellationToken);
 
-        Assert.AreEqual(3, res.Length);
+        Assert.AreEqual(1, res!.Single().Id);
     }
 
     [TestMethod]
-    public void Many__Filtered_from_table()
+    public async Task Many__IEnumerable_resolves_later()
     {
         var phorm = getPhormSession();
-        setupGetTestSchema(phorm);
+        await setupGetTestSchema(phorm);
 
-        var res = phorm.Call("GetTest_Upsert");
+        await phorm.CallAsync("GetTest_Upsert", null, TestContext.CancellationToken);
+        await phorm.CallAsync("GetTest_Upsert", null, TestContext.CancellationToken);
+        await phorm.CallAsync("GetTest_Upsert", null, TestContext.CancellationToken);
 
-        var x = phorm.From<IDataView>(new { Id = 1 })
-            .Get<DataItem[]>()!;
+        var res = await phorm.From<IDataView>(null).GetAsync<IEnumerable<DataItem>>(TestContext.CancellationToken);
 
-        Assert.AreEqual(1, res);
-        Assert.AreEqual(1, x.Single().Id);
+        Assert.IsTrue(hasUnresolvedEntities(res!));
+        Assert.HasCount(3, res!);
+        Assert.IsTrue(hasUnresolvedEntities(res!));
+        Assert.HasCount(3, res!.ToArray()); // Resolve the entities
+        Assert.IsFalse(hasUnresolvedEntities(res!));
+    }
+
+    [TestMethod]
+    public async Task Many__ICollection_resolves_later()
+    {
+        var phorm = getPhormSession();
+        await setupGetTestSchema(phorm);
+
+        await phorm.CallAsync("GetTest_Upsert", null, TestContext.CancellationToken);
+        await phorm.CallAsync("GetTest_Upsert", null, TestContext.CancellationToken);
+        await phorm.CallAsync("GetTest_Upsert", null, TestContext.CancellationToken);
+
+        var res = await phorm.From<IDataView>(null).GetAsync<ICollection<DataItem>>(TestContext.CancellationToken);
+
+        Assert.IsTrue(hasUnresolvedEntities(res!));
+        Assert.HasCount(3, res!);
+        Assert.IsTrue(hasUnresolvedEntities(res!));
+        Assert.HasCount(3, res!.ToArray()); // Resolve the entities
+        Assert.IsFalse(hasUnresolvedEntities(res!));
     }
 
     #endregion Many
@@ -240,19 +271,125 @@ RETURN @@ROWCOUNT");
     #region One
 
     [TestMethod]
-    public void One__Can_ignore_property()
+    public async Task One__Can_ignore_property()
     {
         var phorm = getPhormSession();
-        setupGetTestSchema(phorm);
+        await setupGetTestSchema(phorm);
 
-        var res = phorm.Call("GetTest_Upsert");
+        var res = await phorm.CallAsync("GetTest_Upsert", null, TestContext.CancellationToken);
 
-        var obj = phorm.From<IDataView>(new { Id = 1 })
-            .Get<DataItemWithoutText>()!;
+        var obj = await phorm.From<IDataView>(new { Id = 1 })
+            .GetAsync<DataItemWithoutText>(TestContext.CancellationToken);
 
         Assert.AreEqual(1, res);
-        Assert.IsNull(obj.Text);
+        Assert.IsNull(obj!.Text);
     }
 
     #endregion One
+
+    #region Data
+
+    enum MyEnum
+    {
+        None = 0,
+        A,
+        B,
+        C,
+        D
+    }
+
+    [PhormContract(Name = "GetTestTable", Target = DbObjectType.Table)]
+    class EnumDto
+    {
+        public MyEnum A { get; set; }
+        public MyEnum B { get; set; }
+        public MyEnum C { get; set; }
+        public MyEnum D { get; set; }
+    }
+
+    [TestMethod]
+    public async Task Data__Supports_all_numeric_types_for_enum()
+    {
+        var phorm = getPhormSession();
+
+        await SqlTestHelpers.ApplySql(phorm, TestContext.CancellationToken, [
+            @"DROP TABLE IF EXISTS [dbo].[GetTestTable]",
+            @"CREATE TABLE [dbo].[GetTestTable] (
+	[A] TINYINT,
+	[B] SMALLINT,
+	[C] INT,
+	[D] BIGINT
+)",
+            @"INSERT INTO [dbo].[GetTestTable] VALUES (1, 2, 3, 4)"
+        ]);
+
+        var dto = await ((IPhormSession)phorm).GetAsync<EnumDto>(TestContext.CancellationToken);
+
+        Assert.AreEqual(MyEnum.A, dto!.A);
+        Assert.AreEqual(MyEnum.B, dto.B);
+        Assert.AreEqual(MyEnum.C, dto.C);
+        Assert.AreEqual(MyEnum.D, dto.D);
+    }
+
+    #endregion Data
+
+    #region Filtered
+
+    [TestMethod]
+    public async Task Many__Filtered_from_view_resultset()
+    {
+        var phorm = getPhormSession();
+        await setupGetTestSchema(phorm);
+
+        await phorm.CallAsync("GetTest_Upsert", null, TestContext.CancellationToken);
+        await phorm.CallAsync("GetTest_Upsert", null, TestContext.CancellationToken);
+        await phorm.CallAsync("GetTest_Upsert", null, TestContext.CancellationToken);
+
+        var filter = phorm.From<IDataView>(null)
+            .Where<DataItem>(o => o.Id == 1);
+        var res = await filter.GetAllAsync(TestContext.CancellationToken);
+
+        Assert.AreEqual(1, res.Single().Id);
+    }
+
+    [TestMethod]
+    public async Task Many__Filtered_from_table_resultset()
+    {
+        var phorm = getPhormSession();
+        await setupGetTestSchema(phorm);
+
+        await phorm.CallAsync("GetTest_Upsert", null, TestContext.CancellationToken);
+        await phorm.CallAsync("GetTest_Upsert", null, TestContext.CancellationToken);
+        await phorm.CallAsync("GetTest_Upsert", null, TestContext.CancellationToken);
+
+        var filter = phorm.From<DataItem>(null)
+            .Where<DataItem>(o => o.Id == 1);
+        var res = await filter.GetAllAsync(TestContext.CancellationToken);
+
+        Assert.AreEqual(1, res.Single().Id);
+    }
+
+    [TestMethod]
+    public async Task Many__Filtered_result_doesnt_resolve_unwanted()
+    {
+        var phorm = getPhormSession();
+        await setupGetTestSchema(phorm);
+
+        await phorm.CallAsync("GetTest_Upsert", new { Int = 10 }, TestContext.CancellationToken);
+        await phorm.CallAsync("GetTest_Upsert", new { Int = 20 }, TestContext.CancellationToken);
+        await phorm.CallAsync("GetTest_Upsert", new { Int = 30 }, TestContext.CancellationToken);
+        await phorm.CallAsync("GetTest_Upsert", new { Int = 40 }, TestContext.CancellationToken);
+
+        // Act
+        var filter = phorm.From<IDataView>(null)
+            .Where<DataItem>(o => o.Id <= 3 && o.Text == null && o.Num.HasValue && o.Num.Value > 10 && o.Flag);
+        var res = await filter.GetAllAsync(TestContext.CancellationToken);
+
+        Assert.IsTrue(hasUnresolvedEntities(res));
+        Assert.HasCount(2, res);
+        Assert.HasCount(2, res.ToArray()); // Resolve the entities
+        Assert.IsFalse(hasUnresolvedEntities(res));
+    }
+
+    #endregion Filtered
 }

@@ -1,10 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFrameworks>netstandard2.1;net6.0</TargetFrameworks>
+        <TargetFrameworks>netstandard2.1;net10.0</TargetFrameworks>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
-        <LangVersion>10.0</LangVersion>
+        <LangVersion>latest</LangVersion>
         <RootNamespace>IFY.Phorm</RootNamespace>
         <AssemblyName>IFY.Phorm</AssemblyName>
 
@@ -12,19 +12,23 @@
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <PublishRepositoryUrl>true</PublishRepositoryUrl>
         <IncludeSymbols>true</IncludeSymbols>
-        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+		<IncludeSource>true</IncludeSource>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
         <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+		<EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
 
-        <PackageId>IFY.Phorm.Core</PackageId>
+		<PackageId>IFY.Phorm.Core</PackageId>
         <Authors>IFYates</Authors>
         <PackageLicenseExpression>MPL-2.0</PackageLicenseExpression>
-		<PackageProjectUrl>https://github.com/IFYates/Phorm</PackageProjectUrl>
-		<RepositoryUrl>https://github.com/IFYates/Phorm</RepositoryUrl>
-		<RepositoryType>GitHub</RepositoryType>
-		<Version>1.6.0</Version>
+        <PackageProjectUrl>https://github.com/IFYates/Phorm</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/IFYates/Phorm</RepositoryUrl>
+        <RepositoryType>GitHub</RepositoryType>
+        <Version>2.3.0</Version>
         <Copyright>(c) IFYates</Copyright>
-        <Description>The core "Procedure-heavy object-relational mapping" framework.
-Intended to be implemented by a provider-specific package.</Description>
+        <Description>
+            The core "Procedure-heavy object-relational mapping" framework.
+            Intended to be implemented by a provider-specific package.
+        </Description>
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <DocumentationFile>IFY.Phorm.xml</DocumentationFile>
     </PropertyGroup>
@@ -38,21 +42,22 @@ Intended to be implemented by a provider-specific package.</Description>
             <Pack>True</Pack>
             <PackagePath>\</PackagePath>
         </None>
+        <None Include="..\.editorconfig" Link=".editorconfig" />
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-        <PackageReference Include="IFY.Shimr" Version="2.0.0" />
-        <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
+		<PackageReference Include="IFY.Shimr" />
+		<PackageReference Include="Newtonsoft.Json" />
+        <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All" />
     </ItemGroup>
-	
-	<Target Name="PreparePackageReleaseNotesFromFile" BeforeTargets="GenerateNuspec">
-		<ReadLinesFromFile File="../RELEASE_NOTES.txt" >
-			<Output TaskParameter="Lines" ItemName="ReleaseNoteLines"/>
-		</ReadLinesFromFile>
-		<PropertyGroup>
-			<PackageReleaseNotes>@(ReleaseNoteLines, '%0a')</PackageReleaseNotes>
-		</PropertyGroup>
-	</Target>
-	
+
+    <Target Name="PreparePackageReleaseNotesFromFile" BeforeTargets="GenerateNuspec">
+        <ReadLinesFromFile File="../RELEASE_NOTES.txt">
+            <Output TaskParameter="Lines" ItemName="ReleaseNoteLines" />
+        </ReadLinesFromFile>
+        <PropertyGroup>
+            <PackageReleaseNotes>@(ReleaseNoteLines, '%0a')</PackageReleaseNotes>
+        </PropertyGroup>
+    </Target>
+
 </Project>

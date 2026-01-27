@@ -1,6 +1,5 @@
 ﻿using IFY.Phorm.Encryption;
 using IFY.Phorm.Transformation;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using System.Data;
 using System.Data.SqlTypes;
@@ -66,6 +65,7 @@ public class ContractMemberTests
 
         [ContractMember]
         public string Value4() => "X"; // Ignored by default through interface
+        [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Test member")]
         public string Value5() => "Y"; // Ignored
     }
     interface IContractWithMethodMember
@@ -101,7 +101,7 @@ public class ContractMemberTests
         var res = ContractMember.GetMembersFromContract(new ObjectWithMethodMember(), typeof(IContractWithMethodMember), false);
 
         // Assert
-        Assert.AreEqual(2, res.Length);
+        Assert.HasCount(2, res);
         Assert.AreEqual("Value1", res[0].DbName);
         Assert.AreEqual("A", res[0].Value);
         Assert.AreEqual("Value2", res[1].DbName);
@@ -122,7 +122,7 @@ public class ContractMemberTests
         var res = ContractMember.GetMembersFromContract(arg, typeof(IContractWithMethodMember), false);
 
         // Assert
-        Assert.AreEqual(2, res.Length);
+        Assert.HasCount(2, res);
         Assert.AreEqual("Value1", res[0].DbName);
         Assert.AreEqual("C", res[0].Value);
         Assert.AreEqual("Value2", res[1].DbName);
@@ -136,7 +136,7 @@ public class ContractMemberTests
         var res = ContractMember.GetMembersFromContract(new ObjectWithMethodMember(), typeof(IContractWithParentMethodMember), false);
 
         // Assert
-        Assert.AreEqual(1, res.Length);
+        Assert.HasCount(1, res);
         Assert.AreEqual("Value4", res[0].DbName);
         Assert.AreEqual("X", res[0].Value);
     }
@@ -148,7 +148,7 @@ public class ContractMemberTests
         var res = ContractMember.GetMembersFromContract(new ObjectWithMethodMember(), typeof(IContractWithAnonMethodMember), false);
 
         // Assert
-        Assert.AreEqual(1, res.Length);
+        Assert.HasCount(1, res);
         Assert.AreEqual("Value5", res[0].DbName);
         Assert.AreEqual("Y", res[0].Value);
     }
@@ -167,11 +167,11 @@ public class ContractMemberTests
     public void GetMembersFromContract__Decorated_method_has_parameter__Fail()
     {
         // Act
-        var ex = Assert.ThrowsException<InvalidDataContractException>
+        var ex = Assert.ThrowsExactly<InvalidDataContractException>
             (() => ContractMember.GetMembersFromContract(null, typeof(ObjectWithBadMethodMember1), false));
 
         // Assert
-        Assert.IsTrue(ex.Message.Contains("'IFY.Phorm.Data.Tests.ContractMemberTests+ObjectWithBadMethodMember1.Value2'"), "Actual: " + ex.Message);
+        Assert.Contains("'IFY.Phorm.Data.Tests.ContractMemberTests+ObjectWithBadMethodMember1.Value2'", ex.Message, "Actual: " + ex.Message);
     }
 
     [ExcludeFromCodeCoverage]
@@ -188,11 +188,11 @@ public class ContractMemberTests
     public void GetMembersFromContract__Decorated_method_has_return_type_Fail()
     {
         // Act
-        var ex = Assert.ThrowsException<InvalidDataContractException>
+        var ex = Assert.ThrowsExactly<InvalidDataContractException>
             (() => ContractMember.GetMembersFromContract(null, typeof(ObjectWithBadMethodMember2), false));
 
         // Assert
-        Assert.IsTrue(ex.Message.Contains("'IFY.Phorm.Data.Tests.ContractMemberTests+ObjectWithBadMethodMember2.Value2'"), "Actual: " + ex.Message);
+        Assert.Contains("'IFY.Phorm.Data.Tests.ContractMemberTests+ObjectWithBadMethodMember2.Value2'", ex.Message, "Actual: " + ex.Message);
     }
 
     class ObjectWithoutReturnValueProperty
@@ -217,7 +217,7 @@ public class ContractMemberTests
         var res = ContractMember.GetMembersFromContract(obj, typeof(IPhormContract), false);
 
         // Assert
-        Assert.AreEqual(1, res.Length);
+        Assert.HasCount(1, res);
         Assert.AreEqual("Text", res[0].DbName);
     }
 
@@ -231,7 +231,7 @@ public class ContractMemberTests
         var res = ContractMember.GetMembersFromContract(obj, typeof(IPhormContract), true);
 
         // Assert
-        Assert.AreEqual(1, res.Length);
+        Assert.HasCount(1, res);
         Assert.AreEqual(ParameterType.ReturnValue, res[0].Direction);
     }
 
@@ -245,7 +245,7 @@ public class ContractMemberTests
         var res = ContractMember.GetMembersFromContract(obj, typeof(IPhormContract), false);
 
         // Assert
-        Assert.AreEqual(0, res.Length);
+        Assert.IsEmpty(res);
     }
 
     [TestMethod]
@@ -258,7 +258,7 @@ public class ContractMemberTests
         var res = ContractMember.GetMembersFromContract(obj, typeof(IPhormContract), true);
 
         // Assert
-        Assert.AreEqual(1, res.Length);
+        Assert.HasCount(1, res);
         Assert.AreEqual(ParameterType.ReturnValue, res[0].Direction);
         Assert.AreSame(obj.ReturnValue, res[0]);
     }
@@ -273,7 +273,7 @@ public class ContractMemberTests
         var res = ContractMember.GetMembersFromContract(obj, typeof(IPhormContract), false);
 
         // Assert
-        Assert.AreEqual(1, res.Length);
+        Assert.HasCount(1, res);
         Assert.AreEqual(ParameterType.ReturnValue, res[0].Direction);
         Assert.AreSame(obj.ReturnValue, res[0]);
     }
@@ -453,7 +453,7 @@ public class ContractMemberTests
     }
 
     [TestMethod]
-    [DynamicData(nameof(IgnoreDataMemberAttributeProvider), DynamicDataSourceType.Method)]
+    [DynamicData(nameof(IgnoreDataMemberAttributeProvider))]
     public void ToDataParameter__Transphormer_ignores_property(object value)
     {
         // Arrange
@@ -672,10 +672,8 @@ public class ContractMemberTests
         };
 
         // Act
-        Assert.ThrowsException<ArgumentNullException>(() =>
-        {
-            memb.ToDataParameter(cmdMock.Object, null);
-        });
+        Assert.ThrowsExactly<ArgumentNullException>
+            (() => memb.ToDataParameter(cmdMock.Object, null));
 
         // Assert
         cmdMock.Verify();
@@ -753,8 +751,10 @@ public class ContractMemberTests
 
     public class TestTransphormAttribute : AbstractTransphormAttribute
     {
-        public static object? FromDatasourceReturnValue = null;
-        public static object? ToDatasourceReturnValue = null;
+#pragma warning disable CA2211 // Non-constant fields should not be visible
+        public static object? FromDatasourceReturnValue;
+        public static object? ToDatasourceReturnValue;
+#pragma warning restore CA2211 // Non-constant fields should not be visible
 
         public override object? FromDatasource(Type type, object? data, object? context)
             => FromDatasourceReturnValue;
@@ -767,19 +767,13 @@ public class ContractMemberTests
 
     class TestSecureAttribute : AbstractSecureValueAttribute
     {
-        public override byte[] Decrypt(byte[]? value, object? context)
-        {
-            return new byte[] { 1 };
-        }
+        public override byte[] Decrypt(byte[]? value, object? context) => [1];
 
-        public override byte[] Encrypt(object? value, object? context)
-        {
-            return new byte[] { 2 };
-        }
+        public override byte[] Encrypt(object? value, object? context) => [2];
     }
 
     [TestSecure]
-    public byte[] SecureDataProperty { get; set; } = Array.Empty<byte>();
+    public byte[] SecureDataProperty { get; set; } = [];
 
     [TestMethod]
     public void TryFromDatasource__DBNull_is_null()
@@ -849,7 +843,7 @@ public class ContractMemberTests
     }
 
     [TestMethod]
-    [DynamicData(nameof(IgnoreDataMemberAttributeProvider), DynamicDataSourceType.Method)]
+    [DynamicData(nameof(IgnoreDataMemberAttributeProvider))]
     public void TryFromDatasource__Transphormer_ignores_property(object value)
     {
         // Arrange

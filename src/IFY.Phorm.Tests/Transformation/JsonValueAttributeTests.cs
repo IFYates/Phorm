@@ -1,5 +1,4 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 
 namespace IFY.Phorm.Transformation.Tests;
 
@@ -39,10 +38,8 @@ public class JsonValueAttributeTests
         var attr = new JsonValueAttribute();
 
         // Act
-        Assert.ThrowsException<JsonReaderException>(() =>
-        {
-            attr.FromDatasource(typeof(int), "invalid", null);
-        });
+        Assert.ThrowsExactly<JsonReaderException>
+            (() => attr.FromDatasource(typeof(int), "invalid", null));
     }
 
     [TestMethod]

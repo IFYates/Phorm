@@ -1,4 +1,5 @@
 ﻿using IFY.Phorm.Encryption;
+using IFY.Phorm.Transformation;
 using System.Collections.Concurrent;
 using System.Data;
 using System.Diagnostics.CodeAnalysis;
@@ -46,11 +47,15 @@ public class ContractMemberDefinition
     /// <summary>
     /// Relevant attributes for this contract member.
     /// </summary>
-    public IContractMemberAttribute[] Attributes { get; } = Array.Empty<IContractMemberAttribute>();
+    public IContractMemberAttribute[] Attributes { get; } = [];
     /// <summary>
     /// Returns true if this property is transformed by a secure attribute.
     /// </summary>
     public bool HasSecureAttribute => Attributes.OfType<AbstractSecureValueAttribute>().Any();
+    /// <summary>
+    /// Returns true if this property is transformed by an attribute.
+    /// </summary>
+    public bool HasTransphormation => Attributes.OfType<AbstractTransphormAttribute>().Any();
 
     internal ContractMemberDefinition(ContractMemberDefinition orig)
     {
@@ -129,7 +134,7 @@ public class ContractMemberDefinition
         foreach (var method in methods)
         {
             // Must not have any parameters
-            if (method.GetParameters().Any())
+            if (method.GetParameters().Length != 0)
             {
                 throw new InvalidDataContractException($"Cannot include method '{contractType.FullName}.{method.Name}' in contract: specifies parameters.");
             }
@@ -151,8 +156,10 @@ public class ContractMemberDefinition
     {
         // Resolve member direction
         var cmAttr = prop.GetCustomAttribute<ContractMemberAttribute>();
-        var canRead = prop.CanRead && cmAttr?.DisableInput != true;
-        var canWrite = prop.CanWrite && cmAttr?.DisableOutput != true;
+        var canRead = prop.GetMethod?.IsPrivate is not null and not true
+            && cmAttr?.DisableInput != true;
+        var canWrite = prop.SetMethod?.IsPrivate is not null and not true
+            && cmAttr?.DisableOutput != true;
         var dir = (canRead ? ParameterType.Input : 0) | (canWrite ? ParameterType.Output : 0);
         if (prop.PropertyType.IsGenericType && prop.PropertyType.GetGenericTypeDefinition() == typeof(ContractOutMember<>))
         {
@@ -186,24 +193,24 @@ public class ContractMemberDefinition
             var objType = entity.GetType();
             if (SourceMember is PropertyInfo pi && pi.CanRead)
             {
-                if (!pi.DeclaringType.IsAssignableFrom(objType))
+                if (!pi.DeclaringType!.IsAssignableFrom(objType))
                 {
                     // Resolve same property on non-contract
-                    pi = objType.GetProperty(SourceMember.Name, BindingFlags.Instance | BindingFlags.Public);
+                    pi = objType.GetProperty(SourceMember.Name, BindingFlags.Instance | BindingFlags.Public)!;
                 }
                 value = pi?.GetValue(entity);
             }
             else if (SourceMember is MethodInfo mi)
             {
-                if (!mi.DeclaringType.IsAssignableFrom(objType))
+                if (!mi.DeclaringType!.IsAssignableFrom(objType))
                 {
                     // Resolve identical method on non-contract
-                    mi = objType.GetMethod(SourceMember.Name, BindingFlags.Instance | BindingFlags.Public);
+                    mi = objType.GetMethod(SourceMember.Name, BindingFlags.Instance | BindingFlags.Public)!;
 
                     // Otherwise, resolve property with same name on non-contract
                     mi ??= objType.GetProperty(SourceMember.Name, BindingFlags.Instance | BindingFlags.Public)?.GetMethod!;
                 }
-                value = mi?.Invoke(entity, Array.Empty<object>());
+                value = mi?.Invoke(entity, []);
             }
         }
 

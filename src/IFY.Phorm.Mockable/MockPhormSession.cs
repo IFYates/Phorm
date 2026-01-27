@@ -24,6 +24,8 @@ public class MockPhormSession : IPhormSession
     public string TablePrefix { get; set; } = GlobalSettings.TablePrefix;
     public string ViewPrefix { get; set; } = GlobalSettings.ViewPrefix;
 
+    public IDictionary<string, object?> ContextData => throw new NotImplementedException();
+
     public event EventHandler<ConnectedEventArgs> Connected = null!;
     public event EventHandler<CommandExecutingEventArgs> CommandExecuting = null!;
     public event EventHandler<CommandExecutedEventArgs> CommandExecuted = null!;
@@ -36,7 +38,7 @@ public class MockPhormSession : IPhormSession
         _mockObject = mockObject;
     }
 
-    internal CallContext GetCallContext(string? schemaName, string objectName, DbObjectType objectType)
+    internal CallContext GetCallContext(string? schemaName, string objectName, DbObjectType objectType, bool readOnly)
     {
         objectName = (objectType switch
         {
@@ -46,7 +48,7 @@ public class MockPhormSession : IPhormSession
             _ => throw new NotImplementedException(),
         }) + objectName;
 
-        return new CallContext(ConnectionName, schemaName, objectName, objectType);
+        return new CallContext(ConnectionName, schemaName, objectName, objectType, readOnly);
     }
 
     public ITransactedPhormSession BeginTransaction()
@@ -61,95 +63,95 @@ public class MockPhormSession : IPhormSession
 
     public int Call(string contractName)
     {
-        var ctxt = GetCallContext(null, contractName, DbObjectType.StoredProcedure);
+        var ctxt = GetCallContext(null, contractName, DbObjectType.StoredProcedure, false);
         return _mockObject.Call(contractName, null, ctxt);
     }
     public int Call(string contractName, object? args)
     {
-        var ctxt = GetCallContext(null, contractName, DbObjectType.StoredProcedure);
+        var ctxt = GetCallContext(null, contractName, DbObjectType.StoredProcedure, false);
         return _mockObject.Call(contractName, args, ctxt);
     }
     public int Call<TActionContract>()
         where TActionContract : IPhormContract
     {
-        var (schemaName, contractName, objectType) = PhormContractRunner<IPhormContract>.ResolveContractName(typeof(TActionContract));
-        var ctxt = GetCallContext(schemaName, contractName, objectType);
+        var (schemaName, contractName, objectType, readOnly) = PhormContractRunner<IPhormContract>.ResolveContractName(typeof(TActionContract));
+        var ctxt = GetCallContext(schemaName, contractName, objectType, readOnly);
         return _mockObject.Call<TActionContract>(null, ctxt);
     }
     public int Call<TActionContract>(object? args)
         where TActionContract : IPhormContract
     {
-        var (schemaName, contractName, objectType) = PhormContractRunner<IPhormContract>.ResolveContractName(typeof(TActionContract));
-        var ctxt = GetCallContext(schemaName, contractName, objectType);
+        var (schemaName, contractName, objectType, readOnly) = PhormContractRunner<IPhormContract>.ResolveContractName(typeof(TActionContract));
+        var ctxt = GetCallContext(schemaName, contractName, objectType, readOnly);
         return _mockObject.Call<TActionContract>(args, ctxt);
     }
     public int Call<TActionContract>(TActionContract contract)
         where TActionContract : IPhormContract
     {
-        var (schemaName, contractName, objectType) = PhormContractRunner<IPhormContract>.ResolveContractName(typeof(TActionContract));
-        var ctxt = GetCallContext(schemaName, contractName, objectType);
+        var (schemaName, contractName, objectType, readOnly) = PhormContractRunner<IPhormContract>.ResolveContractName(typeof(TActionContract));
+        var ctxt = GetCallContext(schemaName, contractName, objectType, readOnly);
         return _mockObject.Call<TActionContract>(contract, ctxt);
     }
     public Task<int> CallAsync(string contractName)
     {
-        var ctxt = GetCallContext(null, contractName, DbObjectType.StoredProcedure);
+        var ctxt = GetCallContext(null, contractName, DbObjectType.StoredProcedure, false);
         return Task.FromResult(_mockObject.Call(contractName, null, ctxt));
     }
     public Task<int> CallAsync(string contractName, object? args)
     {
-        var ctxt = GetCallContext(null, contractName, DbObjectType.StoredProcedure);
+        var ctxt = GetCallContext(null, contractName, DbObjectType.StoredProcedure, false);
         return Task.FromResult(_mockObject.Call(contractName, args, ctxt));
     }
     public Task<int> CallAsync(string contractName, CancellationToken cancellationToken)
     {
-        var ctxt = GetCallContext(null, contractName, DbObjectType.StoredProcedure);
+        var ctxt = GetCallContext(null, contractName, DbObjectType.StoredProcedure, false);
         return Task.FromResult(_mockObject.Call(contractName, null, ctxt));
     }
     public Task<int> CallAsync(string contractName, object? args, CancellationToken cancellationToken)
     {
-        var ctxt = GetCallContext(null, contractName, DbObjectType.StoredProcedure);
+        var ctxt = GetCallContext(null, contractName, DbObjectType.StoredProcedure, false);
         return Task.FromResult(_mockObject.Call(contractName, args, ctxt));
     }
     public Task<int> CallAsync<TActionContract>()
         where TActionContract : IPhormContract
     {
-        var (schemaName, contractName, objectType) = PhormContractRunner<IPhormContract>.ResolveContractName(typeof(TActionContract));
-        var ctxt = GetCallContext(schemaName, contractName, objectType);
+        var (schemaName, contractName, objectType, readOnly) = PhormContractRunner<IPhormContract>.ResolveContractName(typeof(TActionContract));
+        var ctxt = GetCallContext(schemaName, contractName, objectType, readOnly);
         return Task.FromResult(_mockObject.Call<TActionContract>(null, ctxt));
     }
     public Task<int> CallAsync<TActionContract>(object? args)
         where TActionContract : IPhormContract
     {
-        var (schemaName, contractName, objectType) = PhormContractRunner<IPhormContract>.ResolveContractName(typeof(TActionContract));
-        var ctxt = GetCallContext(schemaName, contractName, objectType);
+        var (schemaName, contractName, objectType, readOnly) = PhormContractRunner<IPhormContract>.ResolveContractName(typeof(TActionContract));
+        var ctxt = GetCallContext(schemaName, contractName, objectType, readOnly);
         return Task.FromResult(_mockObject.Call<TActionContract>(args, ctxt));
     }
     public Task<int> CallAsync<TActionContract>(CancellationToken cancellationToken)
         where TActionContract : IPhormContract
     {
-        var (schemaName, contractName, objectType) = PhormContractRunner<IPhormContract>.ResolveContractName(typeof(TActionContract));
-        var ctxt = GetCallContext(schemaName, contractName, objectType);
+        var (schemaName, contractName, objectType, readOnly) = PhormContractRunner<IPhormContract>.ResolveContractName(typeof(TActionContract));
+        var ctxt = GetCallContext(schemaName, contractName, objectType, readOnly);
         return Task.FromResult(_mockObject.Call<TActionContract>(null, ctxt));
     }
     public Task<int> CallAsync<TActionContract>(object? args, CancellationToken cancellationToken)
         where TActionContract : IPhormContract
     {
-        var (schemaName, contractName, objectType) = PhormContractRunner<IPhormContract>.ResolveContractName(typeof(TActionContract));
-        var ctxt = GetCallContext(schemaName, contractName, objectType);
+        var (schemaName, contractName, objectType, readOnly) = PhormContractRunner<IPhormContract>.ResolveContractName(typeof(TActionContract));
+        var ctxt = GetCallContext(schemaName, contractName, objectType, readOnly);
         return Task.FromResult(_mockObject.Call<TActionContract>(args, ctxt));
     }
     public Task<int> CallAsync<TActionContract>(TActionContract contract)
         where TActionContract : IPhormContract
     {
-        var (schemaName, contractName, objectType) = PhormContractRunner<IPhormContract>.ResolveContractName(typeof(TActionContract));
-        var ctxt = GetCallContext(schemaName, contractName, objectType);
+        var (schemaName, contractName, objectType, readOnly) = PhormContractRunner<IPhormContract>.ResolveContractName(typeof(TActionContract));
+        var ctxt = GetCallContext(schemaName, contractName, objectType, readOnly);
         return Task.FromResult(_mockObject.Call<TActionContract>(contract, ctxt));
     }
     public Task<int> CallAsync<TActionContract>(TActionContract contract, CancellationToken cancellationToken)
         where TActionContract : IPhormContract
     {
-        var (schemaName, contractName, objectType) = PhormContractRunner<IPhormContract>.ResolveContractName(typeof(TActionContract));
-        var ctxt = GetCallContext(schemaName, contractName, objectType);
+        var (schemaName, contractName, objectType, readOnly) = PhormContractRunner<IPhormContract>.ResolveContractName(typeof(TActionContract));
+        var ctxt = GetCallContext(schemaName, contractName, objectType, readOnly);
         return Task.FromResult(_mockObject.Call<TActionContract>(contract, ctxt));
     }
 
@@ -177,24 +179,6 @@ public class MockPhormSession : IPhormSession
         return new MockPhormContractRunner<TActionContract>(this, _mockObject, null, args);
     }
 
-    public TResult? Get<TResult>()
-        where TResult : class
-    {
-        return new MockPhormContractRunner<IPhormContract>(this, _mockObject, null, null)
-            .Get<TResult>();
-    }
-    public TResult? Get<TResult>(object? args)
-        where TResult : class
-    {
-        return new MockPhormContractRunner<IPhormContract>(this, _mockObject, null, args)
-            .Get<TResult>();
-    }
-    public TResult? Get<TResult>(TResult args)
-        where TResult : class
-    {
-        return new MockPhormContractRunner<IPhormContract>(this, _mockObject, null, args)
-            .Get<TResult>();
-    }
     public Task<TResult?> GetAsync<TResult>()
         where TResult : class
     {
@@ -230,5 +214,15 @@ public class MockPhormSession : IPhormSession
     {
         return new MockPhormContractRunner<IPhormContract>(this, _mockObject, null, args)
             .GetAsync<TResult>(cancellationToken);
+    }
+
+    public IPhormSession WithContext(string? connectionName, IDictionary<string, object?> contextData)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<ITransactedPhormSession> BeginTransactionAsync(CancellationToken cancellationToken)
+    {
+        throw new NotImplementedException();
     }
 }

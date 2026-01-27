@@ -1,5 +1,12 @@
 ﻿namespace IFY.Phorm.EventArgs;
 
+/// <summary>
+/// Provides data for an event that is raised when a record column cannot be mapped to a property of the target entity
+/// type during data processing.
+/// </summary>
+/// <remarks>This event argument supplies information about the command instance, the entity type being
+/// constructed, and the name of the unmapped column. It can be used to log, handle, or inspect unexpected columns
+/// encountered during record-to-entity mapping operations.</remarks>
 public sealed class UnexpectedRecordColumnEventArgs : System.EventArgs
 {
     /// <summary>

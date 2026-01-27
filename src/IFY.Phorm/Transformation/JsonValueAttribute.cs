@@ -7,6 +7,7 @@ namespace IFY.Phorm.Transformation;
 /// </summary>
 public class JsonValueAttribute : AbstractTransphormAttribute
 {
+    /// <inheritdoc/>
     public override object? FromDatasource(Type type, object? data, object? context)
     {
         return data != null
@@ -14,6 +15,7 @@ public class JsonValueAttribute : AbstractTransphormAttribute
             : null;
     }
 
+    /// <inheritdoc/>
     public override object? ToDatasource(object? data, object? context)
     {
         return data != null

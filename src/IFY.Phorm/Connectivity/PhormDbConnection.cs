@@ -1,4 +1,4 @@
-﻿using IFY.Shimr.Extensions;
+﻿using IFY.Phorm.Execution;
 using System.Data;
 
 namespace IFY.Phorm.Connectivity;
@@ -6,44 +6,80 @@ namespace IFY.Phorm.Connectivity;
 /// <summary>
 /// Wraps <see cref="IDbConnection"/> with additional Pho/rm values.
 /// </summary>
-public sealed class PhormDbConnection : IPhormDbConnection
+internal sealed class PhormDbConnection : IPhormDbConnection
 {
-    private readonly IDbConnection _db;
-    public IDbConnection DbConnection => _db;
+    private readonly AbstractPhormSession _session;
 
-    public string? ConnectionName { get; }
+    /// <inheritdoc/>
+    public string? ConnectionName => _session.ConnectionName;
+
+    /// <inheritdoc/>
+    public IAsyncDbConnection DbConnection { get; }
+    /// <inheritdoc/>
+    public string ConnectionString { get => DbConnection.ConnectionString; set => DbConnection.ConnectionString = value; }
+    /// <inheritdoc/>
+    public int ConnectionTimeout => DbConnection.ConnectionTimeout;
+    /// <inheritdoc/>
+    public string Database => DbConnection.Database;
+    /// <inheritdoc/>
+    public ConnectionState State => DbConnection.State;
+
+    /// <inheritdoc/>
     public string DefaultSchema { get; set; } = string.Empty;
 
-    public string ConnectionString { get => _db.ConnectionString; set => _db.ConnectionString = value; }
-    public int ConnectionTimeout => _db.ConnectionTimeout;
-    public string Database => _db.Database;
-    public ConnectionState State => _db.State;
-
-    public PhormDbConnection(string? connectionName, IDbConnection dbConnection)
+    internal PhormDbConnection(AbstractPhormSession session, IAsyncDbConnection dbConnection)
     {
-        ConnectionName = connectionName;
-        _db = dbConnection;
-    }
+        _session = session;
 
-    public IDbTransaction BeginTransaction() => _db.BeginTransaction();
-    public IDbTransaction BeginTransaction(IsolationLevel il) => _db.BeginTransaction(il);
-
-    public void ChangeDatabase(string databaseName) => _db.ChangeDatabase(databaseName);
-
-    public void Open() => _db.Open();
-    public void Close() => _db.Close();
-
-    public IAsyncDbCommand CreateCommand()
-        => ((IDbConnection)this).CreateCommand().Shim<IAsyncDbCommand>()!;
-    IDbCommand IDbConnection.CreateCommand()
-    {
-        if (_db.State != ConnectionState.Open)
+        if (dbConnection is PhormDbConnection phorm)
         {
-            _db.Open();
+            DbConnection = phorm.DbConnection;
+            DefaultSchema = phorm.DefaultSchema;
         }
-
-        return _db.CreateCommand();
+        else
+        {
+            DbConnection = dbConnection;
+        }
     }
 
-    public void Dispose() => _db.Dispose();
+    /// <inheritdoc/>
+    public ValueTask<IDbTransaction> BeginTransactionAsync(CancellationToken cancellationToken) => DbConnection.BeginTransactionAsync(cancellationToken);
+    /// <inheritdoc/>
+    public ValueTask<IDbTransaction> BeginTransactionAsync(IsolationLevel il, CancellationToken cancellationToken) => DbConnection.BeginTransactionAsync(il, cancellationToken);
+
+    /// <inheritdoc/>
+    public Task ChangeDatabaseAsync(string databaseName, CancellationToken cancellationToken) => DbConnection.ChangeDatabaseAsync(databaseName, cancellationToken);
+
+    /// <inheritdoc/>
+    public async Task OpenAsync(CancellationToken cancellationToken)
+    {
+        if (DbConnection.State == ConnectionState.Broken)
+        {
+            DbConnection.Close();
+        }
+        if (DbConnection.State == ConnectionState.Closed)
+        {
+            await DbConnection.OpenAsync(cancellationToken);
+
+            await _session.ApplyContextAsync(this);
+            await _session.ResolveDefaultSchemaAsync(this);
+
+            _session.OnConnected(new() { Connection = this });
+        }
+    }
+    /// <inheritdoc/>
+    public void Close()
+    {
+        if (DbConnection.State != ConnectionState.Closed)
+        {
+            DbConnection.Close();
+        }
+    }
+
+    /// <inheritdoc/>
+    public IAsyncDbCommand CreateCommand()
+        => DbConnection.CreateCommand();
+
+    /// <inheritdoc/>
+    public void Dispose() => DbConnection.Dispose();
 }

@@ -4,7 +4,7 @@ namespace IFY.Phorm.Tests;
 
 internal class TestConsoleMessageCapture : AbstractConsoleMessageCapture
 {
-    private readonly new TestPhormSession _session;
+    private readonly TestPhormSession _session;
 
     public Func<Exception, bool>? ProcessExceptionLogic { get; set; }
 

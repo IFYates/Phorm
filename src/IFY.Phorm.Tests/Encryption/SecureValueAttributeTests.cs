@@ -1,9 +1,9 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Moq;
+﻿using Moq;
 
 namespace IFY.Phorm.Encryption.Tests;
 
 [TestClass]
+[DoNotParallelize]
 public class SecureValueAttributeTests
 {
     public class ClassWithAuthenticator
@@ -18,10 +18,10 @@ public class SecureValueAttributeTests
         var attr = new SecureValueAttribute("class", null);
 
         // Act
-        var res = attr.Decrypt(null, null);
+        var res = attr.Decrypt(null, null)!;
 
         // Assert
-        Assert.AreEqual(0, res.Length);
+        Assert.IsEmpty(res);
     }
 
     [TestMethod]
@@ -33,10 +33,8 @@ public class SecureValueAttributeTests
         GlobalSettings.EncryptionProvider = null;
 
         // Act
-        Assert.ThrowsException<InvalidOperationException>(() =>
-        {
-            _ = attr.Decrypt(new byte[] { 1, 2, 3, 4 }, null);
-        });
+        Assert.ThrowsExactly<InvalidOperationException>
+            (() => attr.Decrypt([1, 2, 3, 4], null));
     }
 
     [TestMethod]
@@ -83,7 +81,7 @@ public class SecureValueAttributeTests
 
         // Assert
         Assert.AreSame(result, res);
-        Assert.AreEqual(0, encrMock.Object.Authenticator.Length);
+        Assert.IsEmpty(encrMock.Object.Authenticator);
     }
 
     [TestMethod]
@@ -125,7 +123,7 @@ public class SecureValueAttributeTests
         var res = attr.Encrypt(null, null);
 
         // Assert
-        Assert.AreEqual(0, res.Length);
+        Assert.IsEmpty(res);
     }
 
     [TestMethod]
@@ -137,10 +135,8 @@ public class SecureValueAttributeTests
         GlobalSettings.EncryptionProvider = null;
 
         // Act
-        Assert.ThrowsException<InvalidOperationException>(() =>
-        {
-            _ = attr.Encrypt(new byte[] { 1, 2, 3, 4 }, null);
-        });
+        Assert.ThrowsExactly<InvalidOperationException>
+            (() => attr.Encrypt(new byte[] { 1, 2, 3, 4 }, null));
     }
 
     [TestMethod]
@@ -187,7 +183,7 @@ public class SecureValueAttributeTests
 
         // Assert
         Assert.AreSame(result, res);
-        Assert.AreEqual(0, encrMock.Object.Authenticator.Length);
+        Assert.IsEmpty(encrMock.Object.Authenticator);
     }
 
     [TestMethod]

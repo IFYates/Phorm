@@ -1,7 +1,7 @@
 using IFY.Phorm.Data;
 using IFY.Phorm.Execution;
 using Microsoft.Data.SqlClient;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Threading.Tasks;
 
 namespace IFY.Phorm.SqlClient.IntegrationTests;
 
@@ -30,9 +30,9 @@ public class ConsoleOutputTests : SqlIntegrationTestBase
         disableGlobalEventHandlers();
     }
 
-    private static void setConsoleOutputContract(AbstractPhormSession phorm)
+    private async Task setConsoleOutputContract(AbstractPhormSession phorm)
     {
-        SqlTestHelpers.ApplySql(phorm, @"CREATE OR ALTER PROC [dbo].[usp_ConsoleTest]
+        await SqlTestHelpers.ApplySql(phorm, TestContext.CancellationToken, @"CREATE OR ALTER PROC [dbo].[usp_ConsoleTest]
 	@Text VARCHAR(256) = NULL
 AS
 	SET NOCOUNT ON
@@ -42,9 +42,9 @@ AS
     PRINT 'End'
 RETURN 1");
     }
-    private static void setConsoleOutputErrorContract(AbstractPhormSession phorm)
+    private async Task setConsoleOutputErrorContract(AbstractPhormSession phorm)
     {
-        SqlTestHelpers.ApplySql(phorm, @"CREATE OR ALTER PROC [dbo].[usp_ConsoleTest]
+        await SqlTestHelpers.ApplySql(phorm, TestContext.CancellationToken, @"CREATE OR ALTER PROC [dbo].[usp_ConsoleTest]
 AS
 	SET NOCOUNT ON
 	RAISERROR ('Before', 1, 1) WITH NOWAIT;
@@ -55,11 +55,11 @@ RETURN 1");
     }
 
     [TestMethod]
-    public void Console_output__Contract_member__Get_all_events_in_order()
+    public async Task Console_output__Contract_member__Get_all_events_in_order()
     {
         // Arrange
         var phorm = getPhormSession();
-        setConsoleOutputContract(phorm);
+        await setConsoleOutputContract(phorm);
 
         var arg = new ConsoleTest
         {
@@ -67,12 +67,12 @@ RETURN 1");
         };
 
         // Act
-        var res = phorm.Call<IConsoleTest>(arg);
+        var res = await phorm.CallAsync<IConsoleTest>(arg, TestContext.CancellationToken);
 
         // Assert
         Assert.AreEqual(1, res);
         var events = arg.ConsoleEvents.Value.ToArray();
-        Assert.AreEqual(4, events.Length);
+        Assert.HasCount(4, events);
         Assert.AreEqual("dbo.usp_ConsoleTest @ 5", events[0].Source);
         Assert.AreEqual("Before", events[0].Message);
         Assert.AreEqual(0, events[0].Level);
@@ -92,11 +92,11 @@ RETURN 1");
     }
 
     [TestMethod]
-    public void Console_output__Anonymous_contract_member__Get_all_events_in_order()
+    public async Task Console_output__Anonymous_contract_member__Get_all_events_in_order()
     {
         // Arrange
         var phorm = getPhormSession();
-        setConsoleOutputContract(phorm);
+        await setConsoleOutputContract(phorm);
 
         var arg = new
         {
@@ -105,12 +105,12 @@ RETURN 1");
         };
 
         // Act
-        var res = phorm.Call<IConsoleTest>(arg);
+        var res = await phorm.CallAsync<IConsoleTest>(arg, TestContext.CancellationToken);
 
         // Assert
         Assert.AreEqual(1, res);
         var events = arg.ConsoleEvents.Value.ToArray();
-        Assert.AreEqual(4, events.Length);
+        Assert.HasCount(4, events);
         Assert.AreEqual("dbo.usp_ConsoleTest @ 5", events[0].Source);
         Assert.AreEqual("Before", events[0].Message);
         Assert.AreEqual(0, events[0].Level);
@@ -132,11 +132,11 @@ RETURN 1");
     [TestMethod]
     [DataRow(false, DisplayName = "Instance")]
     [DataRow(true, DisplayName = "Global")]
-    public void Console_output__Event__Get_all_events_in_order(bool asGlobal)
+    public async Task Console_output__Event__Get_all_events_in_order(bool asGlobal)
     {
         // Arrange
         var phorm = getPhormSession();
-        setConsoleOutputContract(phorm);
+        await setConsoleOutputContract(phorm);
 
         var events = new List<ConsoleMessage>();
         if (asGlobal)
@@ -154,11 +154,11 @@ RETURN 1");
         };
 
         // Act
-        var res = phorm.Call<IConsoleTest>(arg);
+        var res = await phorm.CallAsync<IConsoleTest>(arg, TestContext.CancellationToken);
 
         // Assert
         Assert.AreEqual(1, res);
-        Assert.AreEqual(4, events.Count);
+        Assert.HasCount(4, events);
         Assert.AreEqual("dbo.usp_ConsoleTest @ 5", events[0].Source);
         Assert.AreEqual("Before", events[0].Message);
         Assert.AreEqual(0, events[0].Level);
@@ -178,22 +178,22 @@ RETURN 1");
     }
 
     [TestMethod]
-    public void Error__Call__Can_receive_error_info_as_message()
+    public async Task Error__Call__Can_receive_error_info_as_message()
     {
         // Arrange
         var phorm = getPhormSession();
         phorm.ExceptionsAsConsoleMessage = true;
-        setConsoleOutputErrorContract(phorm);
+        await setConsoleOutputErrorContract(phorm);
 
         var arg = new ConsoleTest();
 
         // Act
-        var res = phorm.Call<IConsoleTest>(arg);
+        var res = await phorm.CallAsync<IConsoleTest>(arg, TestContext.CancellationToken);
 
         // Assert
         Assert.AreEqual(0, res);
         var events = arg.ConsoleEvents.Value;
-        Assert.AreEqual(2, events.Length);
+        Assert.HasCount(2, events);
         Assert.AreEqual("dbo.usp_ConsoleTest @ 4", events[0].Source);
         Assert.AreEqual("Before", events[0].Message);
         Assert.AreEqual(1, events[0].Level);
@@ -205,32 +205,30 @@ RETURN 1");
     }
 
     [TestMethod]
-    public void Error__Call_without_capture__Will_fail_execution()
+    public async Task Error__Call_without_capture__Will_fail_execution()
     {
         // Arrange
         var phorm = getPhormSession();
         phorm.ExceptionsAsConsoleMessage = false;
-        setConsoleOutputErrorContract(phorm);
+        await setConsoleOutputErrorContract(phorm);
 
         var arg = new ConsoleTest();
 
         // Act
-        var ex = Assert.ThrowsException<SqlException>(() =>
-        {
-            _ = phorm.Call<IConsoleTest>(arg);
-        });
+        var ex = await Assert.ThrowsExactlyAsync<SqlException>
+            (async () => await phorm.CallAsync<IConsoleTest>(arg, TestContext.CancellationToken));
 
         // Assert
         Assert.AreEqual("Divide by zero error encountered.", ex.Message);
     }
 
     [TestMethod]
-    public void Error__Get__Can_receive_error_info_as_message()
+    public async Task Error__Get__Can_receive_error_info_as_message()
     {
         // Arrange
         var phorm = getPhormSession();
         phorm.ExceptionsAsConsoleMessage = true;
-        setConsoleOutputErrorContract(phorm);
+        await setConsoleOutputErrorContract(phorm);
 
         var arg = new
         {
@@ -239,12 +237,12 @@ RETURN 1");
         };
 
         // Act
-        _ = phorm.From<IConsoleTest>(arg).Get<object>();
+        await phorm.From<IConsoleTest>(arg).GetAsync<object>(TestContext.CancellationToken);
 
         // Assert
         Assert.AreEqual(0, arg.ReturnValue.Value);
         var events = arg.ConsoleEvents.Value;
-        Assert.AreEqual(2, events.Length);
+        Assert.HasCount(2, events);
         Assert.AreEqual("dbo.usp_ConsoleTest @ 4", events[0].Source);
         Assert.AreEqual("Before", events[0].Message);
         Assert.AreEqual(1, events[0].Level);
@@ -256,20 +254,18 @@ RETURN 1");
     }
 
     [TestMethod]
-    public void Error__Get_without_capture__Will_fail_execution()
+    public async Task Error__Get_without_capture__Will_fail_execution()
     {
         // Arrange
         var phorm = getPhormSession();
         phorm.ExceptionsAsConsoleMessage = false;
-        setConsoleOutputErrorContract(phorm);
+        await setConsoleOutputErrorContract(phorm);
 
         var arg = new ConsoleTest();
 
         // Act
-        var ex = Assert.ThrowsException<SqlException>(() =>
-        {
-            _ = phorm.From<IConsoleTest>(arg).Get<object>();
-        });
+        var ex = await Assert.ThrowsExactlyAsync<SqlException>
+            (async () => await phorm.From<IConsoleTest>(arg).GetAsync<object>(TestContext.CancellationToken));
 
         // Assert
         Assert.AreEqual("Divide by zero error encountered.", ex.Message);

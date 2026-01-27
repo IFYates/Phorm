@@ -5,8 +5,11 @@ using System.Diagnostics.CodeAnalysis;
 namespace IFY.Phorm.SqlClient.IntegrationTests;
 
 [ExcludeFromCodeCoverage]
+[DoNotParallelize]
 public abstract class SqlIntegrationTestBase
 {
+    public required TestContext TestContext { get; set; }
+
     protected Action<object?, CommandExecutingEventArgs>? _globalCommandExecuting = null;
     private void invokeHandler(object? sender, CommandExecutingEventArgs args) => _globalCommandExecuting?.Invoke(sender, args);
     protected Action<object?, CommandExecutedEventArgs>? _globalCommandExecuted = null;
@@ -35,9 +38,8 @@ public abstract class SqlIntegrationTestBase
         Events.ConsoleMessage -= invokeHandler;
     }
 
-    protected static AbstractPhormSession getPhormSession(string? connectionName = null)
+    protected static SqlPhormSession getPhormSession(string? connectionName = null)
     {
-        var phorm = new SqlPhormSession(@"Server=(localdb)\ProjectModels;Database=PhormTests;MultipleActiveResultSets=True", connectionName);
-        return phorm;
+        return new SqlPhormSession(@"Server=(localdb)\ProjectModels;Database=PhormTests;MultipleActiveResultSets=True", connectionName);
     }
 }
