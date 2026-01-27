@@ -1,0 +1,17 @@
+<Solution>
+  <Folder Name="/_Meta/">
+    <File Path="../.github/workflows/dotnet.yml" />
+    <File Path="../README.md" />
+    <File Path=".editorconfig" />
+    <File Path="Directory.Packages.props" />
+    <File Path="nuget.config" />
+    <File Path="RELEASE_NOTES.txt" />
+  </Folder>
+  <Folder Name="/Tests/">
+    <Project Path="IFY.Phorm.Tests\IFY.Phorm.Tests.csproj" />
+    <Project Path="IFY.Phorm.SqlClient.Tests\IFY.Phorm.SqlClient.Tests.csproj" />
+    <Project Path="IFY.Phorm.SqlClient.IntegrationTests\IFY.Phorm.SqlClient.IntegrationTests.csproj" />
+  </Folder>
+  <Project Path="IFY.Phorm\IFY.Phorm.Core.csproj" />
+  <Project Path="IFY.Phorm.SqlClient\IFY.Phorm.SqlClient.csproj" />
+</Solution>
