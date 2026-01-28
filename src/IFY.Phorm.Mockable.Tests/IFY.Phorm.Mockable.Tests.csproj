@@ -8,6 +8,14 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<PackageReference Include="Moq" />
+		<PackageReference Include="coverlet.collector">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+	</ItemGroup>
+
+	<ItemGroup>
 		<ProjectReference Include="..\IFY.Phorm.Mockable\IFY.Phorm.Mockable.csproj" />
 	</ItemGroup>
 

@@ -33,7 +33,7 @@ internal sealed partial class PhormContractRunner<TActionContract> : IPhormContr
         _runArgs = args;
     }
 
-    //internal static void ResolveContractName(Type contractType, string? objectName = null, DbObjectType objectType = DbObjectType.Default, out string? schema, out string objectName, out DbObjectType objectType, out bool readOnly)
+    //internal static void ResolveContractName(Type contractType, string? objectName = null, ref DbObjectType objectType = DbObjectType.Default, out string? schema, out string objectName, out bool readOnly)
     internal static (string? SchemaName, string ObjectName, DbObjectType ObjectType, bool ReadOnly) ResolveContractName(Type contractType, string? objectName = null, DbObjectType objectType = DbObjectType.Default)
     {
         string? schema = null;
@@ -58,7 +58,7 @@ internal sealed partial class PhormContractRunner<TActionContract> : IPhormContr
         {
             schema = pcAttr.Namespace;
             objectName = pcAttr.Name ?? objectName;
-            objectType = pcAttr.Target;
+            objectType = pcAttr.Target != DbObjectType.Default ? pcAttr.Target : objectType;
             readOnly = pcAttr.ReadOnly;
         }
         else

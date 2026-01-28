@@ -31,7 +31,7 @@ public abstract class AbstractPhormSession(string? connectionName)
     /// <inheritdoc/>
     public string? ConnectionName { get; } = connectionName;
     /// <inheritdoc/>
-    public IDictionary<string, object?> ContextData
+    public IReadOnlyDictionary<string, object?> ContextData
     {
         get; protected internal
 #if !NET5_0_OR_GREATER

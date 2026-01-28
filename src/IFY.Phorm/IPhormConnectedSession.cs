@@ -52,7 +52,7 @@ public interface IPhormConnectedSession
     /// <summary>
     /// Context data applied to this session.
     /// </summary>
-    IDictionary<string, object?> ContextData { get; }
+    IReadOnlyDictionary<string, object?> ContextData { get; }
 
     /// <summary>
     /// If true, will consume execution errors and treat like a console message.

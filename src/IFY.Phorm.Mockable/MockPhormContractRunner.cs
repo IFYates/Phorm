@@ -12,32 +12,21 @@ internal class MockPhormContractRunner<TActionContract> : IPhormContractRunner<T
     private readonly object? _args;
     private readonly CallContext _callContext;
 
-    public MockPhormContractRunner(MockPhormSession session, IPhormSessionMock mockObject, string? contractName, object? args)
+    public MockPhormContractRunner(MockPhormSession session, Type contractType, IPhormSessionMock mockObject, string? contractName, DbObjectType suggestedObjectType, object? args)
     {
         _mockObject = mockObject;
-        _contractName = contractName;
         _args = args;
+        _contractName = contractName;
 
-        var (schemaName, objectName, objectType, readOnly) = PhormContractRunner<IPhormContract>.ResolveContractName(typeof(TActionContract), contractName);
+        var (schemaName, objectName, objectType, readOnly) = PhormContractRunner<IPhormContract>.ResolveContractName(contractType, contractName, suggestedObjectType);
         _callContext = session.GetCallContext(schemaName, objectName, objectType, readOnly);
     }
 
-    public Task<TResult?> GetAsync<TResult>() where TResult : class
+    public async Task<TResult?> GetAsync<TResult>(CancellationToken cancellationToken) where TResult : class
     {
-        if (_contractName != null)
-        {
-            return Task.FromResult(_mockObject.GetFrom<TResult>(_contractName, _args, _callContext));
-        }
-        return Task.FromResult(_mockObject.GetFrom<TActionContract, TResult>(_args, _callContext));
-    }
-
-    public Task<TResult?> GetAsync<TResult>(CancellationToken cancellationToken) where TResult : class
-    {
-        if (_contractName != null)
-        {
-            return Task.FromResult(_mockObject.GetFrom<TResult>(_contractName, _args, _callContext));
-        }
-        return Task.FromResult(_mockObject.GetFrom<TActionContract, TResult>(_args, _callContext));
+        return typeof(TActionContract) == typeof(IPhormContract)
+            ? _mockObject.GetFrom<TResult>(_contractName, _args, cancellationToken, _callContext)
+            : _mockObject.GetFrom<TActionContract, TResult>(_args, cancellationToken, _callContext);
     }
 
     public IPhormFilteredContractRunner<IEnumerable<TEntity>> Where<TEntity>(Expression<Func<TEntity, bool>> predicate) where TEntity : class, new()
