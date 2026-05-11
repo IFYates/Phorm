@@ -28,7 +28,7 @@ jobs:
         dotnet-version: 10.0.x
 
     - name: Restore dependencies
-      run: dotnet restore src/IFY.Phorm.sln
+      run: dotnet restore src/IFY.Phorm.slnx
     - name: Restore tools
       run: dotnet tool restore
       

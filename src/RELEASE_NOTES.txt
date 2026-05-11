@@ -1,3 +1,6 @@
+v2.3.1
+- #60: WithContext maintains session configuration
+
 v2.3.0
 - #57: Added support for session context data
 
@@ -9,28 +12,3 @@ v2.1.0
 
 v2.0.0
 - #52: Removed non-async methods
-
-v1.7.4
-- Updated Microsoft.Data.SqlClient to v6.1.1 to resolve security vulnerability
-- Improved documentation
-
-v1.7.3.1
-- Update of dependencies
-- Dropped out-of-support frameworks
-
-v1.7.3
-- #45: Fix regression of bug
-
-v1.7.2.1
-- ResultsetAttribute does not require selector to be specified
-- Updated all dependencies
-
-v1.7.2
-- #45: Fix transaction commands not being attached
-
-v1.7.1
-- #43: Fix enum parsing not supporting non-int values
-
-v1.7.0
-- #38: Lazy resolution of results
-- #38: Pre-resolution filtering of entity resultsets

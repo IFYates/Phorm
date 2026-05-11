@@ -1043,6 +1043,12 @@
             Gets or sets the prefix used for accessing database views.
             </summary>
         </member>
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.CopyEventSubscriptions(IFY.Phorm.Execution.AbstractPhormSession)">
+            <summary>
+            Copies all event subscriptions from the current instance to the specified target session.
+            </summary>
+            <param name="target">The session instance to receive the event subscriptions.</param>
+        </member>
         <member name="E:IFY.Phorm.Execution.AbstractPhormSession.Connected">
             <inheritdoc/>
         </member>
@@ -1159,6 +1165,33 @@
             <inheritdoc/>
         </member>
         <member name="M:IFY.Phorm.Execution.AbstractPhormSession.BeginTransactionAsync(System.Threading.CancellationToken)">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.CallAsync``1">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.CallAsync``1(System.Object)">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.CallAsync``1(``0)">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.CallAsync``1(``0,System.Threading.CancellationToken)">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.GetAsync``1">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.GetAsync``1(System.Object)">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.GetAsync``1(System.Threading.CancellationToken)">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.GetAsync``1(``0)">
+            <inheritdoc/>
+        </member>
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.GetAsync``1(``0,System.Threading.CancellationToken)">
             <inheritdoc/>
         </member>
         <member name="T:IFY.Phorm.Execution.ConsoleMessage">

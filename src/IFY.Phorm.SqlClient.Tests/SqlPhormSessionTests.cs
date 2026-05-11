@@ -440,4 +440,89 @@ public class SqlPhormSessionTests
         Assert.AreEqual(123, sess2.ContextData["key1"]);
         Assert.AreEqual("value2", sess2.ContextData["key2"]);
     }
+
+    [TestMethod]
+    public async Task WithContext__Persists_session_configuration()
+    {
+        // Arrange
+        var phorm = new SqlPhormSession(@"Server=(localdb)\ProjectModels;Database=PhormTests;MultipleActiveResultSets=True", "TestContext")
+        {
+            ExceptionsAsConsoleMessage = true,
+            StrictResultSize = true,
+            ProcedurePrefix = "TestProcPrefix_",
+            TablePrefix = "TestTablePrefix_",
+            ViewPrefix = "TestViewPrefix_"
+        };
+
+        // Act
+        var sess = (SqlPhormSession)phorm.WithContext(null, new Dictionary<string, object?>());
+
+        // Assert
+        Assert.IsNull(sess.ConnectionName);
+        Assert.AreEqual(phorm.ExceptionsAsConsoleMessage, sess.ExceptionsAsConsoleMessage);
+        Assert.AreEqual(phorm.StrictResultSize, sess.StrictResultSize);
+        Assert.AreEqual(phorm.ProcedurePrefix, sess.ProcedurePrefix);
+        Assert.AreEqual(phorm.TablePrefix, sess.TablePrefix);
+        Assert.AreEqual(phorm.ViewPrefix, sess.ViewPrefix);
+    }
+
+    [TestMethod]
+    public async Task WithContext__Persists_event_handlers()
+    {
+        // Arrange
+        var sess1 = new SqlPhormSession(null!);
+
+        var calledConnected = false;
+        sess1.Connected += (s, e) =>
+        {
+            calledConnected = true;
+        };
+
+        var calledExecuting = false;
+        sess1.CommandExecuting += (s, e) =>
+        {
+            calledExecuting = true;
+        };
+
+        var calledExecuted = false;
+        sess1.CommandExecuted += (s, e) =>
+        {
+            calledExecuted = true;
+        };
+
+        var calledUnexpectedColumn = false;
+        sess1.UnexpectedRecordColumn += (s, e) =>
+        {
+            calledUnexpectedColumn = true;
+        };
+
+        var calledUnresolvedMember = false;
+        sess1.UnresolvedContractMember += (s, e) =>
+        {
+            calledUnresolvedMember = true;
+        };
+
+        var calledConsoleMessage = false;
+        sess1.ConsoleMessage += (s, e) =>
+        {
+            calledConsoleMessage = true;
+        };
+
+        // Act
+        var sess2 = (SqlPhormSession)sess1.WithContext(null, new Dictionary<string, object?>());
+        sess2.OnConnected(null!);
+        sess2.OnCommandExecuting(null!);
+        sess2.OnCommandExecuted(null!);
+        sess2.OnUnexpectedRecordColumn(null!);
+        sess2.OnUnresolvedContractMember(null!);
+        sess2.OnConsoleMessage(null!);
+
+        // Assert
+        Assert.IsTrue(calledConnected);
+        Assert.IsTrue(calledExecuting);
+        Assert.IsTrue(calledExecuted);
+        Assert.IsTrue(calledUnexpectedColumn);
+        Assert.IsTrue(calledUnresolvedMember);
+        Assert.IsTrue(calledConsoleMessage);
+    }
 }
