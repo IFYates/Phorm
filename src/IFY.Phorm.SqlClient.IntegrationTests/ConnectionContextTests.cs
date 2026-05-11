@@ -1,5 +1,4 @@
 using IFY.Phorm.Execution;
-using System.ComponentModel.DataAnnotations;
 
 namespace IFY.Phorm.SqlClient.IntegrationTests;
 
