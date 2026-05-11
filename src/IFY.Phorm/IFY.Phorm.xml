@@ -1043,6 +1043,12 @@
             Gets or sets the prefix used for accessing database views.
             </summary>
         </member>
+        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.CopyEventSubscriptions(IFY.Phorm.Execution.AbstractPhormSession)">
+            <summary>
+            Copies all event subscriptions from the current instance to the specified target session.
+            </summary>
+            <param name="target">The session instance to receive the event subscriptions.</param>
+        </member>
         <member name="E:IFY.Phorm.Execution.AbstractPhormSession.Connected">
             <inheritdoc/>
         </member>

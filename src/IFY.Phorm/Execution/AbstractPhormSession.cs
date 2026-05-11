@@ -80,6 +80,20 @@ public abstract class AbstractPhormSession(string? connectionName)
 
     #region Events
 
+    /// <summary>
+    /// Copies all event subscriptions from the current instance to the specified target session.
+    /// </summary>
+    /// <param name="target">The session instance to receive the event subscriptions.</param>
+    protected void CopyEventSubscriptions(AbstractPhormSession target)
+    {
+        target.Connected = Connected;
+        target.CommandExecuting = CommandExecuting;
+        target.CommandExecuted = CommandExecuted;
+        target.UnexpectedRecordColumn = UnexpectedRecordColumn;
+        target.UnresolvedContractMember = UnresolvedContractMember;
+        target.ConsoleMessage = ConsoleMessage;
+    }
+
     /// <inheritdoc/>
     public event EventHandler<ConnectedEventArgs>? Connected;
     internal void OnConnected(ConnectedEventArgs args)

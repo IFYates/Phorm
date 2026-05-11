@@ -3,7 +3,6 @@ using IFY.Phorm.Execution;
 using IFY.Shimr.Extensions;
 using Microsoft.Data.SqlClient;
 using System.Data;
-using System.Data.Common;
 using System.Text;
 
 namespace IFY.Phorm.SqlClient;
@@ -25,11 +24,21 @@ public class SqlPhormSession(string databaseConnectionString, string? connection
     /// <inheritdoc/>
     public IPhormSession WithContext(string? connectionName, IDictionary<string, object?> contextData)
     {
-        return new SqlPhormSession(databaseConnectionString, connectionName)
+        // Create a clone of the current session with the new context data and connection name
+        var newSession = new SqlPhormSession(databaseConnectionString, connectionName)
         {
             _connectionBuilder = _connectionBuilder,
-            ContextData = contextData.ToDictionary(e => e.Key, e => e.Value)
+            ContextData = contextData.ToDictionary(e => e.Key, e => e.Value),
+
+            ExceptionsAsConsoleMessage = ExceptionsAsConsoleMessage,
+            StrictResultSize = StrictResultSize,
+
+            ProcedurePrefix = ProcedurePrefix,
+            TablePrefix = TablePrefix,
+            ViewPrefix = ViewPrefix
         };
+        CopyEventSubscriptions(newSession);
+        return newSession;
     }
 
     /// <inheritdoc/>
