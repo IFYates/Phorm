@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+﻿using System.Text.Json;
 
 namespace IFY.Phorm.Transformation;
 
@@ -11,7 +11,7 @@ public class JsonValueAttribute : AbstractTransphormAttribute
     public override object? FromDatasource(Type type, object? data, object? context)
     {
         return data != null
-            ? JsonConvert.DeserializeObject((string)data, type, GlobalSettings.NewtonsoftJsonSerializerSettings)
+            ? JsonSerializer.Deserialize((string)data, type, GlobalSettings.JsonSerializerOptions)
             : null;
     }
 
@@ -19,7 +19,7 @@ public class JsonValueAttribute : AbstractTransphormAttribute
     public override object? ToDatasource(object? data, object? context)
     {
         return data != null
-            ? JsonConvert.SerializeObject(data, GlobalSettings.NewtonsoftJsonSerializerSettings)
+            ? JsonSerializer.Serialize(data, GlobalSettings.JsonSerializerOptions)
             : null;
     }
 }

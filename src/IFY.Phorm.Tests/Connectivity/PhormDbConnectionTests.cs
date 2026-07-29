@@ -104,13 +104,15 @@ public class PhormDbConnectionTests
     }
 
     [TestMethod]
-    public async Task Open__Not_open__Open()
+    public async Task Open__Closed__Open()
     {
         // Arrange
+        var state = ConnectionState.Closed;
         var dbMock = new Mock<IAsyncDbConnection>(MockBehavior.Strict);
         dbMock.SetupGet(m => m.State)
-            .Returns(ConnectionState.Closed).Verifiable();
+            .Returns(() => state).Verifiable();
         dbMock.Setup(m => m.OpenAsync(It.IsAny<CancellationToken>()))
+            .Callback(() => state = ConnectionState.Open)
             .Returns(Task.CompletedTask).Verifiable();
 
         var db = new PhormDbConnection(new TestPhormSession(), dbMock.Object);
@@ -120,6 +122,32 @@ public class PhormDbConnectionTests
 
         // Assert
         dbMock.Verify();
+        Assert.AreEqual(ConnectionState.Open, db.State);
+    }
+
+    [TestMethod]
+    public async Task Open__Broken__Closes_and_opens()
+    {
+        // Arrange
+        var state = ConnectionState.Broken;
+        var dbMock = new Mock<IAsyncDbConnection>(MockBehavior.Strict);
+        dbMock.SetupGet(m => m.State)
+            .Returns(() => state).Verifiable();
+        dbMock.Setup(m => m.Close())
+            .Callback(() => state = ConnectionState.Closed)
+            .Verifiable();
+        dbMock.Setup(m => m.OpenAsync(It.IsAny<CancellationToken>()))
+            .Callback(() => state = ConnectionState.Open)
+            .Returns(Task.CompletedTask).Verifiable();
+
+        var db = new PhormDbConnection(new TestPhormSession(), dbMock.Object);
+
+        // Act
+        await db.OpenAsync(default);
+
+        // Assert
+        dbMock.Verify();
+        Assert.AreEqual(ConnectionState.Open, db.State);
     }
 
     [TestMethod]
@@ -140,13 +168,15 @@ public class PhormDbConnectionTests
     }
 
     [TestMethod]
-    public void Close__Not_closed__Close()
+    public void Close__Open__Close()
     {
         // Arrange
+        var state = ConnectionState.Open;
         var dbMock = new Mock<IAsyncDbConnection>(MockBehavior.Strict);
         dbMock.SetupGet(m => m.State)
-            .Returns(ConnectionState.Open).Verifiable();
+            .Returns(() => state).Verifiable();
         dbMock.Setup(m => m.Close())
+            .Callback(() => state = ConnectionState.Closed)
             .Verifiable();
 
         var db = new PhormDbConnection(new TestPhormSession(), dbMock.Object);
@@ -156,6 +186,7 @@ public class PhormDbConnectionTests
 
         // Assert
         dbMock.Verify();
+        Assert.AreEqual(ConnectionState.Closed, db.State);
     }
 
     [TestMethod]

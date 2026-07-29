@@ -1167,33 +1167,6 @@
         <member name="M:IFY.Phorm.Execution.AbstractPhormSession.BeginTransactionAsync(System.Threading.CancellationToken)">
             <inheritdoc/>
         </member>
-        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.CallAsync``1">
-            <inheritdoc/>
-        </member>
-        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.CallAsync``1(System.Object)">
-            <inheritdoc/>
-        </member>
-        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.CallAsync``1(``0)">
-            <inheritdoc/>
-        </member>
-        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.CallAsync``1(``0,System.Threading.CancellationToken)">
-            <inheritdoc/>
-        </member>
-        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.GetAsync``1">
-            <inheritdoc/>
-        </member>
-        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.GetAsync``1(System.Object)">
-            <inheritdoc/>
-        </member>
-        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.GetAsync``1(System.Threading.CancellationToken)">
-            <inheritdoc/>
-        </member>
-        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.GetAsync``1(``0)">
-            <inheritdoc/>
-        </member>
-        <member name="M:IFY.Phorm.Execution.AbstractPhormSession.GetAsync``1(``0,System.Threading.CancellationToken)">
-            <inheritdoc/>
-        </member>
         <member name="T:IFY.Phorm.Execution.ConsoleMessage">
             <summary>
             Represents a message written to the console, including its content, severity, and source information.
@@ -1364,9 +1337,9 @@
             Defaults to false.
             </summary>
         </member>
-        <member name="P:IFY.Phorm.GlobalSettings.NewtonsoftJsonSerializerSettings">
+        <member name="P:IFY.Phorm.GlobalSettings.JsonSerializerOptions">
             <summary>
-            The global <see cref="T:Newtonsoft.Json.JsonSerializerSettings"/> to use when dealing with JSON.
+            The global <see cref="!:System.Text.Json."/> to use when dealing with JSON.
             If null, uses library defaults.
             </summary>
         </member>

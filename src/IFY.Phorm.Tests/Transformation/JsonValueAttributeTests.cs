@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+﻿using System.Text.Json;
 
 namespace IFY.Phorm.Transformation.Tests;
 
@@ -38,7 +38,7 @@ public class JsonValueAttributeTests
         var attr = new JsonValueAttribute();
 
         // Act
-        Assert.ThrowsExactly<JsonReaderException>
+        Assert.ThrowsExactly<JsonException>
             (() => attr.FromDatasource(typeof(int), "invalid", null));
     }
 
