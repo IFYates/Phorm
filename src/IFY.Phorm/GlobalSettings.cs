@@ -1,5 +1,4 @@
 ﻿using IFY.Phorm.Encryption;
-using Newtonsoft.Json;
 
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo("IFY.Phorm.Tests")]
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo("IFY.Phorm.SqlClient.Tests")]
@@ -28,10 +27,10 @@ public static class GlobalSettings
     public static bool ExceptionsAsConsoleMessage { get; set; }
 
     /// <summary>
-    /// The global <see cref="JsonSerializerSettings"/> to use when dealing with JSON.
+    /// The global <see cref="System.Text.Json."/> to use when dealing with JSON.
     /// If null, uses library defaults.
     /// </summary>
-    public static JsonSerializerSettings? NewtonsoftJsonSerializerSettings { get; set; }
+    public static System.Text.Json.JsonSerializerOptions? JsonSerializerOptions { get; set; }
 
     /// <summary>
     /// Whether to throw a <see cref="InvalidOperationException"/> if an invocation result includes more records than expected.
