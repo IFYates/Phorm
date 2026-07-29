@@ -6,7 +6,8 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <LangVersion>latest</LangVersion>
 		<IsPackable>false</IsPackable>
-    </PropertyGroup>
+		<NoWarn>IDE0130</NoWarn>
+	</PropertyGroup>
 
 	<ItemGroup>
 	  <Compile Include="..\IFY.Phorm\Extensions.cs" Link="Core\Extensions.cs" />

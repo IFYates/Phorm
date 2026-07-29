@@ -6,6 +6,7 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <LangVersion>latest</LangVersion>
         <IsPackable>false</IsPackable>
+		<NoWarn>IDE0130</NoWarn>
     </PropertyGroup>
 
 	<ItemGroup>
