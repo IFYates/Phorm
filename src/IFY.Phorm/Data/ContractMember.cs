@@ -147,11 +147,10 @@ public class ContractMember : ContractMemberDefinition
             param.DbType = DbType.Guid;
         }
 
-        if (HasSecureAttribute)
+        if (SecureAttribute != null)
         {
             // AbstractSecureValue
-            var secvalAttr = Attributes.OfType<AbstractSecureValueAttribute>().Single();
-            param.Value = secvalAttr.Encrypt(param.Value, context);
+            param.Value = SecureAttribute.Encrypt(param.Value, context);
         }
 
         if (param.Value is byte[] bin)

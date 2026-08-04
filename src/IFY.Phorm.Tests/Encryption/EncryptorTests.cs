@@ -106,7 +106,7 @@ public class EncryptorTests
 
         // Assert
         Assert.AreEqual(1, res);
-        CollectionAssert.AreEqual(authBytes, encMock.Object.Authenticator);
+        Assert.AreSequenceEqual(authBytes, encMock.Object.Authenticator);
     }
 
     [TestMethod]

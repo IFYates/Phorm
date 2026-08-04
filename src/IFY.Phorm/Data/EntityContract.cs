@@ -130,14 +130,12 @@ internal class EntityContract
         return (primaryConstructor, constructorFields);
     }
 
-    // TODO: when would this return null?
-    public Func<object>? GetInstanceResolver(Dictionary<string, object?> rowData)
+    public Func<object> GetInstanceResolver(Dictionary<string, object?> rowData)
     {
-        return () => FillInstance(
-            FillInstance(
-                BuildInstance(rowData),
-                rowData, BasicPropertySetters),
-            rowData, DeferredPropertySetters);
+        // Fill in order of basic properties, then deferred properties
+        var inst = BuildInstance(rowData);
+        inst = FillInstance(inst, rowData, BasicPropertySetters);
+        return () => FillInstance(inst, rowData, DeferredPropertySetters);
     }
 
     public bool IsResultsetValid(Dictionary<string, object?> rowData, AbstractPhormSession session, Guid commandGuid)

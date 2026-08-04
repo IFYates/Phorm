@@ -9,6 +9,7 @@ public class SecureValueAttributeTests
     public class ClassWithAuthenticator
     {
         public long AuthenticatorValue { get; set; }
+        public long AuthenticatorValue2 { get; set; }
     }
 
     [TestMethod]
@@ -110,7 +111,7 @@ public class SecureValueAttributeTests
 
         // Assert
         Assert.AreSame(result, res);
-        CollectionAssert.AreEqual(BitConverter.GetBytes(100L), encrMock.Object.Authenticator);
+        Assert.AreSequenceEqual(BitConverter.GetBytes(100L), encrMock.Object.Authenticator);
     }
 
     [TestMethod]
@@ -212,6 +213,38 @@ public class SecureValueAttributeTests
 
         // Assert
         Assert.AreSame(result, res);
-        CollectionAssert.AreEqual(BitConverter.GetBytes(100L), encrMock.Object.Authenticator);
+        Assert.AreSequenceEqual(BitConverter.GetBytes(100L), encrMock.Object.Authenticator);
+    }
+
+    // Breaks before v3.0.1
+    [TestMethod]
+    public void Encrypt__Can_use_multiple_Authenticators_in_the_same_object()
+    {
+        // Arrange
+        var attr1 = new SecureValueAttribute("class", nameof(ClassWithAuthenticator.AuthenticatorValue));
+        var attr2 = new SecureValueAttribute("class", nameof(ClassWithAuthenticator.AuthenticatorValue2));
+
+        var context = new ClassWithAuthenticator { AuthenticatorValue = 100, AuthenticatorValue2 = 200 };
+
+        var data = new byte[] { 1, 2, 3, 4 };
+        var result = new byte[] { 1, 2, 3, 4 };
+
+        var encrMock = new Mock<IEncryptor>(MockBehavior.Strict);
+        encrMock.SetupProperty(m => m.Authenticator);
+        encrMock.Setup(m => m.Encrypt(data))
+            .Returns(() => encrMock.Object.Authenticator);
+
+        var provMock = new Mock<IEncryptionProvider>(MockBehavior.Strict);
+        provMock.Setup(m => m.GetEncryptor("class"))
+            .Returns(() => encrMock.Object);
+        GlobalSettings.EncryptionProvider = provMock.Object;
+
+        // Act
+        var res1 = attr1.Encrypt(data, context);
+        var res2 = attr2.Encrypt(data, context);
+
+        // Assert
+        Assert.AreSequenceEqual(BitConverter.GetBytes(100L), res1);
+        Assert.AreSequenceEqual(BitConverter.GetBytes(200L), res2);
     }
 }

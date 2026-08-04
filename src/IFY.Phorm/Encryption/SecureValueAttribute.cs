@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System.Collections.Concurrent;
+using System.Reflection;
 
 namespace IFY.Phorm.Encryption;
 
@@ -15,11 +16,6 @@ public class SecureValueAttribute : AbstractSecureValueAttribute
     /// The name of a property on this contract/DTO that is used as an encryption/decryption authenticator.
     /// </summary>
     public string? AuthenticatorPropertyName { get; }
-
-    private static readonly object _lock = 1;
-    private static PropertyInfo? _lastProperty;
-    private static object? _lastInstance;
-    private static byte[] _lastValue = [];
 
     /// <summary>
     /// This contract property represents a value that is stored encrypted.
@@ -40,34 +36,24 @@ public class SecureValueAttribute : AbstractSecureValueAttribute
         AuthenticatorPropertyName = authenticatorPropertyName;
     }
 
+    private static readonly ConcurrentDictionary<(int AuthenticatorDeclaringType, string AuthenticatorPropertyName), PropertyInfo> _authenticatorCache = new();
     private static byte[] resolveAuthenticator(object? context, string? propertyName)
     {
         if (context == null || propertyName == null)
         {
             return [];
         }
-        if (_lastInstance != context)
-        {
-            lock (_lock)
-            {
-                if (_lastInstance != context)
-                {
-                    if (_lastProperty?.Name != propertyName
-                        || _lastProperty.DeclaringType != context.GetType())
-                    {
-                        // Find property
-                        _lastProperty = context.GetType().GetProperty(propertyName, BindingFlags.Public | BindingFlags.Instance)
-                            ?? throw new InvalidOperationException($"Specified authenticator '{propertyName}' is not a public property on type {context.GetType().FullName}");
-                    }
 
-                    // Get value as byte[]
-                    var value = _lastProperty.GetValue(context);
-                    _lastInstance = context;
-                    _lastValue = value.GetBytes();
-                }
-            }
-        }
-        return _lastValue;
+        var authProp = _authenticatorCache.GetOrAdd((context.GetType().GetHashCode(), propertyName), _ =>
+        {
+            // Find property
+            return context.GetType().GetProperty(propertyName, BindingFlags.Public | BindingFlags.Instance)
+                ?? throw new InvalidOperationException($"Specified authenticator '{propertyName}' is not a public property on type {context.GetType().FullName}");
+        });
+
+        // Get value as byte[]
+        var value = authProp.GetValue(context);
+        return value.GetBytes();
     }
 
     /// <inheritdoc/>

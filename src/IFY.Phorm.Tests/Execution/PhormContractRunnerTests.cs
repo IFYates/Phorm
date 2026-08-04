@@ -1,9 +1,11 @@
 ﻿using IFY.Phorm.Data;
 using IFY.Phorm.Encryption;
 using IFY.Phorm.Tests;
+using IFY.Phorm.Transformation;
 using Moq;
 using System.Collections;
 using System.Data;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.Serialization;
 
@@ -481,7 +483,7 @@ public class PhormContractRunnerTests
         // Assert
         Assert.HasCount(1, res);
         Assert.AreEqual("secure_value", res[0].Arg3);
-        CollectionAssert.AreEqual(100.GetBytes(), encrMock.Object.Authenticator);
+        Assert.AreSequenceEqual(100.GetBytes(), encrMock.Object.Authenticator);
     }
 
     [TestMethod]
@@ -925,7 +927,7 @@ public class PhormContractRunnerTests
         // Assert
         mocks.Verify();
         Assert.AreEqual("secure_value", res!.Arg3);
-        CollectionAssert.AreEqual(100.GetBytes(), encrMock.Object.Authenticator);
+        Assert.AreSequenceEqual(100.GetBytes(), encrMock.Object.Authenticator);
     }
 
     #endregion One
@@ -1020,4 +1022,54 @@ public class PhormContractRunnerTests
     }
 
     #endregion Console messages
+
+    class TestTransformerAttribute : AbstractTransphormAttribute
+    {
+        public override object? FromDatasource(Type type, object? data, object? context)
+            => $"transformed_{((TestEntityWithDeferred)context!).Value}";
+        [ExcludeFromCodeCoverage]
+        public override object? ToDatasource(object? data, object? context)
+            => throw new NotImplementedException();
+    }
+
+    class TestEntityWithDeferred
+    {
+        public string? Value { get; set; }
+        [TestTransformer]
+        public string? TransformedValue { get; set; }
+    }
+
+    [TestMethod]
+    public async Task Basic_entity_properties_are_resolved_before_deferred_properties()
+    {
+        // Arrange
+        var conn = new TestPhormConnection("")
+        {
+            DefaultSchema = "schema"
+        };
+
+        var cmd = new TestDbCommand(new TestDbDataReader
+        {
+            Data =
+            [
+                new()
+                {
+                    ["TransformedValue"] = "data",
+                    ["Value"] = "original"
+                }
+            ]
+        });
+        conn.CommandQueue.Enqueue(cmd);
+
+        var phorm = new TestPhormSession(conn);
+
+        var runner = new PhormContractRunner<IContractDTO>(phorm, "ContractName", DbObjectType.StoredProcedure, null, null);
+
+        // Act
+        var res = await runner.GetAsync<TestEntityWithDeferred>(TestContext.CancellationToken);
+
+        // Assert
+        Assert.AreEqual("original", res!.Value);
+        Assert.AreEqual("transformed_original", res.TransformedValue);
+    }
 }

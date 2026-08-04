@@ -51,7 +51,11 @@ public class ContractMemberDefinition
     /// <summary>
     /// Returns true if this property is transformed by a secure attribute.
     /// </summary>
-    public bool HasSecureAttribute => Attributes.OfType<AbstractSecureValueAttribute>().Any();
+    public bool HasSecureAttribute => SecureAttribute != null;
+    /// <summary>
+    /// Returns the secure attribute for this property, if any.
+    /// </summary>
+    public AbstractSecureValueAttribute? SecureAttribute { get; }
     /// <summary>
     /// Returns true if this property is transformed by an attribute.
     /// </summary>
@@ -67,6 +71,7 @@ public class ContractMemberDefinition
         ValueType = orig.ValueType;
         IsRequired = orig.IsRequired;
         Attributes = orig.Attributes;
+        SecureAttribute = orig.SecureAttribute;
     }
     internal ContractMemberDefinition(string? dbName, ParameterType dir, MethodInfo sourceMethod)
     {
@@ -76,6 +81,7 @@ public class ContractMemberDefinition
         ValueType = sourceMethod.ReturnType;
         Direction = dir;
         Attributes = SourceMember.GetCustomAttributes().OfType<IContractMemberAttribute>().ToArray();
+        SecureAttribute = Attributes.OfType<AbstractSecureValueAttribute>().FirstOrDefault();
     }
     internal ContractMemberDefinition(string? dbName, ParameterType dir, PropertyInfo sourceProperty)
     {
@@ -85,6 +91,7 @@ public class ContractMemberDefinition
         ValueType = sourceProperty.PropertyType;
         Direction = dir;
         Attributes = SourceMember.GetCustomAttributes().OfType<IContractMemberAttribute>().ToArray();
+        SecureAttribute = Attributes.OfType<AbstractSecureValueAttribute>().FirstOrDefault();
     }
     internal ContractMemberDefinition(string? dbName, ParameterType dir, Type valueType)
     {

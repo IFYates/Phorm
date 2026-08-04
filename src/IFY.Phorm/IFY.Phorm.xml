@@ -350,6 +350,11 @@
             Returns true if this property is transformed by a secure attribute.
             </summary>
         </member>
+        <member name="P:IFY.Phorm.Data.ContractMemberDefinition.SecureAttribute">
+            <summary>
+            Returns the secure attribute for this property, if any.
+            </summary>
+        </member>
         <member name="P:IFY.Phorm.Data.ContractMemberDefinition.HasTransphormation">
             <summary>
             Returns true if this property is transformed by an attribute.
